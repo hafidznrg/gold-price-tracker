@@ -32,7 +32,7 @@ Semua backfill dijalankan lewat `backfill.yml` (dibuat di P1-13): pertama `dry_r
 
 - [ ] **P2-06** `backfill/worldbank.ts`: XLS Pink Sheet bulanan → `xau_usd_oz` (`M`) 1996 → bulan lalu. — `FR-07` · M
 - [ ] **P2-07** `backfill/xaus.ts`: histori harian 5 tahun → `xau_usd_oz` (`D`). — `FR-07` · S
-- [ ] **P2-08** `backfill/ecb.ts`: Frankfurter `rates.csv` → `usd_idr_ecb` = EUR/IDR ÷ EUR/USD, Feb 1999 → kini (harian bila tersedia, bulanan sebagai minimum). — `FR-07` · S
+- [ ] **P2-08** `backfill/ecb.ts`: Frankfurter `rates.csv` → `usd_idr_ecb` = EUR/IDR ÷ EUR/USD, 4 Jan 1999 → kini (harian; satu request `v2/rates.csv`, TECH-SPEC §5.6). — `FR-07` · S
 - [ ] **P2-09** `backfill/jisdor.ts`: histori JISDOR 20 Mei 2013 → kini. — `FR-07` · M
 - [ ] **P2-10** `backfill/annual-fx.ts`: kurs USD/IDR tahunan 1996–1998 dari sumber resmi terverifikasi (jawab **Q-3**); catat sumbernya di DECISIONS.md. — `FR-07` · S
 

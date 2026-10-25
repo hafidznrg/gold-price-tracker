@@ -55,7 +55,7 @@ flowchart LR
 
 | Fase | Status | Mulai | Selesai |
 | --- | --- | --- | --- |
-| 0 | Berjalan (P0-02–P0-08 selesai; P0-09 tertahan: Logam Mulia maintenance) | 25 Okt 2026 | |
+| 0 | Berjalan (P0-02–P0-08, P0-10 selesai; P0-09 tertahan: Logam Mulia maintenance) | 25 Okt 2026 | |
 | 1 | Belum mulai | | |
 | 2 | Belum mulai | | |
 | 3 | Belum mulai | | |

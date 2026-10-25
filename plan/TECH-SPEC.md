@@ -219,21 +219,43 @@ await browser.close();
 - Spot: `GET https://xaus.com/api/v1/spot?compact=1` → ditimpa ke `data/macro/spot.json` (tidak masuk CSV), dipakai sebagai titik bergaris putus.
 - Tolak respons dengan `stale: true`.
 
+Hasil riset P0-10 (25 Okt 2026, fixture di `apps/scraper/test/fixtures/xaus/`):
+
+- **Akses:** JSON publik tanpa API key; `curl` biasa cukup. Respons di-cache CDN (`Cache-Control: max-age=1800, s-maxage=21600`).
+- **`/history`:** `{ symbol: "XAUUSD", interval: "daily", unit: "troy_oz", points: [{ d, c, h, l }], count, updated_at, data_state: { status, as_of, age_seconds }, price_source }`. `d` = tanggal perdagangan, `c` = penutupan. 1.258 titik, 2021-10-25 → 2026-10-23 (± 5 tahun), hanya hari perdagangan. **`price_source` = `"yahoo finance (GC=F)"`**, yaitu kontrak berjangka emas COMEX, bukan spot LBMA; selisihnya biasanya < 1% tetapi harus disebut di UI dan `config/sources.yml`.
+- **Stale:** `/history` tidak punya field `stale` di akar; pakai `data_state.status` (`"fresh"`) untuk V-10. `/spot` punya `stale` (boolean) dan `fx_stale`.
+- **`/spot?compact=1`:** `spot_usd_oz` (presisi 6 desimal), `price_as_of`, `price_source: "gold-api.com"` — **sumber berbeda** dari histori. Bidang lain (BTC, cadangan bank sentral, dsb.) diabaikan.
+- **Tanggal:** fixture hari Minggu: titik terakhir `/history` = Jumat 23 Okt; spot tetap ada (harga terakhir pasar).
+
 ### 5.5 USD/IDR JISDOR (`jisdor.ts`)
 
-- Sumber: halaman histori JISDOR di bi.go.id (terbit 15.15 WIB hari kerja). **Riset Fase 0:** tentukan cara ambil paling stabil (form query, ekspor, atau parse tabel).
+- Sumber: halaman histori JISDOR di bi.go.id (terbit 15.15 WIB hari kerja).
 - Setiap run mengambil **10 hari terakhir** dan meng-upsert semuanya.
 - Fallback harian bila BI tidak dapat diakses: Frankfurter `usd_idr_ecb` (disimpan sebagai seri terpisah, bukan menimpa JISDOR).
+
+Hasil riset P0-10 (25 Okt 2026, fixture di `apps/scraper/test/fixtures/jisdor/`):
+
+- **Halaman:** `https://www.bi.go.id/id/statistik/informasi-kurs/jisdor/default.aspx`, SharePoint / ASP.NET WebForms (±640 KB, `__VIEWSTATE` ±230 KB). Tidak ada tantangan bot; `fetch` biasa + User-Agent cukup. Server memasang cookie sesi (`cookie_BIWEB`, `TS…`).
+- **Harian (D-21):** `GET` halaman saja sudah berisi tabel `table.table-striped` dengan **10 hari kerja terakhir** (`Tanggal | Kurs`, mis. `23 Oktober 2026 | Rp 18.069,00`), persis kebutuhan "10 hari terakhir" — satu request, tanpa postback. Tanggal berformat `D NamaBulan YYYY` (bulan Indonesia) → perlu peta nama bulan; kurs dibaca dengan `parseRupiah` (akhiran `,00`; nilai sen non-nol akan gagal keras).
+- **Backfill (D-21):** postback form: `GET` halaman (ambil semua `input[type=hidden]` + cookie), lalu `POST` ke URL yang sama dengan `__EVENTTARGET = …$ButtonExport`, `…$TextBoxFrom` / `…$TextBoxDateTo` / `…$HiddenFieldDateFrom` / `…$HiddenFieldDateTo` = `dd/mm/yyyy`. Respons `xlsx` (`Informasi Kurs Jisdor.xlsx`), satu sheet: judul, baris kosong, header `NO | Tanggal | Kurs`, lalu data. Satu postback 20/05/2013–24/10/2026 = **3.251 baris** (78 KB). Sel berupa **teks**: tanggal `M/D/YYYY 12:00:00 AM` (format AS), kurs `9.760,00` (format Indonesia).
+- **Nama field** memuat ID web part SharePoint (`ctl00$ctl51$g_8e393016_…$ctl00$`); parser mencari field berdasarkan akhiran (`$TextBoxFrom`, `$ButtonExport`) agar tahan bila ID berubah.
+- **Cek silang:** 23 Okt 2026 JISDOR 18.069 vs ECB 18.107,80 (selisih 0,2%, wajar karena jam penetapan berbeda).
 
 ### 5.6 Backfill makro (sekali jalan)
 
 | Skrip | Sumber | Seri | Rentang |
 | --- | --- | --- | --- |
-| `backfill/worldbank.ts` | Pink Sheet XLS (monthly) | `xau_usd_oz` frekuensi `M` | 1996 → bulan lalu |
+| `backfill/worldbank.ts` | Pink Sheet XLSX (monthly) | `xau_usd_oz` frekuensi `M` | 1996 → bulan lalu |
 | `backfill/xaus.ts` | `/api/v1/history` | `xau_usd_oz` frekuensi `D` | 5 tahun terakhir |
-| `backfill/ecb.ts` | Frankfurter `rates.csv?base=eur&providers=ecb` | `usd_idr_ecb` = EUR/IDR ÷ EUR/USD | Feb 1999 → kini |
-| `backfill/jisdor.ts` | Histori JISDOR | `usd_idr_jisdor` | 20 Mei 2013 → kini |
+| `backfill/ecb.ts` | Frankfurter `v2/rates.csv` | `usd_idr_ecb` = EUR/IDR ÷ EUR/USD | **4 Jan 1999** → kini |
+| `backfill/jisdor.ts` | Ekspor XLSX JISDOR (§5.5) | `usd_idr_jisdor` | 20 Mei 2013 → kini |
 | `backfill/annual-fx.ts` | File statis terverifikasi | `usd_idr_annual` | 1996–1998 |
+
+Hasil riset P0-10 (25 Okt 2026, fixture di `apps/scraper/test/fixtures/{frankfurter,worldbank}/`):
+
+- **Frankfurter:** `GET https://api.frankfurter.dev/v2/rates.csv?base=EUR&quotes=IDR,USD&from=1999-01-01&to=<hari ini>&providers=ecb` → `text/csv` long format `date,base,quote,rate`; satu request = seluruh histori (14.242 baris, 7.121 tanggal kerja ECB, 1999-01-04 → kini, ±380 KB, tidak ada tanggal yang kehilangan IDR atau USD). Tanpa API key. URL tanpa `/v2` mengembalikan 404; API v1 (`/v1/1999-01-01..?base=EUR&symbols=IDR,USD`, JSON) setara dan menjadi cadangan. Fallback harian JISDOR memakai URL yang sama dengan `from` = 10 hari lalu.
+- **World Bank Pink Sheet:** halaman https://www.worldbank.org/en/research/commodity-markets menautkan `https://thedocs.worldbank.org/en/doc/<hash>-<kode-rilis>/related/CMO-Historical-Data-Monthly.xlsx`; **hash berubah setiap rilis**, jadi scraper membaca halaman lalu mengambil tautan berakhiran `CMO-Historical-Data-Monthly.xlsx`. File ±590 KB, sheet `Monthly Prices`: baris judul ("Updated on October 02, 2026"), baris nama komoditas (kolom `Gold`, saat ini indeks 69 dari 89), baris satuan (`($/troy oz)`), lalu data dengan label periode `YYYYMmm` (1960M01 → bulan lalu). Nilai emas berupa **bilangan bulat** (dibulatkan World Bank). Parse berdasarkan nama kolom `Gold`, bukan posisi. Rilis bulanan ±tanggal 2 memuat bulan sebelumnya, sesuai aturan `plan` (tanggal ≥ 5).
+- **Pustaka XLSX:** SheetJS dipasang dari CDN resmi (`https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz`) karena paket `xlsx` di registri npm berhenti di 0.18.5 yang memiliki kerentanan yang sudah diketahui (D-21).
 
 ## 6. Pipeline
 

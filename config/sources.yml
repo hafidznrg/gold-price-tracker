@@ -50,6 +50,7 @@ sources:
     update_calendar: weekdays
     parser_version: 0.1.0
     enabled: false
+    notes: Indikatif — histori dari futures GC=F (Yahoo), spot dari gold-api.com; bukan LBMA (D-21).
 
   - id: jisdor
     kind: macro
@@ -59,7 +60,7 @@ sources:
     update_calendar: business_days_id
     parser_version: 0.1.0
     enabled: false
-    notes: Cara ambil paling stabil ditentukan di P0-10.
+    notes: GET halaman = 10 hari kerja terakhir; backfill lewat postback ButtonExport → XLSX (D-21).
 
   - id: worldbank
     kind: macro
@@ -69,7 +70,7 @@ sources:
     update_calendar: monthly
     parser_version: 0.1.0
     enabled: false
-    notes: Pink Sheet XLS bulanan; URL file final ditentukan di P0-10.
+    notes: Halaman menautkan CMO-Historical-Data-Monthly.xlsx; hash URL berubah tiap rilis (D-21).
 
 macro_series:
   - { id: xau_usd_oz, concept: gold_usd, unit: USD/ozt, source: xaus, precedence: 1 }

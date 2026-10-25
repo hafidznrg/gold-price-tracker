@@ -24,6 +24,7 @@ Log keputusan produk dan teknis (format ringkas ala ADR). Keputusan baru ditamba
 | D-18 | 25 Okt 2026 | Paket `@gold/schema` diekspor sebagai sumber TypeScript (tanpa build); `update_calendar` tambah `monthly` | Diterima |
 | D-19 | 25 Okt 2026 | UBS Lifestyle: tanggal data dari endpoint grafik, bukan blok "Updated"; `source_updated_at` kosong | Diterima |
 | D-20 | 25 Okt 2026 | Pegadaian: endpoint `/gold/prices/table`, vendor dipetakan lewat `idVendor`, vendor lain diabaikan | Diterima |
+| D-21 | 25 Okt 2026 | Cara ambil sumber makro: JISDOR GET + ekspor postback, Frankfurter v2 CSV, Pink Sheet via tautan halaman, SheetJS dari CDN | Diterima |
 
 ---
 
@@ -126,3 +127,14 @@ Log keputusan produk dan teknis (format ringkas ala ADR). Keputusan baru ditamba
 **Konteks:** riset P0-08. Halaman Pegadaian (Nuxt) memuat harga dari endpoint JSON same-origin yang dapat dipanggil tanpa token. Respons memuat 10 vendor, termasuk varian (Antam Retro, UBS Disney, Batik Series, Lotus Archi) yang tidak ditampilkan di tabel halaman, dan nama vendor tidak konsisten (`"GALERI 24"` di tabel harga, `"Galeri 24"` di daftar vendor).
 **Keputusan:** jalur utama `GET /gold/prices/table`; Playwright membaca DOM hanya sebagai fallback. Brand ditentukan dari `idVendor` (`00005201808001` antam, `00005201808002` ubs, `00005202003010` galeri24), bukan nama. Vendor lain diabaikan tanpa karantina — menambahkannya (mis. `antam` + `gold_bar_retro`) adalah perubahan katalog lewat PR. Gramasi dengan `hargaJual = 0` dibuang. `source_updated_at` = `idHarga` (epoch ms) dalam zona Jakarta; `date` = `tglBerlaku`.
 **Konsekuensi:** satu request per run. Bila Pegadaian menambah vendor baru, pipeline tidak gagal; bila kode vendor target berubah, V-04 (≥ 5 gramasi per brand) menggagalkan run sehingga perubahan terdeteksi.
+
+### D-21 — Cara ambil sumber makro
+
+**Konteks:** riset P0-10 memverifikasi keempat sumber makro dari jaringan lokal; semuanya dapat diakses tanpa API key atau browser.
+**Keputusan:**
+- **JISDOR harian:** satu `GET` halaman BI — tabelnya sudah memuat 10 hari kerja terakhir. **Backfill:** postback ASP.NET `ButtonExport` dengan rentang tanggal → satu XLSX berisi seluruh histori sejak 20 Mei 2013. Nama field dicari berdasarkan akhiran, bukan ID web part SharePoint.
+- **Frankfurter:** `v2/rates.csv` (long format) untuk backfill dan fallback harian; v1 JSON sebagai cadangan. Histori ECB untuk IDR dimulai 4 Jan 1999 (bukan Feb 1999).
+- **World Bank:** URL XLSX ber-hash yang berubah tiap rilis ditemukan dari tautan di halaman Commodity Markets; kolom emas dicari lewat nama `Gold`.
+- **xaus:** histori = futures GC=F (Yahoo), spot = gold-api.com; keduanya indikatif dan diberi label di UI. V-10 memakai `data_state.status` untuk histori dan `stale` untuk spot.
+- **SheetJS** dipasang dari tarball CDN resmi 0.20.3, bukan registri npm (0.18.5 berkerentanan). Dependabot tidak memantau dependensi URL, jadi versinya diperiksa manual di P5-04.
+**Konsekuensi:** tidak ada sumber makro yang memerlukan Playwright; workflow makro tetap ringan. Struktur HTML/XLSX BI dan World Bank bisa berubah — dilindungi tes kontrak fixture dan aturan gagal keras.
