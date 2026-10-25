@@ -18,7 +18,11 @@ const page = gunzipSync(readFileSync(path.join(DIR, 'page-2026-10-25-sunday.html
   'utf8',
 );
 const tableHtml = page.slice(page.indexOf('<table'), page.indexOf('</table>'));
-const strip = (html: string) => html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+const strip = (html: string) =>
+  html
+    .replace(/<[^>]*>/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
 
 const rows = [...tableHtml.matchAll(/<tr[^>]*>([\s\S]*?)<\/tr>/g)]
   .map((m) => [...m[1]!.matchAll(/<t[dh][^>]*>([\s\S]*?)<\/t[dh]>/g)].map((c) => strip(c[1]!)))
