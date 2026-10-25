@@ -1,0 +1,63 @@
+name: probe
+
+# WORKFLOWS §3.6 — fetch + cek bentuk respons dari runner GitHub, tanpa menulis data.
+# Hasil (raw + report.json) diunggah sebagai artifact; ringkasan di step summary.
+
+on:
+  workflow_dispatch:
+    inputs:
+      source:
+        description: Sumber yang di-probe
+        type: choice
+        default: all
+        options: [all, ubslifestyle, pegadaian, logammulia, xaus, jisdor, worldbank, frankfurter]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: probe-${{ inputs.source }}
+  cancel-in-progress: false
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        source: >-
+          ${{ inputs.source == 'all'
+            && fromJSON('["ubslifestyle","pegadaian","logammulia","xaus","jisdor","worldbank","frankfurter"]')
+            || fromJSON(format('["{0}"]', inputs.source)) }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      - name: Lokasi runner
+        run: |
+          trace=$(curl -fsS -m 10 https://www.cloudflare.com/cdn-cgi/trace || true)
+          echo "Runner: $(echo "$trace" | grep -E '^(loc|colo)=' | tr '\n' ' ')" | tee -a "$GITHUB_STEP_SUMMARY"
+      - name: Cache Playwright
+        if: matrix.source == 'logammulia'
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+      - name: Install Chromium
+        if: matrix.source == 'logammulia'
+        run: pnpm --filter scraper exec playwright install --with-deps chromium
+      - name: Probe ${{ matrix.source }}
+        run: >
+          pnpm --filter scraper start probe
+          --source ${{ matrix.source }}
+          --root "$GITHUB_WORKSPACE"
+          --out "$GITHUB_WORKSPACE/out/probe-${{ matrix.source }}"
+        env:
+          SCRAPER_USER_AGENT: ${{ vars.SCRAPER_USER_AGENT }}
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: probe-${{ matrix.source }}
+          path: out/probe-${{ matrix.source }}
+          retention-days: 14
+          if-no-files-found: warn

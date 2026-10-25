@@ -42,9 +42,12 @@ describe('cli', () => {
     expect(error.mock.calls.join('\n')).toContain('belum diimplementasikan');
   });
 
-  it('probe memvalidasi --source', async () => {
+  // Probe sungguhan memanggil jaringan; di sini hanya validasi argumen.
+  it('probe memvalidasi --source dan --out', async () => {
     expect(await main(['probe', '--root', ROOT, '--source', 'tokopedia'])).toBe(EXIT.USAGE);
-    expect(await main(['probe', '--root', ROOT, '--source', 'ubslifestyle'])).toBe(EXIT.USAGE);
-    expect(error.mock.calls.join('\n')).toContain('belum diimplementasikan');
+    expect(error.mock.calls.join('\n')).toContain('frankfurter');
+    expect(await main(['probe', '--root', ROOT, '--source', 'xaus', '--out', 'rel/out'])).toBe(
+      EXIT.USAGE,
+    );
   });
 });

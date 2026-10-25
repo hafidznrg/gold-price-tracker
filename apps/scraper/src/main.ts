@@ -1,8 +1,8 @@
 import path from 'node:path';
 import { parseArgs, type ParseArgsConfig } from 'node:util';
-import { ScraperId } from '@gold/schema';
 import { loadConfig, loadStatus } from './config';
-import { getScraper } from './sources';
+import { formatReport, runProbe, writeStepSummary } from './probe/run';
+import { PROBE_TARGETS } from './probe/targets';
 
 // TECH-SPEC §10. Kode keluar (WORKFLOWS §2.3): 0 sukses · 1 gagal · 3 stale di hari diharapkan.
 // Kode 2 dipakai untuk kesalahan pemakaian dan perintah yang belum diimplementasikan.
@@ -59,25 +59,28 @@ const COMMANDS: Record<string, Command> = {
     },
   },
   probe: {
-    summary: 'Fetch + parse + validasi satu sumber tanpa menulis data',
+    summary:
+      'Fetch + cek bentuk respons satu sumber; raw + report.json ke --out, tanpa menulis data/',
     task: 'P0-11',
     options: { root, source: { type: 'string' }, out: { type: 'string' } },
     run: async (values) => {
       const rootDir = requireRoot(values);
-      const source = ScraperId.safeParse(values.source);
-      if (!source.success) {
-        throw new UsageError(`--source wajib salah satu dari: ${ScraperId.options.join(', ')}`);
+      const target = PROBE_TARGETS.find((t) => t === values.source);
+      if (!target) {
+        throw new UsageError(`--source wajib salah satu dari: ${PROBE_TARGETS.join(', ')}`);
       }
-      const config = await loadConfig(rootDir);
-      if (!config.sources.some((s) => s.id === source.data)) {
-        throw new UsageError(`Sumber ${source.data} tidak ada di config/sources.yml`);
+      const out = values.out;
+      if (out !== undefined && (typeof out !== 'string' || !path.isAbsolute(out))) {
+        throw new UsageError(`--out harus path absolut: ${String(out)}`);
       }
-      if (!getScraper(source.data)) {
-        console.error(`Modul sumber ${source.data} belum diimplementasikan.`);
-        return EXIT.USAGE;
-      }
-      console.error('probe belum diimplementasikan (P0-11).');
-      return EXIT.USAGE;
+      await loadConfig(rootDir); // config rusak = gagal lebih awal, sama seperti scrape
+      const report = await runProbe(target, {
+        out,
+        userAgent: process.env.SCRAPER_USER_AGENT,
+      });
+      console.log(formatReport(report));
+      await writeStepSummary(report);
+      return report.ok ? EXIT.OK : EXIT.FAILED;
     },
   },
   check: {
