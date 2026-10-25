@@ -27,7 +27,7 @@
 ### Riset dan fixture per sumber
 
 - [x] **P0-07** **UBS Lifestyle:** simpan ≥ 2 fixture HTML. Petakan struktur tabel per tahun produksi dan blok "Updated". Cek tab Network apakah grafik histori 7H–3T memuat endpoint JSON (jawab **Q-2**). — `FR-01`, `FR-08` · S
-- [ ] **P0-08** **Pegadaian:** di DevTools → Network, temukan request yang mengembalikan harga. Catat URL, method, header wajib, dan bentuk respons. Simpan fixture. Catat apakah buyback per brand tersedia (bahan **Q-1**). — `FR-02` · M
+- [x] **P0-08** **Pegadaian:** di DevTools → Network, temukan request yang mengembalikan harga. Catat URL, method, header wajib, dan bentuk respons. Simpan fixture. Catat apakah buyback per brand tersedia (bahan **Q-1**). — `FR-02` · M
 - [ ] **P0-09** **Logam Mulia:** prototipe lokal Playwright + `playwright-extra` + stealth sesuai TECH-SPEC §5.3. Simpan fixture respons jual dan buyback (potong ke ±200 titik terakhir agar kecil). — `FR-03` · M
 - [ ] **P0-10** **Makro:** verifikasi `xaus.com/api/v1/history` dan `/spot`, Frankfurter (`EUR/IDR`, `EUR/USD`), struktur XLS Pink Sheet World Bank (baris/kolom emas), dan cara mengambil histori JISDOR. Simpan fixture masing-masing. — `FR-05`–`FR-07` · M
 - [ ] **P0-11** Workflow `probe.yml` (WORKFLOWS §3.6; `workflow_dispatch`, input `source`) yang menjalankan `probe` untuk setiap sumber **dari runner GitHub** tanpa menulis data. Jalankan dan catat hasilnya; ini menjawab **Q-4** (perlu *self-hosted runner* atau tidak). — `NFR-04` · S

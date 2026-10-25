@@ -157,11 +157,19 @@ Hasil riset P0-07 (25 Okt 2026, fixture di `apps/scraper/test/fixtures/ubslifest
 
 ### 5.2 Pegadaian (`pegadaian.ts`)
 
-- **Riset (Fase 0):** buka `https://pegadaian.co.id/harga-emas` di DevTools → Network → temukan request XHR/fetch yang mengembalikan harga. Catat URL, method, header wajib, bentuk respons.
-- **Fetch utama:** panggil endpoint itu langsung dengan `fetch`.
-- **Fallback:** Playwright membuka halaman, tunggu tabel harga ter-render, baca DOM.
-- **Parse:** per brand (Antam, UBS, Galeri24) per gramasi → `sell_price`; buyback diisi bila ada, kosong bila tidak.
-- **Validasi khusus:** setiap brand punya ≥ 5 gramasi.
+Hasil riset P0-08 (25 Okt 2026, fixture di `apps/scraper/test/fixtures/pegadaian/`):
+
+- **Halaman:** Nuxt 3; harga **tidak** ada di HTML SSR, melainkan dimuat klien dari endpoint same-origin (proksi ke `agata.pegadaian.co.id`). Halaman memuat skrip Cloudflare *challenge-platform* (JSD) di latar, tetapi endpoint JSON tidak memerlukannya.
+- **Endpoint utama:** `GET https://pegadaian.co.id/gold/prices/table` → `application/json`, ±19 KB. `curl`/`fetch` biasa dengan User-Agent proyek cukup; **tidak** ada token, cookie, atau header wajib (`fetch_method: api`).
+- **Bentuk respons:** `{ responseCode: "2000000100", responseDesc: "Approved", data: VendorPrices[] }`. Setiap `VendorPrices`: `idHarga` (epoch ms, waktu entri harga dibuat), `tglBerlaku` (`YYYY-MM-DD`, tanggal harga berlaku), `keterangan` (mis. `"JUAL EB 241026 PER II"`), `idVendor` (kode 14 digit), `namaVendor`, `hargaMuliaDetails: [{ idHargaDetail, berat, hargaJual, hargaBeli }]`, `timestamp` (epoch ms, sama untuk semua vendor — waktu cache/ekspor, bukan update harga).
+- **Vendor:** 10 vendor, termasuk varian yang tidak ditampilkan di tabel halaman (ANTAM MULIA RETRO, LOTUS ARCHI, UBS DISNEY/ANNA/ELSA/MICKEY FULLBODY, BATIK SERIES). Parser memetakan lewat `idVendor` (D-20): `00005201808001` → `antam`, `00005201808002` → `ubs`, `00005202003010` → `galeri24`; vendor lain diabaikan (tidak dikarantina), dicatat jumlahnya di `RUN`. `GET /gold/prices/vendors?isRequest=true` mengembalikan tiga vendor yang ditampilkan halaman — dipakai sebagai cek silang, bukan sumber utama.
+- **Gramasi:** `hargaMuliaDetails` memuat semua 25 gramasi templat; `hargaJual = 0` berarti tidak dijual dan dibuang. Gramasi berharga per 24 Okt 2026: Galeri 24 0,5–1.000 g (11), ANTAM 0,5–100 g termasuk 3 g (9), UBS 0,5–500 g (10) — sama dengan `config/catalog.yml`.
+- **Buyback (jawaban awal Q-1):** **tidak tersedia** untuk emas batangan; `hargaBeli` selalu `null`, dan halaman hanya menampilkan satu kolom harga per brand. `buyback_price` Pegadaian selalu kosong (D-07). Buyback hanya ada untuk **Tabungan Emas** (`GET /gold/prices`, per 0,01 g; grafik 360 hari di `GET /gold/prices/chart`) — di luar cakupan v1, dicatat sebagai kandidat backlog.
+- **Pemetaan kolom:** `tglBerlaku` → `date` dan `data_date`; `hargaJual` → `sell_price`; `berat` → `weight_g` (lewat `canonicalWeight`); `idHarga` → `source_updated_at` (`jakartaIso`); `variant = ''`, `location = ''`, `product = gold_bar`.
+- **Tanggal & stale:** pada fixture hari Minggu, `tglBerlaku` = Sabtu (harga emas batangan tidak diperbarui Minggu), sedangkan Tabungan Emas `tglBerlaku` = Minggu. `stale` bila `tglBerlaku` < tanggal Jakarta hari ini; kegagalan hanya pada hari yang diharapkan (Q-6). Bila tiga vendor target punya `tglBerlaku` berbeda, run `failed` (`VALIDATION_FAILED`).
+- **Pembaruan dalam sehari:** `keterangan` memuat `PER II` dan `idHarga` 24 Okt bertanggal ±10.18–10.35 WIB; harga tampaknya bisa ditetapkan lebih dari sekali per hari ("periode"). Run `retry` 13.25 WIB akan meng-update baris yang sama bila harga berubah (DATA-MODEL §5, revisi tercatat). Pola periode dikonfirmasi saat observasi P1-11.
+- **Fallback:** Playwright membaca tabel DOM ("Harga Emas Batangan") tetap disiapkan bila endpoint berubah/diblokir, tetapi bukan jalur utama.
+- **Validasi khusus:** setiap brand target punya ≥ 5 gramasi berharga (V-04); `responseCode = 2000000100`.
 
 ### 5.3 Logam Mulia / Antam (`logammulia.ts`)
 

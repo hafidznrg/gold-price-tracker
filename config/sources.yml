@@ -23,14 +23,14 @@ sources:
 
   - id: pegadaian
     kind: prices
-    url: https://pegadaian.co.id/harga-emas
+    url: https://pegadaian.co.id/gold/prices/table
     fetch_method: api
     workflow: scrape-retail
-    update_calendar: daily
+    update_calendar: daily # P0-08: harga batangan tidak diperbarui Minggu; final di P1-11 (Q-6)
     stale_is_error_on_expected_day: true
     parser_version: 0.1.0
     enabled: false
-    notes: Endpoint JSON ditentukan di P0-08; fallback Playwright membaca DOM.
+    notes: JSON tanpa token; brand dari idVendor (D-20); fallback Playwright membaca DOM /harga-emas.
 
   - id: logammulia
     kind: prices
