@@ -1,0 +1,15 @@
+{
+  "started_at": "2026-10-25T03:33:47.029Z",
+  "home": {
+    "status": 503,
+    "ms": 11140,
+    "url": "https://www.logammulia.com/id",
+    "title": "Maintenance"
+  },
+  "token_found": false,
+  "token_length": 0,
+  "error": "TOKEN_MISSING",
+  "finished_at": "2026-10-25T03:34:01.769Z",
+  "server": "AkamaiGHost",
+  "note": "Semua path (/id, /robots.txt, /data-base-price/*) 503 juga lewat curl biasa"
+}

@@ -1,0 +1,29 @@
+<!DOCTYPE html><html lang="id"><head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Maintenance</title>
+  <style>
+    html, body { margin: 0; width: 100%; height: 100%; }
+    body { font-family: Arial, sans-serif; }
+    iframe { display: block; width: 100%; height: 100%; border: 0; }
+    .fallback { position: fixed; left: 0; right: 0; bottom: 0; padding: 8px;
+                text-align: center; font-size: 12px; background: #fff; }
+  </style>
+</head>
+<body>
+  <!--
+    Memuat halaman maintenance di dalam iframe agar URL utama tidak berubah.
+    Catatan: jika S3 melarang embedding melalui X-Frame-Options atau CSP
+    frame-ancestors, gunakan reverse proxy/origin Akamai, bukan iframe.
+  -->
+  <iframe src="https://uatphase2-antam-asset.s3.ap-southeast-3.amazonaws.com/maintenance-mode-antam/maintenance-mode/index.html" title="Halaman Maintenance" referrerpolicy="no-referrer" allowfullscreen="">
+  </iframe>
+  <noscript>
+    <div class="fallback">
+      JavaScript tidak diperlukan untuk halaman ini. Jika halaman maintenance tidak tampil,
+      buka <a href="https://uatphase2-antam-asset.s3.ap-southeast-3.amazonaws.com/maintenance-mode-antam/maintenance-mode/index.html">halaman maintenance</a>.
+    </div>
+  </noscript>
+
+
+</body></html>

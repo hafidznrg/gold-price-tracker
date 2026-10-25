@@ -173,6 +173,10 @@ Hasil riset P0-08 (25 Okt 2026, fixture di `apps/scraper/test/fixtures/pegadaian
 
 ### 5.3 Logam Mulia / Antam (`logammulia.ts`)
 
+> **Status riset P0-09 (25 Okt 2026): tertahan.** Prototipe `apps/scraper/scripts/prototype-logammulia.ts` (Playwright 1.64 + `playwright-extra` + stealth) berjalan, tetapi seluruh domain `logammulia.com` mengembalikan **HTTP 503** dari Akamai dengan halaman "Maintenance": *layanan operasional tutup sementara karena sedang mempersiapkan aplikasi versi terbaru*. Hasilnya sama lewat `curl` biasa dan untuk semua path (`/id`, `/robots.txt`, `/data-base-price/*`), jadi ini bukan blokir bot. Langkah di bawah **belum terverifikasi** dan bisa berubah total bila versi baru mengganti endpoint atau mekanisme token. Fixture maintenance disimpan; saat situs kembali, jalankan ulang prototipe (1–2 kali), simpan fixture jual & buyback, lalu perbarui bagian ini.
+>
+> Klasifikasi untuk P1-06: HTTP 503 + `<title>Maintenance</title>` → `failed` dengan `error_code = FETCH_HTTP` dan pesan `MAINTENANCE` (bukan `BLOCKED`), agar Issue membedakan situs tutup dari pemblokiran.
+
 1. Chromium headless via `playwright-extra` + plugin stealth.
 2. `goto('https://www.logammulia.com/id', { waitUntil: 'networkidle', timeout: 60_000 })`.
 3. Token: `page.inputValue('input[name="_token"]')`.
