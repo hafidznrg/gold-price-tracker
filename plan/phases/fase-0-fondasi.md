@@ -32,7 +32,8 @@
   - *25 Okt 2026:* prototipe selesai (`scripts/prototype-logammulia.ts`), tetapi situs 503 maintenance ("mempersiapkan aplikasi versi terbaru"); fixture jual/buyback **tertunda** sampai situs kembali. Lihat TECH-SPEC §5.3.
 - [x] **P0-10** **Makro:** verifikasi `xaus.com/api/v1/history` dan `/spot`, Frankfurter (`EUR/IDR`, `EUR/USD`), struktur XLS Pink Sheet World Bank (baris/kolom emas), dan cara mengambil histori JISDOR. Simpan fixture masing-masing. — `FR-05`–`FR-07` · M
 - [x] **P0-11** Workflow `probe.yml` (WORKFLOWS §3.6; `workflow_dispatch`, input `source`) yang menjalankan `probe` untuk setiap sumber **dari runner GitHub** tanpa menulis data. Jalankan dan catat hasilnya; ini menjawab **Q-4** (perlu *self-hosted runner* atau tidak). — `NFR-04` · S
-- [ ] **P0-12** Dokumentasikan temuan riset di TECH-SPEC §5 (endpoint final Pegadaian, cara JISDOR, kolom XLS) dan catat keputusan baru di DECISIONS.md. — · S
+- [x] **P0-12** Dokumentasikan temuan riset di TECH-SPEC §5 (endpoint final Pegadaian, cara JISDOR, kolom XLS) dan catat keputusan baru di DECISIONS.md. — · S
+  - *25 Okt 2026:* TECH-SPEC §5.1–5.6 dan §7 (V-06, V-10), PRD §6, DATA-MODEL §3.1/§4.3, tugas P1-03/P1-07/P2-04/P2-06/P2-09 diselaraskan dengan temuan; keputusan D-18–D-21. Bagian Logam Mulia (§5.3) diperbarui bersama P0-09.
 
 ## Kriteria selesai
 
@@ -40,6 +41,28 @@
 - Setiap sumber (UBS, Pegadaian, Logam Mulia, xaus, Frankfurter, World Bank, JISDOR) punya ≥ 1 fixture di `apps/scraper/test/fixtures/`.
 - Hasil `probe.yml` dari runner GitHub tercatat untuk setiap sumber.
 - Q-2 dan Q-4 terjawab; Q-1 punya temuan awal.
+
+## Status (25 Okt 2026)
+
+**Tugas:** 10 dari 12 selesai.
+
+| Tugas | Status | Yang tersisa |
+| --- | --- | --- |
+| P0-01 | ⏳ | Dicek lewat API GitHub: repo publik ✅, **belum ada ruleset** untuk `main`, **belum ada LICENSE**. Ruleset diatur pemilik repo di *Settings → Rules* (blokir force-push + penghapusan, tanpa wajib PR, D-17); LICENSE MIT bisa ditambahkan lewat PR |
+| P0-09 | ⏳ tertahan | Logam Mulia 503 maintenance sejak 25 Okt 2026. Prototipe siap; ambil fixture jual/buyback dan jalankan `probe.yml source=logammulia` setelah situs kembali |
+
+**Kriteria selesai:**
+
+| Kriteria | Status |
+| --- | --- |
+| CI hijau di `main`; uji skema dan util lulus | ✅ |
+| Setiap sumber punya ≥ 1 fixture | ✅ untuk 6 sumber · ⚠️ Logam Mulia hanya fixture halaman maintenance, belum respons data |
+| Hasil `probe.yml` dari runner GitHub tercatat untuk setiap sumber | ✅ (Logam Mulia tercatat sebagai 503 maintenance) |
+| Q-2 dan Q-4 terjawab; Q-1 punya temuan awal | ✅ Q-2 (P0-07) · ✅ Q-4 (P0-11, kecuali Logam Mulia) · ✅ Q-1 temuan awal (P0-08) |
+
+**G0:** terpenuhi untuk UBS Lifestyle, Pegadaian, xaus, JISDOR, World Bank, dan Frankfurter (opsi 1: fetch terbukti dari runner GitHub). **Belum** untuk Logam Mulia: kegagalannya bukan dari runner, sehingga opsi 2 (self-hosted runner atau terima kosong sesuai D-06) belum relevan sampai situs kembali dan bisa diuji.
+
+**Dampak ke fase berikutnya:** Fase 1 dapat dimulai karena urutan kerjanya (P1-01 validate → P1-02 merge → P1-03 UBS → P1-04 workflow) tidak bergantung pada Logam Mulia; hanya **P1-06** yang menunggu P0-09. Fase 2 tidak terpengaruh. Bila Logam Mulia masih tutup ketika P1-06 tiba, catat di DECISIONS.md apakah menunggu atau menerima seri kosong (D-06).
 
 ## Gerbang keluar G0
 

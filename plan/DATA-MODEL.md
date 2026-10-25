@@ -169,7 +169,7 @@ Urutan kolom di CSV persis seperti tabel ini.
 | 7 | `location` | string | `''` | `jakarta` | `jakarta` untuk Logam Mulia; kosong untuk lainnya |
 | 8 | `sell_price` | integer Rp | ya* | 1403300 | Toko menjual ke konsumen |
 | 9 | `buyback_price` | integer Rp | ya* | 1145000 | Toko membeli dari konsumen |
-| 10 | `source_updated_at` | ISO 8601 +07:00 | ya | 2026-10-24T10:12:08+07:00 | Waktu update yang tertera di sumber |
+| 10 | `source_updated_at` | ISO 8601 +07:00 | ya | 2026-10-24T10:12:08+07:00 | Waktu update yang tertera di sumber; kosong bila sumber tidak menyediakan yang dapat dipercaya (UBS Lifestyle, D-19). Pegadaian: `idHarga` (D-20) |
 | 11 | `scraped_at` | ISO 8601 UTC | tidak | 2026-10-24T03:31:40Z | Waktu baris terakhir **diubah** (bukan waktu run terakhir) |
 | 12 | `run_id` | string | tidak | `18734512345-1` | Run yang terakhir menyisipkan/mengubah baris |
 | 13 | `origin` | enum | tidak | `scrape` | `scrape` · `backfill` · `manual` |
@@ -294,7 +294,7 @@ UTF-8 tanpa BOM · pemisah koma · akhir baris LF · baris header wajib · kutip
 
 ### 4.3 Tanggal
 
-- `date` selalu tanggal Asia/Jakarta menurut **sumber** (tanggal di halaman, atau timestamp endpoint yang dikonversi), bukan tanggal saat scraper berjalan.
+- `date` selalu tanggal Asia/Jakarta menurut **sumber** (UBS: titik terakhir endpoint grafik, D-19; Pegadaian: `tglBerlaku`; Logam Mulia: timestamp endpoint yang dikonversi), bukan tanggal saat scraper berjalan.
 - Logam Mulia: titik terakhir per tanggal Jakarta = harga penutupan. `source_updated_at` = timestamp terbaru di antara titik jual dan titik buyback yang terpilih.
 - Makro `D`: tanggal perdagangan/penetapan menurut penyedia.
 

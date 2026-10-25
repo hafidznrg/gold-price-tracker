@@ -52,7 +52,7 @@ Prinsip:
 | Validasi | `zod` |
 | CSV | `csv-parse` / `csv-stringify` |
 | Tanggal | `date-fns` + `date-fns-tz` (zona `Asia/Jakarta` eksplisit) |
-| XLS (backfill World Bank) | `xlsx` (SheetJS) |
+| XLSX (World Bank, ekspor JISDOR) | `xlsx` (SheetJS 0.20.3 dari CDN resmi, D-21) |
 | Scheduler | GitHub Actions |
 | Web | Next.js (App Router), static export / SSG |
 | Grafik | Apache ECharts via `echarts-for-react` |
@@ -168,6 +168,7 @@ Hasil riset P0-08 (25 Okt 2026, fixture di `apps/scraper/test/fixtures/pegadaian
 - **Pemetaan kolom:** `tglBerlaku` → `date` dan `data_date`; `hargaJual` → `sell_price`; `berat` → `weight_g` (lewat `canonicalWeight`); `idHarga` → `source_updated_at` (`jakartaIso`); `variant = ''`, `location = ''`, `product = gold_bar`.
 - **Tanggal & stale:** pada fixture hari Minggu, `tglBerlaku` = Sabtu (harga emas batangan tidak diperbarui Minggu), sedangkan Tabungan Emas `tglBerlaku` = Minggu. `stale` bila `tglBerlaku` < tanggal Jakarta hari ini; kegagalan hanya pada hari yang diharapkan (Q-6). Bila tiga vendor target punya `tglBerlaku` berbeda, run `failed` (`VALIDATION_FAILED`).
 - **Pembaruan dalam sehari:** `keterangan` memuat `PER II` dan `idHarga` 24 Okt bertanggal ±10.18–10.35 WIB; harga tampaknya bisa ditetapkan lebih dari sekali per hari ("periode"). Run `retry` 13.25 WIB akan meng-update baris yang sama bila harga berubah (DATA-MODEL §5, revisi tercatat). Pola periode dikonfirmasi saat observasi P1-11.
+- **Risiko jadwal (untuk P1-08/P1-11):** PRD semula memperkirakan update ±07.30 WIB, tetapi `idHarga` menunjukkan harga 24 Okt dibuat 10.18–10.35 WIB — **tepat di sekitar slot primary 10.25 WIB** (cron GitHub juga sering terlambat 5–30 menit). Akibatnya slot primary bisa membaca campuran periode lama/baru antar vendor (ditangkap aturan "tglBerlaku sama") atau harga periode I yang lalu direvisi di slot retry. Bila pola ini konsisten selama observasi, geser slot primary ke ±11.05 WIB atau andalkan slot retry untuk Pegadaian.
 - **Fallback:** Playwright membaca tabel DOM ("Harga Emas Batangan") tetap disiapkan bila endpoint berubah/diblokir, tetapi bukan jalur utama.
 - **Validasi khusus:** setiap brand target punya ≥ 5 gramasi berharga (V-04); `responseCode = 2000000100`.
 
@@ -217,7 +218,7 @@ await browser.close();
 
 - Harian: `GET https://xaus.com/api/v1/history` → ambil penutupan **10 hari terakhir** dan upsert semuanya (menutup akhir pekan, libur, dan run yang terlewat; baris yang sama tidak disentuh). Penutupan hari berjalan tidak diambil karena belum final.
 - Spot: `GET https://xaus.com/api/v1/spot?compact=1` → ditimpa ke `data/macro/spot.json` (tidak masuk CSV), dipakai sebagai titik bergaris putus.
-- Tolak respons dengan `stale: true`.
+- Tolak respons basi (V-10): histori bila `data_state.status ≠ "fresh"`, spot bila `stale: true`.
 
 Hasil riset P0-10 (25 Okt 2026, fixture di `apps/scraper/test/fixtures/xaus/`):
 
@@ -282,11 +283,11 @@ Tingkat **run** = seluruh hasil sumber itu tidak ditulis (`failed`). Tingkat **b
 | V-03 | `buyback_price < sell_price` pada baris yang sama | Harga ritel | Run | `VALIDATION_FAILED` |
 | V-04 | Jumlah baris ≥ minimum (UBS ≥ 13 untuk tahun berjalan; Pegadaian ≥ 5 per brand) | Harga ritel | Run | `VALIDATION_FAILED` |
 | V-05 | Harga per gram berubah ≤ ±10% dari nilai terakhir seri yang sama | Harga ritel | Baris | Karantina `PRICE_JUMP` |
-| V-06 | Tanggal data = hari ini | UBS, Pegadaian | Run | `stale`; gagal hanya pada hari yang diharapkan |
+| V-06 | Tanggal data = hari ini. UBS: titik terakhir grafik yang cocok dengan buyback 1 g tabel (D-19); Pegadaian: `tglBerlaku` (D-20) | UBS, Pegadaian | Run | `stale`; gagal hanya pada hari yang diharapkan |
 | V-07 | Titik terakhir ≤ 3 hari; jumlah titik histori ≥ `status.history_points` | Logam Mulia | Run | `VALIDATION_FAILED` |
 | V-08 | Kurs berubah ≤ ±5% per hari | USD/IDR | Baris | Karantina `PRICE_JUMP` |
 | V-09 | Emas berubah ≤ ±8% per hari | XAU/USD | Baris | Karantina `PRICE_JUMP` |
-| V-10 | Respons tidak bertanda `stale` | xaus | Run | `STALE_SOURCE` |
+| V-10 | Respons tidak basi: histori `data_state.status = "fresh"`, spot `stale = false` | xaus | Run | `STALE_SOURCE` |
 | V-11 | Revisi nilai histori (tanggal < kemarin) ≤ 20 baris per run | Semua | Run | Karantina seluruh batch `MASS_REVISION` |
 
 ## 8. Build web

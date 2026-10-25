@@ -40,9 +40,9 @@ flowchart LR
 
 ### Scraper
 
-- [ ] **P1-03** **UBS Lifestyle** (`ubslifestyle.ts`): semua tabel tahun produksi → `variant`; "Harga Beli" → `sell_price`, "Harga Jual (Buyback)" → `buyback_price`; `source_updated_at` dari blok "Updated"; deteksi `stale`. Uji dengan fixture Fase 0. — `FR-01`, `D-08` · M
+- [ ] **P1-03** **UBS Lifestyle** (`ubslifestyle.ts`): semua tabel tahun produksi → `variant`; "Harga Beli" → `sell_price`, "Harga Jual (Buyback)" → `buyback_price`; `data_date` dari endpoint grafik `chart_interval/GOLD/7` bila cocok dengan buyback 1 g, `source_updated_at` kosong, deteksi `stale` (TECH-SPEC §5.1, D-19). Uji dengan fixture Fase 0. — `FR-01`, `D-08` · M
 - [ ] **P1-06** **Logam Mulia** (`logammulia.ts`) sesuai TECH-SPEC §5.3: Playwright + stealth, token CSRF, dua endpoint, titik terakhir per hari, `location = jakarta`, aturan V-07. Run pertama mengisi histori sejak 2010: baris dengan tanggal sebelum run pertama ditandai `origin = backfill`. Gagal keras bila diblokir; tidak ada sumber pengganti. — `FR-03`, `D-06`, `D-10` · L
-- [ ] **P1-07** **Pegadaian** (`pegadaian.ts`): jalur utama endpoint JSON hasil riset; fallback Playwright membaca DOM. Tiga brand, semua gramasi, buyback bila ada. — `FR-02`, `D-07` · M
+- [ ] **P1-07** **Pegadaian** (`pegadaian.ts`): jalur utama `GET /gold/prices/table`, brand lewat `idVendor`, vendor lain diabaikan, `hargaJual = 0` dibuang (TECH-SPEC §5.2, D-20); fallback Playwright membaca DOM. Buyback selalu kosong (Q-1). — `FR-02`, `D-07` · M
 
 ### Otomasi dan operasi
 

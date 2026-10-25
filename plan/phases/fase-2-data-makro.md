@@ -23,17 +23,17 @@
 ### Pengambilan harian
 
 - [ ] **P2-03** Scraper `xaus.ts`: upsert penutupan **10 hari terakhir** dari `/api/v1/history` ke `xau_usd_oz` (`D`), tanpa hari berjalan; spot ke `data/macro/spot.json`. Tolak respons `stale: true`. — `FR-05` · S
-- [ ] **P2-04** Scraper `jisdor.ts`: upsert 10 hari terakhir ke `usd_idr_jisdor` (`D`) sesuai cara yang ditemukan di P0-10. Fallback: Frankfurter harian ke `usd_idr_ecb` (seri terpisah, tidak menimpa JISDOR). — `FR-06` · M
+- [ ] **P2-04** Scraper `jisdor.ts`: upsert 10 hari terakhir ke `usd_idr_jisdor` (`D`) dari tabel `GET` halaman BI (10 hari kerja; TECH-SPEC §5.5). Fallback: Frankfurter harian ke `usd_idr_ecb` (seri terpisah, tidak menimpa JISDOR). — `FR-06` · M
 - [ ] **P2-05** Workflow `scrape-macro.yml` (WORKFLOWS §3.3): cron `40 9 * * 1-5`, `plan` memilih `xaus`, `jisdor`, dan `worldbank` bila rata-rata bulan lalu belum ada (tanggal ≥ 5), `concurrency: data-write`. — `FR-09`, `NFR-02` · S
 
 ### Backfill
 
 Semua backfill dijalankan lewat `backfill.yml` (dibuat di P1-13): pertama `dry_run: true` untuk memeriksa diff, lalu `false`.
 
-- [ ] **P2-06** `backfill/worldbank.ts`: XLS Pink Sheet bulanan → `xau_usd_oz` (`M`) 1996 → bulan lalu. — `FR-07` · M
+- [ ] **P2-06** `backfill/worldbank.ts`: XLSX Pink Sheet bulanan (URL dari tautan halaman, kolom `Gold` lewat nama; TECH-SPEC §5.6) → `xau_usd_oz` (`M`) 1996 → bulan lalu. — `FR-07` · M
 - [ ] **P2-07** `backfill/xaus.ts`: histori harian 5 tahun → `xau_usd_oz` (`D`). — `FR-07` · S
 - [ ] **P2-08** `backfill/ecb.ts`: Frankfurter `rates.csv` → `usd_idr_ecb` = EUR/IDR ÷ EUR/USD, 4 Jan 1999 → kini (harian; satu request `v2/rates.csv`, TECH-SPEC §5.6). — `FR-07` · S
-- [ ] **P2-09** `backfill/jisdor.ts`: histori JISDOR 20 Mei 2013 → kini. — `FR-07` · M
+- [ ] **P2-09** `backfill/jisdor.ts`: postback ekspor XLSX, 20 Mei 2013 → kini, satu request (TECH-SPEC §5.5). — `FR-07` · M
 - [ ] **P2-10** `backfill/annual-fx.ts`: kurs USD/IDR tahunan 1996–1998 dari sumber resmi terverifikasi (jawab **Q-3**); catat sumbernya di DECISIONS.md. — `FR-07` · S
 
 ### Turunan dan verifikasi
@@ -59,4 +59,4 @@ Semua backfill dijalankan lewat `backfill.yml` (dibuat di P1-13): pertama `dry_r
 
 - xaus.com indikatif (histori dari Yahoo Finance); tandai di UI bahwa ini bukan harga patokan LBMA.
 - Kurs ECB dan JISDOR ditetapkan di jam berbeda; simpan terpisah dan tandai sambungan seri di 2013.
-- File XLS World Bank bisa berubah tata letak antar rilis; parse berdasarkan nama kolom, bukan posisi.
+- File XLSX World Bank bisa berubah tata letak antar rilis; parse berdasarkan nama kolom, bukan posisi.

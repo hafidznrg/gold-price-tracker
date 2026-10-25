@@ -4,7 +4,7 @@ Platform untuk melihat pergerakan historis harga emas batangan di Indonesia: **h
 
 Data dikumpulkan otomatis setiap hari oleh GitHub Actions dari logammulia.com, pegadaian.co.id, dan ubslifestyle.com, disimpan sebagai CSV di repository ini (*git-as-database*), lalu disajikan sebagai situs statis di Vercel.
 
-> **Status:** tahap perencanaan. Implementasi mengikuti rencana di [`plan/`](./plan/README.md), dimulai dari Fase 0.
+> **Status:** Fase 0 (fondasi & validasi sumber) hampir selesai — monorepo, skema, CI, dan riset sumber beres; Logam Mulia menunggu situsnya kembali dari maintenance. Berikutnya Fase 1 (pipeline harga ritel). Rencana lengkap di [`plan/`](./plan/README.md).
 
 ## Dokumentasi
 

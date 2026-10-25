@@ -57,13 +57,13 @@ Proyek ini **non-komersial**, untuk kepentingan pribadi sekaligus **portofolio d
 
 | Sumber | Brand / seri | Cara akses | Waktu update | Kesulitan |
 | --- | --- | --- | --- | --- |
-| ubslifestyle.com/harga-buyback-hari-ini | UBS Gold Bar 0,05–100 g: harga beli konsumen + buyback, per tahun produksi | Tabel HTML server-rendered | ±10.00 WIB | Rendah |
-| pegadaian.co.id/harga-emas | Galeri24 (0,5–1.000 g), UBS (0,5–500 g), Antam (0,5–100 g): harga jual; buyback bila ditampilkan | Endpoint JSON yang dipanggil halaman (Nuxt) | ±07.30 WIB | Sedang |
-| logammulia.com | Antam 1 g: histori jual (sejak 2010) dan buyback (sejak 2015); opsional tabel gramasi | Sesi browser + token CSRF → endpoint JSON grafik | Setelah 08.30 WIB | Tinggi |
-| xaus.com API | XAU/USD harian (≤ 5 tahun) + spot | REST JSON tanpa key | Harian | Rendah |
-| World Bank Pink Sheet | XAU/USD rata-rata bulanan, histori panjang | XLS bulanan | Bulanan | Rendah |
-| Bank Indonesia JISDOR | USD/IDR harian sejak 20 Mei 2013 | Halaman histori BI | Hari kerja 15.15 WIB | Sedang |
-| Frankfurter (kurs acuan ECB) | EUR/IDR & EUR/USD sejak 1999 → USD/IDR | REST/CSV tanpa key | Hari kerja | Rendah |
+| ubslifestyle.com/harga-buyback-hari-ini | UBS Gold Bar 0,05–100 g: harga beli konsumen + buyback, per tahun produksi | Tabel HTML server-rendered + endpoint grafik `admin-ajax` untuk tanggal data (D-19) | ±10.00 WIB, Senin–Sabtu | Rendah |
+| pegadaian.co.id/harga-emas | Galeri24 (0,5–1.000 g), UBS (0,5–500 g), Antam (0,5–100 g): harga jual saja — buyback batangan tidak ditampilkan (Q-1) | `GET /gold/prices/table` (JSON, tanpa token; D-20) | ±10.30 WIB per 24 Okt 2026 (`idHarga`); tidak diperbarui Minggu | Rendah |
+| logammulia.com | Antam 1 g: histori jual (sejak 2010) dan buyback (sejak 2015); opsional tabel gramasi | Sesi browser + token CSRF → endpoint JSON grafik (belum terverifikasi: situs maintenance sejak 25 Okt 2026) | Setelah 08.30 WIB | Tinggi |
+| xaus.com API | XAU/USD harian (≤ 5 tahun) + spot | REST JSON tanpa key; histori = futures GC=F, spot = gold-api.com (indikatif) | Harian | Rendah |
+| World Bank Pink Sheet | XAU/USD rata-rata bulanan, histori panjang | XLSX bulanan; URL ber-hash dari tautan halaman Commodity Markets (D-21) | Bulanan (±tanggal 2) | Rendah |
+| Bank Indonesia JISDOR | USD/IDR harian sejak 20 Mei 2013 | `GET` halaman = 10 hari kerja; backfill lewat postback ekspor XLSX (D-21) | Hari kerja 15.15 WIB | Sedang |
+| Frankfurter (kurs acuan ECB) | EUR/IDR & EUR/USD sejak 4 Jan 1999 → USD/IDR | `v2/rates.csv` tanpa key, satu request = seluruh histori | Hari kerja | Rendah |
 | Kurs tahunan resmi (mis. World Bank WDI) | USD/IDR 1996–1998 | File statis | Statis | Rendah (perlu verifikasi) |
 
 Detail teknis cara akses tiap sumber ada di [TECH-SPEC.md §5](./TECH-SPEC.md#5-spesifikasi-scraper-per-sumber).
