@@ -15,10 +15,11 @@ sources:
     url: https://ubslifestyle.com/harga-buyback-hari-ini/
     fetch_method: http
     workflow: scrape-retail
-    update_calendar: business_days_id
+    update_calendar: business_days_id # P0-07: histori menunjukkan Senin–Sabtu; final di P1-11 (Q-6)
     stale_is_error_on_expected_day: true
     parser_version: 0.1.0
     enabled: false
+    notes: Tanggal data dari endpoint grafik admin-ajax, bukan blok "Updated" (D-19).
 
   - id: pegadaian
     kind: prices

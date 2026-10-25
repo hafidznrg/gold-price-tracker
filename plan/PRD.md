@@ -180,11 +180,11 @@ Ringkasan; rincian dan alasannya di [DECISIONS.md](./DECISIONS.md).
 | ID | Pertanyaan | Kapan diputuskan |
 | --- | --- | --- |
 | Q-1 | Apakah Pegadaian menampilkan buyback per brand? Jika tidak, dari mana buyback Antam/Galeri24? | Setelah Fase 1 berjalan |
-| Q-2 | Apakah grafik histori UBS Lifestyle memuat endpoint JSON yang bisa dipakai untuk backfill? | Fase 0 |
+| Q-2 | Apakah grafik histori UBS Lifestyle memuat endpoint JSON yang bisa dipakai untuk backfill? | **Terjawab (P0-07):** ya, tetapi hanya buyback 1 g sejak Nov 2023, bercelah, tahun produksi tidak diketahui — TECH-SPEC §5.1 |
 | Q-3 | Sumber kurs USD/IDR tahunan 1996–1998 yang terverifikasi | Fase 2 |
 | Q-4 | Perlukah *self-hosted runner* Indonesia? | Setelah uji akses dari runner GitHub di Fase 0 |
 | Q-5 | Nama domain dan nama produk | Sebelum rilis publik (Fase 3) |
-| Q-6 | `update_calendar` tiap sumber (apakah UBS/Pegadaian/Logam Mulia update di akhir pekan dan hari libur) | Observasi 2 minggu di Fase 1 |
+| Q-6 | `update_calendar` tiap sumber (apakah UBS/Pegadaian/Logam Mulia update di akhir pekan dan hari libur) | Observasi 2 minggu di Fase 1. Temuan awal UBS: Senin–Sabtu, sebagian libur tetap update (TECH-SPEC §5.1) |
 
 ## 14. Rencana rilis
 

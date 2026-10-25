@@ -22,6 +22,7 @@ Log keputusan produk dan teknis (format ringkas ala ADR). Keputusan baru ditamba
 | D-16 | 25 Okt 2026 | *As-of join* eksplisit untuk metrik lintas seri | Diterima |
 | D-17 | 25 Okt 2026 | Ruleset `main` tanpa wajib PR; bot push dengan `GITHUB_TOKEN` | Diterima |
 | D-18 | 25 Okt 2026 | Paket `@gold/schema` diekspor sebagai sumber TypeScript (tanpa build); `update_calendar` tambah `monthly` | Diterima |
+| D-19 | 25 Okt 2026 | UBS Lifestyle: tanggal data dari endpoint grafik, bukan blok "Updated"; `source_updated_at` kosong | Diterima |
 
 ---
 
@@ -112,3 +113,9 @@ Log keputusan produk dan teknis (format ringkas ala ADR). Keputusan baru ditamba
 **Konteks:** P0-02/P0-03. `packages/schema` dipakai `tsx` (scraper) dan nanti Next.js (web).
 **Keputusan:** `@gold/schema` mengekspor `src/index.ts` langsung (`moduleResolution: Bundler`), tanpa langkah build; Next.js memakainya lewat `transpilePackages` di Fase 3. `update_calendar` mendapat nilai `monthly` untuk World Bank Pink Sheet. CLI memakai kode keluar 2 untuk kesalahan pemakaian dan perintah yang belum diimplementasikan, serta perintah tambahan `check` untuk memvalidasi `config/` dan `status.json` di CI.
 **Konsekuensi:** tidak ada artefak `dist/` yang perlu disinkronkan; typecheck tiap paket mencakup sumber schema.
+
+### D-19 — Tanggal data UBS Lifestyle dari endpoint grafik
+
+**Konteks:** riset P0-07 menemukan bahwa blok "Updated" di halaman UBS Lifestyle tidak mencerminkan waktu update harga: tanggalnya dicetak server saat halaman di-cache (selalu "hari ini", juga di hari Minggu ketika harga masih data Sabtu), dan jamnya diisi JavaScript dengan jam peramban. Aturan V-06 ("tanggal di halaman = hari ini") karenanya selalu lolos dan tidak pernah mendeteksi `stale`.
+**Keputusan:** scraper UBS mengambil halaman lalu `chart_interval/GOLD/7` (satu request tambahan, jeda 5 detik). `data_date` = tanggal titik terakhir grafik bila nilainya sama dengan buyback 1 g tabel tahun berjalan; selain itu `stale`. `source_updated_at` dibiarkan `null` karena sumber tidak menyediakan waktu update yang dapat dipercaya. Raw snapshot menyimpan kedua respons.
+**Konsekuensi:** dua request per run (masih sesuai NFR-12). Bila endpoint grafik hilang, scraper gagal dengan `PARSE_ERROR` alih-alih diam-diam menulis data berlabel tanggal salah.

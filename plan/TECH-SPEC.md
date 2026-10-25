@@ -142,11 +142,18 @@ Tiga aturan yang paling menentukan perilaku pipeline:
 
 ### 5.1 UBS Lifestyle (`ubslifestyle.ts`)
 
-- **Fetch:** `GET https://ubslifestyle.com/harga-buyback-hari-ini/`, User-Agent mencantumkan URL repo.
-- **Parse (cheerio):** baca tanggal & jam di blok "Updated" → `source_updated_at`. Untuk setiap tabel per tahun ("Tahun 2026", dst.): kolom "Harga Beli" → `sell_price`, "Harga Jual (Buyback)" → `buyback_price`, label tahun → `variant`.
-- **Normalisasi:** `Rp1.403.300` → `1403300`; `0.05 Gram` / `0,5 Gram` → `0.05` / `0.5`.
-- **Validasi khusus:** ≥ 13 pecahan untuk tahun berjalan; tanggal di halaman = hari ini. Jika tidak: `stale` — dianggap kegagalan hanya pada hari yang diharapkan menurut `update_calendar` (situs tidak update di akhir pekan/libur).
-- **Riset (Fase 0):** cek tab Network apakah grafik 7H–3T memuat endpoint JSON → bahan backfill (FR-08).
+Hasil riset P0-07 (25 Okt 2026, fixture di `apps/scraper/test/fixtures/ubslifestyle/`):
+
+- **Akses:** `GET https://ubslifestyle.com/harga-buyback-hari-ini/` → 200, HTML WordPress di belakang Cloudflare tanpa tantangan JS; `curl` biasa dengan User-Agent proyek cukup (`fetch_method: http`). Halaman di-cache server (`x-fastcgi-cache: HIT`).
+- **Struktur tabel:** di dalam `div.table-product-wrapper` ada `table[data-hide="beli"]`. Baris header `<th colspan="2">Tahun 2026</th>` → `variant`; baris kedua berlabel `Pecahan | Harga Beli | Harga Jual (Buyback)`; lalu satu `<tr>` per pecahan: sel 1 `0.05 Gram` (label dibungkus `div`), sel 2 "Harga Beli" → `sell_price`, sel 3 "Harga Jual (Buyback)" → `buyback_price`. Per 25 Okt 2026 hanya **satu** tabel tahun produksi (2026) yang tampil; parser tetap mengiterasi setiap tabel/blok berlabel "Tahun YYYY" (D-08). CSS `data-hide="beli"` menyembunyikan kolom Harga Beli di layar, tetapi nilainya ada di HTML.
+- **Pecahan:** 13 — 0,05 · 0,1 · 0,25 · 0,5 · 1 · 2 · 3 · 4 · 5 · 10 · 25 · 50 · 100 g (= `config/catalog.yml`). Label memakai titik desimal (`0.05 Gram`).
+- **Blok "Updated" tidak bisa dipakai sebagai waktu update harga:** tanggal (`25 October 2026`) dicetak server saat halaman di-cache, dan jam (`#clock`) ditimpa JavaScript `updateClock()` dengan jam peramban. Pada fixture hari Minggu, tanggal halaman = hari ini padahal harga = data Sabtu. Karena itu `source_updated_at` = `null` dan aturan V-06 tidak bisa memakai tanggal halaman (D-19).
+- **Endpoint grafik (jawaban Q-2):** `POST /wp-admin/admin-ajax.php`, body `action=get_harga_emas_hari_ini&path=ajax/chart_interval/GOLD/{hari}`, header `X-Requested-With: XMLHttpRequest`. Respons `[{"name":"GOLD","data":[[ts_ms, a, a, a, b], …],"source":"local"}]`, `ts` = 00:00 UTC tanggal harga (ambil `YYYY-MM-DD` dari UTC, jangan dikonversi). `a` = **buyback 1 g** (cocok dengan tabel); `b` selalu 4.000–15.000 lebih rendah, artinya belum diketahui. Varian `chart_interval_jual` mengembalikan data yang identik (tombol Harga Beli/Jual di halaman tidak mengubah seri); `chart_range/...` selalu `data: []`. Histori terpanjang = 543 titik, **20 Nov 2023 → kini**, berapa pun `{hari}`, dengan celah (terpanjang 79 hari, Jun–Sep 2025).
+- **Kalender update (bahan Q-6):** dari histori grafik, data ada Senin–Sabtu (Sabtu ada setiap minggu dalam 8 minggu terakhir), hampir tidak pernah Minggu; sebagian libur nasional tetap update (mis. 17 Agu, 1 Mei), sebagian tidak (1 Jan, Imlek, Nyepi, Idulfitri, Iduladha).
+- **Tanggal data & stale (D-19):** scraper memanggil `chart_interval/GOLD/7` setelah halaman (jeda 5 detik). `data_date` = tanggal titik terakhir grafik bila nilai `a`-nya sama dengan buyback 1 g tabel tahun berjalan; bila tidak sama, run berstatus `stale` (situs sedang di tengah pembaruan atau cache belum segar). `stale` dianggap kegagalan hanya pada hari yang diharapkan menurut `update_calendar`; tanggal data < tanggal berjalan pada hari yang diharapkan juga `stale`.
+- **Normalisasi:** `Rp1.403.300` → `1403300`; `0.05 Gram` / `0,5 Gram` → `0.05` / `0.5`. Sel tanpa angka (mis. `-`) → `null`.
+- **Validasi khusus:** ≥ 13 pecahan untuk tahun berjalan (V-04).
+- **Backfill (FR-08, P1-09):** layak hanya untuk **buyback 1 g** sejak Nov 2023 (`sell_price` kosong, `variant` tidak diketahui → `''`, `origin = backfill`). Tahun produksi seri grafik tidak tercantum; putuskan di P1-09 apakah tetap diambil.
 
 ### 5.2 Pegadaian (`pegadaian.ts`)
 
