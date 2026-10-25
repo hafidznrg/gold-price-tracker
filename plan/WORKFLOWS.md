@@ -325,7 +325,7 @@ Langkah: validasi ulang baris (kecuali aturan lonjakan yang memicu karantina), l
 
 ### 3.6 `probe.yml`
 
-Manual, input `source` (choice). `permissions: contents: read`. Menjalankan `probe` (fetch → parse → validasi) dan mengunggah raw + hasil parse sebagai artifact. Dipakai di Fase 0 dan setiap kali parser diperbaiki.
+Manual, input `source` (choice: `all` atau satu sumber, termasuk `frankfurter` yang bukan modul scraper). `permissions: contents: read`. Job matrix per sumber (`fail-fast: false`); Chromium hanya dipasang untuk `logammulia`; langkah pertama mencatat lokasi runner (Cloudflare `cdn-cgi/trace`) ke step summary. Menjalankan `probe` (fetch → cek bentuk respons; di Fase 1–2 diganti parse + validasi penuh) dan mengunggah raw + `report.json` sebagai artifact `probe-{source}` (14 hari). Tidak pernah menulis ke `data/`. Dipakai di Fase 0 dan setiap kali parser diperbaiki.
 
 ### 3.7 `freshness.yml`
 

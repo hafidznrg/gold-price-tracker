@@ -31,7 +31,7 @@
 - [ ] **P0-09** **Logam Mulia:** prototipe lokal Playwright + `playwright-extra` + stealth sesuai TECH-SPEC §5.3. Simpan fixture respons jual dan buyback (potong ke ±200 titik terakhir agar kecil). — `FR-03` · M
   - *25 Okt 2026:* prototipe selesai (`scripts/prototype-logammulia.ts`), tetapi situs 503 maintenance ("mempersiapkan aplikasi versi terbaru"); fixture jual/buyback **tertunda** sampai situs kembali. Lihat TECH-SPEC §5.3.
 - [x] **P0-10** **Makro:** verifikasi `xaus.com/api/v1/history` dan `/spot`, Frankfurter (`EUR/IDR`, `EUR/USD`), struktur XLS Pink Sheet World Bank (baris/kolom emas), dan cara mengambil histori JISDOR. Simpan fixture masing-masing. — `FR-05`–`FR-07` · M
-- [ ] **P0-11** Workflow `probe.yml` (WORKFLOWS §3.6; `workflow_dispatch`, input `source`) yang menjalankan `probe` untuk setiap sumber **dari runner GitHub** tanpa menulis data. Jalankan dan catat hasilnya; ini menjawab **Q-4** (perlu *self-hosted runner* atau tidak). — `NFR-04` · S
+- [x] **P0-11** Workflow `probe.yml` (WORKFLOWS §3.6; `workflow_dispatch`, input `source`) yang menjalankan `probe` untuk setiap sumber **dari runner GitHub** tanpa menulis data. Jalankan dan catat hasilnya; ini menjawab **Q-4** (perlu *self-hosted runner* atau tidak). — `NFR-04` · S
 - [ ] **P0-12** Dokumentasikan temuan riset di TECH-SPEC §5 (endpoint final Pegadaian, cara JISDOR, kolom XLS) dan catat keputusan baru di DECISIONS.md. — · S
 
 ## Kriteria selesai
@@ -47,6 +47,22 @@ Setiap sumber memenuhi salah satu:
 
 1. Fetch terbukti berhasil dari runner GitHub, **atau**
 2. Gagal dari runner GitHub, tetapi terdokumentasi dengan rencana: *self-hosted runner* Indonesia, atau (khusus Logam Mulia) diterima kosong sesuai D-06.
+
+### Hasil probe dari runner GitHub (P0-11)
+
+Run [`probe` #40160955522](https://github.com/hafidznrg/gold-price-tracker/actions/runs/40160955522), 25 Okt 2026 11.11 WIB (Minggu), `source = all`. Runner `ubuntu-latest` di AS (Cloudflare `loc=US`, colo DFW/IAD/LAX/MSP/SJC). Artifact `probe-{source}` berisi raw + `report.json`.
+
+| Sumber | Hasil | HTTP | `data_date` | Catatan | G0 |
+| --- | --- | --- | --- | --- | --- |
+| UBS Lifestyle | ✅ | 200 · 200 | 2026-10-24 | Halaman 188 KB + grafik; titik terakhir = buyback 1 g | ✅ |
+| Pegadaian | ✅ | 200 | 2026-10-24 | `/gold/prices/table` tanpa token, tidak diblokir dari AS | ✅ |
+| Logam Mulia | ❌ | 503 | — | Halaman "Maintenance" (Akamai), sama seperti dari jaringan Indonesia — **bukan** blokir runner | ⏳ menunggu situs kembali (P0-09) |
+| xaus | ✅ | 200 · 200 | 2026-10-23 | Penutupan Jumat (diambil Minggu) | ✅ |
+| JISDOR | ✅ | 200 · 200 | 2026-10-23 | `GET` 10 hari + postback ekspor XLSX 30 hari dari runner berhasil | ✅ |
+| World Bank | ✅ | 200 · 200 | 2026-09-01 | Tautan XLSX ditemukan dari halaman; kolom Gold ada | ✅ |
+| Frankfurter | ✅ | 200 | 2026-10-23 | `v2/rates.csv` | ✅ |
+
+**Q-4:** *self-hosted runner* Indonesia **tidak diperlukan** untuk enam sumber di atas. Untuk Logam Mulia belum bisa dinilai; jalankan ulang `probe.yml` dengan `source = logammulia` setelah situs kembali (1–2 kali, sesuai catatan risiko di bawah).
 
 ## Risiko dan catatan
 
