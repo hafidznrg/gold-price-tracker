@@ -18,11 +18,11 @@
 ### Kerangka repo
 
 - [ ] **P0-01** Repo publik `gold-price-tracker` (sudah dibuat). Ruleset `main`: blokir force-push dan penghapusan, **tanpa** wajib PR agar bot bisa push data dengan `GITHUB_TOKEN` (WORKFLOWS §6.1). Lisensi MIT untuk kode; README menyatakan data milik masing-masing penerbit. — `D-09`, `D-17` · S
-- [ ] **P0-02** Monorepo pnpm: `packages/schema`, `apps/scraper`, `apps/web` (placeholder). TypeScript strict, ESLint + Prettier, `.nvmrc` Node 22, field `packageManager` di `package.json` (dibaca `pnpm/action-setup`). — `NFR-10` · S
-- [ ] **P0-03** `packages/schema` sesuai DATA-MODEL §3–4: skema `zod` `PriceRow`, `MacroRow`, `RunRecord`, `QuarantineBatch`; semua enum (§3.6); `parseRupiah('Rp1.403.300') → 1403300`, `parseWeight('0,5 Gram') → 0.5`, `canonicalWeight()`, `rowKey()`; util tanggal `Asia/Jakarta`; penulis/pembaca CSV sesuai §4.1; `SCHEMA_VERSION`. Sertakan uji unit. — `NFR-10`, `NFR-11` · M
-- [ ] **P0-04** Aksi komposit `.github/actions/setup` dan workflow `ci.yml` (WORKFLOWS §3.1, §3.8): lint, typecheck, test pada PR dan push kode ke `main` (abaikan `data/**`). — `NFR-10` · S
-- [ ] **P0-05** Kerangka CLI `apps/scraper/src/cli.ts` dengan subperintah `plan`, `scrape`, `merge`, `probe` (stub), opsi `--root` untuk path absolut, dan antarmuka `SourceScraper`. — · S
-- [ ] **P0-06** Buat `config/sources.yml`, `config/catalog.yml` (gramasi valid per sumber × brand × produk), `config/holidays.yml` (2026–2027), `config/events.yml`, serta struktur `data/` (DATA-MODEL §1) dan `.gitattributes` (`*.csv text eol=lf`). — `FR-12`, `D-13` · S
+- [x] **P0-02** Monorepo pnpm: `packages/schema`, `apps/scraper`, `apps/web` (placeholder). TypeScript strict, ESLint + Prettier, `.nvmrc` Node 22, field `packageManager` di `package.json` (dibaca `pnpm/action-setup`). — `NFR-10` · S
+- [x] **P0-03** `packages/schema` sesuai DATA-MODEL §3–4: skema `zod` `PriceRow`, `MacroRow`, `RunRecord`, `QuarantineBatch`; semua enum (§3.6); `parseRupiah('Rp1.403.300') → 1403300`, `parseWeight('0,5 Gram') → 0.5`, `canonicalWeight()`, `rowKey()`; util tanggal `Asia/Jakarta`; penulis/pembaca CSV sesuai §4.1; `SCHEMA_VERSION`. Sertakan uji unit. — `NFR-10`, `NFR-11` · M
+- [x] **P0-04** Aksi komposit `.github/actions/setup` dan workflow `ci.yml` (WORKFLOWS §3.1, §3.8): lint, typecheck, test pada PR dan push kode ke `main` (abaikan `data/**`). — `NFR-10` · S
+- [x] **P0-05** Kerangka CLI `apps/scraper/src/cli.ts` dengan subperintah `plan`, `scrape`, `merge`, `probe` (stub), opsi `--root` untuk path absolut, dan antarmuka `SourceScraper`. — · S
+- [x] **P0-06** Buat `config/sources.yml`, `config/catalog.yml` (gramasi valid per sumber × brand × produk), `config/holidays.yml` (2026–2027), `config/events.yml`, serta struktur `data/` (DATA-MODEL §1) dan `.gitattributes` (`*.csv text eol=lf`). — `FR-12`, `D-13` · S
 
 ### Riset dan fixture per sumber
 

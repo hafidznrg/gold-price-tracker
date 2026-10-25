@@ -1,0 +1,8 @@
+# EVENT (DATA-MODEL §3.5): anotasi peristiwa untuk grafik kelipatan (FR-32).
+# kind: crisis | peak | policy | other
+#
+# Diisi di P2-13 (Krisis 1998, Puncak 2011, dll.) setelah tanggalnya diverifikasi terhadap data makro.
+# Contoh:
+#   - { date: '2011-09-06', label: Puncak 2011, kind: peak }
+
+events: []

@@ -21,6 +21,7 @@ Log keputusan produk dan teknis (format ringkas ala ADR). Keputusan baru ditamba
 | D-15 | 25 Okt 2026 | Atomik per sumber untuk pelanggaran run; karantina per baris untuk pelanggaran baris | Diterima |
 | D-16 | 25 Okt 2026 | *As-of join* eksplisit untuk metrik lintas seri | Diterima |
 | D-17 | 25 Okt 2026 | Ruleset `main` tanpa wajib PR; bot push dengan `GITHUB_TOKEN` | Diterima |
+| D-18 | 25 Okt 2026 | Paket `@gold/schema` diekspor sebagai sumber TypeScript (tanpa build); `update_calendar` tambah `monthly` | Diterima |
 
 ---
 
@@ -105,3 +106,9 @@ Log keputusan produk dan teknis (format ringkas ala ADR). Keputusan baru ditamba
 
 **Konteks:** branch protection "wajib PR" memblokir push data oleh `GITHUB_TOKEN`.
 **Keputusan:** ruleset `main` hanya memblokir force-push dan penghapusan. Alternatif ketat (wajib PR + deploy key sebagai bypass) didokumentasikan di WORKFLOWS §6.1.
+
+### D-18 — Schema sebagai sumber TypeScript; kalender `monthly`
+
+**Konteks:** P0-02/P0-03. `packages/schema` dipakai `tsx` (scraper) dan nanti Next.js (web).
+**Keputusan:** `@gold/schema` mengekspor `src/index.ts` langsung (`moduleResolution: Bundler`), tanpa langkah build; Next.js memakainya lewat `transpilePackages` di Fase 3. `update_calendar` mendapat nilai `monthly` untuk World Bank Pink Sheet. CLI memakai kode keluar 2 untuk kesalahan pemakaian dan perintah yang belum diimplementasikan, serta perintah tambahan `check` untuk memvalidasi `config/` dan `status.json` di CI.
+**Konsekuensi:** tidak ada artefak `dist/` yang perlu disinkronkan; typecheck tiap paket mencakup sumber schema.

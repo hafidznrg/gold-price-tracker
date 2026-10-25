@@ -1,0 +1,40 @@
+# CATALOG_ITEM (DATA-MODEL §3.5): gramasi valid per source × brand × product (aturan V-02).
+# Gramasi baru → tambah grup dengan `active_from`; gramasi dihentikan → isi `active_to`.
+# Jangan hapus grup lama agar histori tetap tervalidasi.
+#
+# Daftar awal dari rentang di PRD §6; WAJIB dicocokkan dengan fixture P0-07 (UBS) dan P0-08
+# (Pegadaian) sebelum sumber diaktifkan.
+
+items:
+  # UBS Lifestyle — 13 pecahan 0,05–100 g (V-04: ≥ 13 untuk tahun produksi berjalan)
+  - source: ubslifestyle
+    brand: ubs
+    product: gold_bar
+    weights: [0.05, 0.1, 0.25, 0.5, 1, 2, 3, 4, 5, 10, 25, 50, 100]
+    active_from: '2010-01-01'
+
+  # Pegadaian
+  - source: pegadaian
+    brand: galeri24
+    product: gold_bar
+    weights: [0.5, 1, 2, 5, 10, 25, 50, 100, 250, 500, 1000]
+    active_from: '2010-01-01'
+
+  - source: pegadaian
+    brand: ubs
+    product: gold_bar
+    weights: [0.5, 1, 2, 5, 10, 25, 50, 100, 250, 500]
+    active_from: '2010-01-01'
+
+  - source: pegadaian
+    brand: antam
+    product: gold_bar
+    weights: [0.5, 1, 2, 3, 5, 10, 25, 50, 100]
+    active_from: '2010-01-01'
+
+  # Logam Mulia — endpoint grafik hanya 1 g (FR-03); tabel per gramasi menyusul di FR-04
+  - source: logammulia
+    brand: antam
+    product: gold_bar
+    weights: [1]
+    active_from: '2010-01-01'

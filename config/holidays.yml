@@ -1,0 +1,66 @@
+# HOLIDAY (DATA-MODEL §3.5): libur nasional dan cuti bersama, dipakai untuk menghitung
+# hari yang diharapkan ada data (`update_calendar: business_days_id`).
+#
+# Sumber: SKB 3 Menteri, sebagaimana dimuat Kementerian Sekretariat Negara
+#   2026: https://www.setneg.go.id/baca/index/inilah_skb_3_menteri_libur_nasional_dan_cuti_bersama_2026
+#   2027: https://setneg.go.id/baca/index/inilah_skb_3_menteri_libur_nasional_dan_cuti_bersama_2027
+# Tanggal hijriah dapat berubah mengikuti Keputusan Menteri Agama; perbarui bila ada penetapan baru.
+# Perbarui setiap tahun setelah SKB tahun berikutnya terbit (biasanya September).
+
+holidays:
+  # ── 2026 · libur nasional ──
+  - { date: '2026-01-01', kind: libur_nasional, name: Tahun Baru 2026 Masehi }
+  - { date: '2026-01-16', kind: libur_nasional, name: Isra Mikraj Nabi Muhammad SAW }
+  - { date: '2026-02-17', kind: libur_nasional, name: Tahun Baru Imlek 2577 Kongzili }
+  - { date: '2026-03-19', kind: libur_nasional, name: Hari Suci Nyepi (Tahun Baru Saka 1948) }
+  - { date: '2026-03-21', kind: libur_nasional, name: Idulfitri 1447 H }
+  - { date: '2026-03-22', kind: libur_nasional, name: Idulfitri 1447 H }
+  - { date: '2026-04-03', kind: libur_nasional, name: Wafat Yesus Kristus }
+  - { date: '2026-04-05', kind: libur_nasional, name: Kebangkitan Yesus Kristus (Paskah) }
+  - { date: '2026-05-01', kind: libur_nasional, name: Hari Buruh Internasional }
+  - { date: '2026-05-14', kind: libur_nasional, name: Kenaikan Yesus Kristus }
+  - { date: '2026-05-27', kind: libur_nasional, name: Iduladha 1447 H }
+  - { date: '2026-05-31', kind: libur_nasional, name: Hari Raya Waisak 2570 BE }
+  - { date: '2026-06-01', kind: libur_nasional, name: Hari Lahir Pancasila }
+  - { date: '2026-06-16', kind: libur_nasional, name: 1 Muharam Tahun Baru Islam 1448 H }
+  - { date: '2026-08-17', kind: libur_nasional, name: Proklamasi Kemerdekaan }
+  - { date: '2026-08-25', kind: libur_nasional, name: Maulid Nabi Muhammad SAW }
+  - { date: '2026-12-25', kind: libur_nasional, name: Kelahiran Yesus Kristus }
+  # ── 2026 · cuti bersama ──
+  - { date: '2026-02-16', kind: cuti_bersama, name: Tahun Baru Imlek 2577 Kongzili }
+  - { date: '2026-03-18', kind: cuti_bersama, name: Hari Suci Nyepi (Tahun Baru Saka 1948) }
+  - { date: '2026-03-20', kind: cuti_bersama, name: Idulfitri 1447 H }
+  - { date: '2026-03-23', kind: cuti_bersama, name: Idulfitri 1447 H }
+  - { date: '2026-03-24', kind: cuti_bersama, name: Idulfitri 1447 H }
+  - { date: '2026-05-15', kind: cuti_bersama, name: Kenaikan Yesus Kristus }
+  - { date: '2026-05-28', kind: cuti_bersama, name: Iduladha 1447 H }
+  - { date: '2026-12-24', kind: cuti_bersama, name: Kelahiran Yesus Kristus }
+
+  # ── 2027 · libur nasional ──
+  - { date: '2027-01-01', kind: libur_nasional, name: Tahun Baru 2027 Masehi }
+  - { date: '2027-01-05', kind: libur_nasional, name: Isra Mikraj Nabi Muhammad SAW }
+  - { date: '2027-02-06', kind: libur_nasional, name: Tahun Baru Imlek 2578 Kongzili }
+  - { date: '2027-03-08', kind: libur_nasional, name: Hari Suci Nyepi (Tahun Baru Saka 1949) }
+  - { date: '2027-03-10', kind: libur_nasional, name: Idulfitri 1448 H }
+  - { date: '2027-03-11', kind: libur_nasional, name: Idulfitri 1448 H }
+  - { date: '2027-03-26', kind: libur_nasional, name: Wafat Yesus Kristus }
+  - { date: '2027-03-28', kind: libur_nasional, name: Kebangkitan Yesus Kristus (Paskah) }
+  - { date: '2027-05-01', kind: libur_nasional, name: Hari Buruh Internasional }
+  - { date: '2027-05-06', kind: libur_nasional, name: Kenaikan Yesus Kristus }
+  - { date: '2027-05-17', kind: libur_nasional, name: Iduladha 1448 H }
+  - { date: '2027-05-20', kind: libur_nasional, name: Hari Raya Waisak 2571 BE }
+  - { date: '2027-06-01', kind: libur_nasional, name: Hari Lahir Pancasila }
+  - { date: '2027-06-06', kind: libur_nasional, name: 1 Muharam Tahun Baru Islam 1449 H }
+  - { date: '2027-08-15', kind: libur_nasional, name: Maulid Nabi Muhammad SAW }
+  - { date: '2027-08-17', kind: libur_nasional, name: Proklamasi Kemerdekaan }
+  - { date: '2027-12-25', kind: libur_nasional, name: Kelahiran Yesus Kristus }
+  - { date: '2027-12-26', kind: libur_nasional, name: Isra Mikraj Nabi Muhammad SAW }
+  # ── 2027 · cuti bersama ──
+  - { date: '2027-02-05', kind: cuti_bersama, name: Tahun Baru Imlek 2578 Kongzili }
+  - { date: '2027-03-09', kind: cuti_bersama, name: Idulfitri 1448 H }
+  - { date: '2027-03-12', kind: cuti_bersama, name: Idulfitri 1448 H }
+  - { date: '2027-03-15', kind: cuti_bersama, name: Idulfitri 1448 H }
+  - { date: '2027-03-25', kind: cuti_bersama, name: Wafat Yesus Kristus }
+  - { date: '2027-05-18', kind: cuti_bersama, name: Iduladha 1448 H }
+  - { date: '2027-05-19', kind: cuti_bersama, name: Hari Raya Waisak 2571 BE }
+  - { date: '2027-12-24', kind: cuti_bersama, name: Kelahiran Yesus Kristus }

@@ -293,6 +293,7 @@ Format seri ringkas untuk menekan ukuran: `{ "fields": ["date","variant","w","se
   pnpm --filter scraper start reparse --source ubslifestyle --from 2026-11-01 --root "$PWD"
   pnpm --filter scraper start probe --source logammulia --root "$PWD"   # fetch tanpa menulis
   pnpm --filter scraper start freshness --root "$PWD"
+  pnpm --filter scraper start check --root "$PWD"       # validasi config/ + status.json
   ```
 - Uang disimpan sebagai integer rupiah; tidak ada float untuk harga ritel.
 - Semua tanggal harga `Asia/Jakarta`; timestamp teknis UTC.

@@ -58,7 +58,7 @@ erDiagram
     string kind "prices | macro"
     string url
     string fetch_method "http | browser | api | file"
-    string update_calendar "daily | weekdays | business_days_id"
+    string update_calendar "daily | weekdays | business_days_id | monthly"
     bool enabled
   }
   CATALOG_ITEM {

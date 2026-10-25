@@ -55,7 +55,7 @@ flowchart LR
 
 | Fase | Status | Mulai | Selesai |
 | --- | --- | --- | --- |
-| 0 | Belum mulai | | |
+| 0 | Berjalan (P0-02–P0-06 selesai) | 25 Okt 2026 | |
 | 1 | Belum mulai | | |
 | 2 | Belum mulai | | |
 | 3 | Belum mulai | | |
