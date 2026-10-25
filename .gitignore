@@ -1,0 +1,61 @@
+# ── Dependencies ────────────────────────────────────────────
+node_modules/
+.pnpm-store/
+.pnpm-debug.log*
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ── Build output ────────────────────────────────────────────
+dist/
+build/
+out/
+.next/
+.turbo/
+*.tsbuildinfo
+next-env.d.ts
+
+# Data JSON hasil build-data (sumber kebenaran tetap CSV di data/)
+apps/web/public/data/
+
+# ── Pipeline: artefak sementara job GitHub Actions / run lokal ──
+# (out/ di atas mencakup out/{source}/ hasil scrape)
+summary/
+tmp/
+.cache/
+
+# ── Testing ─────────────────────────────────────────────────
+coverage/
+test-results/
+playwright-report/
+blob-report/
+playwright/.cache/
+
+# ── Environment & secrets ───────────────────────────────────
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# ── Deploy ──────────────────────────────────────────────────
+.vercel/
+
+# ── Logs ────────────────────────────────────────────────────
+logs/
+*.log
+
+# ── OS & editor ─────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+.idea/
+*.swp
+*.swo
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+
+# ── Catatan ─────────────────────────────────────────────────
+# JANGAN abaikan: data/ (CSV, raw .gz, meta, karantina) dan config/.
+# Keduanya adalah "database" proyek ini (git-as-database).
