@@ -184,3 +184,14 @@ Log keputusan produk dan teknis (format ringkas ala ADR). Keputusan baru ditamba
 - Run manual tanpa daftar sumber melewati sumber `evening` sebelum 18.45 WIB; sumber yang disebut eksplisit tetap dijalankan.
 - Alternatif ditolak: tetap di slot siang dan menerima `tglBerlaku` = kemarin. Datanya tetap benar per tanggal, tetapi harga hari D baru tercatat D+1 dan aturan stale butuh pengecualian lag khusus Pegadaian.
 **Konsekuensi:** NFR-02 Pegadaian menjadi ≤ 21.30 WIB. Perubahan harga dalam sehari (periode II) hanya terlihat lewat snapshot malam, jadi slot retry tidak lagi menangkap revisi intraday. Tanggal campur antar brand kecil kemungkinannya (satu snapshot untuk semua vendor), tetapi aturan `VALIDATION_FAILED` dari D-23 tetap berlaku. `freshness.yml` (Fase 5) dijadwalkan setelah slot retry malam. Bila jam snapshot bergeser, ubah cron dan `EVENING_FROM` bersama-sama.
+
+### D-26 — Logam Mulia lewat Playwright + stealth (menggantikan sebagian D-24)
+
+**Konteks:** 26 Okt 2026 pemilik proyek memutuskan seri Antam LM harus terisi otomatis dengan sumber logammulia.com, setelah membandingkan opsi (impor semi-manual dari browser, akses resmi Antam, stealth) beserta risikonya: blokir Akamai, ToS Antam, UU ITE Pasal 30, dan kebijakan GitHub. Prototipe stealth membuka `/harga-emas` dengan HTTP 200 dari IP rumah.
+**Keputusan:**
+- Bagian D-24 "tidak menembus proteksi bot" **dicabut untuk Logam Mulia saja**: `logammulia.ts` memakai `playwright-extra` + plugin stealth, headless, satu halaman per run (cron `day` 10.25 & 13.25 WIB). Tidak ada rotasi IP, penyelesai CAPTCHA/tantangan, atau retry agresif. Halaman tantangan/"Access Denied" → `BLOCKED` dan run berhenti.
+- Enkripsi API `api.logammulia.com` **tetap tidak dibongkar**. Yang dibaca hanya hasil tampilan aplikasi: teks halaman (tabel Emas Batangan) dan seri grafik ApexCharts (`Apex._chartInstances`) setelah tab "Harga Jual" diklik.
+- Data: 12 gramasi 0,5–1.000 g, `sell_price` = Harga Dasar (D-24), `buyback_price` hanya 1 g dari grafik "Harga Jual" (titik terakhir hari itu), `location = jakarta` (butik default Jakarta Ekspedisi; butik lain = `PARSE_ERROR`). `data_date` dan `source_updated_at` dari "Terakhir diperbarui". Bila titik grafik 1 g hari itu ≠ tabel → `stale` dan buyback dikosongkan (pola D-19).
+- V-07 (histori) dihapus; Logam Mulia memakai V-06 seperti sumber ritel lain. V-04 = 12 gramasi.
+**Konsekuensi:** risiko tercatat dan diterima pemilik proyek: stealth bisa berhenti lolos kapan saja (paling mungkin dari IP datacenter GitHub Actions; fallback = self-hosted runner atau opsi impor dari browser), dan akses ini melanggar maksud proteksi situs. Backfill 6 bulan buyback/jual 1 g dari grafik (rentang "6 Bulan") jadi kandidat P1-09. Bila Antam menyediakan akses resmi, ganti `fetchRaw` dan kembali ke D-24.
+

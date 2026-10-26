@@ -1,6 +1,6 @@
 # SOURCE + MACRO_SERIES (DATA-MODEL §3.5). Ditulis manusia lewat PR; state bot ada di data/meta/status.json.
 #
-# Aktif: ubslifestyle (P1-04), pegadaian (P1-07). Logam Mulia tertahan (P1-06, D-24).
+# Aktif: ubslifestyle (P1-04), pegadaian (P1-07), logammulia (P1-06, D-26).
 # `probe` dan run manual yang menyebut sumber secara eksplisit tetap bisa menjalankan sumber nonaktif.
 # `parser_version` = versi modul parser (`parserVersion` di apps/scraper/src/sources/*).
 #
@@ -40,13 +40,14 @@ sources:
 
   - id: logammulia
     kind: prices
-    url: https://www.logammulia.com/id
+    url: https://logammulia.com/harga-emas
     fetch_method: browser
     workflow: scrape-retail
-    update_calendar: daily
-    parser_version: 0.1.0
-    enabled: false
-    notes: Situs baru memblokir akses otomatis dan API-nya terenkripsi; tidak di-scrape sampai ada akses resmi (D-24).
+    update_calendar: daily # 26 Okt 2026: harga diperbarui ±07.30–08.40 WIB, juga Minggu; final di P1-11 (Q-6)
+    stale_is_error_on_expected_day: true
+    parser_version: 1.0.0
+    enabled: true
+    notes: Playwright + stealth karena Akamai menolak browser otomatis biasa; API terenkripsi tidak dibongkar (D-26).
 
   - id: xaus
     kind: macro

@@ -11,16 +11,15 @@ import {
 import type { ParseResult } from '../sources/types';
 import { classify, indexByKey, seriesKey, type Candidate } from './upsert';
 
-// TECH-SPEC §7 — gerbang kualitas harga ritel. Tingkat run (V-01, V-03, V-04, V-07) menggagalkan
+// TECH-SPEC §7 — gerbang kualitas harga ritel. Tingkat run (V-01, V-03, V-04) menggagalkan
 // seluruh sumber; V-06 menandai `stale`; tingkat baris (V-02, V-05) menahan baris ke karantina;
 // V-11 menahan seluruh batch (D-15). Fungsi murni.
 
 export const MAX_PRICE_JUMP = 0.1;
 export const MAX_HISTORY_REVISIONS = 20;
-export const MAX_HISTORY_AGE_DAYS = 3;
 
 /** V-04: jumlah baris minimum per sumber. */
-export const MIN_ROWS = { ubslifestyle: 13, pegadaian: 5, logammulia: 1 } as const;
+export const MIN_ROWS = { ubslifestyle: 13, pegadaian: 5, logammulia: 12 } as const;
 /** Brand yang wajib ada di Pegadaian (D-20). */
 export const PEGADAIAN_BRANDS = ['antam', 'ubs', 'galeri24'] as const;
 
@@ -32,8 +31,6 @@ export interface ValidateInput {
   existing: readonly PriceRow[];
   /** Tanggal Jakarta saat run. */
   today: string;
-  /** `status.json` → `history_points` run sebelumnya (V-07). */
-  previousHistoryPoints?: number;
 }
 
 export interface HeldBatch {
@@ -51,9 +48,6 @@ const fail = (error_code: ErrorCode, error_message: string): ValidateResult => (
   error_code,
   error_message,
 });
-
-const daysBetween = (from: string, to: string) =>
-  Math.round((Date.parse(`${to}T00:00:00Z`) - Date.parse(`${from}T00:00:00Z`)) / 86_400_000);
 
 /** V-01: bentuk baris lengkap (kolom yang diisi merge diberi nilai sementara), kunci unik. */
 function checkSchema(rows: readonly Candidate[]): string | null {
@@ -110,28 +104,13 @@ function checkMinRows(source: PriceSource, rows: readonly Candidate[]): string |
         : `V-04: ${short.map(([b, n]) => `${b} ${n} gramasi`).join(', ')} (minimal ${MIN_ROWS.pegadaian} per brand)`;
     }
     case 'logammulia':
-      return rows.length >= MIN_ROWS.logammulia ? null : 'V-04: tidak ada baris';
+      return rows.length >= MIN_ROWS.logammulia
+        ? null
+        : `V-04: ${rows.length} gramasi (minimal ${MIN_ROWS.logammulia})`;
   }
 }
 
-/** V-07 (Logam Mulia): titik terakhir ≤ 3 hari; histori tidak menyusut. */
-function checkHistory(input: ValidateInput): string | null {
-  const { parsed, today, previousHistoryPoints } = input;
-  if (!parsed.dataDate) return 'V-07: tanggal titik terakhir tidak diketahui';
-  const age = daysBetween(parsed.dataDate, today);
-  if (age > MAX_HISTORY_AGE_DAYS) {
-    return `V-07: titik terakhir ${parsed.dataDate} berumur ${age} hari (maks. ${MAX_HISTORY_AGE_DAYS})`;
-  }
-  if (previousHistoryPoints !== undefined) {
-    const points = parsed.historyPoints ?? 0;
-    if (points < previousHistoryPoints) {
-      return `V-07: histori menyusut dari ${previousHistoryPoints} ke ${points} titik`;
-    }
-  }
-  return null;
-}
-
-/** V-06 (UBS, Pegadaian): tanggal data = hari ini dan sumber tidak menandai dirinya basi. */
+/** V-06 (semua sumber ritel): tanggal data = hari ini dan sumber tidak menandai dirinya basi. */
 function checkFreshness(input: ValidateInput): string | null {
   const { parsed, today } = input;
   if (parsed.stale) return parsed.stale;
@@ -164,16 +143,11 @@ export function validate(input: ValidateInput): ValidateResult {
 
   const schema = checkSchema(rows);
   if (schema) return fail('SCHEMA_INVALID', `V-01: ${schema}`);
-  const runLevel =
-    checkSpread(rows) ??
-    checkMinRows(source, rows) ??
-    (source === 'logammulia' ? checkHistory(input) : null);
+  const runLevel = checkSpread(rows) ?? checkMinRows(source, rows);
   if (runLevel) return fail('VALIDATION_FAILED', runLevel);
 
-  if (source !== 'logammulia') {
-    const stale = checkFreshness(input);
-    if (stale) return { outcome: 'stale', reason: stale };
-  }
+  const stale = checkFreshness(input);
+  if (stale) return { outcome: 'stale', reason: stale };
 
   const previous = lastValues(existing);
   const unknown: Candidate[] = [];

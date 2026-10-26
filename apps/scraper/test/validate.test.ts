@@ -26,7 +26,7 @@ const catalog: CatalogItem[] = expandCatalog({
       source: 'logammulia',
       brand: 'antam',
       product: 'gold_bar',
-      weights: [1],
+      weights: [0.5, 1, 2, 3, 5, 10, 25, 50, 100, 250, 500, 1000],
       active_from: '2010-01-01',
       active_to: null,
     },
@@ -225,30 +225,37 @@ describe('V-06 tanggal data (stale)', () => {
   });
 });
 
-describe('V-07 histori Logam Mulia (run)', () => {
-  const lm = (date: string) =>
-    candidate({ source: 'logammulia', brand: 'antam', variant: '', location: 'jakarta', date });
-  const lmInput = (dataDate: string, historyPoints: number, previous?: number) =>
-    input([lm(dataDate)], {
+describe('Logam Mulia: V-04 dan V-06', () => {
+  const LM_WEIGHTS = [0.5, 1, 2, 3, 5, 10, 25, 50, 100, 250, 500, 1000];
+  const lmDay = (date: string, weights = LM_WEIGHTS) =>
+    weights.map((weight_g) =>
+      candidate({
+        source: 'logammulia',
+        brand: 'antam',
+        variant: '',
+        location: 'jakarta',
+        weight_g,
+        date,
+      }),
+    );
+  const lmInput = (rows: Candidate[], dataDate: string) =>
+    input(rows, {
       source: 'logammulia',
-      parsed: { rows: [lm(dataDate)], dataDate, sourceUpdatedAt: null, stale: null, historyPoints },
-      previousHistoryPoints: previous,
+      parsed: { rows, dataDate, sourceUpdatedAt: null, stale: null },
     });
 
-  it('titik terakhir ≤ 3 hari dan histori tidak menyusut → ok (tanpa V-06)', () => {
-    expect(validate(lmInput('2026-10-23', 5150, 5149)).outcome).toBe('ok');
+  it('12 gramasi hari ini → ok', () => {
+    expect(validate(lmInput(lmDay(TODAY), TODAY)).outcome).toBe('ok');
   });
 
-  it('titik terakhir 4 hari lalu → gagal', () => {
-    const r = validate(lmInput('2026-10-22', 5150));
-    expect(r).toMatchObject({ outcome: 'failed', error_code: 'VALIDATION_FAILED' });
+  it('kurang dari 12 gramasi → gagal V-04', () => {
+    const r = validate(lmInput(lmDay(TODAY, LM_WEIGHTS.slice(1)), TODAY));
+    expect(r.outcome === 'failed' && r.error_message).toBe('V-04: 11 gramasi (minimal 12)');
   });
 
-  it('histori menyusut → gagal', () => {
-    const r = validate(lmInput(TODAY, 5000, 5150));
-    expect(r.outcome === 'failed' && r.error_message).toBe(
-      'V-07: histori menyusut dari 5150 ke 5000 titik',
-    );
+  it('tanggal data kemarin → stale', () => {
+    const r = validate(lmInput(lmDay('2026-10-25'), '2026-10-25'));
+    expect(r.outcome).toBe('stale');
   });
 });
 

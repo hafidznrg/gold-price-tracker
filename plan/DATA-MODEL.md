@@ -224,7 +224,7 @@ Spot tidak masuk CSV harian (nilainya terus bergerak); dipakai sebagai titik ter
 | `raw_paths` | `["data/raw/…gz"]` | Kosong bila konten sama dengan snapshot terakhir |
 | `parser_version` | `ubslifestyle@1.2.0` | Versi modul parser |
 
-**`SOURCE_STATUS`** — `data/meta/status.json`, objek per `source_id`: `last_run_id`, `last_status`, `last_success_at`, `last_data_date`, `consecutive_failures`, `history_points` (khusus Logam Mulia, untuk aturan V-07), `updated_at`.
+**`SOURCE_STATUS`** — `data/meta/status.json`, objek per `source_id`: `last_run_id`, `last_status`, `last_success_at`, `last_data_date`, `consecutive_failures`, `history_points` (opsional; tidak diisi lagi sejak V-07 dihapus, D-26), `updated_at`.
 
 **`REVISION`** — `data/meta/revisions/{yyyy}.jsonl`: `{ table, row_key, field, old_value, new_value, run_id, revised_at, reason }`. `reason`: `source_changed` · `quarantine_approved` · `reparse` · `manual`.
 
@@ -314,7 +314,7 @@ Inilah yang membuat pipeline **idempoten** dan teraudit (D-14).
 
 **Atomisitas per sumber (D-15):**
 
-- Pelanggaran tingkat **run** (V-01 skema, V-03, V-04, V-07, V-10, atau salah satu endpoint Logam Mulia gagal) → tidak ada baris sumber itu yang ditulis; status `failed`.
+- Pelanggaran tingkat **run** (V-01 skema, V-03, V-04, V-10) → tidak ada baris sumber itu yang ditulis; status `failed`.
 - Pelanggaran tingkat **baris** (V-02 gramasi tak dikenal, V-05/V-08/V-09 lonjakan) → baris itu masuk karantina, sisanya ditulis; status `partial`.
 - Arsip mentah ditulis untuk **semua** status (termasuk `failed`) agar kegagalan bisa didiagnosis — kecuali kontennya identik (sha256 sama) dengan snapshot terakhir sumber itu.
 

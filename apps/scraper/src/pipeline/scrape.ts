@@ -100,7 +100,6 @@ export async function scrape(opts: ScrapeOptions): Promise<ScrapeRun> {
       catalog: config.catalog,
       existing: await readPrices(opts.root, source),
       today,
-      previousHistoryPoints: status[opts.source]?.history_points,
     });
     if (result.outcome === 'failed') {
       failure = { code: result.error_code, message: result.error_message };
