@@ -166,3 +166,12 @@ Log keputusan produk dan teknis (format ringkas ala ADR). Keputusan baru ditamba
 - Jumlah vendor yang diabaikan tidak dicatat di RUN karena skema RUN tidak punya kolomnya; vendor baru tetap bisa dilihat di raw snapshot.
 **Konsekuensi:** `pegadaian` diaktifkan (`parser_version 1.0.0`). Slot primary 10.25 WIB bisa jatuh tepat saat periode II diterbitkan (±10.18–10.35 WIB); bila sering `failed` karena tanggal campur, geser jadwal di P1-11.
 
+### D-24 — Logam Mulia versi baru: tidak di-scrape, harga-emas.org belum dipakai
+
+**Konteks:** 26 Okt 2026 logammulia.com kembali sebagai aplikasi baru (TECH-SPEC §5.3): API terenkripsi, dan Akamai menolak browser otomatis tanpa penyamaran ("Access Denied" untuk Playwright biasa dan `curl` dengan User-Agent proyek). Satu-satunya cara masuk adalah plugin stealth, yang tujuannya menyamarkan otomasi.
+**Keputusan:**
+- Proyek **tidak** menembus proteksi bot (stealth, User-Agent palsu, rotasi IP, penyelesai tantangan) dan **tidak** membongkar enkripsi API. Ini menggantikan bagian "Playwright + stealth" di D-06. `logammulia` tetap nonaktif; P1-06 tertahan sampai ada akses resmi (mis. izin atau feed dari Antam).
+- Bila akses resmi tersedia: `sell_price` = **Harga Dasar** (tanpa PPh 0,25%, yang bergantung status NPWP pembeli); histori sejak 2010/2015 **tidak** diambil lagi (situs baru maks. 6 bulan) — kriteria Fase 1 "histori sejak 2010" dicabut.
+- **harga-emas.org dievaluasi dan belum dipakai** sebagai sumber sekunder: kolom Antam mencampur produk (0,5 g & 1 g = Gift Series, 10 g = Batik Seri III), label tanggal tidak sesuai angka, tidak ada buyback per hari di histori, dan histori berhenti 11 Okt 2026 dengan hari tanpa kolom Antam (fixture `apps/scraper/test/fixtures/hargaemas/`). D-06 tetap: tidak ada sumber pengganti.
+**Konsekuensi:** seri Antam LM kosong sejak awal; G1 memakai jalur "celah tercatat" untuk Logam Mulia. Harga Antam dari Pegadaian tetap terkumpul sebagai seri tersendiri (bukan pengganti). Nilai ulang harga-emas.org bila pemetaan produknya diperbaiki.
+

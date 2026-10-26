@@ -1,6 +1,6 @@
 # SOURCE + MACRO_SERIES (DATA-MODEL §3.5). Ditulis manusia lewat PR; state bot ada di data/meta/status.json.
 #
-# Aktif: ubslifestyle (P1-04), pegadaian (P1-07). Logam Mulia menyusul setelah situsnya kembali (P1-06).
+# Aktif: ubslifestyle (P1-04), pegadaian (P1-07). Logam Mulia tertahan (P1-06, D-24).
 # `probe` dan run manual yang menyebut sumber secara eksplisit tetap bisa menjalankan sumber nonaktif.
 # `parser_version` = versi modul parser (`parserVersion` di apps/scraper/src/sources/*).
 #
@@ -41,7 +41,7 @@ sources:
     update_calendar: daily
     parser_version: 0.1.0
     enabled: false
-    notes: Sesi Playwright + stealth + token CSRF; bila gagal dibiarkan kosong (D-06).
+    notes: Situs baru memblokir akses otomatis dan API-nya terenkripsi; tidak di-scrape sampai ada akses resmi (D-24).
 
   - id: xaus
     kind: macro
