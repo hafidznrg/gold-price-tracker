@@ -1,6 +1,8 @@
 import {
   jakartaDate,
+  jakartaIso,
   ScraperId,
+  type ScheduleWindow,
   type Slot,
   type SourceStatusEntry,
   type SourceStatusFile,
@@ -11,10 +13,29 @@ import { isExpectedDay } from './calendar';
 
 // WORKFLOWS §2.2 — job plan: pilih sumber yang dijalankan dan slotnya.
 
-/** Cron slot `retry` per workflow; cron lain dari workflow yang sama = `primary`. */
-export const RETRY_SCHEDULES: Partial<Record<Workflow, string>> = {
-  'scrape-retail': '25 6 * * *',
+interface ScheduleSlot {
+  slot: 'primary' | 'retry';
+  window: ScheduleWindow;
+}
+
+/**
+ * Cron per workflow → slot dan jendela. Cron yang tidak terdaftar = `primary` tanpa saringan
+ * jendela. Harus sama dengan `on.schedule` di `.github/workflows/`.
+ */
+export const SCHEDULES: Partial<Record<Workflow, Record<string, ScheduleSlot>>> = {
+  'scrape-retail': {
+    '25 3 * * *': { slot: 'primary', window: 'day' }, // 10.25 WIB
+    '25 6 * * *': { slot: 'retry', window: 'day' }, // 13.25 WIB
+    '5 12 * * *': { slot: 'primary', window: 'evening' }, // 19.05 WIB
+    '5 14 * * *': { slot: 'retry', window: 'evening' }, // 21.05 WIB
+  },
 };
+
+/**
+ * Jam Jakarta (`HH:mm`) mulai jendela `evening`: snapshot Pegadaian terbit ±18.32 WIB (D-25).
+ * Run manual tanpa daftar sumber melewati sumber `evening` sebelum jam ini.
+ */
+export const EVENING_FROM = '18:45';
 
 export interface PlanInput {
   workflow: Workflow;
@@ -50,9 +71,13 @@ export function doneToday(entry: SourceStatusEntry | undefined, today: string): 
   );
 }
 
+function scheduleOf(workflow: Workflow, schedule: string): ScheduleSlot | undefined {
+  return SCHEDULES[workflow]?.[schedule.trim()];
+}
+
 export function slotOf(workflow: Workflow, event: string, schedule: string): Slot {
   if (event !== 'schedule') return 'manual';
-  return schedule.trim() === RETRY_SCHEDULES[workflow] ? 'retry' : 'primary';
+  return scheduleOf(workflow, schedule)?.slot ?? 'primary';
 }
 
 export function plan(input: PlanInput): PlanResult {
@@ -62,6 +87,8 @@ export function plan(input: PlanInput): PlanResult {
   const inWorkflow = config.sources.filter((s) => s.workflow === workflow);
 
   let candidates = inWorkflow.filter((s) => s.enabled);
+  const window = slot === 'manual' ? undefined : scheduleOf(workflow, input.schedule)?.window;
+  if (window !== undefined) candidates = candidates.filter((s) => s.schedule_window === window);
   const requested = input.sources
     .split(',')
     .map((s) => s.trim())
@@ -80,8 +107,14 @@ export function plan(input: PlanInput): PlanResult {
   }
 
   const skipped: PlanResult['skipped'] = [];
+  const beforeEvening = jakartaIso(input.now).slice(11, 16) < EVENING_FROM;
   const selected = candidates.filter((s) => {
     const entry = status[s.id];
+    const manualAll = slot === 'manual' && requested.length === 0;
+    if (manualAll && s.schedule_window === 'evening' && beforeEvening) {
+      skipped.push({ source: s.id, reason: `jendela malam mulai ${EVENING_FROM} WIB` });
+      return false;
+    }
     if (slot === 'retry') {
       if (doneToday(entry, today)) {
         skipped.push({ source: s.id, reason: 'sudah sukses hari ini' });

@@ -57,6 +57,7 @@ flowchart LR
   - *26 Okt 2026:* sebagian — `notify` menulis tabel step summary (`pipeline/notify.ts`). Belum: Telegram, Issue `pipeline-failure`/`quarantine`, tutup otomatis.
 - [ ] **P1-08** Logika `plan` (WORKFLOWS §2.2): slot `primary` vs `retry` dari `github.event.schedule`, input manual `sources`/`force`, kalender `update_calendar` + `holidays.yml` untuk menentukan hari yang diharapkan. — `FR-09`, `NFR-02` · M
   - *26 Okt 2026:* logika slot primary/retry/manual, `force`, dan kalender + `holidays.yml` sudah ada di `pipeline/plan.ts` + `calendar.ts` (uji `test/plan.test.ts`) karena dibutuhkan P1-04. Dicentang setelah slot retry terbukti di run terjadwal.
+  - *26 Okt 2026:* jendela jadwal `day`/`evening` (`schedule_window`, `SCHEDULES`): Pegadaian pindah ke 19.05/21.05 WIB karena endpoint = snapshot harian ±18.32 WIB (D-25).
 - [ ] **P1-09** *(P2)* Backfill histori UBS dari endpoint grafik bila Q-2 positif (`backfill --job ubs-history`, `origin = backfill`) lewat `backfill.yml`. — `FR-08` · M
 - [ ] **P1-10** Bagian "Operasional" di README repo: menjalankan scrape manual, membaca `data/meta/runs/`, `status.json`, dan karantina, menangani Issue gagal, menambah sumber baru. — `NFR-05` · S
 - [ ] **P1-12** Karantina: perintah `quarantine` + workflow `quarantine.yml` (WORKFLOWS §3.5); Issue `quarantine` berisi path dan cara memutuskan. — `FR-15` · M

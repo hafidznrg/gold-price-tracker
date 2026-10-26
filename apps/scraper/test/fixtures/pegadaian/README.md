@@ -5,7 +5,7 @@ Diambil 25 Okt 2026 ±08.50 WIB (Minggu) dari jaringan lokal (Indonesia) dengan 
 | File | Endpoint | Isi | Asli? |
 | --- | --- | --- | --- |
 | `prices-table-2026-10-25-sunday.json` | `GET /gold/prices/table` | Harga emas batangan, 10 vendor × 25–29 gramasi. `tglBerlaku` = `2026-10-24` (Sabtu) walau diambil hari Minggu | Asli, utuh |
-| `prices-table-2026-10-26-monday-per-i.json` | `GET /gold/prices/table` | Diambil Senin 26 Okt 09.43 WIB (P1-07): `tglBerlaku` = `2026-10-25` (Minggu), `keterangan` `… PER I`, `idHarga` Sabtu 24 Okt 18.08–18.31 WIB — harga Minggu dibuat Sabtu malam; harga Senin belum terbit | Asli, utuh |
+| `prices-table-2026-10-26-monday-per-i.json` | `GET /gold/prices/table` | Diambil Senin 26 Okt 09.43 WIB (P1-07): `tglBerlaku` = `2026-10-25` (Minggu), `keterangan` `… PER I`, `idHarga` Sabtu 24 Okt 18.08–18.31 WIB — harga Minggu dibuat Sabtu malam; harga Senin belum terbit. `timestamp` per vendor = snapshot Minggu 18.32 WIB; harga Senin baru tampil di snapshot Senin 18.32 WIB (D-25) | Asli, utuh |
 | `prices-table-edge-synthetic.json` | — | Salinan di atas dengan: Galeri 24 hanya 3 gramasi berharga (uji V-04), UBS 2,5 g berharga Rp6.170.000 (gramasi di luar katalog, uji V-02), ANTAM `tglBerlaku` = `2026-10-23` (tanggal campur) | **Sintetis** |
 | `vendors-2026-10-25.json` | `GET /gold/prices/vendors?isRequest=true` | 3 vendor yang ditampilkan di tabel halaman: ANTAM, Galeri 24, UBS | Asli, utuh |
 | `tabungan-2026-10-25.json` | `GET /gold/prices` | Harga Tabungan Emas per 0,01 g (`hargaJual` = harga beli konsumen, `hargaBeli` = buyback), `tglBerlaku` = `2026-10-25` | Asli, utuh — di luar cakupan v1 |

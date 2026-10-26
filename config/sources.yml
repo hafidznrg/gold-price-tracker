@@ -9,6 +9,10 @@
 #   weekdays         — Senin–Jumat
 #   business_days_id — Senin–Jumat dikurangi config/holidays.yml
 #   monthly          — sekali per bulan (World Bank Pink Sheet)
+#
+# `schedule_window` (default `day`): pasangan cron primary + retry tempat sumber dijalankan.
+#   day     — scrape-retail 10.25 & 13.25 WIB
+#   evening — scrape-retail 19.05 & 21.05 WIB
 
 sources:
   - id: ubslifestyle
@@ -27,7 +31,8 @@ sources:
     url: https://pegadaian.co.id/gold/prices/table
     fetch_method: api
     workflow: scrape-retail
-    update_calendar: daily # P1-07: harga Minggu ada (PER I dibuat Sabtu ±18.10 WIB); final di P1-11 (Q-6)
+    update_calendar: daily # P1-07: harga Minggu ada; final di P1-11 (Q-6)
+    schedule_window: evening # snapshot harian ±18.32 WIB; sebelum itu tglBerlaku = kemarin (D-25)
     stale_is_error_on_expected_day: true
     parser_version: 1.0.0
     enabled: true

@@ -121,7 +121,7 @@ Prioritas: **P0** = wajib untuk rilis publik (MVP) · **P1** = wajib untuk v1 le
 | ID | Kebutuhan | Target |
 | --- | --- | --- |
 | NFR-01 | Biaya operasional | Rp0: GitHub publik + Vercel Hobby |
-| NFR-02 | Kesegaran data | Data UBS & Pegadaian hari ini tayang ≤ 14.00 WIB; makro ≤ 17.30 WIB hari kerja |
+| NFR-02 | Kesegaran data | Data UBS hari ini tayang ≤ 14.00 WIB; Pegadaian ≤ 21.30 WIB (snapshot harian ±18.32 WIB, D-25); makro ≤ 17.30 WIB hari kerja |
 | NFR-03 | Idempoten | Menjalankan pipeline 2× dengan data sumber yang sama tidak menghasilkan diff Git (baris yang tidak berubah tidak disentuh, termasuk `scraped_at`) |
 | NFR-04 | Ketahanan | Kegagalan satu sumber tidak menggagalkan sumber lain |
 | NFR-05 | Keterlacakan | Setiap baris punya `source`, `scraped_at`, `origin`; setiap perubahan data = commit |

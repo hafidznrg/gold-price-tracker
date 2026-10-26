@@ -10,15 +10,15 @@ Spesifikasi rinci setiap workflow, kontrak antar job, perilaku saat gagal, dan k
 | --- | --- | --- | --- | --- |
 | `ci.yml` | PR, push ke `main` (kecuali `data/**`) | Lint, typecheck, test, build web | Tidak | 0 |
 | `probe.yml` | Manual | Fetch + parse + validasi satu sumber tanpa menulis | Tidak | 0 |
-| `scrape-retail.yml` | Cron 10.25 & 13.25 WIB, manual | Harga ritel | Ya | 1 |
+| `scrape-retail.yml` | Cron 10.25 & 13.25 WIB (jendela siang), 19.05 & 21.05 WIB (jendela malam), manual | Harga ritel | Ya | 1 |
 | `quarantine.yml` | Manual | Setujui/tolak baris yang ditahan | Ya | 1 |
 | `backfill.yml` | Manual | Isi histori sekali jalan | Ya | 1–2 |
 | `scrape-macro.yml` | Cron 16.40 WIB hari kerja, manual | XAU/USD, USD/IDR, refresh bulanan World Bank | Ya | 2 |
-| `freshness.yml` | Cron 19.15 WIB harian | Deteksi sumber/workflow yang berhenti | Tidak (hanya Issue) | 5 |
+| `freshness.yml` | Cron 22.15 WIB harian | Deteksi sumber/workflow yang berhenti | Tidak (hanya Issue) | 5 |
 
 Semua workflow yang menulis data memakai `concurrency: { group: data-write, cancel-in-progress: false }` di tingkat workflow, sehingga tidak pernah ada dua penulis bersamaan.
 
-> **Catatan concurrency:** GitHub hanya menyimpan **satu** run *pending* per grup. Jika tiga run menumpuk (mis. dua dispatch manual saat run terjadwal berjalan), run pending yang lebih lama dibatalkan. Jadwal ritel dan makro terpaut lebih dari 3 jam, jadi ini hanya relevan untuk run manual.
+> **Catatan concurrency:** GitHub hanya menyimpan **satu** run *pending* per grup. Jika tiga run menumpuk (mis. dua dispatch manual saat run terjadwal berjalan), run pending yang lebih lama dibatalkan. Jadwal ritel dan makro terpaut lebih dari 2 jam, jadi ini hanya relevan untuk run manual.
 
 ## 2. Alur `scrape-retail`
 
@@ -61,9 +61,13 @@ Bila artifact `out-{source}` tidak ada (job scrape mati sebelum upload), `merge`
 
 | Pemicu | Sumber yang dijalankan |
 | --- | --- |
-| Cron `25 3 * * *` (slot `primary`) | Semua sumber `enabled` dengan `workflow: scrape-retail` |
-| Cron `25 6 * * *` (slot `retry`) | Hanya sumber yang hari ini belum `success`/`partial` atau masih `stale` pada hari yang diharapkan |
-| Manual | Input `sources` (kosong = semua); `force: false` melewati sumber yang hari ini sudah sukses |
+| Cron `25 3 * * *` (slot `primary`, jendela `day`) | Semua sumber `enabled` dengan `workflow: scrape-retail` dan `schedule_window: day` |
+| Cron `25 6 * * *` (slot `retry`, jendela `day`) | Sumber jendela `day` yang hari ini belum `success`/`partial` atau masih `stale` pada hari yang diharapkan |
+| Cron `5 12 * * *` (slot `primary`, jendela `evening`) | Seperti primary, untuk sumber `schedule_window: evening` (Pegadaian, D-25) |
+| Cron `5 14 * * *` (slot `retry`, jendela `evening`) | Seperti retry, untuk sumber jendela `evening` |
+| Manual | Input `sources` (kosong = semua, kecuali sumber `evening` sebelum 18.45 WIB); `force: false` melewati sumber yang hari ini sudah sukses |
+
+Pemetaan cron → slot + jendela ada di `SCHEDULES` (`apps/scraper/src/pipeline/plan.ts`); tes memastikan isinya sama dengan `on.schedule` di YAML.
 
 Jika daftar kosong, `has_work=false` dan semua job lain dilewati (workflow tetap hijau).
 
@@ -103,8 +107,10 @@ name: scrape-retail
 
 on:
   schedule:
-    - cron: '25 3 * * *'   # 10.25 WIB — slot primary
-    - cron: '25 6 * * *'   # 13.25 WIB — slot retry
+    - cron: '25 3 * * *'   # 10.25 WIB — slot primary, jendela day
+    - cron: '25 6 * * *'   # 13.25 WIB — slot retry, jendela day
+    - cron: '5 12 * * *'   # 19.05 WIB — slot primary, jendela evening (Pegadaian)
+    - cron: '5 14 * * *'   # 21.05 WIB — slot retry, jendela evening
   workflow_dispatch:
     inputs:
       sources:
@@ -329,7 +335,7 @@ Manual, input `source` (choice: `all` atau satu sumber, termasuk `frankfurter` y
 
 ### 3.7 `freshness.yml`
 
-Cron `15 12 * * *` (19.15 WIB). `permissions: { contents: read, issues: write }`. Perintah `freshness` membaca `status.json`, `sources.yml`, dan `holidays.yml`, lalu:
+Cron `15 15 * * *` (22.15 WIB, setelah slot retry malam `scrape-retail`). `permissions: { contents: read, issues: write }`. Perintah `freshness` membaca `status.json`, `sources.yml`, dan `holidays.yml`, lalu:
 
 - membuka/memperbarui Issue `stale-source` bila sebuah sumber tidak punya data untuk ≥ 2 hari yang diharapkan;
 - membuka Issue `pipeline-silent` bila `status.json.updated_at` lebih tua dari 36 jam (workflow terjadwal mati atau dinonaktifkan GitHub);

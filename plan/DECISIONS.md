@@ -164,7 +164,7 @@ Log keputusan produk dan teknis (format ringkas ala ADR). Keputusan baru ditamba
 - Raw = respons JSON utuh (±1,5 KB gzip).
 - **Fallback Playwright (DOM) ditunda:** belum ada fixture DOM untuk diuji, dan endpoint JSON stabil dari runner AS (P0-11). Dibuat bila endpoint berubah atau diblokir; sampai saat itu kegagalan endpoint = `failed`.
 - Jumlah vendor yang diabaikan tidak dicatat di RUN karena skema RUN tidak punya kolomnya; vendor baru tetap bisa dilihat di raw snapshot.
-**Konsekuensi:** `pegadaian` diaktifkan (`parser_version 1.0.0`). Slot primary 10.25 WIB bisa jatuh tepat saat periode II diterbitkan (±10.18–10.35 WIB); bila sering `failed` karena tanggal campur, geser jadwal di P1-11.
+**Konsekuensi:** `pegadaian` diaktifkan (`parser_version 1.0.0`). Slot primary 10.25 WIB bisa jatuh tepat saat periode II diterbitkan (±10.18–10.35 WIB); bila sering `failed` karena tanggal campur, geser jadwal di P1-11. *Jadwal diganti oleh D-25: Pegadaian dijalankan di jendela malam.*
 
 ### D-24 — Logam Mulia versi baru: tidak di-scrape, harga-emas.org belum dipakai
 
@@ -175,3 +175,12 @@ Log keputusan produk dan teknis (format ringkas ala ADR). Keputusan baru ditamba
 - **harga-emas.org dievaluasi dan belum dipakai** sebagai sumber sekunder: kolom Antam mencampur produk (0,5 g & 1 g = Gift Series, 10 g = Batik Seri III), label tanggal tidak sesuai angka, tidak ada buyback per hari di histori, dan histori berhenti 11 Okt 2026 dengan hari tanpa kolom Antam (fixture `apps/scraper/test/fixtures/hargaemas/`). D-06 tetap: tidak ada sumber pengganti.
 **Konsekuensi:** seri Antam LM kosong sejak awal; G1 memakai jalur "celah tercatat" untuk Logam Mulia. Harga Antam dari Pegadaian tetap terkumpul sebagai seri tersendiri (bukan pengganti). Nilai ulang harga-emas.org bila pemetaan produknya diperbaiki.
 
+### D-25 — Pegadaian di jendela malam `scrape-retail`
+
+**Konteks:** run terjadwal Senin 26 Okt 16.08 WIB gagal `stale` (`tglBerlaku` 25 Okt). Field `timestamp` per vendor di `/gold/prices/table` ternyata waktu **snapshot harian**: tiga pengamatan (24, 25, 26 Okt) semuanya 18.32.05 WIB. Snapshot hari D hanya memuat harga ber-`tglBerlaku` D, walau harga itu sudah dibuat sebelumnya (harga Senin dibuat Minggu 18.19 WIB; periode II 24 Okt dibuat 10.18–10.35 WIB). Akibatnya slot 10.25 dan 13.25 WIB selalu membaca harga kemarin, dan Pegadaian `stale` setiap hari (TECH-SPEC §5.2).
+**Keputusan:**
+- Field baru `schedule_window` di `config/sources.yml` (`day` default, `evening`). Pegadaian = `evening`.
+- `scrape-retail.yml` menambah cron `5 12 * * *` (19.05 WIB, slot `primary`) dan `5 14 * * *` (21.05 WIB, slot `retry`) untuk jendela `evening`; cron siang hanya menjalankan sumber `day`. Pemetaan cron → slot + jendela ada di `SCHEDULES` (`pipeline/plan.ts`), dan tes memastikan isinya sama dengan YAML.
+- Run manual tanpa daftar sumber melewati sumber `evening` sebelum 18.45 WIB; sumber yang disebut eksplisit tetap dijalankan.
+- Alternatif ditolak: tetap di slot siang dan menerima `tglBerlaku` = kemarin. Datanya tetap benar per tanggal, tetapi harga hari D baru tercatat D+1 dan aturan stale butuh pengecualian lag khusus Pegadaian.
+**Konsekuensi:** NFR-02 Pegadaian menjadi ≤ 21.30 WIB. Perubahan harga dalam sehari (periode II) hanya terlihat lewat snapshot malam, jadi slot retry tidak lagi menangkap revisi intraday. Tanggal campur antar brand kecil kemungkinannya (satu snapshot untuk semua vendor), tetapi aturan `VALIDATION_FAILED` dari D-23 tetap berlaku. `freshness.yml` (Fase 5) dijadwalkan setelah slot retry malam. Bila jam snapshot bergeser, ubah cron dan `EVENING_FROM` bersama-sama.

@@ -1,8 +1,11 @@
+import { readFile } from 'node:fs/promises';
+import path from 'node:path';
 import type { SourceStatusEntry } from '@gold/schema';
 import { describe, expect, it } from 'vitest';
+import { parse as parseYaml } from 'yaml';
 import { loadConfig, type ProjectConfig } from '../src/config';
 import { isExpectedDay } from '../src/pipeline/calendar';
-import { plan, PlanError, slotOf, type PlanInput } from '../src/pipeline/plan';
+import { plan, PlanError, SCHEDULES, slotOf, type PlanInput } from '../src/pipeline/plan';
 import { ROOT } from './helpers';
 
 const config: ProjectConfig = await loadConfig(ROOT);
@@ -16,6 +19,7 @@ const retail: ProjectConfig = {
 };
 
 const MONDAY_1040 = new Date('2026-10-26T03:40:00Z');
+const MONDAY_1915 = new Date('2026-10-26T12:15:00Z');
 
 const entry = (over: Partial<SourceStatusEntry>): SourceStatusEntry => ({
   last_run_id: '1-1',
@@ -55,40 +59,44 @@ describe('isExpectedDay', () => {
 });
 
 describe('slotOf', () => {
-  it('cron 25 6 → retry, cron lain → primary, manual → manual', () => {
+  it('cron retry siang/malam → retry, cron lain → primary, manual → manual', () => {
     expect(slotOf('scrape-retail', 'schedule', '25 6 * * *')).toBe('retry');
+    expect(slotOf('scrape-retail', 'schedule', '5 14 * * *')).toBe('retry');
     expect(slotOf('scrape-retail', 'schedule', '25 3 * * *')).toBe('primary');
+    expect(slotOf('scrape-retail', 'schedule', '5 12 * * *')).toBe('primary');
     expect(slotOf('scrape-retail', 'workflow_dispatch', '')).toBe('manual');
     expect(slotOf('scrape-macro', 'schedule', '40 9 * * 1-5')).toBe('primary');
+  });
+
+  it('SCHEDULES scrape-retail sama dengan cron di scrape-retail.yml', async () => {
+    const file = path.join(ROOT, '.github', 'workflows', 'scrape-retail.yml');
+    const yml = parseYaml(await readFile(file, 'utf8')) as { on: { schedule: { cron: string }[] } };
+    const crons = yml.on.schedule.map((s) => s.cron).sort();
+    expect(crons).toEqual(Object.keys(SCHEDULES['scrape-retail']!).sort());
   });
 });
 
 describe('plan', () => {
-  it('primary: semua sumber aktif workflow itu, walau sudah sukses', () => {
+  it('primary siang: sumber aktif berjendela day, walau sudah sukses', () => {
     const r = plan(input({ status: { ubslifestyle: entry({}) } }));
-    expect(r).toMatchObject({
-      slot: 'primary',
-      sources: ['ubslifestyle', 'pegadaian'],
-      has_work: true,
-    });
-    expect(r.matrix.include).toEqual([
-      { source: 'ubslifestyle', browser: false },
-      { source: 'pegadaian', browser: false },
-    ]);
+    expect(r).toMatchObject({ slot: 'primary', sources: ['ubslifestyle'], has_work: true });
+    expect(r.matrix.include).toEqual([{ source: 'ubslifestyle', browser: false }]);
+  });
+
+  it('primary malam: hanya sumber berjendela evening (Pegadaian)', () => {
+    const r = plan(input({ schedule: '5 12 * * *', now: MONDAY_1915 }));
+    expect(r).toMatchObject({ slot: 'primary', sources: ['pegadaian'], has_work: true });
   });
 
   it('retry: lewati yang sudah sukses hari ini; jalankan yang gagal/stale', () => {
-    const r = plan(
-      input({
-        schedule: '25 6 * * *',
-        status: {
-          ubslifestyle: entry({}),
-          pegadaian: entry({ last_status: 'failed', last_success_at: '2026-10-25T03:30:00Z' }),
-        },
-      }),
+    const failed = entry({ last_status: 'failed', last_success_at: '2026-10-25T12:10:00Z' });
+    const day = plan(input({ schedule: '25 6 * * *', status: { ubslifestyle: entry({}) } }));
+    expect(day.sources).toEqual([]);
+    expect(day.skipped).toEqual([{ source: 'ubslifestyle', reason: 'sudah sukses hari ini' }]);
+    const evening = plan(
+      input({ schedule: '5 14 * * *', now: MONDAY_1915, status: { pegadaian: failed } }),
     );
-    expect(r.sources).toEqual(['pegadaian']);
-    expect(r.skipped).toEqual([{ source: 'ubslifestyle', reason: 'sudah sukses hari ini' }]);
+    expect(evening.sources).toEqual(['pegadaian']);
   });
 
   it('retry: sukses kemarin tidak dihitung sukses hari ini', () => {
@@ -105,7 +113,10 @@ describe('plan', () => {
       updated_at: '2026-10-25T03:30:00Z',
     });
     const r = plan(input({ schedule: '25 6 * * *', now: sunday, status: { ubslifestyle: stale } }));
-    expect(r.sources).toEqual(['pegadaian']);
+    expect(r.sources).toEqual([]);
+    expect(r.skipped).toEqual([
+      { source: 'ubslifestyle', reason: 'stale di hari yang tidak diharapkan' },
+    ]);
   });
 
   it('manual: input sources; force=false melewati yang sudah sukses', () => {
@@ -115,7 +126,17 @@ describe('plan', () => {
     expect(plan(input({ ...base, sources: 'ubslifestyle', force: true })).sources).toEqual([
       'ubslifestyle',
     ]);
-    expect(plan(input({ ...base })).sources).toEqual(['pegadaian']);
+    expect(plan(input({ ...base, now: MONDAY_1915 })).sources).toEqual(['pegadaian']);
+  });
+
+  it('manual tanpa daftar sumber: sumber evening dilewati sebelum 18.45 WIB, kecuali disebut', () => {
+    const manual = { event: 'workflow_dispatch', schedule: '' };
+    const r = plan(input(manual));
+    expect(r.sources).toEqual(['ubslifestyle']);
+    expect(r.skipped).toEqual([{ source: 'pegadaian', reason: 'jendela malam mulai 18:45 WIB' }]);
+    expect(plan(input({ ...manual, sources: 'pegadaian' })).sources).toEqual(['pegadaian']);
+    const at1845 = new Date('2026-10-26T11:45:00Z');
+    expect(plan(input({ ...manual, now: at1845 })).sources).toEqual(['ubslifestyle', 'pegadaian']);
   });
 
   it('manual: sumber nonaktif boleh disebut eksplisit; browser untuk Logam Mulia', () => {

@@ -21,6 +21,10 @@ export type UpdateCalendar = z.infer<typeof UpdateCalendar>;
 export const FetchMethod = z.enum(['http', 'browser', 'api', 'file']);
 export type FetchMethod = z.infer<typeof FetchMethod>;
 
+/** Pasangan cron (primary + retry) tempat sumber dijalankan dalam workflow-nya (WORKFLOWS §2.2). */
+export const ScheduleWindow = z.enum(['day', 'evening']);
+export type ScheduleWindow = z.infer<typeof ScheduleWindow>;
+
 export const SourceConfig = z.object({
   id: ScraperId,
   kind: z.enum(['prices', 'macro']),
@@ -28,6 +32,7 @@ export const SourceConfig = z.object({
   fetch_method: FetchMethod,
   workflow: Workflow,
   update_calendar: UpdateCalendar,
+  schedule_window: ScheduleWindow.default('day'),
   stale_is_error_on_expected_day: z.boolean().default(false),
   parser_version: z.string().regex(/^\d+\.\d+\.\d+$/),
   enabled: z.boolean(),

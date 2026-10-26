@@ -59,6 +59,7 @@ erDiagram
     string url
     string fetch_method "http | browser | api | file"
     string update_calendar "daily | weekdays | business_days_id | monthly"
+    string schedule_window "day | evening"
     bool enabled
   }
   CATALOG_ITEM {
@@ -259,7 +260,7 @@ macro_series:
   - { id: usd_idr_annual, concept: usd_idr,  unit: IDR/USD, source: wdi,       precedence: 3 }
 ```
 
-Nilai `update_calendar` final per sumber ditetapkan dari observasi di Fase 0–1.
+Nilai `update_calendar` final per sumber ditetapkan dari observasi di Fase 0–1. `schedule_window` (default `day`) memilih pasangan cron primary + retry dalam workflow sumber itu (WORKFLOWS §2.2); Pegadaian = `evening` (D-25).
 
 **`catalog.yml`** — gramasi valid per `source × brand × product`, dengan `active_from`/`active_to` agar gramasi baru atau yang dihentikan tidak memutus histori.
 

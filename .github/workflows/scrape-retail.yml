@@ -5,8 +5,11 @@ name: scrape-retail
 
 on:
   schedule:
-    - cron: '25 3 * * *' # 10.25 WIB — slot primary
-    - cron: '25 6 * * *' # 13.25 WIB — slot retry
+    # Harus sama dengan SCHEDULES di apps/scraper/src/pipeline/plan.ts.
+    - cron: '25 3 * * *' # 10.25 WIB — slot primary, jendela day
+    - cron: '25 6 * * *' # 13.25 WIB — slot retry, jendela day
+    - cron: '5 12 * * *' # 19.05 WIB — slot primary, jendela evening (Pegadaian, D-25)
+    - cron: '5 14 * * *' # 21.05 WIB — slot retry, jendela evening
   workflow_dispatch:
     inputs:
       sources:
