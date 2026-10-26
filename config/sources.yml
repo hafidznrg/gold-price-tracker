@@ -1,7 +1,8 @@
 # SOURCE + MACRO_SERIES (DATA-MODEL §3.5). Ditulis manusia lewat PR; state bot ada di data/meta/status.json.
 #
-# Semua sumber `enabled: false` selama Fase 0 (belum ada workflow terjadwal). P1-04 mengaktifkan
-# ubslifestyle lebih dulu, lalu sumber lain menyusul. `probe` tetap bisa menjalankan sumber nonaktif.
+# P1-04 mengaktifkan ubslifestyle lebih dulu; sumber lain menyusul setelah scraper-nya selesai.
+# `probe` dan run manual yang menyebut sumber secara eksplisit tetap bisa menjalankan sumber nonaktif.
+# `parser_version` = versi modul parser (`parserVersion` di apps/scraper/src/sources/*).
 #
 # `update_calendar` sementara; nilai final ditetapkan dari observasi Fase 0–1 (Q-6).
 #   daily            — diharapkan ada data setiap hari
@@ -17,8 +18,8 @@ sources:
     workflow: scrape-retail
     update_calendar: business_days_id # P0-07: histori menunjukkan Senin–Sabtu; final di P1-11 (Q-6)
     stale_is_error_on_expected_day: true
-    parser_version: 0.1.0
-    enabled: false
+    parser_version: 1.0.0
+    enabled: true
     notes: Tanggal data dari endpoint grafik admin-ajax, bukan blok "Updated" (D-19).
 
   - id: pegadaian

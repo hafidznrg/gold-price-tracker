@@ -37,9 +37,20 @@ describe('cli', () => {
     expect(log.mock.calls.join('\n')).toMatch(/sources:\s+6/);
   });
 
-  it.each(['plan', 'scrape', 'merge'])('%s masih stub → kode 2', async (cmd) => {
-    expect(await main([cmd, '--root', ROOT])).toBe(EXIT.USAGE);
-    expect(error.mock.calls.join('\n')).toContain('belum diimplementasikan');
+  it('plan/scrape/merge memvalidasi argumen wajib', async () => {
+    expect(await main(['plan', '--root', ROOT, '--workflow', 'nope'])).toBe(EXIT.USAGE);
+    expect(await main(['scrape', '--root', ROOT, '--source', 'ubslifestyle'])).toBe(EXIT.USAGE);
+    expect(error.mock.calls.join('\n')).toContain('--out wajib diisi');
+    expect(await main(['merge', '--root', ROOT, '--in', 'rel/out'])).toBe(EXIT.USAGE);
+    expect(await main(['merge', '--root', ROOT, '--in', ROOT, '--expected', 'tokopedia'])).toBe(
+      EXIT.USAGE,
+    );
+  });
+
+  it('plan mencetak slot dan sumber', async () => {
+    const args = ['--workflow', 'scrape-retail', '--event', 'schedule', '--schedule', '25 3 * * *'];
+    expect(await main(['plan', '--root', ROOT, ...args])).toBe(EXIT.OK);
+    expect(log.mock.calls.join('\n')).toContain('slot: primary');
   });
 
   // Probe sungguhan memanggil jaringan; di sini hanya validasi argumen.

@@ -138,3 +138,18 @@ Log keputusan produk dan teknis (format ringkas ala ADR). Keputusan baru ditamba
 - **xaus:** histori = futures GC=F (Yahoo), spot = gold-api.com; keduanya indikatif dan diberi label di UI. V-10 memakai `data_state.status` untuk histori dan `stale` untuk spot.
 - **SheetJS** dipasang dari tarball CDN resmi 0.20.3, bukan registri npm (0.18.5 berkerentanan). Dependabot tidak memantau dependensi URL, jadi versinya diperiksa manual di P5-04.
 **Konsekuensi:** tidak ada sumber makro yang memerlukan Playwright; workflow makro tetap ringan. Struktur HTML/XLSX BI dan World Bank bisa berubah — dilindungi tes kontrak fixture dan aturan gagal keras.
+
+### D-22 — Detail implementasi inti pipeline (P1-01–P1-04)
+
+**Konteks:** implementasi `validate`, `merge`, scraper UBS, dan `scrape-retail.yml` memunculkan beberapa hal yang belum dirinci DATA-MODEL/WORKFLOWS.
+**Keputusan:**
+- **Artifact scrape:** `run.json` berisi baris RUN tanpa hitungan insert/update/unchanged, ditambah `expected_day`, `exit_code`, `history_points`, dan metadata raw (`file`, `ext`, `fetched_at`, `sha256` isi sebelum gzip). Merge memverifikasi sha256 dan gagal keras bila tidak cocok.
+- **Raw UBS:** satu file JSON `{ tables, chart }` — semua blok `<table>` halaman + respons grafik apa adanya (±1 KB gzip, bukan halaman 188 KB). Bila halaman tidak memuat tabel, seluruh halaman ikut disimpan (`page`) untuk diagnosis.
+- **"Tahun berjalan" UBS** (V-04, D-19) = tahun produksi **terbaru** di tabel, bukan tahun kalender, agar awal Januari (tabel masih "Tahun 2026") tidak gagal.
+- **`stale` tidak menulis baris** (WORKFLOWS §5) dan tidak menambah `consecutive_failures`; hanya `failed` yang menambah. `stale` di hari yang diharapkan tetap merah (kode 3) dan dicoba lagi di slot retry.
+- **V-01** juga menolak kunci utama ganda dalam satu hasil parse.
+- **RUN idempoten:** merge ulang artifact dengan `run_id` + `source` yang sama tidak menambah atau menimpa baris RUN; bersama aturan nilai (D-14), merge 2× = tanpa diff Git.
+- **File karantina:** `{date}-{run_id}.json`; bila satu run menahan baris karena lebih dari satu alasan, satu file per alasan dengan akhiran `-{reason_code}`.
+- **`plan` manual** boleh menjalankan sumber nonaktif bila disebut eksplisit di input `sources` (untuk uji); daftar kosong = hanya sumber aktif.
+- **Notifikasi bertahap:** `notify` sementara hanya menulis step summary; Telegram dan Issue menyusul di P1-05.
+**Konsekuensi:** `ubslifestyle` diaktifkan (`parser_version 1.0.0`) sehingga pengumpulan data mulai sebelum Pegadaian dan Logam Mulia selesai.

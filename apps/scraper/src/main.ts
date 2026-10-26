@@ -1,6 +1,13 @@
+import { appendFile, mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { parseArgs, type ParseArgsConfig } from 'node:util';
+import { Origin, ScraperId, Slot, Workflow, type Trigger } from '@gold/schema';
 import { loadConfig, loadStatus } from './config';
+import { merge, type MergeSummary } from './pipeline/merge';
+import { formatSummary } from './pipeline/notify';
+import { plan, PlanError } from './pipeline/plan';
+import { describeRun, scrape } from './pipeline/scrape';
+import { DEFAULT_USER_AGENT } from './probe/http';
 import { formatReport, runProbe, writeStepSummary } from './probe/run';
 import { PROBE_TARGETS } from './probe/targets';
 
@@ -35,6 +42,41 @@ const COMMANDS: Record<string, Command> = {
       sources: { type: 'string' },
       force: { type: 'string' },
     },
+    run: async (values) => {
+      const rootDir = requireRoot(values);
+      const workflow = parseEnum(Workflow, values.workflow, '--workflow');
+      const [config, status] = await Promise.all([loadConfig(rootDir), loadStatus(rootDir)]);
+      let result;
+      try {
+        result = plan({
+          workflow,
+          event: str(values.event),
+          schedule: str(values.schedule),
+          sources: str(values.sources),
+          force: str(values.force) === 'true',
+          config,
+          status,
+          now: new Date(),
+        });
+      } catch (err) {
+        if (err instanceof PlanError) throw new UsageError(err.message);
+        throw err;
+      }
+      console.log(
+        [
+          `slot: ${result.slot}`,
+          `sumber: ${result.sources.join(', ') || '(tidak ada)'}`,
+          ...result.skipped.map((s) => `lewati ${s.source}: ${s.reason}`),
+        ].join('\n'),
+      );
+      await setOutputs({
+        matrix: JSON.stringify(result.matrix),
+        sources: result.sources.join(','),
+        slot: result.slot,
+        has_work: String(result.has_work),
+      });
+      return EXIT.OK;
+    },
   },
   scrape: {
     summary: 'Fetch → parse → validasi satu sumber, tulis artifact ke --out',
@@ -44,6 +86,21 @@ const COMMANDS: Record<string, Command> = {
       source: { type: 'string' },
       slot: { type: 'string' },
       out: { type: 'string' },
+    },
+    run: async (values) => {
+      const rootDir = requireRoot(values);
+      const source = parseEnum(ScraperId, values.source, '--source');
+      const run = await scrape({
+        root: rootDir,
+        source,
+        slot: values.slot === undefined ? 'manual' : parseEnum(Slot, values.slot, '--slot'),
+        trigger: triggerFromEnv(),
+        out: requireAbsolute(values.out, '--out'),
+        runId: runIdFromEnv(),
+        userAgent: process.env.SCRAPER_USER_AGENT || DEFAULT_USER_AGENT,
+      });
+      console.log(describeRun(run));
+      return run.exit_code;
     },
   },
   merge: {
@@ -56,6 +113,67 @@ const COMMANDS: Record<string, Command> = {
       summary: { type: 'string' },
       origin: { type: 'string' },
       'dry-run': { type: 'string' },
+    },
+    run: async (values) => {
+      const rootDir = requireRoot(values);
+      const expected = str(values.expected)
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean)
+        .map((s) => parseEnum(ScraperId, s, '--expected'));
+      const workflow = Workflow.safeParse(process.env.GITHUB_WORKFLOW);
+      const summary = await merge({
+        root: rootDir,
+        inDir: requireAbsolute(values.in, '--in'),
+        expected,
+        runId: runIdFromEnv(),
+        origin:
+          values.origin === undefined ? 'scrape' : parseEnum(Origin, values.origin, '--origin'),
+        dryRun: str(values['dry-run']) === 'true',
+        fallback: {
+          workflow: workflow.success ? workflow.data : 'scrape-retail',
+          trigger: triggerFromEnv(),
+        },
+      });
+      if (values.summary !== undefined) {
+        const file = requireAbsolute(values.summary, '--summary');
+        await mkdir(path.dirname(file), { recursive: true });
+        await writeFile(file, JSON.stringify(summary, null, 2) + '\n');
+      }
+      console.log(summary.commit_message);
+      for (const p of summary.changed_paths)
+        console.log(`  ${summary.dry_run ? '(dry) ' : ''}${p}`);
+      await setOutputs({ commit_message: summary.commit_message });
+      return EXIT.OK;
+    },
+  },
+  notify: {
+    summary: 'Ringkasan run ke step summary (Telegram + Issue menyusul di P1-05)',
+    task: 'P1-05',
+    options: {
+      summary: { type: 'string' },
+      'merge-result': { type: 'string' },
+      'run-url': { type: 'string' },
+    },
+    run: async (values) => {
+      let summary: MergeSummary | null = null;
+      if (values.summary !== undefined) {
+        try {
+          summary = JSON.parse(
+            await readFile(requireAbsolute(values.summary, '--summary'), 'utf8'),
+          ) as MergeSummary;
+        } catch (err) {
+          if ((err as NodeJS.ErrnoException).code !== 'ENOENT') throw err;
+        }
+      }
+      const text = formatSummary(
+        summary,
+        str(values['merge-result']) || 'success',
+        str(values['run-url']),
+      );
+      console.log(text);
+      if (process.env.GITHUB_STEP_SUMMARY) await appendFile(process.env.GITHUB_STEP_SUMMARY, text);
+      return EXIT.OK;
     },
   },
   probe: {
@@ -111,6 +229,44 @@ function requireRoot(values: Record<string, unknown>): string {
   // `pnpm --filter` menjalankan dari folder paket, jadi path relatif mudah salah (WORKFLOWS §3.2).
   if (!path.isAbsolute(value)) throw new UsageError(`--root harus path absolut: ${value}`);
   return value;
+}
+
+const str = (v: unknown): string => (typeof v === 'string' ? v : '');
+
+function requireAbsolute(value: unknown, flag: string): string {
+  if (typeof value !== 'string' || value === '') throw new UsageError(`${flag} wajib diisi`);
+  if (!path.isAbsolute(value)) throw new UsageError(`${flag} harus path absolut: ${value}`);
+  return value;
+}
+
+function parseEnum<T extends string>(
+  schema: { safeParse(v: unknown): { success: true; data: T } | { success: false } },
+  value: unknown,
+  flag: string,
+): T {
+  const result = schema.safeParse(value);
+  if (!result.success) throw new UsageError(`${flag} tidak valid: ${String(value)}`);
+  return result.data;
+}
+
+/** `${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}` dari env `RUN_ID`; run lokal diberi `local-…`. */
+function runIdFromEnv(): string {
+  return process.env.RUN_ID || `local-${new Date().toISOString().replace(/\D/g, '').slice(0, 14)}`;
+}
+
+function triggerFromEnv(): Trigger {
+  return process.env.GITHUB_EVENT_NAME === 'schedule' ? 'schedule' : 'workflow_dispatch';
+}
+
+/** Tulis output step GitHub Actions (nilai satu baris); tanpa `GITHUB_OUTPUT` tidak melakukan apa-apa. */
+async function setOutputs(outputs: Record<string, string>): Promise<void> {
+  const file = process.env.GITHUB_OUTPUT;
+  if (!file) return;
+  const lines = Object.entries(outputs).map(([k, v]) => {
+    if (v.includes('\n')) throw new Error(`output ${k} tidak boleh multi-baris`);
+    return `${k}=${v}\n`;
+  });
+  await appendFile(file, lines.join(''));
 }
 
 function usage(): string {

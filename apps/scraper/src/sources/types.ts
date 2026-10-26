@@ -9,6 +9,10 @@ export interface FetchContext {
   runId: string;
   userAgent: string;
   now: Date;
+  /** Jeda antar request ke sumber yang sama (NFR-12); 0 di uji. */
+  pauseMs?: number;
+  /** Jeda dasar sebelum retry; 0 di uji. */
+  retryDelayMs?: number;
   signal?: AbortSignal;
 }
 
@@ -31,6 +35,13 @@ export interface ParseResult<Row> {
   dataDate: string | null;
   /** Waktu update yang tertera di sumber (ISO +07:00). */
   sourceUpdatedAt: string | null;
+  /**
+   * Alasan sumber dianggap belum update walau tanggalnya bisa dibaca (mis. UBS: titik
+   * terakhir grafik ≠ buyback 1 g tabel, D-19). `null` = tidak ada indikasi basi.
+   */
+  stale: string | null;
+  /** Jumlah titik histori di respons (Logam Mulia, aturan V-07). */
+  historyPoints?: number;
 }
 
 export interface SourceScraper<Row extends PriceRow | MacroRow = PriceRow | MacroRow> {

@@ -1,0 +1,153 @@
+name: scrape-retail
+
+# WORKFLOWS §3.2 — harga ritel: plan → scrape (matrix per sumber) → merge + commit → notify.
+# Kontrak artifact §2.1, kode keluar scraper §2.3. Satu penulis data lewat concurrency data-write.
+
+on:
+  schedule:
+    - cron: '25 3 * * *' # 10.25 WIB — slot primary
+    - cron: '25 6 * * *' # 13.25 WIB — slot retry
+  workflow_dispatch:
+    inputs:
+      sources:
+        description: Sumber dipisah koma (kosong = semua yang aktif)
+        required: false
+        default: ''
+      force:
+        description: Jalankan walau hari ini sudah sukses
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+  issues: write
+
+concurrency:
+  group: data-write
+  cancel-in-progress: false
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      matrix: ${{ steps.plan.outputs.matrix }}
+      sources: ${{ steps.plan.outputs.sources }}
+      slot: ${{ steps.plan.outputs.slot }}
+      has_work: ${{ steps.plan.outputs.has_work }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      - id: plan
+        run: >
+          pnpm --filter scraper start plan
+          --workflow scrape-retail
+          --event "${{ github.event_name }}"
+          --schedule "${{ github.event.schedule }}"
+          --sources "${{ inputs.sources }}"
+          --force "${{ inputs.force }}"
+          --root "$GITHUB_WORKSPACE"
+
+  scrape:
+    needs: plan
+    if: needs.plan.outputs.has_work == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.plan.outputs.matrix) }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      - name: Cache Playwright
+        if: matrix.browser
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+      - name: Install Chromium
+        if: matrix.browser
+        run: pnpm --filter scraper exec playwright install --with-deps chromium
+      - name: Scrape ${{ matrix.source }}
+        run: >
+          pnpm --filter scraper start scrape
+          --source ${{ matrix.source }}
+          --slot ${{ needs.plan.outputs.slot }}
+          --root "$GITHUB_WORKSPACE"
+          --out "$GITHUB_WORKSPACE/out/${{ matrix.source }}"
+        env:
+          RUN_ID: ${{ github.run_id }}-${{ github.run_attempt }}
+          SCRAPER_USER_AGENT: ${{ vars.SCRAPER_USER_AGENT }}
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: out-${{ matrix.source }}
+          path: out/${{ matrix.source }}
+          retention-days: 7
+          overwrite: true # aman untuk "Re-run failed jobs"
+          if-no-files-found: warn
+
+  merge:
+    needs: [plan, scrape]
+    if: always() && needs.plan.outputs.has_work == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: out-*
+          path: out # → out/out-{source}/…
+      - id: merge
+        run: >
+          pnpm --filter scraper start merge
+          --in "$GITHUB_WORKSPACE/out"
+          --root "$GITHUB_WORKSPACE"
+          --expected "${{ needs.plan.outputs.sources }}"
+          --summary "$GITHUB_WORKSPACE/summary/summary.json"
+        env:
+          RUN_ID: ${{ github.run_id }}-${{ github.run_attempt }}
+      - name: Commit & push
+        env:
+          COMMIT_MESSAGE: ${{ steps.merge.outputs.commit_message }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data
+          if git diff --cached --quiet; then echo "Tidak ada perubahan data"; exit 0; fi
+          git commit -m "$COMMIT_MESSAGE"
+          for i in 1 2 3; do
+            git pull --rebase origin main && git push origin HEAD:main && exit 0
+            sleep $((i * 10))
+          done
+          exit 1
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: run-summary
+          path: summary
+          overwrite: true
+
+  notify:
+    needs: [plan, merge]
+    if: always() && needs.plan.outputs.has_work == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      - uses: actions/download-artifact@v4
+        continue-on-error: true # merge bisa gagal sebelum upload
+        with:
+          name: run-summary
+          path: summary
+      - run: >
+          pnpm --filter scraper start notify
+          --summary "$GITHUB_WORKSPACE/summary/summary.json"
+          --merge-result "${{ needs.merge.result }}"
+          --run-url "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}

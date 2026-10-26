@@ -1,5 +1,6 @@
 import { isIsoDate, jakartaDate, parseRupiah, parseWeight } from '@gold/schema';
 import * as XLSX from 'xlsx';
+import { tableRows } from '../html';
 
 // Pemeriksaan bentuk respons per sumber (P0-11). Fungsi murni: menerima body mentah
 // dan `today` (tanggal Jakarta), sehingga bisa diuji dengan fixture riset P0-07–P0-10.
@@ -35,20 +36,6 @@ class Checks {
 }
 
 const text = (b: Buffer | string) => (typeof b === 'string' ? b : b.toString('utf8'));
-const strip = (html: string) =>
-  html
-    .replace(/<[^>]*>/g, ' ')
-    .replace(/&nbsp;/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
-
-/** Sel-sel setiap `<tr>` dalam potongan HTML. */
-export function tableRows(html: string): string[][] {
-  return [...html.matchAll(/<tr[^>]*>([\s\S]*?)<\/tr>/g)].map((m) =>
-    [...m[1]!.matchAll(/<t[dh][^>]*>([\s\S]*?)<\/t[dh]>/g)].map((c) => strip(c[1]!)),
-  );
-}
-
 function sliceTable(html: string, openTagStart: string): string | null {
   const start = html.indexOf(openTagStart);
   if (start === -1) return null;
