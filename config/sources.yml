@@ -1,6 +1,6 @@
 # SOURCE + MACRO_SERIES (DATA-MODEL §3.5). Ditulis manusia lewat PR; state bot ada di data/meta/status.json.
 #
-# P1-04 mengaktifkan ubslifestyle lebih dulu; sumber lain menyusul setelah scraper-nya selesai.
+# Aktif: ubslifestyle (P1-04), pegadaian (P1-07). Logam Mulia menyusul setelah situsnya kembali (P1-06).
 # `probe` dan run manual yang menyebut sumber secara eksplisit tetap bisa menjalankan sumber nonaktif.
 # `parser_version` = versi modul parser (`parserVersion` di apps/scraper/src/sources/*).
 #
@@ -27,11 +27,11 @@ sources:
     url: https://pegadaian.co.id/gold/prices/table
     fetch_method: api
     workflow: scrape-retail
-    update_calendar: daily # P0-08: harga batangan tidak diperbarui Minggu; final di P1-11 (Q-6)
+    update_calendar: daily # P1-07: harga Minggu ada (PER I dibuat Sabtu ±18.10 WIB); final di P1-11 (Q-6)
     stale_is_error_on_expected_day: true
-    parser_version: 0.1.0
-    enabled: false
-    notes: JSON tanpa token; brand dari idVendor (D-20); fallback Playwright membaca DOM /harga-emas.
+    parser_version: 1.0.0
+    enabled: true
+    notes: JSON tanpa token; brand dari idVendor (D-20). Fallback Playwright (DOM) belum dibuat (D-23).
 
   - id: logammulia
     kind: prices

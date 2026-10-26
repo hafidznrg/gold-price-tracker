@@ -153,3 +153,16 @@ Log keputusan produk dan teknis (format ringkas ala ADR). Keputusan baru ditamba
 - **`plan` manual** boleh menjalankan sumber nonaktif bila disebut eksplisit di input `sources` (untuk uji); daftar kosong = hanya sumber aktif.
 - **Notifikasi bertahap:** `notify` sementara hanya menulis step summary; Telegram dan Issue menyusul di P1-05.
 **Konsekuensi:** `ubslifestyle` diaktifkan (`parser_version 1.0.0`) sehingga pengumpulan data mulai sebelum Pegadaian dan Logam Mulia selesai.
+
+### D-23 — Scraper Pegadaian (P1-07)
+
+**Konteks:** implementasi P1-07 dan uji nyata Senin 26 Okt 09.43 WIB, yang menunjukkan harga bertanggal Minggu sudah terbit sejak Sabtu malam (TECH-SPEC §5.2).
+**Keputusan:**
+- `update_calendar` Pegadaian tetap **`daily`**: data Sabtu yang masih tampil di hari Minggu dianggap basi.
+- `tglBerlaku` berbeda antar tiga brand target → parser melempar `VALIDATION_FAILED` (run `failed`, dicoba lagi di slot retry), bukan `stale`.
+- `hargaBeli` disimpan sebagai `buyback_price` hanya bila berisi angka > 0. Saat ini selalu `null` (Q-1, D-07).
+- Raw = respons JSON utuh (±1,5 KB gzip).
+- **Fallback Playwright (DOM) ditunda:** belum ada fixture DOM untuk diuji, dan endpoint JSON stabil dari runner AS (P0-11). Dibuat bila endpoint berubah atau diblokir; sampai saat itu kegagalan endpoint = `failed`.
+- Jumlah vendor yang diabaikan tidak dicatat di RUN karena skema RUN tidak punya kolomnya; vendor baru tetap bisa dilihat di raw snapshot.
+**Konsekuensi:** `pegadaian` diaktifkan (`parser_version 1.0.0`). Slot primary 10.25 WIB bisa jatuh tepat saat periode II diterbitkan (±10.18–10.35 WIB); bila sering `failed` karena tanggal campur, geser jadwal di P1-11.
+

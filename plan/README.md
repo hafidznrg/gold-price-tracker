@@ -56,7 +56,7 @@ flowchart LR
 | Fase | Status | Mulai | Selesai |
 | --- | --- | --- | --- |
 | 0 | 10/12 selesai; G0 terpenuhi kecuali Logam Mulia (P0-09 tertahan: situs maintenance). Sisa: P0-01 ruleset + LICENSE | 25 Okt 2026 | |
-| 1 | 4/13 selesai (P1-01–P1-04); UBS Lifestyle aktif di `scrape-retail.yml`. P1-08 terimplementasi, P1-05 sebagian (step summary) | 26 Okt 2026 | |
+| 1 | 5/13 selesai (P1-01–P1-04, P1-07); UBS Lifestyle dan Pegadaian aktif di `scrape-retail.yml`. P1-08 terimplementasi, P1-05 sebagian (step summary) | 26 Okt 2026 | |
 | 2 | Belum mulai | | |
 | 3 | Belum mulai | | |
 | 4 | Belum mulai | | |
@@ -70,3 +70,4 @@ flowchart LR
 | 25 Okt 2026 | Tinjauan skema & workflow: tambah DATA-MODEL.md dan WORKFLOWS.md; FR-15–17; D-13–D-17; tugas fase diselaraskan |
 | 25 Okt 2026 | Fase 0: hasil riset sumber (P0-07–P0-11) masuk TECH-SPEC §5, PRD §6, DATA-MODEL; D-18–D-21; Q-1 temuan awal, Q-2 dan Q-4 terjawab |
 | 26 Okt 2026 | Fase 1: inti pipeline (validate, merge), scraper UBS, workflow `scrape-retail.yml`; D-22 |
+| 26 Okt 2026 | P1-07 scraper Pegadaian; temuan harga Minggu periode I (TECH-SPEC §5.2, Q-6); D-23 |

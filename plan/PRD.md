@@ -184,7 +184,7 @@ Ringkasan; rincian dan alasannya di [DECISIONS.md](./DECISIONS.md).
 | Q-3 | Sumber kurs USD/IDR tahunan 1996–1998 yang terverifikasi | Fase 2 |
 | Q-4 | Perlukah *self-hosted runner* Indonesia? | **Terjawab (P0-11, 25 Okt 2026):** tidak untuk UBS Lifestyle, Pegadaian, xaus, JISDOR, World Bank, Frankfurter — semua lolos dari runner GitHub di AS. Logam Mulia belum dapat dinilai (situs maintenance untuk semua pengunjung) |
 | Q-5 | Nama domain dan nama produk | Sebelum rilis publik (Fase 3) |
-| Q-6 | `update_calendar` tiap sumber (apakah UBS/Pegadaian/Logam Mulia update di akhir pekan dan hari libur) | Observasi 2 minggu di Fase 1. Temuan awal UBS: Senin–Sabtu, sebagian libur tetap update (TECH-SPEC §5.1) |
+| Q-6 | `update_calendar` tiap sumber (apakah UBS/Pegadaian/Logam Mulia update di akhir pekan dan hari libur) | Observasi 2 minggu di Fase 1. Temuan awal UBS: Senin–Sabtu, sebagian libur tetap update (TECH-SPEC §5.1). Pegadaian: harga Minggu ada, diterbitkan Sabtu malam sebagai periode I (TECH-SPEC §5.2) |
 
 ## 14. Rencana rilis
 
