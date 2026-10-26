@@ -1,10 +1,18 @@
 {
-  "ubslifestyle": {
-    "last_run_id": "40260128834-1",
+  "pegadaian": {
+    "last_run_id": "40297213298-1",
     "last_status": "stale",
     "last_success_at": null,
     "last_data_date": null,
     "consecutive_failures": 0,
-    "updated_at": "2026-10-26T02:39:40Z"
+    "updated_at": "2026-10-26T09:08:48Z"
+  },
+  "ubslifestyle": {
+    "last_run_id": "40297213298-1",
+    "last_status": "success",
+    "last_success_at": "2026-10-26T09:08:32Z",
+    "last_data_date": "2026-10-26",
+    "consecutive_failures": 0,
+    "updated_at": "2026-10-26T09:08:48Z"
   }
 }
