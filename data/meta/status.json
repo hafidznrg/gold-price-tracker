@@ -8,12 +8,12 @@
     "updated_at": "2026-10-27T09:11:08Z"
   },
   "pegadaian": {
-    "last_run_id": "40389831209-1",
+    "last_run_id": "40554432680-1",
     "last_status": "stale",
     "last_success_at": null,
     "last_data_date": null,
     "consecutive_failures": 0,
-    "updated_at": "2026-10-26T19:47:54Z"
+    "updated_at": "2026-10-27T17:51:55Z"
   },
   "ubslifestyle": {
     "last_run_id": "40478693868-1",
