@@ -11,7 +11,7 @@ import {
   type Slot,
   type Trigger,
 } from '@gold/schema';
-import { loadConfig, loadStatus } from '../config';
+import { loadConfig } from '../config';
 import { getScraper } from '../sources';
 import type { ParseResult, RawPayload, SourceScraper } from '../sources/types';
 import { ARTIFACT_FILES, type RawExtension, type ScrapeRun } from './artifact';
@@ -33,6 +33,8 @@ export interface ScrapeOptions {
   trigger: Trigger;
   out: string;
   runId: string;
+  /** Tanggal Jakarta sasaran dari `plan` (D-27); kosong = tanggal `now`. */
+  date?: string;
   userAgent: string;
   now?: Date;
   /** Untuk uji: ganti modul sumber dari registry. */
@@ -47,8 +49,8 @@ const rawExtension = (raw: RawPayload): RawExtension =>
 export async function scrape(opts: ScrapeOptions): Promise<ScrapeRun> {
   const now = opts.now ?? new Date();
   const startedAt = utcIso(now);
-  const today = jakartaDate(now);
-  const [config, status] = await Promise.all([loadConfig(opts.root), loadStatus(opts.root)]);
+  const today = opts.date ?? jakartaDate(now);
+  const config = await loadConfig(opts.root);
   const sourceConfig = config.sources.find((s) => s.id === opts.source);
   if (!sourceConfig) throw new Error(`sumber ${opts.source} tidak ada di config/sources.yml`);
   const scraper = opts.scraper ?? getScraper(opts.source);

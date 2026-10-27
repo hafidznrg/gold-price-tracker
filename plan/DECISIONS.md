@@ -195,3 +195,13 @@ Log keputusan produk dan teknis (format ringkas ala ADR). Keputusan baru ditamba
 - V-07 (histori) dihapus; Logam Mulia memakai V-06 seperti sumber ritel lain. V-04 = 12 gramasi.
 **Konsekuensi:** risiko tercatat dan diterima pemilik proyek: stealth bisa berhenti lolos kapan saja (paling mungkin dari IP datacenter GitHub Actions; fallback = self-hosted runner atau opsi impor dari browser), dan akses ini melanggar maksud proteksi situs. Backfill 6 bulan buyback/jual 1 g dari grafik (rentang "6 Bulan") jadi kandidat P1-09. Bila Antam menyediakan akses resmi, ganti `fetchRaw` dan kembali ke D-24.
 
+### D-27 — Tanggal sasaran dari jadwal cron, bukan jam runner
+
+**Konteks:** 26 Okt 2026 semua run terjadwal `scrape-retail` terlambat 5,7–6,9 jam (cron 10.25 → 16.08, 13.25 → 20.17, 19.05 → 01.35, 21.05 → 02.47 WIB). Kedua slot malam berjalan setelah tanggal WIB berganti, sehingga snapshot Pegadaian bertanggal 26 Okt dinilai terhadap "hari ini" 27 Okt: `stale`, 30 baris ditolak, dan harga Pegadaian 26 Okt hilang permanen.
+**Keputusan:**
+- `plan` menghitung **tanggal sasaran** (`targetDate`): untuk run terjadwal, tanggal Jakarta dari kemunculan cron terakhir ≤ waktu run; untuk run manual, tanggal sekarang. Output `date` diteruskan ke `scrape --date` (V-06, kalender hari diharapkan) dan `merge --date` (pesan commit).
+- `doneToday` memakai `last_data_date` = tanggal sasaran, bukan tanggal `last_success_at`, agar retry yang terlambat tidak mengulang sumber yang sudah sukses untuk tanggal slot.
+- CLI menolak `--date` selain hari ini atau kemarin (WIB).
+- Alternatif ditunda: pemicu eksternal (mis. layanan cron yang memanggil `workflow_dispatch`) untuk ketepatan waktu. Dievaluasi selama observasi P1-11 bila keterlambatan berjam-jam terus terjadi.
+**Konsekuensi:** run yang terlambat sampai lewat tengah malam tetap mengambil data tanggal slot selama sumber masih menampilkannya. Bila sumber sudah berganti ke tanggal berikutnya (mis. Pegadaian menerbitkan periode I hari berikutnya), hasilnya `stale` dan tanggal itu tetap hilang; satu-satunya mitigasi adalah run tepat waktu. Run tetap dicatat di `runs/{yyyy}.jsonl` menurut `started_at`.
+

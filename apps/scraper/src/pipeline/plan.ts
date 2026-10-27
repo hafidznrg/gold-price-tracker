@@ -53,6 +53,8 @@ export interface PlanInput {
 
 export interface PlanResult {
   slot: Slot;
+  /** Tanggal Jakarta sasaran (`YYYY-MM-DD`), diteruskan ke scrape dan merge. */
+  date: string;
   sources: ScraperId[];
   matrix: { include: { source: ScraperId; browser: boolean }[] };
   has_work: boolean;
@@ -61,14 +63,33 @@ export interface PlanResult {
 
 export class PlanError extends Error {}
 
-/** Sudah `success`/`partial` dengan waktu sukses pada tanggal Jakarta `today`. */
+/**
+ * Sudah `success`/`partial` untuk tanggal data `today`. Memakai `last_data_date`, bukan jam
+ * sukses, karena run yang terlambat bisa sukses lewat tengah malam untuk tanggal kemarin.
+ */
 export function doneToday(entry: SourceStatusEntry | undefined, today: string): boolean {
   return (
     entry !== undefined &&
     (entry.last_status === 'success' || entry.last_status === 'partial') &&
-    entry.last_success_at !== null &&
-    jakartaDate(new Date(entry.last_success_at)) === today
+    entry.last_data_date === today
   );
+}
+
+const DAY_MS = 24 * 3600_000;
+
+/**
+ * Tanggal Jakarta yang menjadi sasaran run (D-27). Run terjadwal memakai tanggal kemunculan
+ * cron terakhir ≤ `now`, karena cron GitHub bisa terlambat berjam-jam (26 Okt: 5,7–6,9 jam)
+ * sehingga slot malam berjalan lewat tengah malam WIB. Run manual dan cron yang tidak
+ * berbentuk `M H * * *` memakai tanggal `now`.
+ */
+export function targetDate(event: string, schedule: string, now: Date): string {
+  const m = /^(\d{1,2}) (\d{1,2}) \* \* \*$/.exec(schedule.trim());
+  if (event !== 'schedule' || !m) return jakartaDate(now);
+  const at = new Date(now);
+  at.setUTCHours(Number(m[2]), Number(m[1]), 0, 0);
+  if (at.getTime() > now.getTime()) at.setTime(at.getTime() - DAY_MS);
+  return jakartaDate(at);
 }
 
 function scheduleOf(workflow: Workflow, schedule: string): ScheduleSlot | undefined {
@@ -82,7 +103,7 @@ export function slotOf(workflow: Workflow, event: string, schedule: string): Slo
 
 export function plan(input: PlanInput): PlanResult {
   const { workflow, config, status } = input;
-  const today = jakartaDate(input.now);
+  const today = targetDate(input.event, input.schedule, input.now);
   const slot = slotOf(workflow, input.event, input.schedule);
   const inWorkflow = config.sources.filter((s) => s.workflow === workflow);
 
@@ -136,6 +157,7 @@ export function plan(input: PlanInput): PlanResult {
 
   return {
     slot,
+    date: today,
     sources: selected.map((s) => s.id),
     matrix: {
       include: selected.map((s) => ({ source: s.id, browser: s.fetch_method === 'browser' })),

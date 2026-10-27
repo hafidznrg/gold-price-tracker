@@ -50,6 +50,8 @@ export interface MergeOptions {
   origin: Origin;
   dryRun: boolean;
   now?: Date;
+  /** Tanggal Jakarta sasaran dari `plan` untuk pesan commit (D-27); kosong = tanggal `now`. */
+  date?: string;
   /** Konteks untuk RUN sintetis bila artifact hilang. */
   fallback?: { workflow: Workflow; trigger: Trigger };
 }
@@ -187,7 +189,7 @@ export function commitMessage(date: string, results: readonly SourceResult[]): s
 export async function merge(opts: MergeOptions): Promise<MergeSummary> {
   const now = opts.now ?? new Date();
   const nowIso = utcIso(now);
-  const today = jakartaDate(now);
+  const today = opts.date ?? jakartaDate(now);
   const artifacts = await findArtifacts(opts.inDir);
   const slot = artifacts[0]?.run.slot ?? 'manual';
   const present = new Set(artifacts.map((a) => a.run.source));

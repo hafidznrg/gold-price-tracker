@@ -51,6 +51,8 @@ try {
   await save('page.txt', await page.innerText('body'));
 
   // Data yang sudah didekripsi aplikasi sendiri: state Pinia dan seri grafik ApexCharts.
+  // Objek global halaman (Nuxt, ApexCharts) tidak bertipe; skrip prototipe sekali pakai.
+  /* eslint-disable @typescript-eslint/no-explicit-any */
   const dumpState = () =>
     page.evaluate(() => {
       const w = globalThis as unknown as Record<string, any>;
@@ -63,6 +65,7 @@ try {
       }));
       return JSON.stringify({ pinia, charts }, null, 1);
     });
+  /* eslint-enable @typescript-eslint/no-explicit-any */
   await save('state-beli.json', await dumpState());
   await page.waitForTimeout(3_000);
   // Popup (v-overlay) menutupi halaman setelah load; tab grafik cukup menerima event click.

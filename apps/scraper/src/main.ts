@@ -1,10 +1,25 @@
 import { appendFile, mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { parseArgs, type ParseArgsConfig } from 'node:util';
-import { Origin, ScraperId, Slot, Workflow, type Trigger } from '@gold/schema';
+import {
+  addDaysIso,
+  isIsoDate,
+  jakartaDate,
+  Origin,
+  ScraperId,
+  Slot,
+  Workflow,
+  type Trigger,
+} from '@gold/schema';
 import { loadConfig, loadStatus } from './config';
 import { merge, type MergeSummary } from './pipeline/merge';
-import { formatSummary } from './pipeline/notify';
+import {
+  deliver,
+  formatSummary,
+  githubIssueClient,
+  planNotifications,
+  telegramSender,
+} from './pipeline/notify';
 import { plan, PlanError } from './pipeline/plan';
 import { describeRun, scrape } from './pipeline/scrape';
 import { DEFAULT_USER_AGENT } from './probe/http';
@@ -64,7 +79,7 @@ const COMMANDS: Record<string, Command> = {
       }
       console.log(
         [
-          `slot: ${result.slot}`,
+          `slot: ${result.slot} · tanggal sasaran: ${result.date}`,
           `sumber: ${result.sources.join(', ') || '(tidak ada)'}`,
           ...result.skipped.map((s) => `lewati ${s.source}: ${s.reason}`),
         ].join('\n'),
@@ -73,6 +88,7 @@ const COMMANDS: Record<string, Command> = {
         matrix: JSON.stringify(result.matrix),
         sources: result.sources.join(','),
         slot: result.slot,
+        date: result.date,
         has_work: String(result.has_work),
       });
       return EXIT.OK;
@@ -86,6 +102,7 @@ const COMMANDS: Record<string, Command> = {
       source: { type: 'string' },
       slot: { type: 'string' },
       out: { type: 'string' },
+      date: { type: 'string' },
     },
     run: async (values) => {
       const rootDir = requireRoot(values);
@@ -98,6 +115,7 @@ const COMMANDS: Record<string, Command> = {
         out: requireAbsolute(values.out, '--out'),
         runId: runIdFromEnv(),
         userAgent: process.env.SCRAPER_USER_AGENT || DEFAULT_USER_AGENT,
+        date: targetDateOption(values.date),
       });
       console.log(describeRun(run));
       return run.exit_code;
@@ -113,6 +131,7 @@ const COMMANDS: Record<string, Command> = {
       summary: { type: 'string' },
       origin: { type: 'string' },
       'dry-run': { type: 'string' },
+      date: { type: 'string' },
     },
     run: async (values) => {
       const rootDir = requireRoot(values);
@@ -130,6 +149,7 @@ const COMMANDS: Record<string, Command> = {
         origin:
           values.origin === undefined ? 'scrape' : parseEnum(Origin, values.origin, '--origin'),
         dryRun: str(values['dry-run']) === 'true',
+        date: targetDateOption(values.date),
         fallback: {
           workflow: workflow.success ? workflow.data : 'scrape-retail',
           trigger: triggerFromEnv(),
@@ -148,7 +168,7 @@ const COMMANDS: Record<string, Command> = {
     },
   },
   notify: {
-    summary: 'Ringkasan run ke step summary (Telegram + Issue menyusul di P1-05)',
+    summary: 'Ringkasan run ke step summary, Telegram, dan Issue per sumber (WORKFLOWS §4)',
     task: 'P1-05',
     options: {
       summary: { type: 'string' },
@@ -166,14 +186,25 @@ const COMMANDS: Record<string, Command> = {
           if ((err as NodeJS.ErrnoException).code !== 'ENOENT') throw err;
         }
       }
-      const text = formatSummary(
-        summary,
-        str(values['merge-result']) || 'success',
-        str(values['run-url']),
-      );
+      const mergeResult = str(values['merge-result']) || 'success';
+      const runUrl = str(values['run-url']);
+      const text = formatSummary(summary, mergeResult, runUrl);
       console.log(text);
       if (process.env.GITHUB_STEP_SUMMARY) await appendFile(process.env.GITHUB_STEP_SUMMARY, text);
-      return EXIT.OK;
+
+      const { GH_TOKEN, GITHUB_REPOSITORY, TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID } = process.env;
+      const errors = await deliver(planNotifications(summary, mergeResult, runUrl), runUrl, {
+        issues:
+          GH_TOKEN && GITHUB_REPOSITORY ? githubIssueClient(GITHUB_REPOSITORY, GH_TOKEN) : null,
+        telegram:
+          TELEGRAM_BOT_TOKEN && TELEGRAM_CHAT_ID
+            ? telegramSender(TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID)
+            : null,
+        now: new Date(),
+        log: (msg) => console.log(msg),
+      });
+      // Notifikasi yang gagal terkirim harus terlihat sebagai job merah.
+      return errors > 0 ? EXIT.FAILED : EXIT.OK;
     },
   },
   probe: {
@@ -232,6 +263,20 @@ function requireRoot(values: Record<string, unknown>): string {
 }
 
 const str = (v: unknown): string => (typeof v === 'string' ? v : '');
+
+/**
+ * `--date` dari `plan` (D-27): kosong = tanggal sekarang. Hanya hari ini atau kemarin (WIB)
+ * yang diterima, karena keterlambatan cron tidak pernah melewati satu hari.
+ */
+function targetDateOption(value: unknown, now = new Date()): string | undefined {
+  const v = str(value);
+  if (v === '') return undefined;
+  const today = jakartaDate(now);
+  if (!isIsoDate(v) || (v !== today && v !== addDaysIso(today, -1))) {
+    throw new UsageError(`--date harus hari ini atau kemarin (WIB): ${v}`);
+  }
+  return v;
+}
 
 function requireAbsolute(value: unknown, flag: string): string {
   if (typeof value !== 'string' || value === '') throw new UsageError(`${flag} wajib diisi`);

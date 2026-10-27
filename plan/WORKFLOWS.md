@@ -51,7 +51,7 @@ sequenceDiagram
 
 | Dari → ke | Isi | Lokasi |
 | --- | --- | --- |
-| `plan` → `scrape` | `matrix` = `{"include":[{"source":"ubslifestyle","browser":false}, …]}`, `slot` = `primary`/`retry`/`manual`, `has_work`, `sources` (CSV) | `outputs` job |
+| `plan` → `scrape` | `matrix` = `{"include":[{"source":"ubslifestyle","browser":false}, …]}`, `slot` = `primary`/`retry`/`manual`, `date` (tanggal sasaran, D-27), `has_work`, `sources` (CSV) | `outputs` job |
 | `scrape` → `merge` | `run.json` (baris `RUN` tanpa hitungan insert/update), `rows.json` (baris lolos validasi run-level), `held.json` (baris untuk karantina), `raw.{html,json}.gz` | artifact `out-{source}` |
 | `merge` → `notify` | `summary.json`: hasil per sumber (status, error_code, hitungan, path karantina), `commit_sha`, `merge_ok` | artifact `run-summary` |
 
@@ -68,6 +68,8 @@ Bila artifact `out-{source}` tidak ada (job scrape mati sebelum upload), `merge`
 | Manual | Input `sources` (kosong = semua, kecuali sumber `evening` sebelum 18.45 WIB); `force: false` melewati sumber yang hari ini sudah sukses |
 
 Pemetaan cron → slot + jendela ada di `SCHEDULES` (`apps/scraper/src/pipeline/plan.ts`); tes memastikan isinya sama dengan `on.schedule` di YAML.
+
+**Tanggal sasaran (D-27):** "hari ini" pada tabel di atas, aturan V-06, dan pesan commit memakai output `date`: untuk run terjadwal = tanggal Jakarta dari kemunculan cron terakhir ≤ waktu run, untuk run manual = tanggal sekarang. `plan` meneruskannya ke `scrape --date` dan `merge --date`; CLI hanya menerima hari ini atau kemarin (WIB). "Sudah sukses" diukur dengan `last_data_date` = tanggal sasaran.
 
 Jika daftar kosong, `has_work=false` dan semua job lain dilewati (workflow tetap hijau).
 
@@ -138,6 +140,7 @@ jobs:
       matrix: ${{ steps.plan.outputs.matrix }}
       sources: ${{ steps.plan.outputs.sources }}
       slot: ${{ steps.plan.outputs.slot }}
+      date: ${{ steps.plan.outputs.date }}
       has_work: ${{ steps.plan.outputs.has_work }}
     steps:
       - uses: actions/checkout@v4
@@ -177,6 +180,7 @@ jobs:
           pnpm --filter scraper start scrape
           --source ${{ matrix.source }}
           --slot ${{ needs.plan.outputs.slot }}
+          --date "${{ needs.plan.outputs.date }}"
           --root "$GITHUB_WORKSPACE"
           --out "$GITHUB_WORKSPACE/out/${{ matrix.source }}"
         env:
@@ -209,6 +213,7 @@ jobs:
           --in "$GITHUB_WORKSPACE/out"
           --root "$GITHUB_WORKSPACE"
           --expected "${{ needs.plan.outputs.sources }}"
+          --date "${{ needs.plan.outputs.date }}"
           --summary "$GITHUB_WORKSPACE/summary/summary.json"
         env:
           RUN_ID: ${{ github.run_id }}-${{ github.run_attempt }}

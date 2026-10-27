@@ -97,6 +97,13 @@ describe('scrape', () => {
     });
   });
 
+  it('date dari plan: run yang terlambat lewat tengah malam menilai terhadap tanggal slot (D-27)', async () => {
+    const afterMidnight = new Date('2026-10-24T18:35:00Z'); // 01.35 WIB Minggu 25 Okt
+    expect((await scrape(opts({ now: afterMidnight }))).status).toBe('stale');
+    const run = await scrape(opts({ now: afterMidnight, date: '2026-10-24' }));
+    expect(run).toMatchObject({ status: 'success', data_date: '2026-10-24', exit_code: 0 });
+  });
+
   it('fetch diblokir → failed/BLOCKED, kode 1, run.json tetap ditulis tanpa raw', async () => {
     const blocked = fake(async () => {
       throw new ScrapeError('BLOCKED', 'HTTP 403 (halaman tantangan/blokir)');

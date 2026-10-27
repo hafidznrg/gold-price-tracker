@@ -56,7 +56,7 @@ flowchart LR
 | Fase | Status | Mulai | Selesai |
 | --- | --- | --- | --- |
 | 0 | 10/12 selesai; G0 terpenuhi kecuali Logam Mulia (P0-09 tertahan: situs maintenance). Sisa: P0-01 ruleset + LICENSE | 25 Okt 2026 | |
-| 1 | 5/13 selesai (P1-01–P1-04, P1-07); UBS Lifestyle dan Pegadaian aktif di `scrape-retail.yml`; P1-06 Logam Mulia aktif lewat stealth (D-26), menunggu run pertama di Actions. P1-08 terimplementasi, P1-05 sebagian (step summary) | 26 Okt 2026 | |
+| 1 | 6/13 selesai (P1-01–P1-04, P1-06, P1-07); ketiga scraper aktif di `scrape-retail.yml` (Logam Mulia lewat stealth, D-26; run pertama di Actions sukses). P1-05 dan P1-08 terimplementasi, menunggu bukti di run nyata | 26 Okt 2026 | |
 | 2 | Belum mulai | | |
 | 3 | Belum mulai | | |
 | 4 | Belum mulai | | |
@@ -74,3 +74,4 @@ flowchart LR
 | 26 Okt 2026 | Logam Mulia versi baru memblokir akses otomatis; harga-emas.org dievaluasi; D-24 |
 | 26 Okt 2026 | Logam Mulia diaktifkan lewat Playwright + stealth (D-26) |
 | 26 Okt 2026 | Pegadaian: endpoint = snapshot harian ±18.32 WIB → jendela malam `scrape-retail` (19.05/21.05 WIB), field `schedule_window`; D-25 |
+| 27 Okt 2026 | Cron GitHub terlambat 5,7–6,9 jam → tanggal sasaran dari jadwal cron (`plan` output `date`); D-27. P1-05 Telegram + Issue terimplementasi (menunggu bot) |
