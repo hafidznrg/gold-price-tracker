@@ -338,6 +338,8 @@ Langkah: validasi ulang baris (kecuali aturan lonjakan yang memicu karantina), l
 
 Manual, input `source` (choice: `all` atau satu sumber, termasuk `frankfurter` yang bukan modul scraper). `permissions: contents: read`. Job matrix per sumber (`fail-fast: false`); Chromium hanya dipasang untuk `logammulia`; langkah pertama mencatat lokasi runner (Cloudflare `cdn-cgi/trace`) ke step summary. Menjalankan `probe` (fetch → cek bentuk respons; di Fase 1–2 diganti parse + validasi penuh) dan mengunggah raw + `report.json` sebagai artifact `probe-{source}` (14 hari). Tidak pernah menulis ke `data/`. Dipakai di Fase 0 dan setiap kali parser diperbaiki.
 
+`notify-test.yml` (manual, input `outcome`: `failed`/`recovered`, `permissions: contents: read, issues: write`) menjalankan `notify` dengan `summary.json` sintetis untuk `ubslifestyle`: `failed` membuka Issue `pipeline-failure` + Telegram, `recovered` menutupnya. Untuk membuktikan secret dan izin Issue tanpa menyentuh `data/` (P1-05).
+
 ### 3.7 `freshness.yml`
 
 Cron `15 15 * * *` (22.15 WIB, setelah slot retry malam `scrape-retail`). `permissions: { contents: read, issues: write }`. Perintah `freshness` membaca `status.json`, `sources.yml`, dan `holidays.yml`, lalu:

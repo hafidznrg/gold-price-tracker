@@ -1,0 +1,67 @@
+name: notify-test
+
+# Uji jalur notifikasi (P1-05, WORKFLOWS §4) tanpa menyentuh data/: menjalankan `notify`
+# dengan summary.json sintetis. `failed` membuka Issue + Telegram, `recovered` menutupnya.
+
+on:
+  workflow_dispatch:
+    inputs:
+      outcome:
+        description: failed = buka Issue + Telegram, recovered = tutup Issue
+        type: choice
+        options: [failed, recovered]
+        default: failed
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      - name: summary.json sintetis
+        env:
+          OUTCOME: ${{ inputs.outcome }}
+          RUN_ID: ${{ github.run_id }}-${{ github.run_attempt }}
+        run: |
+          mkdir -p summary
+          node -e '
+            const failed = process.env.OUTCOME === "failed";
+            const today = new Date(Date.now() + 7 * 3600e3).toISOString().slice(0, 10);
+            const summary = {
+              run_id: process.env.RUN_ID,
+              merged_at: new Date().toISOString(),
+              dry_run: false,
+              merge_ok: true,
+              commit_message: "notify-test",
+              changed_paths: [],
+              results: [{
+                source: "ubslifestyle",
+                status: failed ? "failed" : "success",
+                error_code: failed ? "UNKNOWN" : null,
+                error_message: failed ? "UJI notify-test.yml, bukan kegagalan nyata" : null,
+                data_date: failed ? null : today,
+                slot: "manual",
+                expected_day: true,
+                exit_code: failed ? 1 : 0,
+                rows_inserted: 0, rows_updated: 0, rows_unchanged: 0,
+                rows_held: 0, rows_rejected: 0, revisions: 0,
+                quarantine_paths: [],
+                consecutive_failures: failed ? 1 : 0,
+              }],
+            };
+            require("fs").writeFileSync("summary/summary.json", JSON.stringify(summary, null, 2));
+          '
+      - run: >
+          pnpm --filter scraper start notify
+          --summary "$GITHUB_WORKSPACE/summary/summary.json"
+          --merge-result success
+          --run-url "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
