@@ -56,7 +56,7 @@ flowchart LR
 | Fase | Status | Mulai | Selesai |
 | --- | --- | --- | --- |
 | 0 | 10/12 selesai; G0 terpenuhi kecuali Logam Mulia (P0-09 tertahan: situs maintenance). Sisa: P0-01 ruleset + LICENSE | 25 Okt 2026 | |
-| 1 | 6/13 selesai (P1-01–P1-04, P1-06, P1-07); ketiga scraper aktif di `scrape-retail.yml` (Logam Mulia lewat stealth, D-26; run pertama di Actions sukses). P1-05 dan P1-08 terimplementasi, menunggu bukti di run nyata | 26 Okt 2026 | |
+| 1 | 7/13 selesai (P1-01–P1-07); ketiga scraper aktif di `scrape-retail.yml` (Logam Mulia lewat stealth, D-26; run pertama di Actions sukses). P1-05 selesai (Telegram + Issue terbukti lewat `notify-test.yml`); P1-08 terimplementasi, menunggu bukti di run nyata | 26 Okt 2026 | |
 | 2 | Belum mulai | | |
 | 3 | Belum mulai | | |
 | 4 | Belum mulai | | |
