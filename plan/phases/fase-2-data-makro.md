@@ -36,6 +36,7 @@ Semua backfill dijalankan lewat `backfill.yml` (dibuat di P1-13): pertama `dry_r
 - [ ] **P2-08** `backfill/ecb.ts`: Frankfurter `rates.csv` → `usd_idr_ecb` = EUR/IDR ÷ EUR/USD, 4 Jan 1999 → kini (harian; satu request `v2/rates.csv`, TECH-SPEC §5.6). — `FR-07` · S
   - *1 Nov 2026:* `src/backfill/ecb.ts` (`ecb@1.0.0`, D-32): parse murni + uji `test/ecb.test.ts` dengan fixture P0-10; uji ke endpoint asli 7.126 tanggal (1999-01-04 → 2026-10-30). Kontrak `MacroBackfillJob` ditambahkan; job ditolak CLI (kode 2) sampai P2-01/P2-02. Dicentang setelah run `backfill.yml` non-dry ter-commit.
 - [ ] **P2-09** `backfill/jisdor.ts`: postback ekspor XLSX, 20 Mei 2013 → kini, satu request (TECH-SPEC §5.5). — `FR-07` · M
+  - *1 Nov 2026:* `src/backfill/jisdor.ts` (`jisdor@1.0.0`): `GET` halaman → postback `…$ButtonExport` (field dicari lewat akhiran, helper probe P0-10) → XLSX; tanggal `M/D/YYYY`, kurs `9.760,00` (sen diterima, bukan `parseRupiah`); respons bukan XLSX, baris rusak, atau tanggal ganda → `PARSE_ERROR`. Uji `test/jisdor-backfill.test.ts`. Ekspor asli (lewat curl karena koneksi TCP lokal ke bi.go.id ±19,5 detik, melewati batas konek 10 detik `fetch` Node; dari runner GitHub probe 25 Okt sukses): 3.256 hari 2013-05-20 → 2026-10-30, semua bilangan bulat, tanpa akhir pekan, ±240 hari/tahun. Ditolak CLI (kode 2) sampai P2-01/P2-02 (D-32).
 - [ ] **P2-10** `backfill/annual-fx.ts`: kurs USD/IDR tahunan 1996–1998 dari sumber resmi terverifikasi (jawab **Q-3**); catat sumbernya di DECISIONS.md. — `FR-07` · S
 
 ### Turunan dan verifikasi

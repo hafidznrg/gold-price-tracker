@@ -1,4 +1,5 @@
 import { ecb } from './ecb';
+import { jisdor } from './jisdor';
 import { logammuliaArchive } from './logammulia-archive';
 import { pegadaianSavings } from './pegadaian-savings';
 import type { BackfillJob } from './types';
@@ -36,6 +37,7 @@ export const BACKFILL_TASKS: Record<BackfillJobId, string> = {
 /** Modul job yang sudah diimplementasikan. */
 const registry: Partial<Record<BackfillJobId, BackfillJob>> = {
   ecb,
+  jisdor,
   worldbank,
   'ubs-history': ubsHistory,
   'logammulia-archive': logammuliaArchive,
