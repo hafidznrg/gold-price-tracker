@@ -34,9 +34,9 @@ sources:
     update_calendar: daily # P1-07: harga Minggu ada; final di P1-11 (Q-6)
     schedule_window: evening # snapshot harian ±18.32 WIB; sebelum itu tglBerlaku = kemarin (D-25)
     stale_is_error_on_expected_day: true
-    parser_version: 1.0.0
+    parser_version: 1.1.0
     enabled: true
-    notes: JSON tanpa token; brand dari idVendor (D-20). Fallback Playwright (DOM) belum dibuat (D-23).
+    notes: JSON tanpa token; brand dari idVendor (D-20). Tabungan Emas dari /gold/prices (D-30). Fallback Playwright (DOM) belum dibuat (D-23).
 
   - id: logammulia
     kind: prices

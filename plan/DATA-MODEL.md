@@ -274,7 +274,7 @@ Nilai `update_calendar` final per sumber ditetapkan dari observasi di Fase 0–1
 | --- | --- |
 | `source` (harga) | `logammulia`, `pegadaian`, `ubslifestyle` |
 | `source` (makro) | `xaus`, `worldbank`, `bi`, `ecb`, `wdi` |
-| `brand` | `antam`, `ubs`, `galeri24` |
+| `brand` | `antam`, `ubs`, `galeri24`, `pegadaian` (Tabungan Emas, D-30) |
 | `product` | `gold_bar` (default); varian lain ditambah lewat katalog, mis. `gold_bar_retro` |
 | `series` | `xau_usd_oz`, `usd_idr_jisdor`, `usd_idr_ecb`, `usd_idr_annual` |
 | `origin` | `scrape`, `backfill`, `manual` |

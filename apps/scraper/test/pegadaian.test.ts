@@ -186,3 +186,79 @@ describe('scrape pegadaian', () => {
     expect(r).toMatchObject({ status: 'partial', rows_parsed: 31, rows_held: 1, exit_code: 0 });
   });
 });
+
+describe('Tabungan Emas (D-30)', () => {
+  const savings = readFileSync(path.join(DIR, 'tabungan-2026-10-25.json'), 'utf8');
+  const combined = (table: string, s = savings) => payload(JSON.stringify({ table, savings: s }));
+
+  it('raw gabungan: 30 baris emas batangan + 1 baris Tabungan Emas per 0,01 g', () => {
+    const r = parse(combined(sunday));
+    expect(r.rows).toHaveLength(31);
+    expect(r.dataDate).toBe('2026-10-24'); // tetap dari tabel emas batangan
+    expect(r.rows.at(-1)).toEqual({
+      date: '2026-10-25', // tglBerlaku Tabungan Emas sendiri
+      source: 'pegadaian',
+      brand: 'pegadaian',
+      product: 'gold_savings',
+      variant: '',
+      weight_g: 0.01,
+      location: '',
+      sell_price: 23_990,
+      buyback_price: 23_150,
+      source_updated_at: '2026-10-24T18:53:27+07:00', // harga 25 Okt dibuat 24 Okt malam
+    });
+  });
+
+  it('raw lama (respons tabel saja) tetap terbaca, tanpa Tabungan Emas', () => {
+    expect(parse(payload(sunday)).rows.some((x) => x.product === 'gold_savings')).toBe(false);
+  });
+
+  it('satuan selain 0,01 g atau harga kosong → PARSE_ERROR', () => {
+    const unit = edit(savings, (j) => {
+      (j.data as unknown as Record<string, unknown>).unit = '1';
+    });
+    expect(() => parse(combined(sunday, unit))).toThrow(/satuan 1/);
+    const empty = edit(savings, (j) => {
+      (j.data as unknown as Record<string, unknown>).hargaBeli = null;
+    });
+    expect(() => parse(combined(sunday, empty))).toThrow(/kosong/);
+  });
+
+  it('gramasi Tabungan Emas ada di katalog', async () => {
+    const config = await loadConfig(ROOT);
+    expect(
+      config.catalog.some(
+        (i) =>
+          i.source === 'pegadaian' &&
+          i.brand === 'pegadaian' &&
+          i.product === 'gold_savings' &&
+          i.weight_g === 0.01,
+      ),
+    ).toBe(true);
+  });
+
+  it('fetchRaw: dua endpoint, raw gabungan', async () => {
+    const calls: string[] = [];
+    const original = globalThis.fetch;
+    globalThis.fetch = (async (url: string) => {
+      calls.push(String(url));
+      return new Response(String(url).endsWith('/table') ? sunday : savings, { status: 200 });
+    }) as typeof fetch;
+    try {
+      const raw = await pegadaian.fetchRaw({
+        root: ROOT,
+        config: (await loadConfig(ROOT)).sources.find((s) => s.id === 'pegadaian')!,
+        runId: 'local-x',
+        userAgent: 'test',
+        now: new Date(),
+        pauseMs: 0,
+        retryDelayMs: 0,
+      });
+      expect(Object.keys(JSON.parse(raw.body))).toEqual(['table', 'savings']);
+      expect(parse(raw).rows).toHaveLength(31);
+    } finally {
+      globalThis.fetch = original;
+    }
+    expect(calls.map((u) => new URL(u).pathname)).toEqual(['/gold/prices/table', '/gold/prices']);
+  });
+});

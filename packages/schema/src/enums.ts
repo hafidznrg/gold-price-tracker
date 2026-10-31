@@ -23,7 +23,8 @@ export const MACRO_SOURCES = ['xaus', 'worldbank', 'bi', 'ecb', 'wdi'] as const;
 export const MacroSource = z.enum(MACRO_SOURCES);
 export type MacroSource = z.infer<typeof MacroSource>;
 
-export const BRANDS = ['antam', 'ubs', 'galeri24'] as const;
+/** `pegadaian` = produk milik Pegadaian sendiri (Tabungan Emas, D-30). */
+export const BRANDS = ['antam', 'ubs', 'galeri24', 'pegadaian'] as const;
 export const Brand = z.enum(BRANDS);
 export type Brand = z.infer<typeof Brand>;
 

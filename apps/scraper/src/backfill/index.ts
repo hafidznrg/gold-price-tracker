@@ -1,4 +1,5 @@
 import { logammuliaArchive } from './logammulia-archive';
+import { pegadaianSavings } from './pegadaian-savings';
 import type { BackfillJob } from './types';
 import { ubsHistory } from './ubs-history';
 
@@ -14,6 +15,7 @@ export const BACKFILL_JOB_IDS = [
   'annual-fx',
   'ubs-history',
   'logammulia-archive',
+  'pegadaian-savings',
 ] as const;
 export type BackfillJobId = (typeof BACKFILL_JOB_IDS)[number];
 
@@ -26,12 +28,14 @@ export const BACKFILL_TASKS: Record<BackfillJobId, string> = {
   'annual-fx': 'P2-10',
   'ubs-history': 'P1-09',
   'logammulia-archive': 'D-29',
+  'pegadaian-savings': 'D-30',
 };
 
 /** Modul job yang sudah diimplementasikan. */
 const registry: Partial<Record<BackfillJobId, BackfillJob>> = {
   'ubs-history': ubsHistory,
   'logammulia-archive': logammuliaArchive,
+  'pegadaian-savings': pegadaianSavings,
 };
 
 export function getBackfillJob(id: BackfillJobId): BackfillJob | undefined {

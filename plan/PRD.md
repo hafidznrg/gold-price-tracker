@@ -77,7 +77,7 @@ Prioritas: **P0** = wajib untuk rilis publik (MVP) · **P1** = wajib untuk v1 le
 | ID | Kebutuhan | Prioritas | Fase |
 | --- | --- | --- | --- |
 | FR-01 | Scrape UBS Lifestyle: harga beli konsumen dan buyback per pecahan, **semua tahun produksi** yang ditampilkan, beserta tanggal/jam update di situs | P0 | 1 |
-| FR-02 | Scrape Pegadaian: harga jual per brand (Antam, UBS, Galeri24) per gramasi; buyback **apa adanya** bila tersedia | P0 | 1 |
+| FR-02 | Scrape Pegadaian: harga jual per brand (Antam, UBS, Galeri24) per gramasi; buyback **apa adanya** bila tersedia. Ditambah **Tabungan Emas** (jual + buyback per 0,01 g) beserta histori 360 hari (D-30) | P0 | 1 |
 | FR-03 | Scrape Antam LM lewat endpoint JSON: histori jual dan buyback 1 g; run pertama sekaligus backfill sejak 2010. Bila gagal, hari itu dibiarkan kosong (tanpa sumber pengganti) | P0 | 1 |
 | FR-04 | Scrape tabel harga Antam LM per gramasi dengan sesi browser yang sama | P2 | 4 |
 | FR-05 | Ambil XAU/USD harian (penutupan hari sebelumnya) dan titik spot terakhir | P0 | 2 |

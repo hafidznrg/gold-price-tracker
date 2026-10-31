@@ -10,7 +10,7 @@ on:
       job:
         type: choice
         # Harus sama dengan BACKFILL_JOB_IDS di apps/scraper/src/backfill/index.ts.
-        options: [worldbank, xaus, ecb, jisdor, annual-fx, ubs-history]
+        options: [worldbank, xaus, ecb, jisdor, annual-fx, ubs-history, pegadaian-savings]
       from:
         description: YYYY-MM-DD (opsional)
         required: false

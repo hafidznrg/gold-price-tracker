@@ -49,6 +49,7 @@ flowchart LR
   - *26 Okt 2026:* **tertahan (D-24).** Situs versi baru: API terenkripsi, Akamai menolak akses otomatis tanpa stealth. Tidak di-scrape; harga-emas.org dievaluasi dan belum layak. Kriteria "histori sejak 2010" dicabut; bila ada akses resmi, `sell_price` = Harga Dasar.
 - [x] **P1-07** **Pegadaian** (`pegadaian.ts`): jalur utama `GET /gold/prices/table`, brand lewat `idVendor`, vendor lain diabaikan, `hargaJual = 0` dibuang (TECH-SPEC §5.2, D-20); fallback Playwright membaca DOM. Buyback selalu kosong (Q-1). — `FR-02`, `D-07` · M
   - *26 Okt 2026:* `sources/pegadaian.ts` (parserVersion `pegadaian@1.0.0`), uji `test/pegadaian.test.ts` dengan tiga fixture. Uji nyata: harga Minggu terbit Sabtu malam (periode I) → kalender tetap `daily`. Fallback Playwright ditunda (D-23). Diaktifkan di `config/sources.yml`.
+  - *31 Okt 2026:* Tabungan Emas ditambahkan (D-30, `pegadaian@1.1.0`): brand `pegadaian`, produk `gold_savings`, per 0,01 g, jual + buyback; backfill 360 hari lewat job `pegadaian-savings`.
 
 ### Otomasi dan operasi
 

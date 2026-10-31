@@ -113,6 +113,7 @@ Actions → **backfill** → pilih `job`, opsional `from`/`to` (`YYYY-MM-DD`). S
 | --- | --- | --- |
 | `ubs-history` | Buyback 1 g UBS dari grafik sejak Nov 2023, `variant` kosong (D-28) | Sudah dijalankan 31 Okt 2026 |
 | `logammulia-archive` | Harga dasar + buyback 1 g Antam sejak 2010, dari arsip lokal (`--input`, hanya dari terminal, D-29) | Sudah diimpor 31 Okt 2026 |
+| `pegadaian-savings` | Tabungan Emas Pegadaian (jual + buyback per 0,01 g), 360 hari terakhir dari grafik (D-30); bisa diulang untuk menambal hari terlewat | Sudah dijalankan 31 Okt 2026 |
 | `worldbank`, `xaus`, `ecb`, `jisdor`, `annual-fx` | Seri makro | Fase 2 |
 
 Backfill tidak menimpa nilai yang sama, mencatat nilai yang berbeda sebagai revisi `source_changed`, dan tidak mengubah `status.json`.

@@ -76,3 +76,4 @@ flowchart LR
 | 26 Okt 2026 | Pegadaian: endpoint = snapshot harian ±18.32 WIB → jendela malam `scrape-retail` (19.05/21.05 WIB), field `schedule_window`; D-25 |
 | 27 Okt 2026 | Cron GitHub terlambat 5,7–6,9 jam → tanggal sasaran dari jadwal cron (`plan` output `date`); D-27. P1-05 Telegram + Issue terimplementasi (menunggu bot) |
 | 31 Okt 2026 | P1-05 terbukti (`notify-test.yml`); P1-12 karantina: perintah `quarantine` + `quarantine.yml`; P1-13 kerangka `backfill` + `backfill.yml`; P1-09 backfill buyback 1 g UBS sejak Nov 2023 (543 baris, D-28) |
+| 31 Okt 2026 | P1-10 README Operasional; histori LM 1 g sejak 2010 dari arsip (D-29); Pegadaian Tabungan Emas + backfill 360 hari (D-30) |

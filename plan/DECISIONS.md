@@ -226,3 +226,13 @@ Log keputusan produk dan teknis (format ringkas ala ADR). Keputusan baru ditamba
 - Raw arsip disimpan di `data/raw/logammulia/` seperti backfill lain.
 **Konsekuensi:** kriteria Fase 1 "histori jual sejak 2010 dan buyback sejak 2015" yang dicabut di D-24 terpenuhi kembali untuk 1 g. Hasil impor: 5.086 baris (2010–2026), 0 revisi, 0 karantina. Celah 24–25 Okt 2026 (antara akhir arsip dan scrape harian pertama) tetap ada. Gramasi selain 1 g tetap hanya mulai 26 Okt 2026.
 
+### D-30 — Pegadaian Tabungan Emas masuk cakupan
+
+**Konteks:** buyback emas batangan Pegadaian tidak tersedia (Q-1, D-07), sedangkan Tabungan Emas punya harga jual dan buyback harian serta histori 360 hari. Pemilik proyek memutuskan produk ini penting dan harus ikut dikumpulkan, lengkap dengan backfill-nya (31 Okt 2026). Cakupan Pegadaian lain tetap: vendor tambahan (Retro, Lotus, Disney, Batik, …) tidak diambil.
+**Keputusan:**
+- Brand baru `pegadaian` (produk milik Pegadaian sendiri), produk `gold_savings`, `weight_g 0.01`. Harga disimpan per 0,01 g persis seperti sumber; konversi per gram dilakukan saat menghitung metrik turunan, bukan di data.
+- Scraper harian Pegadaian (`pegadaian@1.1.0`) mengambil Tabungan Emas di run yang sama dengan tabel batangan (jendela `evening`). Kegagalan salah satu endpoint menggagalkan sumber (atomik, D-15). Baris Tabungan Emas memakai `tglBerlaku`-nya sendiri.
+- Histori lewat job backfill `pegadaian-savings` (`backfill.yml`): grafik 360 hari, `jual` → `sell_price`, `beli` → `buyback_price`. Job ini juga bisa dijalankan ulang kapan saja untuk menambal hari yang terlewat (grafik selalu memuat 360 hari terakhir); nilai yang sama tidak disentuh, nilai berbeda dicatat sebagai REVISION.
+- Alternatif ditolak: menyimpan harga per gram (×100). Mengubah satuan sumber menyulitkan audit terhadap raw.
+**Konsekuensi:** Pegadaian kini punya buyback (khusus Tabungan Emas) dan spread harian. Kode yang membandingkan harga lintas produk wajib membagi dengan `weight_g`. V-04 tetap hanya menghitung tiga brand batangan.
+
