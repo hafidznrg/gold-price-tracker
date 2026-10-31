@@ -66,7 +66,8 @@ flowchart LR
 - [ ] **P1-10** Bagian "Operasional" di README repo: menjalankan scrape manual, membaca `data/meta/runs/`, `status.json`, dan karantina, menangani Issue gagal, menambah sumber baru. — `NFR-05` · S
 - [x] **P1-12** Karantina: perintah `quarantine` + workflow `quarantine.yml` (WORKFLOWS §3.5); Issue `quarantine` berisi path dan cara memutuskan. — `FR-15` · M
   - *31 Okt 2026:* `pipeline/quarantine.ts` (`decideQuarantine`, `resolveQuarantineIssue`), `revalidateHeld` di `validate.ts`, perintah `quarantine --phase apply|issue`, `.github/workflows/quarantine.yml` (WORKFLOWS §3.5). Uji `test/quarantine.test.ts`: approve/reject, pemindahan ke `_resolved`, revisi tercatat, V-02/V-03/V-05 diperiksa ulang, path dibatasi, Issue ditutup/dikomentari. Belum dipakai pada batch nyata (belum ada karantina).
-- [ ] **P1-13** Workflow `backfill.yml` (WORKFLOWS §3.4) dengan `dry_run` default `true`; dipakai P1-09 dan Fase 2. — `FR-07`, `FR-08` · S
+- [x] **P1-13** Workflow `backfill.yml` (WORKFLOWS §3.4) dengan `dry_run` default `true`; dipakai P1-09 dan Fase 2. — `FR-07`, `FR-08` · S
+  - *31 Okt 2026:* `.github/workflows/backfill.yml`, perintah `backfill` (`pipeline/backfill.ts`, registry `src/backfill/`), `validateBackfill`, `merge` melewati `status.json` untuk slot `backfill`, `notify --deliver false` (WORKFLOWS §3.4). Uji `test/backfill.test.ts` dengan job palsu. Belum ada job nyata; job pertama = `ubs-history` (P1-09).
 - [ ] **P1-11** Observasi 7 hari: cek hasil harian, perbaiki parser/validasi, catat insiden di DECISIONS.md bila mengubah aturan. Tetapkan `update_calendar` final tiap sumber (jawab **Q-6**). — `G1` · —
 
 ## Kriteria selesai

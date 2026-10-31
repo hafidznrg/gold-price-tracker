@@ -222,3 +222,26 @@ export function revalidateHeld(
   }
   return problems;
 }
+
+/**
+ * Gerbang untuk backfill (WORKFLOWS §3.4): V-01 dan V-03 tingkat run, V-02 menahan baris
+ * `UNKNOWN_ITEM`. V-04/V-06 (cakupan & kesegaran hari ini), V-05 (lonjakan antarbaris histori
+ * memang terjadi), dan V-11 (backfill memang mengisi histori) tidak berlaku; diff dry run
+ * menggantikan tinjauannya. Selisih dengan baris yang ada dicatat merge sebagai REVISION.
+ */
+export function validateBackfill(
+  rows: readonly Candidate[],
+  catalog: readonly CatalogItem[],
+): ValidateResult {
+  if (rows.length === 0) return fail('VALIDATION_FAILED', 'tidak ada baris dalam rentang');
+  const schema = checkSchema(rows);
+  if (schema) return fail('SCHEMA_INVALID', `V-01: ${schema}`);
+  const spread = checkSpread(rows);
+  if (spread) return fail('VALIDATION_FAILED', spread);
+  const unknown = rows.filter((r) => !isInCatalog(catalog, r));
+  return {
+    outcome: 'ok',
+    rows: rows.filter((r) => isInCatalog(catalog, r)),
+    held: unknown.length > 0 ? [{ reason_code: 'UNKNOWN_ITEM', rows: unknown }] : [],
+  };
+}

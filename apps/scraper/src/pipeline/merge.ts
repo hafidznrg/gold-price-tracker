@@ -319,7 +319,10 @@ export async function merge(opts: MergeOptions): Promise<MergeSummary> {
     });
     runs.push(record);
     rawPaths.forEach((p) => changed.add(p));
-    status[run.source] = nextStatus(status[run.source], record, run.history_points, nowIso);
+    // Backfill tidak menyentuh status harian sumber (kesegaran, consecutive_failures).
+    if (run.slot !== 'backfill') {
+      status[run.source] = nextStatus(status[run.source], record, run.history_points, nowIso);
+    }
 
     results.push({
       source: run.source,
@@ -337,7 +340,7 @@ export async function merge(opts: MergeOptions): Promise<MergeSummary> {
       rows_rejected: rejected,
       revisions: revisions.length - revisionsBefore,
       quarantine_paths: quarantinePaths,
-      consecutive_failures: status[run.source]!.consecutive_failures,
+      consecutive_failures: status[run.source]?.consecutive_failures ?? 0,
     });
   }
 

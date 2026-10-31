@@ -20,6 +20,7 @@ import {
   planNotifications,
   telegramSender,
 } from './pipeline/notify';
+import { backfill, describeBackfill } from './pipeline/backfill';
 import { plan, PlanError } from './pipeline/plan';
 import {
   decideQuarantine,
@@ -30,6 +31,7 @@ import {
 } from './pipeline/quarantine';
 import { describeRun, scrape } from './pipeline/scrape';
 import { DEFAULT_USER_AGENT } from './probe/http';
+import { BACKFILL_JOB_IDS, BACKFILL_TASKS, getBackfillJob } from './backfill';
 import { formatReport, runProbe, writeStepSummary } from './probe/run';
 import { PROBE_TARGETS } from './probe/targets';
 
@@ -181,6 +183,8 @@ const COMMANDS: Record<string, Command> = {
       summary: { type: 'string' },
       'merge-result': { type: 'string' },
       'run-url': { type: 'string' },
+      /** `false` = hanya step summary (backfill: tanpa Telegram/Issue sumber harian). */
+      deliver: { type: 'string' },
     },
     run: async (values) => {
       let summary: MergeSummary | null = null;
@@ -198,6 +202,7 @@ const COMMANDS: Record<string, Command> = {
       const text = formatSummary(summary, mergeResult, runUrl);
       console.log(text);
       if (process.env.GITHUB_STEP_SUMMARY) await appendFile(process.env.GITHUB_STEP_SUMMARY, text);
+      if (str(values.deliver) === 'false') return EXIT.OK;
 
       const { GH_TOKEN, GITHUB_REPOSITORY, TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID } = process.env;
       const errors = await deliver(planNotifications(summary, mergeResult, runUrl), runUrl, {
@@ -212,6 +217,48 @@ const COMMANDS: Record<string, Command> = {
       });
       // Notifikasi yang gagal terkirim harus terlihat sebagai job merah.
       return errors > 0 ? EXIT.FAILED : EXIT.OK;
+    },
+  },
+  backfill: {
+    summary: 'Histori satu job (WORKFLOWS §3.4) ke artifact --out untuk merge --origin backfill',
+    task: 'P1-13',
+    options: {
+      root,
+      job: { type: 'string' },
+      from: { type: 'string' },
+      to: { type: 'string' },
+      out: { type: 'string' },
+    },
+    run: async (values) => {
+      const rootDir = requireRoot(values);
+      const id = BACKFILL_JOB_IDS.find((j) => j === values.job);
+      if (!id) throw new UsageError(`--job wajib salah satu dari: ${BACKFILL_JOB_IDS.join(', ')}`);
+      const from = str(values.from) || undefined;
+      const to = str(values.to) || undefined;
+      for (const [flag, v] of [
+        ['--from', from],
+        ['--to', to],
+      ] as const) {
+        if (v !== undefined && !isIsoDate(v))
+          throw new UsageError(`${flag} harus YYYY-MM-DD: ${v}`);
+      }
+      if (from && to && from > to) throw new UsageError(`--from ${from} setelah --to ${to}`);
+      const job = getBackfillJob(id);
+      if (!job) {
+        console.error(`job backfill ${id} belum diimplementasikan (${BACKFILL_TASKS[id]}).`);
+        return EXIT.USAGE;
+      }
+      const run = await backfill({
+        root: rootDir,
+        job,
+        out: requireAbsolute(values.out, '--out'),
+        runId: runIdFromEnv(),
+        userAgent: process.env.SCRAPER_USER_AGENT || DEFAULT_USER_AGENT,
+        from,
+        to,
+      });
+      console.log(describeBackfill(run, from, to));
+      return run.exit_code;
     },
   },
   quarantine: {

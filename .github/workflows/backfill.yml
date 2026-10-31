@@ -1,0 +1,106 @@
+name: backfill
+
+# WORKFLOWS §3.4 — histori satu job: backfill → merge --origin backfill → ringkasan.
+# dry_run (default): merge berjalan di checkout runner, diff data/ diunggah sebagai artifact
+# backfill-diff tanpa commit. Bukan dry run: commit & push seperti scrape-retail.
+
+on:
+  workflow_dispatch:
+    inputs:
+      job:
+        type: choice
+        # Harus sama dengan BACKFILL_JOB_IDS di apps/scraper/src/backfill/index.ts.
+        options: [worldbank, xaus, ecb, jisdor, annual-fx, ubs-history]
+      from:
+        description: YYYY-MM-DD (opsional)
+        required: false
+        default: ''
+      to:
+        description: YYYY-MM-DD (opsional)
+        required: false
+        default: ''
+      dry_run:
+        description: Hanya tampilkan diff, tanpa commit
+        type: boolean
+        default: true
+
+permissions:
+  contents: write
+
+concurrency:
+  group: data-write
+  cancel-in-progress: false
+
+jobs:
+  backfill:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      - name: Backfill ${{ inputs.job }}
+        run: >
+          pnpm --filter scraper start backfill
+          --job "$JOB" --from "$FROM" --to "$TO"
+          --root "$GITHUB_WORKSPACE" --out "$GITHUB_WORKSPACE/out/backfill"
+        env:
+          JOB: ${{ inputs.job }}
+          FROM: ${{ inputs.from }}
+          TO: ${{ inputs.to }}
+          RUN_ID: ${{ github.run_id }}-${{ github.run_attempt }}
+          SCRAPER_USER_AGENT: ${{ vars.SCRAPER_USER_AGENT }}
+      - id: merge
+        run: >
+          pnpm --filter scraper start merge
+          --in "$GITHUB_WORKSPACE/out"
+          --root "$GITHUB_WORKSPACE"
+          --origin backfill
+          --summary "$GITHUB_WORKSPACE/summary/summary.json"
+        env:
+          RUN_ID: ${{ github.run_id }}-${{ github.run_attempt }}
+      - name: Ringkasan
+        if: always() && steps.merge.outcome != 'skipped'
+        run: >
+          pnpm --filter scraper start notify
+          --summary "$GITHUB_WORKSPACE/summary/summary.json"
+          --merge-result "${{ steps.merge.outcome }}"
+          --run-url "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          --deliver false
+      - name: Diff (dry run)
+        if: inputs.dry_run && steps.merge.outcome == 'success'
+        run: |
+          git add -N data
+          git diff --stat -- data > summary/diffstat.txt
+          git diff -- data ':(exclude)data/raw' > summary/data.diff
+          {
+            echo '### backfill: diff (dry run, tidak di-commit)'
+            echo
+            echo '```'
+            tail -n 40 summary/diffstat.txt
+            echo '```'
+            echo
+            echo 'Diff lengkap (tanpa data/raw): artifact `backfill-diff` → `data.diff`.'
+          } >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        if: always() && inputs.dry_run
+        with:
+          name: backfill-diff
+          path: summary
+          retention-days: 7
+          if-no-files-found: warn
+      - name: Commit & push
+        if: ${{ !inputs.dry_run }}
+        env:
+          COMMIT_MESSAGE: ${{ steps.merge.outputs.commit_message }}
+          JOB: ${{ inputs.job }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data
+          if git diff --cached --quiet; then echo "Tidak ada perubahan data"; exit 0; fi
+          git commit -m "data: backfill $JOB · ${COMMIT_MESSAGE#data: }"
+          for i in 1 2 3; do
+            git pull --rebase origin main && git push origin HEAD:main && exit 0
+            sleep $((i * 10))
+          done
+          exit 1

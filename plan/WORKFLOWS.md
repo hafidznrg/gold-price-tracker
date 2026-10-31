@@ -318,6 +318,15 @@ jobs:
 
 Backfill menghormati aturan merge yang sama: baris yang sudah ada dari `scrape` tidak ditimpa oleh nilai `backfill` yang sama; bila berbeda, dicatat di `REVISION` dengan `reason = source_changed` dan dilaporkan di ringkasan agar ditinjau.
 
+Implementasi (P1-13):
+
+- **Perintah `backfill`** memakai registry `BACKFILL_JOB_IDS` (`apps/scraper/src/backfill/`); tes memastikan isinya sama dengan pilihan `job` di YAML. Job yang belum punya modul keluar dengan kode 2 sambil menyebut tugasnya (`ubs-history` → P1-09, makro → P2-06…P2-10). Hasilnya artifact berkontrak §2.1 dengan `workflow: backfill`, `slot: backfill`, `data_date` = tanggal terakhir. Baris di luar `--from`/`--to` dihitung `rows_rejected`.
+- **Validasi backfill** (`validateBackfill`): V-01 dan V-03 tingkat run, V-02 → karantina `UNKNOWN_ITEM`. Rentang kosong = `failed`. V-04, V-05, V-06, dan V-11 tidak berlaku; tinjauan diff menggantikannya.
+- **`merge` tidak memperbarui `status.json`** untuk run `slot: backfill`, jadi kesegaran dan `consecutive_failures` sumber harian tidak terganggu. RUN tetap dicatat.
+- **`dry_run`:** merge berjalan sungguhan di checkout runner yang sekali pakai, bukan `--dry-run`. Hasilnya `git diff` nyata: diffstat di step summary, dan `data.diff` (tanpa `data/raw`) + `summary.json` di artifact `backfill-diff` (7 hari). Tidak ada commit.
+- **Ringkasan** memakai `notify --deliver false`: hanya step summary, tanpa Telegram/Issue, agar backfill tidak membuka atau menutup Issue sumber harian.
+- **Commit:** `data: backfill {job} · {pesan merge}`.
+
 ### 3.5 `quarantine.yml`
 
 ```yaml
