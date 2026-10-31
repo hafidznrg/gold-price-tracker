@@ -3,6 +3,7 @@ import { ScrapeError } from '../pipeline/errors';
 import { fetchOk } from '../sources/http';
 import type { ParsedRow, ParseResult, RawPayload } from '../sources/types';
 import { CHART_URL } from '../sources/ubslifestyle';
+import { selectUncovered } from './select';
 import type { BackfillJob } from './types';
 
 // P1-09 (FR-08, D-28) — histori buyback 1 g UBS dari endpoint grafik (TECH-SPEC §5.1):
@@ -58,14 +59,6 @@ export function parseHistory(raw: RawPayload): ParseResult<PriceRow> {
     sourceUpdatedAt: null,
     stale: null,
   };
-}
-
-/** Buang tanggal yang sudah punya baris 1 g hasil scrape harian (tahun produksi apa pun). */
-export function selectUncovered(rows: Row[], existing: readonly PriceRow[]): Row[] {
-  const scraped = new Set(
-    existing.filter((r) => r.origin === 'scrape' && r.weight_g === 1).map((r) => r.date),
-  );
-  return rows.filter((r) => !scraped.has(r.date));
 }
 
 export const ubsHistory: BackfillJob = {

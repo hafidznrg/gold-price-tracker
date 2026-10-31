@@ -23,6 +23,7 @@ export interface BackfillOptions {
   userAgent: string;
   from?: string;
   to?: string;
+  input?: string;
   now?: Date;
   pauseMs?: number;
   retryDelayMs?: number;
@@ -55,6 +56,7 @@ export async function backfill(opts: BackfillOptions): Promise<ScrapeRun> {
       now,
       from: opts.from,
       to: opts.to,
+      input: opts.input,
       pauseMs: opts.pauseMs,
       retryDelayMs: opts.retryDelayMs,
     });

@@ -2,7 +2,8 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
-import { parseHistory, selectUncovered, ubsHistory } from '../src/backfill/ubs-history';
+import { selectUncovered } from '../src/backfill/select';
+import { parseHistory, ubsHistory } from '../src/backfill/ubs-history';
 import type { RawPayload } from '../src/sources/types';
 import { stored } from './helpers';
 

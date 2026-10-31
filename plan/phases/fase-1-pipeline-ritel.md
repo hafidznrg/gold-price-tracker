@@ -76,7 +76,7 @@ flowchart LR
 ## Kriteria selesai
 
 - Ketiga scraper berjalan di workflow terjadwal dan lulus uji fixture.
-- ~~`data/prices/logammulia/` memuat histori jual sejak 2010 dan buyback sejak 2015.~~ Dicabut (D-24): situs baru tidak menyediakan histori panjang dan memblokir akses otomatis.
+- ~~`data/prices/logammulia/` memuat histori jual sejak 2010 dan buyback sejak 2015.~~ Dicabut (D-24): situs baru tidak menyediakan histori panjang dan memblokir akses otomatis. *31 Okt 2026:* terpenuhi kembali untuk 1 g lewat arsip scraping (D-29).
 - Setiap kegagalan menghasilkan workflow merah, pesan Telegram, dan Issue.
 - `data/meta/runs/{yyyy}.jsonl` dan `data/meta/status.json` terisi untuk setiap run; setiap perubahan nilai tercatat di `revisions/`.
 - Menjalankan workflow manual dua kali di hari yang sama tidak mengubah CSV.

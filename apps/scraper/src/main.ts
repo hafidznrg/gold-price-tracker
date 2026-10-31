@@ -228,6 +228,7 @@ const COMMANDS: Record<string, Command> = {
       from: { type: 'string' },
       to: { type: 'string' },
       out: { type: 'string' },
+      input: { type: 'string' },
     },
     run: async (values) => {
       const rootDir = requireRoot(values);
@@ -256,6 +257,7 @@ const COMMANDS: Record<string, Command> = {
         userAgent: process.env.SCRAPER_USER_AGENT || DEFAULT_USER_AGENT,
         from,
         to,
+        input: values.input === undefined ? undefined : requireAbsolute(values.input, '--input'),
       });
       console.log(describeBackfill(run, from, to));
       return run.exit_code;

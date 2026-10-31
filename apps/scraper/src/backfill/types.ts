@@ -13,6 +13,8 @@ export interface BackfillContext {
   /** Rentang opsional dari input workflow (`YYYY-MM-DD`, inklusif). */
   from?: string;
   to?: string;
+  /** Folder berisi file sumber untuk job `localOnly` (`--input`, absolut). */
+  input?: string;
   pauseMs?: number;
   retryDelayMs?: number;
 }
@@ -23,6 +25,11 @@ export interface BackfillJob {
   source: PriceSource;
   /** Dicatat di RUN, mis. `ubs-history@1.0.0`. */
   parserVersion: string;
+  /**
+   * Job yang membaca file lokal (`--input`), bukan situs: hanya dijalankan dari terminal dan
+   * tidak muncul sebagai pilihan di backfill.yml.
+   */
+  localOnly?: boolean;
   fetchRaw(ctx: BackfillContext): Promise<RawPayload>;
   /** Fungsi murni: tidak boleh melakukan I/O. */
   parse(raw: RawPayload): ParseResult<PriceRow>;

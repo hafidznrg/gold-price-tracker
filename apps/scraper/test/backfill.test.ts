@@ -3,7 +3,7 @@ import path from 'node:path';
 import { readPriceCsv, type PriceRow } from '@gold/schema';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { parse as parseYaml } from 'yaml';
-import { BACKFILL_JOB_IDS } from '../src/backfill';
+import { BACKFILL_JOB_IDS, getBackfillJob } from '../src/backfill';
 import type { BackfillJob } from '../src/backfill/types';
 import { EXIT, main } from '../src/main';
 import { backfill, type BackfillOptions } from '../src/pipeline/backfill';
@@ -172,11 +172,12 @@ describe('backfill', () => {
 });
 
 describe('job backfill', () => {
-  it('BACKFILL_JOB_IDS sama dengan pilihan job di backfill.yml', async () => {
+  it('BACKFILL_JOB_IDS (tanpa job lokal) sama dengan pilihan job di backfill.yml', async () => {
     const yml = parseYaml(
       await readFile(path.join(ROOT, '.github/workflows/backfill.yml'), 'utf8'),
     ) as { on: { workflow_dispatch: { inputs: { job: { options: string[] } } } } };
-    expect(yml.on.workflow_dispatch.inputs.job.options).toEqual([...BACKFILL_JOB_IDS]);
+    const remote = BACKFILL_JOB_IDS.filter((id) => !getBackfillJob(id)?.localOnly);
+    expect(yml.on.workflow_dispatch.inputs.job.options).toEqual(remote);
   });
 
   describe('cli', () => {

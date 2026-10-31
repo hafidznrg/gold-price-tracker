@@ -326,6 +326,7 @@ Implementasi (P1-13):
 - **`dry_run`:** merge berjalan sungguhan di checkout runner yang sekali pakai, bukan `--dry-run`. Hasilnya `git diff` nyata: diffstat di step summary, dan `data.diff` (tanpa `data/raw`) + `summary.json` di artifact `backfill-diff` (7 hari). Tidak ada commit.
 - **Ringkasan** memakai `notify --deliver false`: hanya step summary, tanpa Telegram/Issue, agar backfill tidak membuka atau menutup Issue sumber harian.
 - **Commit:** `data: backfill {job} · {pesan merge}`.
+- **Job lokal** (`localOnly`, mis. `logammulia-archive`, D-29) membaca file dari `--input` dan tidak muncul sebagai pilihan di YAML. Dijalankan dari terminal: `backfill --job … --input … --out …`, lalu `merge --origin backfill --dry-run true` untuk meninjau, baru merge sungguhan dan commit.
 
 ### 3.5 `quarantine.yml`
 

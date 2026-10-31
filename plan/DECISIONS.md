@@ -215,3 +215,14 @@ Log keputusan produk dan teknis (format ringkas ala ADR). Keputusan baru ditamba
 - Histori 6 bulan Logam Mulia dari grafik (D-26) tidak termasuk P1-09: butuh interaksi Playwright terpisah dan menambah risiko blokir. Dicatat sebagai kandidat lanjutan.
 **Konsekuensi:** seri 1 g UBS punya histori ±3 tahun sebelum 26 Okt 2026, dengan celah sesuai sumber (tidak diinterpolasi). Puncak 29 Jan 2026 lolos validasi (< 10%) dan dibiarkan apa adanya; bila kelak terbukti salah, perbaiki lewat REVISION `manual`.
 
+### D-29 — Histori Antam LM 1 g sejak 2010 dari arsip scraping
+
+**Konteks:** situs logammulia.com versi baru membatasi grafik ke 6 bulan (D-24), jadi histori panjang tidak bisa diambil lagi dari situs. Ada arsip hasil scraping endpoint lama logammulia.com, dari masa sebelum pembatasan itu: harga dasar 1 g sejak 4 Jan 2010 dan buyback 1 g sejak 25 Nov 2015, sampai 23 Okt 2026. Pemilik arsip memberi izin pemakaian dan meminta tidak disebut.
+**Pemeriksaan (31 Okt 2026):** nilai arsip 19–23 Okt 2026 sama persis dengan grafik situs di raw kita, untuk jual maupun buyback. Stempel waktu arsip adalah jam dinding WIB yang tersimpan seolah-olah UTC; titik sebelum 2016 hanya berisi tanggal. Hanya satu perubahan harga dasar antartanggal > 8%: −8,3% pada 30→31 Jan 2026, sejalan dengan lonjakan akhir Januari di data UBS.
+**Keputusan:**
+- Job backfill lokal `logammulia-archive` (`--input` = folder berisi `antam_sell.json` dan `antam_buy.json`). Job ini tidak muncul di `backfill.yml`, agar lokasi arsip tidak tercatat di kode atau log Actions publik. Diimpor dari terminal, dengan `run_id` `local-…`.
+- Baris: `antam`, `gold_bar`, `variant = ''`, `weight_g 1`, `location jakarta`, `origin = backfill`, `parser_version logammulia-archive@1.0.0`. Tanggal = tanggal UTC dari stempel. Titik terakhir per tanggal dipakai. `source_updated_at` = jam stempel +07:00, atau kosong bila hanya tanggal. `buyback_price` kosong sebelum Nov 2015.
+- Tanggal yang sudah di-scrape harian dibuang (sama seperti D-28). Arsip berakhir 23 Okt, jadi tidak ada tumpang tindih.
+- Raw arsip disimpan di `data/raw/logammulia/` seperti backfill lain.
+**Konsekuensi:** kriteria Fase 1 "histori jual sejak 2010 dan buyback sejak 2015" yang dicabut di D-24 terpenuhi kembali untuk 1 g. Hasil impor: 5.086 baris (2010–2026), 0 revisi, 0 karantina. Celah 24–25 Okt 2026 (antara akhir arsip dan scrape harian pertama) tetap ada. Gramasi selain 1 g tetap hanya mulai 26 Okt 2026.
+
