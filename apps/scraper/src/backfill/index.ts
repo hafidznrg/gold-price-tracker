@@ -1,3 +1,4 @@
+import { ecb } from './ecb';
 import { logammuliaArchive } from './logammulia-archive';
 import { pegadaianSavings } from './pegadaian-savings';
 import type { BackfillJob } from './types';
@@ -33,6 +34,7 @@ export const BACKFILL_TASKS: Record<BackfillJobId, string> = {
 
 /** Modul job yang sudah diimplementasikan. */
 const registry: Partial<Record<BackfillJobId, BackfillJob>> = {
+  ecb,
   'ubs-history': ubsHistory,
   'logammulia-archive': logammuliaArchive,
   'pegadaian-savings': pegadaianSavings,

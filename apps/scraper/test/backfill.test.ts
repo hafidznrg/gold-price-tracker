@@ -4,7 +4,7 @@ import { readPriceCsv, type PriceRow } from '@gold/schema';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { parse as parseYaml } from 'yaml';
 import { BACKFILL_JOB_IDS, getBackfillJob } from '../src/backfill';
-import type { BackfillJob } from '../src/backfill/types';
+import type { PriceBackfillJob } from '../src/backfill/types';
 import { EXIT, main } from '../src/main';
 import { backfill, type BackfillOptions } from '../src/pipeline/backfill';
 import { ScrapeError } from '../src/pipeline/errors';
@@ -21,7 +21,7 @@ const HISTORY = [
   candidate({ date: '2026-10-22', variant: '', sell_price: null, buyback_price: 2_270_000 }),
 ];
 
-const fakeJob = (rows = HISTORY, fetchRaw?: BackfillJob['fetchRaw']): BackfillJob => ({
+const fakeJob = (rows = HISTORY, fetchRaw?: PriceBackfillJob['fetchRaw']): PriceBackfillJob => ({
   id: 'ubs-history',
   source: 'ubslifestyle',
   parserVersion: 'ubs-history@0.0.0-test',
@@ -190,6 +190,14 @@ describe('job backfill', () => {
         EXIT.USAGE,
       );
       expect(error.mock.calls.join('\n')).toContain('belum diimplementasikan (P2-07)');
+    });
+
+    it('job makro ditolak sebelum fetch sampai merge makro ada → kode 2', async () => {
+      const out = path.join(root, 'out', 'backfill');
+      expect(await main(['backfill', '--job', 'ecb', '--root', root, '--out', out])).toBe(
+        EXIT.USAGE,
+      );
+      expect(error.mock.calls.join('\n')).toContain('(P2-01, P2-02)');
     });
 
     it('argumen tidak valid → kode 2', async () => {

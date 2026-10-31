@@ -249,6 +249,12 @@ const COMMANDS: Record<string, Command> = {
         console.error(`job backfill ${id} belum diimplementasikan (${BACKFILL_TASKS[id]}).`);
         return EXIT.USAGE;
       }
+      if (job.kind === 'macro') {
+        console.error(
+          `job backfill ${id} (${job.series}) belum bisa ditulis: validasi dan merge baris makro menyusul (P2-01, P2-02).`,
+        );
+        return EXIT.USAGE;
+      }
       const run = await backfill({
         root: rootDir,
         job,

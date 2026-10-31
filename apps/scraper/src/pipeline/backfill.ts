@@ -2,7 +2,7 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { gzipSync } from 'node:zlib';
 import { utcIso, type ErrorCode, type PriceRow } from '@gold/schema';
-import type { BackfillJob } from '../backfill/types';
+import type { PriceBackfillJob } from '../backfill/types';
 import { loadConfig } from '../config';
 import type { ParseResult, RawPayload } from '../sources/types';
 import { ARTIFACT_FILES, type RawExtension, type ScrapeRun } from './artifact';
@@ -17,7 +17,7 @@ import { validateBackfill, type HeldBatch } from './validate';
 
 export interface BackfillOptions {
   root: string;
-  job: BackfillJob;
+  job: PriceBackfillJob;
   out: string;
   runId: string;
   userAgent: string;

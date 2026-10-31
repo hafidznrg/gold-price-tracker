@@ -3,7 +3,7 @@ import { ScrapeError } from '../pipeline/errors';
 import { fetchOk } from '../sources/http';
 import { readData, savingsRow } from '../sources/pegadaian';
 import type { ParsedRow, ParseResult, RawPayload } from '../sources/types';
-import type { BackfillJob } from './types';
+import type { PriceBackfillJob } from './types';
 
 // D-30 — histori Tabungan Emas Pegadaian dari `GET /gold/prices/chart`. Respons memuat
 // `allGrafik[]` per `tipe` (`jual`, `beli`) × `timeInterval` (7/30/90/180/360 hari); dipakai
@@ -52,7 +52,7 @@ export function parseSavingsChart(raw: RawPayload): ParseResult<PriceRow> {
   return { rows, dataDate: dates.at(-1) ?? null, sourceUpdatedAt: null, stale: null };
 }
 
-export const pegadaianSavings: BackfillJob = {
+export const pegadaianSavings: PriceBackfillJob = {
   id: 'pegadaian-savings',
   source: 'pegadaian',
   parserVersion: 'pegadaian-savings@1.0.0',

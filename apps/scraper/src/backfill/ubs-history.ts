@@ -4,7 +4,7 @@ import { fetchOk } from '../sources/http';
 import type { ParsedRow, ParseResult, RawPayload } from '../sources/types';
 import { CHART_URL } from '../sources/ubslifestyle';
 import { selectUncovered } from './select';
-import type { BackfillJob } from './types';
+import type { PriceBackfillJob } from './types';
 
 // P1-09 (FR-08, D-28) — histori buyback 1 g UBS dari endpoint grafik (TECH-SPEC §5.1):
 // `chart_interval/GOLD/{hari}` mengembalikan seluruh histori (±20 Nov 2023 → kini) berapa pun
@@ -61,7 +61,7 @@ export function parseHistory(raw: RawPayload): ParseResult<PriceRow> {
   };
 }
 
-export const ubsHistory: BackfillJob = {
+export const ubsHistory: PriceBackfillJob = {
   id: 'ubs-history',
   source: 'ubslifestyle',
   parserVersion: 'ubs-history@1.0.0',

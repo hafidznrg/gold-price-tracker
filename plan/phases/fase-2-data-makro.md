@@ -33,6 +33,7 @@ Semua backfill dijalankan lewat `backfill.yml` (dibuat di P1-13): pertama `dry_r
 - [ ] **P2-06** `backfill/worldbank.ts`: XLSX Pink Sheet bulanan (URL dari tautan halaman, kolom `Gold` lewat nama; TECH-SPEC §5.6) → `xau_usd_oz` (`M`) 1996 → bulan lalu. — `FR-07` · M
 - [ ] **P2-07** `backfill/xaus.ts`: histori harian 5 tahun → `xau_usd_oz` (`D`). — `FR-07` · S
 - [ ] **P2-08** `backfill/ecb.ts`: Frankfurter `rates.csv` → `usd_idr_ecb` = EUR/IDR ÷ EUR/USD, 4 Jan 1999 → kini (harian; satu request `v2/rates.csv`, TECH-SPEC §5.6). — `FR-07` · S
+  - *1 Nov 2026:* `src/backfill/ecb.ts` (`ecb@1.0.0`, D-32): parse murni + uji `test/ecb.test.ts` dengan fixture P0-10; uji ke endpoint asli 7.126 tanggal (1999-01-04 → 2026-10-30). Kontrak `MacroBackfillJob` ditambahkan; job ditolak CLI (kode 2) sampai P2-01/P2-02. Dicentang setelah run `backfill.yml` non-dry ter-commit.
 - [ ] **P2-09** `backfill/jisdor.ts`: postback ekspor XLSX, 20 Mei 2013 → kini, satu request (TECH-SPEC §5.5). — `FR-07` · M
 - [ ] **P2-10** `backfill/annual-fx.ts`: kurs USD/IDR tahunan 1996–1998 dari sumber resmi terverifikasi (jawab **Q-3**); catat sumbernya di DECISIONS.md. — `FR-07` · S
 

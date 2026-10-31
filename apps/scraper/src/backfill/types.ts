@@ -1,4 +1,4 @@
-import type { PriceRow, PriceSource } from '@gold/schema';
+import type { MacroRow, MacroSource, PriceRow, PriceSource, Series } from '@gold/schema';
 import type { ParsedRow, ParseResult, RawPayload } from '../sources/types';
 
 // WORKFLOWS §3.4 — kontrak job backfill. Sama dengan modul sumber (TECH-SPEC §3): fetch
@@ -19,10 +19,8 @@ export interface BackfillContext {
   retryDelayMs?: number;
 }
 
-export interface BackfillJob {
+interface BaseBackfillJob {
   id: string;
-  /** Sumber harga yang diisi. Job makro (Fase 2) menambah varian `macro`. */
-  source: PriceSource;
   /** Dicatat di RUN, mis. `ubs-history@1.0.0`. */
   parserVersion: string;
   /**
@@ -31,6 +29,12 @@ export interface BackfillJob {
    */
   localOnly?: boolean;
   fetchRaw(ctx: BackfillContext): Promise<RawPayload>;
+}
+
+export interface PriceBackfillJob extends BaseBackfillJob {
+  kind?: 'prices';
+  /** Sumber harga yang diisi. */
+  source: PriceSource;
   /** Fungsi murni: tidak boleh melakukan I/O. */
   parse(raw: RawPayload): ParseResult<PriceRow>;
   /**
@@ -39,3 +43,18 @@ export interface BackfillJob {
    */
   select?(rows: ParsedRow<PriceRow>[], existing: readonly PriceRow[]): ParsedRow<PriceRow>[];
 }
+
+/**
+ * Job histori makro (TECH-SPEC §5.6): mengisi satu seri `data/macro/{series}.csv`. Pipeline
+ * `backfill`/`merge` untuk baris makro menyusul di P2-01/P2-02; sampai itu CLI menolak job ini.
+ */
+export interface MacroBackfillJob extends BaseBackfillJob {
+  kind: 'macro';
+  series: Series;
+  /** Penyedia data (kolom `source` CSV makro). */
+  source: MacroSource;
+  /** Fungsi murni: tidak boleh melakukan I/O. */
+  parse(raw: RawPayload): ParseResult<MacroRow>;
+}
+
+export type BackfillJob = PriceBackfillJob | MacroBackfillJob;

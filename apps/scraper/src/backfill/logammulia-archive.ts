@@ -4,7 +4,7 @@ import { utcIso, type PriceRow } from '@gold/schema';
 import { ScrapeError } from '../pipeline/errors';
 import type { ParsedRow, ParseResult, RawPayload } from '../sources/types';
 import { selectUncovered } from './select';
-import type { BackfillJob } from './types';
+import type { PriceBackfillJob } from './types';
 
 // D-29 — histori 1 g Antam LM (Jakarta) dari arsip hasil scraping logammulia.com sebelum situs
 // membatasi grafik ke 6 bulan; dipakai dengan izin pemilik arsip. Job lokal: `--input` = folder
@@ -84,7 +84,7 @@ export function parseArchive(raw: RawPayload): ParseResult<PriceRow> {
   return { rows, dataDate: dates.at(-1) ?? null, sourceUpdatedAt: null, stale: null };
 }
 
-export const logammuliaArchive: BackfillJob = {
+export const logammuliaArchive: PriceBackfillJob = {
   id: 'logammulia-archive',
   source: 'logammulia',
   parserVersion: 'logammulia-archive@1.0.0',

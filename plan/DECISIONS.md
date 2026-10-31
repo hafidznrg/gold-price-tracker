@@ -247,3 +247,12 @@ Log keputusan produk dan teknis (format ringkas ala ADR). Keputusan baru ditamba
 - Periode berjalan dipotong di `until` (default: tanggal terakhir yang diwakili data; baris `M`/`A` mewakili sampai akhir bulan/tahunnya), sehingga tahun berjalan dinilai terhadap hari kerja yang sudah lewat.
 - Join kurs harian hanya memakai baris `D`; nilai tahunan tidak pernah dipasangkan dengan tanggal emas harian.
 **Konsekuensi:** setiap titik agregat membawa `series`, `frequency`, `points`, dan `coverage` untuk tooltip (FR-32). Aturan ini tidak mengubah data, hanya cara build menghitung.
+
+### D-32 — Job backfill makro dan pembulatan `usd_idr_ecb`
+
+**Konteks:** P2-08 adalah job backfill makro pertama. Kerangka backfill (P1-13) hanya mengenal baris harga, sementara validasi dan merge baris makro baru dibuat di P2-01/P2-02. Kurs ECB adalah hasil bagi dua kurs (EUR/IDR ÷ EUR/USD), sehingga desimalnya panjang.
+**Keputusan:**
+- Kontrak job dipisah: `PriceBackfillJob` (job yang sudah ada, `kind` opsional `prices`) dan `MacroBackfillJob` (`kind: 'macro'`, `series`, `source` penyedia, `parse` → `MacroRow`). Job `ecb` sudah terdaftar, tetapi `backfill --job ecb` keluar dengan kode 2 dan menyebut P2-01/P2-02 sampai pipeline makro ada. Dengan begitu tidak ada kode run harian yang berubah selama observasi G1.
+- `usd_idr_ecb` dibulatkan **2 desimal**. EUR/USD dari ECB hanya 4 desimal (presisi relatif ±1e-4, ±2 Rp), jadi angka di belakang sen adalah presisi semu.
+- Tanggal yang kehilangan salah satu kuotasi IDR/USD, kuotasi ganda, atau header yang berubah menggagalkan run (`PARSE_ERROR`), alih-alih menulis seri berlubang diam-diam.
+**Konsekuensi:** uji ke endpoint asli (1 Nov 2026): satu respons ±380 KB, 7.126 tanggal (4 Jan 1999 → 30 Okt 2026, ±255 per tahun, cukup untuk ambang 80% di D-31), nilai 6.614–18.176 Rp/US$.
