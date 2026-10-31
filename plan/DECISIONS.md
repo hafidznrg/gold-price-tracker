@@ -205,3 +205,13 @@ Log keputusan produk dan teknis (format ringkas ala ADR). Keputusan baru ditamba
 - Alternatif ditunda: pemicu eksternal (mis. layanan cron yang memanggil `workflow_dispatch`) untuk ketepatan waktu. Dievaluasi selama observasi P1-11 bila keterlambatan berjam-jam terus terjadi.
 **Konsekuensi:** run yang terlambat sampai lewat tengah malam tetap mengambil data tanggal slot selama sumber masih menampilkannya. Bila sumber sudah berganti ke tanggal berikutnya (mis. Pegadaian menerbitkan periode I hari berikutnya), hasilnya `stale` dan tanggal itu tetap hilang; satu-satunya mitigasi adalah run tepat waktu. Run tetap dicatat di `runs/{yyyy}.jsonl` menurut `started_at`.
 
+### D-28 — Backfill UBS: buyback 1 g dari grafik sebagai seri `variant = ''`
+
+**Konteks:** P1-09 (FR-08). Endpoint grafik UBS (`chart_interval/GOLD/{hari}`, TECH-SPEC §5.1) memuat seluruh histori buyback 1 g sejak 20 Nov 2023, tanpa tahun produksi dan tanpa harga beli. Uji nyata 31 Okt 2026: 549 titik (20 Nov 2023 → 31 Okt 2026); celah terpanjang 79 hari (21 Jun → 8 Sep 2025), lalu dua celah ±33 hari di 2024. Hanya satu perubahan antartitik > 8%: +10,1% yang melewati celah 13 Mar → 15 Apr 2024. Puncak 3.015.000 pada 29 Jan 2026 (+7,1% lalu −6,7% esok harinya).
+**Keputusan:**
+- Diambil sebagai baris `brand ubs`, `weight_g 1`, **`variant = ''`** (tahun produksi tidak diketahui), `sell_price = null`, `buyback_price = a`, `origin = backfill`. Seri ini sengaja terpisah dari seri harian `variant = YYYY`: backfill tidak pernah menimpa atau merevisi baris scrape, dan tampilan (Fase 3) menyambungkan kedua seri secara eksplisit.
+- Tanggal yang sudah punya baris 1 g hasil scrape harian (tahun apa pun) dibuang (`select` di job backfill), agar tidak ada dua seri 1 g di tanggal yang sama.
+- Alternatif ditolak: mengisi `variant` dengan tahun produksi terbaru pada tanggal itu. Asumsinya tidak bisa diverifikasi dari sumber, dan baris itu akan bercampur dengan seri harian.
+- Histori 6 bulan Logam Mulia dari grafik (D-26) tidak termasuk P1-09: butuh interaksi Playwright terpisah dan menambah risiko blokir. Dicatat sebagai kandidat lanjutan.
+**Konsekuensi:** seri 1 g UBS punya histori ±3 tahun sebelum 26 Okt 2026, dengan celah sesuai sumber (tidak diinterpolasi). Puncak 29 Jan 2026 lolos validasi (< 10%) dan dibiarkan apa adanya; bila kelak terbukti salah, perbaiki lewat REVISION `manual`.
+

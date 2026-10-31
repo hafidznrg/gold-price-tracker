@@ -1,5 +1,5 @@
 import type { PriceRow, PriceSource } from '@gold/schema';
-import type { ParseResult, RawPayload } from '../sources/types';
+import type { ParsedRow, ParseResult, RawPayload } from '../sources/types';
 
 // WORKFLOWS §3.4 — kontrak job backfill. Sama dengan modul sumber (TECH-SPEC §3): fetch
 // mentah lalu parse murni, tetapi menghasilkan histori bertanggal lampau.
@@ -26,4 +26,9 @@ export interface BackfillJob {
   fetchRaw(ctx: BackfillContext): Promise<RawPayload>;
   /** Fungsi murni: tidak boleh melakukan I/O. */
   parse(raw: RawPayload): ParseResult<PriceRow>;
+  /**
+   * Opsional, murni: buang baris yang sudah tercakup data sumber itu (mis. tanggal yang sudah
+   * di-scrape harian). Baris yang dibuang dihitung `rows_rejected`.
+   */
+  select?(rows: ParsedRow<PriceRow>[], existing: readonly PriceRow[]): ParsedRow<PriceRow>[];
 }

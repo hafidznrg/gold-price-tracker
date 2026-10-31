@@ -7,7 +7,7 @@ import { loadConfig } from '../config';
 import type { ParseResult, RawPayload } from '../sources/types';
 import { ARTIFACT_FILES, type RawExtension, type ScrapeRun } from './artifact';
 import { errorCodeOf, errorMessageOf, ScrapeError } from './errors';
-import { sha256 } from './store';
+import { readPrices, sha256 } from './store';
 import type { Candidate } from './upsert';
 import { validateBackfill, type HeldBatch } from './validate';
 
@@ -76,7 +76,10 @@ export async function backfill(opts: BackfillOptions): Promise<ScrapeRun> {
   }
 
   if (parsed) {
-    const selected = parsed.rows.filter((r) => inRange(r.date, opts.from, opts.to));
+    const inWindow = parsed.rows.filter((r) => inRange(r.date, opts.from, opts.to));
+    const selected = job.select
+      ? job.select(inWindow, await readPrices(opts.root, job.source))
+      : inWindow;
     const result = validateBackfill(selected, config.catalog);
     if (result.outcome === 'failed') {
       failure = { code: result.error_code, message: result.error_message };

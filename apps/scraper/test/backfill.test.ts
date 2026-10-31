@@ -185,10 +185,10 @@ describe('job backfill', () => {
 
     it('job belum diimplementasikan → kode 2 dengan nama tugas', async () => {
       const out = path.join(root, 'out', 'backfill');
-      expect(await main(['backfill', '--job', 'ubs-history', '--root', root, '--out', out])).toBe(
+      expect(await main(['backfill', '--job', 'xaus', '--root', root, '--out', out])).toBe(
         EXIT.USAGE,
       );
-      expect(error.mock.calls.join('\n')).toContain('belum diimplementasikan (P1-09)');
+      expect(error.mock.calls.join('\n')).toContain('belum diimplementasikan (P2-07)');
     });
 
     it('argumen tidak valid → kode 2', async () => {

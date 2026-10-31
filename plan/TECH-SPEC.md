@@ -153,7 +153,7 @@ Hasil riset P0-07 (25 Okt 2026, fixture di `apps/scraper/test/fixtures/ubslifest
 - **Tanggal data & stale (D-19):** scraper memanggil `chart_interval/GOLD/7` setelah halaman (jeda 5 detik). `data_date` = tanggal titik terakhir grafik bila nilai `a`-nya sama dengan buyback 1 g tabel tahun berjalan; bila tidak sama, run berstatus `stale` (situs sedang di tengah pembaruan atau cache belum segar). `stale` dianggap kegagalan hanya pada hari yang diharapkan menurut `update_calendar`; tanggal data < tanggal berjalan pada hari yang diharapkan juga `stale`.
 - **Normalisasi:** `Rp1.403.300` → `1403300`; `0.05 Gram` / `0,5 Gram` → `0.05` / `0.5`. Sel tanpa angka (mis. `-`) → `null`.
 - **Validasi khusus:** ≥ 13 pecahan untuk tahun berjalan (V-04).
-- **Backfill (FR-08, P1-09):** layak hanya untuk **buyback 1 g** sejak Nov 2023 (`sell_price` kosong, `variant` tidak diketahui → `''`, `origin = backfill`). Tahun produksi seri grafik tidak tercantum; putuskan di P1-09 apakah tetap diambil.
+- **Backfill (FR-08, P1-09):** layak hanya untuk **buyback 1 g** sejak Nov 2023 (`sell_price` kosong, `variant` tidak diketahui → `''`, `origin = backfill`). Tahun produksi seri grafik tidak tercantum. **Diputuskan di D-28:** tetap diambil sebagai seri `variant = ''`; tanggal yang sudah di-scrape harian dibuang. Job `ubs-history` (`apps/scraper/src/backfill/ubs-history.ts`) memanggil `chart_interval/GOLD/1095`.
 
 ### 5.2 Pegadaian (`pegadaian.ts`)
 

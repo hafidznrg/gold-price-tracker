@@ -1,4 +1,5 @@
 import type { BackfillJob } from './types';
+import { ubsHistory } from './ubs-history';
 
 // Job backfill (WORKFLOWS §3.4). Pilihan `job` di backfill.yml harus sama dengan
 // BACKFILL_JOB_IDS; job yang belum ada modulnya keluar dengan kode 2 dan menyebut tugasnya.
@@ -24,7 +25,9 @@ export const BACKFILL_TASKS: Record<BackfillJobId, string> = {
 };
 
 /** Modul job yang sudah diimplementasikan. */
-const registry: Partial<Record<BackfillJobId, BackfillJob>> = {};
+const registry: Partial<Record<BackfillJobId, BackfillJob>> = {
+  'ubs-history': ubsHistory,
+};
 
 export function getBackfillJob(id: BackfillJobId): BackfillJob | undefined {
   return registry[id];
