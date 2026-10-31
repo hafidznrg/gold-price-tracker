@@ -10,3 +10,4 @@ export * from './dates';
 export * from './rows';
 export * from './csv';
 export * from './config';
+export * from './derive';

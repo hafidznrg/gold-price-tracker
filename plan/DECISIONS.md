@@ -236,3 +236,14 @@ Log keputusan produk dan teknis (format ringkas ala ADR). Keputusan baru ditamba
 - Alternatif ditolak: menyimpan harga per gram (×100). Mengubah satuan sumber menyulitkan audit terhadap raw.
 **Konsekuensi:** Pegadaian kini punya buyback (khusus Tabungan Emas) dan spread harian. Kode yang membandingkan harga lintas produk wajib membagi dengan `weight_g`. V-04 tetap hanya menghitung tiga brand batangan.
 
+
+### D-31 — Detail resolusi frekuensi di `derive.ts`
+
+**Konteks:** P2-11. DATA-MODEL §6.3 menetapkan urutan D ≥ 80% → M → A, tetapi belum menyebut hari kerja mana yang dihitung, kapan rata-rata `M` cukup untuk satu tahun, dan bagaimana periode berjalan diperlakukan.
+**Keputusan:**
+- "Hari kerja" untuk cakupan `D` = Senin–Jumat, tanpa mengurangi libur. Seri makro mengikuti kalender pasar yang berbeda (London, Frankfurt, Jakarta); libur JISDOR (±15 hari/tahun) hanya menurunkan cakupan ±6%, masih di atas ambang. Titik akhir pekan ikut dirata-ratakan, tetapi tidak menambah cakupan.
+- Agregat tahunan dari `M` dipakai bila bulan yang ada ≥ 80% bulan periode itu; selain itu jatuh ke `A`. Agregat bulanan memakai baris `M` bulan itu, lalu nilai `A` tahunnya.
+- Tingkat dicoba per frekuensi lebih dulu, lalu per seri menurut `precedence`: D JISDOR → D ECB → M → A tahunan. Jadi 2013 (JISDOR mulai 20 Mei) memakai ECB harian.
+- Periode berjalan dipotong di `until` (default: tanggal terakhir yang diwakili data; baris `M`/`A` mewakili sampai akhir bulan/tahunnya), sehingga tahun berjalan dinilai terhadap hari kerja yang sudah lewat.
+- Join kurs harian hanya memakai baris `D`; nilai tahunan tidak pernah dipasangkan dengan tanggal emas harian.
+**Konsekuensi:** setiap titik agregat membawa `series`, `frequency`, `points`, dan `coverage` untuk tooltip (FR-32). Aturan ini tidak mengubah data, hanya cara build menghitung.
