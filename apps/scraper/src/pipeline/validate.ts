@@ -188,3 +188,37 @@ export function validate(input: ValidateInput): ValidateResult {
   }
   return { outcome: 'ok', rows: passed, held };
 }
+
+/**
+ * Validasi ulang baris karantina sebelum `approve` (WORKFLOWS §3.5): aturan baris dan V-03
+ * diperiksa lagi terhadap data sekarang, kecuali aturan yang memicu karantina itu. V-02 tetap
+ * berlaku untuk `UNKNOWN_ITEM`: tambahkan item ke `config/catalog.yml` dulu, lalu setujui.
+ * Mengembalikan daftar pelanggaran (kosong = boleh disetujui).
+ */
+export function revalidateHeld(
+  reason: QuarantineReason,
+  rows: readonly Candidate[],
+  catalog: readonly CatalogItem[],
+  existing: readonly PriceRow[],
+): string[] {
+  const problems: string[] = [];
+  const schema = checkSchema(rows);
+  if (schema) problems.push(`V-01: ${schema}`);
+  const previous = lastValues(existing);
+  for (const row of rows) {
+    const label = `${row.brand} ${row.variant ? `${row.variant} ` : ''}${row.weight_g} g ${row.date}`;
+    const spread = checkSpread([row]);
+    if (spread) problems.push(spread);
+    if (!isInCatalog(catalog, row)) problems.push(`V-02: ${label} tidak ada di katalog`);
+    if (reason !== 'PRICE_JUMP') {
+      const prev = previous(row);
+      if (
+        prev &&
+        (jumped(prev.sell_price, row.sell_price) || jumped(prev.buyback_price, row.buyback_price))
+      ) {
+        problems.push(`V-05: ${label} berubah > ${MAX_PRICE_JUMP * 100}% dari ${prev.date}`);
+      }
+    }
+  }
+  return problems;
+}

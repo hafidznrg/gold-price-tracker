@@ -21,6 +21,13 @@ import {
   telegramSender,
 } from './pipeline/notify';
 import { plan, PlanError } from './pipeline/plan';
+import {
+  decideQuarantine,
+  parseQuarantinePath,
+  pendingFiles,
+  QuarantineError,
+  resolveQuarantineIssue,
+} from './pipeline/quarantine';
 import { describeRun, scrape } from './pipeline/scrape';
 import { DEFAULT_USER_AGENT } from './probe/http';
 import { formatReport, runProbe, writeStepSummary } from './probe/run';
@@ -205,6 +212,86 @@ const COMMANDS: Record<string, Command> = {
       });
       // Notifikasi yang gagal terkirim harus terlihat sebagai job merah.
       return errors > 0 ? EXIT.FAILED : EXIT.OK;
+    },
+  },
+  quarantine: {
+    summary: 'Putuskan batch karantina: --phase apply (data/) lalu --phase issue (setelah push)',
+    task: 'P1-12',
+    options: {
+      root,
+      path: { type: 'string' },
+      decision: { type: 'string' },
+      note: { type: 'string' },
+      phase: { type: 'string' },
+      'run-url': { type: 'string' },
+    },
+    run: async (values) => {
+      const rootDir = requireRoot(values);
+      const decision = str(values.decision);
+      if (decision !== 'approve' && decision !== 'reject') {
+        throw new UsageError(`--decision wajib approve atau reject: ${decision}`);
+      }
+      const decidedBy = process.env.GITHUB_ACTOR || 'local';
+      const note = str(values.note) || undefined;
+      const phase = str(values.phase) || 'apply';
+      let target;
+      try {
+        target = parseQuarantinePath(str(values.path));
+      } catch (err) {
+        if (err instanceof QuarantineError) throw new UsageError(err.message);
+        throw err;
+      }
+
+      if (phase === 'issue') {
+        const { GH_TOKEN, GITHUB_REPOSITORY } = process.env;
+        if (!GH_TOKEN || !GITHUB_REPOSITORY) {
+          console.log('Issue dilewati: GH_TOKEN/GITHUB_REPOSITORY tidak tersedia');
+          return EXIT.OK;
+        }
+        const outcome = await resolveQuarantineIssue(
+          githubIssueClient(GITHUB_REPOSITORY, GH_TOKEN),
+          {
+            ...target,
+            decision,
+            decidedBy,
+            note,
+            remaining: (await pendingFiles(rootDir, target.source)).length,
+            runUrl: str(values['run-url']),
+          },
+        );
+        console.log(`Issue quarantine ${target.source}: ${outcome}`);
+        return EXIT.OK;
+      }
+      if (phase !== 'apply') throw new UsageError(`--phase wajib apply atau issue: ${phase}`);
+
+      try {
+        const result = await decideQuarantine({
+          root: rootDir,
+          path: str(values.path),
+          decision,
+          decidedBy,
+          note,
+          runId: runIdFromEnv(),
+        });
+        console.log(
+          [
+            result.commit_message,
+            `  → ${result.resolved_path}`,
+            decision === 'approve'
+              ? `  ${result.rows_inserted} insert, ${result.rows_updated} update, ${result.rows_unchanged} sama, ${result.revisions} revisi`
+              : '  baris tidak ditulis',
+            `  pending tersisa untuk ${result.source}: ${result.remaining}`,
+          ].join('\n'),
+        );
+        await setOutputs({ commit_message: result.commit_message });
+        return EXIT.OK;
+      } catch (err) {
+        if (err instanceof QuarantineError) {
+          console.error(err.message);
+          return EXIT.FAILED;
+        }
+        throw err;
+      }
     },
   },
   probe: {

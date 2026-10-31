@@ -1,0 +1,73 @@
+name: quarantine
+
+# WORKFLOWS §3.5 — putuskan satu batch karantina: validasi ulang → approve (upsert + REVISION
+# quarantine_approved) atau reject → pindah ke data/quarantine/_resolved/ → commit → Issue.
+
+on:
+  workflow_dispatch:
+    inputs:
+      path:
+        description: data/quarantine/{source}/{file}.json
+        required: true
+      decision:
+        type: choice
+        options: [approve, reject]
+      note:
+        description: Catatan keputusan (opsional)
+        required: false
+        default: ''
+
+permissions:
+  contents: write
+  issues: write
+
+concurrency:
+  group: data-write
+  cancel-in-progress: false
+
+jobs:
+  decide:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      - id: apply
+        run: >
+          pnpm --filter scraper start quarantine
+          --phase apply
+          --path "$INPUT_PATH"
+          --decision "${{ inputs.decision }}"
+          --note "$INPUT_NOTE"
+          --root "$GITHUB_WORKSPACE"
+        env:
+          INPUT_PATH: ${{ inputs.path }}
+          INPUT_NOTE: ${{ inputs.note }}
+          RUN_ID: ${{ github.run_id }}-${{ github.run_attempt }}
+      - name: Commit & push
+        env:
+          COMMIT_MESSAGE: ${{ steps.apply.outputs.commit_message }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data
+          if git diff --cached --quiet; then echo "Tidak ada perubahan data"; exit 1; fi
+          git commit -m "$COMMIT_MESSAGE"
+          for i in 1 2 3; do
+            git pull --rebase origin main && git push origin HEAD:main && exit 0
+            sleep $((i * 10))
+          done
+          exit 1
+      - name: Issue
+        run: >
+          pnpm --filter scraper start quarantine
+          --phase issue
+          --path "$INPUT_PATH"
+          --decision "${{ inputs.decision }}"
+          --note "$INPUT_NOTE"
+          --run-url "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          --root "$GITHUB_WORKSPACE"
+        env:
+          INPUT_PATH: ${{ inputs.path }}
+          INPUT_NOTE: ${{ inputs.note }}
+          GH_TOKEN: ${{ github.token }}

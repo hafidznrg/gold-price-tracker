@@ -64,7 +64,8 @@ flowchart LR
   - *27 Okt 2026:* cron 26 Okt terlambat 5,7–6,9 jam; slot malam jalan 01.35/02.47 WIB dan Pegadaian 26 Okt hilang (`stale`). `plan` kini mengeluarkan tanggal sasaran dari jadwal cron (`targetDate`, output `date` → `scrape`/`merge --date`), `doneToday` memakai `last_data_date` (D-27). Slot retry siang sudah terbukti melewati sumber yang sukses (run 40329326009).
 - [ ] **P1-09** *(P2)* Backfill histori UBS dari endpoint grafik bila Q-2 positif (`backfill --job ubs-history`, `origin = backfill`) lewat `backfill.yml`. — `FR-08` · M
 - [ ] **P1-10** Bagian "Operasional" di README repo: menjalankan scrape manual, membaca `data/meta/runs/`, `status.json`, dan karantina, menangani Issue gagal, menambah sumber baru. — `NFR-05` · S
-- [ ] **P1-12** Karantina: perintah `quarantine` + workflow `quarantine.yml` (WORKFLOWS §3.5); Issue `quarantine` berisi path dan cara memutuskan. — `FR-15` · M
+- [x] **P1-12** Karantina: perintah `quarantine` + workflow `quarantine.yml` (WORKFLOWS §3.5); Issue `quarantine` berisi path dan cara memutuskan. — `FR-15` · M
+  - *31 Okt 2026:* `pipeline/quarantine.ts` (`decideQuarantine`, `resolveQuarantineIssue`), `revalidateHeld` di `validate.ts`, perintah `quarantine --phase apply|issue`, `.github/workflows/quarantine.yml` (WORKFLOWS §3.5). Uji `test/quarantine.test.ts`: approve/reject, pemindahan ke `_resolved`, revisi tercatat, V-02/V-03/V-05 diperiksa ulang, path dibatasi, Issue ditutup/dikomentari. Belum dipakai pada batch nyata (belum ada karantina).
 - [ ] **P1-13** Workflow `backfill.yml` (WORKFLOWS §3.4) dengan `dry_run` default `true`; dipakai P1-09 dan Fase 2. — `FR-07`, `FR-08` · S
 - [ ] **P1-11** Observasi 7 hari: cek hasil harian, perbaiki parser/validasi, catat insiden di DECISIONS.md bila mengubah aturan. Tetapkan `update_calendar` final tiap sumber (jawab **Q-6**). — `G1` · —
 

@@ -334,6 +334,12 @@ concurrency: { group: data-write, cancel-in-progress: false }
 
 Langkah: validasi ulang baris (kecuali aturan lonjakan yang memicu karantina), lalu `approve` → merge baris ke CSV dan catat `REVISION` (`reason = quarantine_approved`); `reject` → tidak menulis baris. File dipindah ke `data/quarantine/_resolved/` berisi `decision`, `decided_by` (`github.actor`), `note`. Issue karantina terkait ditutup.
 
+Implementasi (P1-12): satu job `decide` dengan tiga langkah.
+
+1. `quarantine --phase apply`: `--path` dibatasi ke `data/quarantine/{source}/{file}.json` (bukan `_resolved`, tanpa `..`), dan file harus `pending`. Validasi ulang memakai `revalidateHeld`: V-01, V-03, dan V-02 selalu diperiksa, jadi `UNKNOWN_ITEM` harus ditambahkan ke katalog dulu. V-05 hanya dilewati untuk `PRICE_JUMP`. Ada pelanggaran = gagal tanpa menulis apa pun. Baris yang disetujui tetap membawa `scraped_at`/`run_id` run yang mengamatinya. REVISION `quarantine_approved` ditulis per kolom nilai yang berubah, termasuk insert (`old_value` kosong), dengan `run_id` run keputusan. File berpindah ke `_resolved/{source}/{file}`.
+2. Commit `data: karantina {decision} {source}/{file} +i ~u`, lalu push dengan `pull --rebase` + retry.
+3. `quarantine --phase issue` (setelah push): Issue `quarantine` sumber itu ditutup bila tidak ada batch pending lagi; bila masih ada, Issue dikomentari.
+
 ### 3.6 `probe.yml`
 
 Manual, input `source` (choice: `all` atau satu sumber, termasuk `frankfurter` yang bukan modul scraper). `permissions: contents: read`. Job matrix per sumber (`fail-fast: false`); Chromium hanya dipasang untuk `logammulia`; langkah pertama mencatat lokasi runner (Cloudflare `cdn-cgi/trace`) ke step summary. Menjalankan `probe` (fetch → cek bentuk respons; di Fase 1–2 diganti parse + validasi penuh) dan mengunggah raw + `report.json` sebagai artifact `probe-{source}` (14 hari). Tidak pernah menulis ke `data/`. Dipakai di Fase 0 dan setiap kali parser diperbaiki.
