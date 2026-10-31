@@ -3,6 +3,7 @@ import { logammuliaArchive } from './logammulia-archive';
 import { pegadaianSavings } from './pegadaian-savings';
 import type { BackfillJob } from './types';
 import { ubsHistory } from './ubs-history';
+import { worldbank } from './worldbank';
 
 // Job backfill (WORKFLOWS §3.4). Pilihan `job` di backfill.yml harus sama dengan
 // BACKFILL_JOB_IDS tanpa job `localOnly`; job yang belum ada modulnya keluar dengan kode 2 dan
@@ -35,6 +36,7 @@ export const BACKFILL_TASKS: Record<BackfillJobId, string> = {
 /** Modul job yang sudah diimplementasikan. */
 const registry: Partial<Record<BackfillJobId, BackfillJob>> = {
   ecb,
+  worldbank,
   'ubs-history': ubsHistory,
   'logammulia-archive': logammuliaArchive,
   'pegadaian-savings': pegadaianSavings,

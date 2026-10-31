@@ -31,6 +31,7 @@
 Semua backfill dijalankan lewat `backfill.yml` (dibuat di P1-13): pertama `dry_run: true` untuk memeriksa diff, lalu `false`.
 
 - [ ] **P2-06** `backfill/worldbank.ts`: XLSX Pink Sheet bulanan (URL dari tautan halaman, kolom `Gold` lewat nama; TECH-SPEC §5.6) → `xau_usd_oz` (`M`) 1996 → bulan lalu. — `FR-07` · M
+  - *1 Nov 2026:* `src/backfill/worldbank.ts` (`worldbank@1.0.0`): halaman → tautan XLSX → sheet `Monthly Prices`, kolom `Gold` lewat nama + cek satuan `($/troy oz)`; sel bukan angka, periode ganda, atau satuan berubah → `PARSE_ERROR`. Raw XLSX dibawa sebagai base64 (`application/octet-stream`); P2-02 perlu ekstensi raw `xlsx`. Uji `test/worldbank.test.ts` (fixture P0-10 + XLSX sintetis); uji ke situs asli: 369 bulan 1996-01 → 2026-09, setiap tahun 12 bulan. Ditolak CLI (kode 2) sampai P2-01/P2-02 (D-32).
 - [ ] **P2-07** `backfill/xaus.ts`: histori harian 5 tahun → `xau_usd_oz` (`D`). — `FR-07` · S
 - [ ] **P2-08** `backfill/ecb.ts`: Frankfurter `rates.csv` → `usd_idr_ecb` = EUR/IDR ÷ EUR/USD, 4 Jan 1999 → kini (harian; satu request `v2/rates.csv`, TECH-SPEC §5.6). — `FR-07` · S
   - *1 Nov 2026:* `src/backfill/ecb.ts` (`ecb@1.0.0`, D-32): parse murni + uji `test/ecb.test.ts` dengan fixture P0-10; uji ke endpoint asli 7.126 tanggal (1999-01-04 → 2026-10-30). Kontrak `MacroBackfillJob` ditambahkan; job ditolak CLI (kode 2) sampai P2-01/P2-02. Dicentang setelah run `backfill.yml` non-dry ter-commit.
