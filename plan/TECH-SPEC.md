@@ -263,7 +263,7 @@ Hasil riset P0-10 (25 Okt 2026, fixture di `apps/scraper/test/fixtures/jisdor/`)
 | `backfill/xaus.ts` | `/api/v1/history` | `xau_usd_oz` frekuensi `D` | 5 tahun terakhir |
 | `backfill/ecb.ts` | Frankfurter `v2/rates.csv` | `usd_idr_ecb` = EUR/IDR ÷ EUR/USD | **4 Jan 1999** → kini |
 | `backfill/jisdor.ts` | Ekspor XLSX JISDOR (§5.5) | `usd_idr_jisdor` | 20 Mei 2013 → kini |
-| `backfill/annual-fx.ts` | File statis terverifikasi | `usd_idr_annual` | 1996–1998 |
+| `backfill/annual-fx.ts` | API World Bank WDI `PA.NUS.FCRF` (D-33) | `usd_idr_annual` frekuensi `A` | 1996–1998 |
 
 Hasil riset P0-10 (25 Okt 2026, fixture di `apps/scraper/test/fixtures/{frankfurter,worldbank}/`):
 

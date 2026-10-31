@@ -256,3 +256,15 @@ Log keputusan produk dan teknis (format ringkas ala ADR). Keputusan baru ditamba
 - `usd_idr_ecb` dibulatkan **2 desimal**. EUR/USD dari ECB hanya 4 desimal (presisi relatif ±1e-4, ±2 Rp), jadi angka di belakang sen adalah presisi semu.
 - Tanggal yang kehilangan salah satu kuotasi IDR/USD, kuotasi ganda, atau header yang berubah menggagalkan run (`PARSE_ERROR`), alih-alih menulis seri berlubang diam-diam.
 **Konsekuensi:** uji ke endpoint asli (1 Nov 2026): satu respons ±380 KB, 7.126 tanggal (4 Jan 1999 → 30 Okt 2026, ±255 per tahun, cukup untuk ambang 80% di D-31), nilai 6.614–18.176 Rp/US$.
+
+### D-33 — Kurs tahunan 1996–1998 dari World Bank WDI (menjawab Q-3)
+
+**Konteks:** P2-10. Histori harian ECB baru dimulai 4 Jan 1999 dan JISDOR 20 Mei 2013, sehingga kurs 1996–1998 butuh sumber tahunan resmi. TECH-SPEC §5.6 semula menyebut "file statis terverifikasi".
+**Keputusan:**
+- Sumber: World Bank WDI indikator `PA.NUS.FCRF` (*Official exchange rate, LCU per US$, period average*; data IMF International Financial Statistics), diambil lewat API publik `api.worldbank.org/v2` tanpa key. API dipakai, bukan file statis: nilainya bisa diaudit lewat raw, dan bila World Bank merevisinya, perbedaannya tercatat sebagai REVISION.
+- Nilai (WDI `lastupdated` 2026-10-08, dibulatkan 2 desimal, D-32): **1996 = 2.342,30 · 1997 = 2.909,38 · 1998 = 10.013,62** Rp/US$, frekuensi `A`, tanggal 1 Januari, `source = wdi`.
+- Verifikasi silang, 1 Nov 2026:
+  - **OECD MEI** (`DF_FINMARK`, `IDN.A.CC`, rata-rata kurs spot) = 2.327,09 / 2.883,51 / 10.249,23, selisih −0,6% / −0,9% / +2,4%. Selisih 1998 terbesar karena tahun itu rupiah bergerak ±7.000 → ±16.000 → ±8.000, sehingga metode rata-rata (harian vs bulanan) sangat berpengaruh.
+  - **Sambungan 1999**: rata-rata 259 hari ECB (`usd_idr_ecb`) = 7.849,92, sedangkan WDI 1999 = 7.855,15 (−0,07%) dan OECD = 7.848,94 (+0,01%). Pergantian seri `annual` → `ecb` di awal 1999 tidak menimbulkan lompatan.
+- Yang tidak dipakai: IMF IFS langsung (host `dataservices.imf.org` tidak dapat di-resolve, portal IMF sudah dipindah) dan FRED (timeout dari jaringan lokal).
+**Konsekuensi:** Q-3 terjawab. Agregat tahunan `usd_idr` 1996–1998 memakai tingkat `A` (D-31) dan tooltip menyebut WDI. Grafik kelipatan dengan tahun dasar 1996 bergantung pada nilai 2.342,30. Memakai OECD sebagai gantinya akan menggeser kelipatan kurs sekitar +0,7%, masih dalam toleransi cek silang G2.

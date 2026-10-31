@@ -1,3 +1,4 @@
+import { annualFx } from './annual-fx';
 import { ecb } from './ecb';
 import { jisdor } from './jisdor';
 import { logammuliaArchive } from './logammulia-archive';
@@ -36,6 +37,7 @@ export const BACKFILL_TASKS: Record<BackfillJobId, string> = {
 
 /** Modul job yang sudah diimplementasikan. */
 const registry: Partial<Record<BackfillJobId, BackfillJob>> = {
+  'annual-fx': annualFx,
   ecb,
   jisdor,
   worldbank,

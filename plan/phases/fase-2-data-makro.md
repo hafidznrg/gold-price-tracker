@@ -38,6 +38,7 @@ Semua backfill dijalankan lewat `backfill.yml` (dibuat di P1-13): pertama `dry_r
 - [ ] **P2-09** `backfill/jisdor.ts`: postback ekspor XLSX, 20 Mei 2013 → kini, satu request (TECH-SPEC §5.5). — `FR-07` · M
   - *1 Nov 2026:* `src/backfill/jisdor.ts` (`jisdor@1.0.0`): `GET` halaman → postback `…$ButtonExport` (field dicari lewat akhiran, helper probe P0-10) → XLSX; tanggal `M/D/YYYY`, kurs `9.760,00` (sen diterima, bukan `parseRupiah`); respons bukan XLSX, baris rusak, atau tanggal ganda → `PARSE_ERROR`. Uji `test/jisdor-backfill.test.ts`. Ekspor asli (lewat curl karena koneksi TCP lokal ke bi.go.id ±19,5 detik, melewati batas konek 10 detik `fetch` Node; dari runner GitHub probe 25 Okt sukses): 3.256 hari 2013-05-20 → 2026-10-30, semua bilangan bulat, tanpa akhir pekan, ±240 hari/tahun. Ditolak CLI (kode 2) sampai P2-01/P2-02 (D-32).
 - [ ] **P2-10** `backfill/annual-fx.ts`: kurs USD/IDR tahunan 1996–1998 dari sumber resmi terverifikasi (jawab **Q-3**); catat sumbernya di DECISIONS.md. — `FR-07` · S
+  - *1 Nov 2026:* **Q-3 terjawab (D-33):** World Bank WDI `PA.NUS.FCRF` lewat API → 1996 = 2.342,30 · 1997 = 2.909,38 · 1998 = 10.013,62. Dicek silang dengan OECD MEI (−0,6% / −0,9% / +2,4%) dan sambungan 1999 (rata-rata ECB 7.849,92 vs WDI 7.855,15). `src/backfill/annual-fx.ts` (`annual-fx@1.0.0`) + fixture `test/fixtures/wdi/` + uji `test/annual-fx.test.ts`; `fetchRaw` teruji ke API asli. Ditolak CLI (kode 2) sampai P2-01/P2-02 (D-32).
 
 ### Turunan dan verifikasi
 

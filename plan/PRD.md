@@ -64,7 +64,7 @@ Proyek ini **non-komersial**, untuk kepentingan pribadi sekaligus **portofolio d
 | World Bank Pink Sheet | XAU/USD rata-rata bulanan, histori panjang | XLSX bulanan; URL ber-hash dari tautan halaman Commodity Markets (D-21) | Bulanan (±tanggal 2) | Rendah |
 | Bank Indonesia JISDOR | USD/IDR harian sejak 20 Mei 2013 | `GET` halaman = 10 hari kerja; backfill lewat postback ekspor XLSX (D-21) | Hari kerja 15.15 WIB | Sedang |
 | Frankfurter (kurs acuan ECB) | EUR/IDR & EUR/USD sejak 4 Jan 1999 → USD/IDR | `v2/rates.csv` tanpa key, satu request = seluruh histori | Hari kerja | Rendah |
-| Kurs tahunan resmi (mis. World Bank WDI) | USD/IDR 1996–1998 | File statis | Statis | Rendah (perlu verifikasi) |
+| Kurs tahunan resmi (World Bank WDI `PA.NUS.FCRF`, D-33) | USD/IDR 1996–1998 | API publik WDI | Statis | Tinggi (terverifikasi silang) |
 
 Detail teknis cara akses tiap sumber ada di [TECH-SPEC.md §5](./TECH-SPEC.md#5-spesifikasi-scraper-per-sumber).
 
@@ -181,7 +181,7 @@ Ringkasan; rincian dan alasannya di [DECISIONS.md](./DECISIONS.md).
 | --- | --- | --- |
 | Q-1 | Apakah Pegadaian menampilkan buyback per brand? Jika tidak, dari mana buyback Antam/Galeri24? | Setelah Fase 1 berjalan. **Temuan P0-08:** tidak — endpoint dan halaman hanya memuat harga jual emas batangan (`hargaBeli: null`); buyback hanya untuk Tabungan Emas. Sumber buyback Antam/Galeri24 masih terbuka (P5-06) |
 | Q-2 | Apakah grafik histori UBS Lifestyle memuat endpoint JSON yang bisa dipakai untuk backfill? | **Terjawab (P0-07):** ya, tetapi hanya buyback 1 g sejak Nov 2023, bercelah, tahun produksi tidak diketahui — TECH-SPEC §5.1 |
-| Q-3 | Sumber kurs USD/IDR tahunan 1996–1998 yang terverifikasi | Fase 2 |
+| Q-3 | Sumber kurs USD/IDR tahunan 1996–1998 yang terverifikasi | **Terjawab (P2-10, 1 Nov 2026):** World Bank WDI `PA.NUS.FCRF` (IMF IFS) lewat API — 2.342,30 / 2.909,38 / 10.013,62; dicek silang dengan OECD MEI dan rata-rata ECB 1999 (D-33) |
 | Q-4 | Perlukah *self-hosted runner* Indonesia? | **Terjawab (P0-11, 25 Okt 2026):** tidak untuk UBS Lifestyle, Pegadaian, xaus, JISDOR, World Bank, Frankfurter — semua lolos dari runner GitHub di AS. Logam Mulia belum dapat dinilai (situs maintenance untuk semua pengunjung) |
 | Q-5 | Nama domain dan nama produk | Sebelum rilis publik (Fase 3) |
 | Q-6 | `update_calendar` tiap sumber (apakah UBS/Pegadaian/Logam Mulia update di akhir pekan dan hari libur) | Observasi 2 minggu di Fase 1. Temuan awal UBS: Senin–Sabtu, sebagian libur tetap update (TECH-SPEC §5.1). Pegadaian: harga Minggu ada, diterbitkan Sabtu malam sebagai periode I (TECH-SPEC §5.2) |
