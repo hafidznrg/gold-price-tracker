@@ -1,0 +1,577 @@
+'use client';
+
+import type { PriceSource } from '@gold/schema';
+import { useEffect, useMemo, useState } from 'react';
+import { BarChart, type BarItem } from '@/components/charts/bar-chart';
+import { SpreadBandChart } from '@/components/charts/spread-band-chart';
+import { TimeSeriesChart, type TimeSeries } from '@/components/charts/time-series-chart';
+import { RangeControl, type RangeValue } from '@/components/range-control';
+import { SourceStamp } from '@/components/source-stamp';
+import { fetchSeries, type ColorToken, type SeriesFile } from '@/lib/data';
+import { EMPTY, formatDate, formatNumber, formatPct, formatRupiah } from '@/lib/format';
+import { rangeToDates } from '@/lib/range';
+import {
+  findGaps,
+  pairDays,
+  pairProblem,
+  sliceDays,
+  spreadStats,
+  type CompareItem,
+  type SpreadDay,
+  type SpreadOption,
+  type TodayPair,
+  type WeightBarRow,
+  POPULAR_PAIRS,
+} from '@/lib/spread';
+import { cn } from '@/lib/utils';
+
+export interface BarSource {
+  id: string;
+  label: string;
+  note: string;
+  source: PriceSource;
+  date: string | null;
+  at: string | null;
+  rows: WeightBarRow[];
+}
+
+export interface SpreadBoardProps {
+  sellOptions: SpreadOption[];
+  buybackOptions: SpreadOption[];
+  /** Harga hari ini per pasangan sah, kunci `${sellId}|${buybackId}`. */
+  today: Record<string, TodayPair>;
+  compare: CompareItem[];
+  bars: BarSource[];
+  /** Tanggal data terbaru (patokan rentang). */
+  asOf: string;
+}
+
+const FIELD = 'h-11 w-full rounded-field border border-line bg-surface2 px-3 text-sm text-text';
+const PANEL = 'min-w-0 rounded-card border border-line bg-surface p-6 max-sm:p-4';
+const BG: Record<ColorToken, string> = {
+  antam: 'bg-antam',
+  ubs: 'bg-ubs',
+  g24: 'bg-g24',
+  tab: 'bg-tab',
+  gold: 'bg-gold',
+  muted: 'bg-muted',
+};
+
+type Files = Record<string, SeriesFile>;
+
+/** Muat file series yang diperlukan (cache di lapisan data); hanya yang belum ada. */
+function useSeriesFiles(ids: string[]): { files: Files; loading: boolean; error: string | null } {
+  const [files, setFiles] = useState<Files>({});
+  const [error, setError] = useState<string | null>(null);
+  const key = ids.join('|');
+  useEffect(() => {
+    let alive = true;
+    for (const id of key.split('|')) {
+      fetchSeries(id).then(
+        (f) => alive && setFiles((cur) => (cur[id] ? cur : { ...cur, [id]: f })),
+        (e: unknown) => alive && setError(e instanceof Error ? e.message : String(e)),
+      );
+    }
+    return () => {
+      alive = false;
+    };
+  }, [key]);
+  const loading = key.split('|').some((id) => !files[id]);
+  return { files, loading: loading && !error, error };
+}
+
+function Kpi({
+  label,
+  value,
+  sub,
+  gold,
+}: {
+  label: string;
+  value: string;
+  sub: string;
+  gold?: boolean;
+}) {
+  return (
+    <div className="min-w-0 rounded-[18px] border border-line bg-surface p-5">
+      <div className="text-xs text-faint">{label}</div>
+      <div
+        className={cn(
+          'num mt-2 text-[30px] font-semibold tracking-[-0.02em]',
+          gold ? 'text-gold' : '',
+        )}
+      >
+        {value}
+      </div>
+      <div className="num mt-1.5 text-[12.5px] text-muted">{sub}</div>
+    </div>
+  );
+}
+
+function Hint({ children }: { children: React.ReactNode }) {
+  return <p className="m-0 py-10 text-center text-sm text-muted">{children}</p>;
+}
+
+export function SpreadBoard({
+  sellOptions,
+  buybackOptions,
+  today,
+  compare,
+  bars,
+  asOf,
+}: SpreadBoardProps) {
+  const [sellId, setSellId] = useState('lm-antam');
+  const [buyId, setBuyId] = useState('lm-antam');
+  const [range, setRange] = useState<RangeValue>('1T');
+  const [barId, setBarId] = useState(bars[0]?.id ?? '');
+
+  const sell = sellOptions.find((o) => o.id === sellId) as SpreadOption;
+  const buy = buybackOptions.find((o) => o.id === buyId) as SpreadOption;
+  const problem = pairProblem(sell, buy);
+  const tabOpt = sellOptions.find((o) => o.id === 'tab') as SpreadOption;
+  const lmOpt = sellOptions.find((o) => o.id === 'lm-antam') as SpreadOption;
+
+  const needed = useMemo(
+    () => [...new Set([lmOpt.file, tabOpt.file, ...(problem ? [] : [sell.file, buy.file])])],
+    [lmOpt.file, tabOpt.file, problem, sell.file, buy.file],
+  );
+  const { files, loading, error } = useSeriesFiles(needed);
+
+  const allDays: SpreadDay[] | null = useMemo(() => {
+    const s = files[sell.file];
+    const b = files[buy.file];
+    return !problem && s && b ? pairDays(sell, s, buy, b) : null;
+  }, [files, sell, buy, problem]);
+
+  const lastDate = allDays?.at(-1)?.date ?? asOf;
+  const { from, to } = rangeToDates(range, lastDate);
+  const days = useMemo(() => (allDays ? sliceDays(allDays, from, to) : []), [allDays, from, to]);
+  const stats = useMemo(() => spreadStats(days), [days]);
+  const gaps = useMemo(
+    () => findGaps(days.map((d) => d.date)).map((g) => ({ ...g, label: 'Tidak ada data' })),
+    [days],
+  );
+
+  const sellSeries: TimeSeries = useMemo(
+    () => ({
+      id: 'sell',
+      label: 'Harga jual',
+      color: sell.color,
+      points: days.map((d) => [d.date, d.sell]),
+    }),
+    [days, sell.color],
+  );
+  const buySeries: TimeSeries = useMemo(
+    () => ({
+      id: 'buyback',
+      label: 'Buyback',
+      color: sell.color,
+      dashed: true,
+      points: days.map((d) => [d.date, d.buyback]),
+    }),
+    [days, sell.color],
+  );
+
+  // Grafik spread %: Antam Logam Mulia vs Tabungan Emas, pada rentang yang sama.
+  const lmDays = useMemo(() => {
+    const f = files[lmOpt.file];
+    return f ? sliceDays(pairDays(lmOpt, f, lmOpt, f), from, to) : null;
+  }, [files, lmOpt, from, to]);
+  const tabDays = useMemo(() => {
+    const f = files[tabOpt.file];
+    return f ? sliceDays(pairDays(tabOpt, f, tabOpt, f), from, to) : null;
+  }, [files, tabOpt, from, to]);
+  const lmStats = useMemo(() => (lmDays ? spreadStats(lmDays) : null), [lmDays]);
+  const pctSeries: TimeSeries[] = useMemo(() => {
+    const out: TimeSeries[] = [];
+    if (lmDays?.length) {
+      out.push({
+        id: 'lm',
+        label: 'Antam 1 g · Logam Mulia',
+        color: 'gold',
+        highlightMin: true,
+        points: lmDays.map((d) => [d.date, d.pct]),
+      });
+      if (lmStats) {
+        out.push({
+          id: 'lm-avg',
+          label: 'Rata-rata Antam LM',
+          color: 'muted',
+          dashed: true,
+          width: 1.2,
+          points: [
+            [lmDays[0]!.date, lmStats.avgPct],
+            [lmDays.at(-1)!.date, lmStats.avgPct],
+          ],
+        });
+      }
+    }
+    if (tabDays?.length) {
+      out.push({
+        id: 'tab',
+        label: 'Tabungan Emas · Pegadaian',
+        color: 'tab',
+        points: tabDays.map((d) => [d.date, d.pct]),
+      });
+    }
+    return out;
+  }, [lmDays, tabDays, lmStats]);
+
+  const bar = bars.find((b) => b.id === barId) ?? bars[0];
+  const barItems: BarItem[] = (bar?.rows ?? []).map((r) => ({
+    label: r.label,
+    value: r.value,
+    highlight: r.w === 1,
+  }));
+  const barMissing = (bar?.rows ?? []).filter((r) => r.value === null).length;
+
+  const pairToday = problem ? null : (today[`${sellId}|${buyId}`] ?? null);
+  const stampNote = [
+    sell.source === buy.source ? '' : `buyback: ${buy.short}`,
+    allDays && allDays.length > 0 && allDays.length < 30
+      ? `baru ${allDays.length} hari memiliki jual dan buyback sekaligus`
+      : '',
+  ]
+    .filter(Boolean)
+    .join(' · ');
+  const cmpMax = Math.max(0, ...compare.map((c) => c.pct ?? 0));
+  const pairLabel = `${sell.label} → ${buy.label}`;
+
+  return (
+    <>
+      <section className="wrap pb-[22px]">
+        <div className="flex flex-wrap items-end gap-[18px] rounded-card border border-line bg-surface p-6 max-sm:p-4">
+          <div className="flex min-w-0 flex-[1_1_260px] flex-col gap-1.5">
+            <label htmlFor="buyAt" className="text-xs text-muted">
+              Beli di (harga jual)
+            </label>
+            <select
+              id="buyAt"
+              className={FIELD}
+              value={sellId}
+              onChange={(e) => setSellId(e.target.value)}
+            >
+              {sellOptions.map((o) => (
+                <option key={o.id} value={o.id}>
+                  {o.label}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div aria-hidden="true" className="grid h-11 place-items-center text-gold max-md:hidden">
+            <svg
+              width="22"
+              height="22"
+              viewBox="0 0 24 24"
+              className="fill-none stroke-current stroke-[1.8]"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M4 12h15M14 6l6 6-6 6" />
+            </svg>
+          </div>
+          <div className="flex min-w-0 flex-[1_1_260px] flex-col gap-1.5">
+            <label htmlFor="sellTo" className="text-xs text-muted">
+              Jual ke (harga buyback)
+            </label>
+            <select
+              id="sellTo"
+              className={FIELD}
+              value={buyId}
+              onChange={(e) => setBuyId(e.target.value)}
+            >
+              {buybackOptions.map((o) => (
+                <option key={o.id} value={o.id}>
+                  {o.label}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+        <div className="mt-3 flex flex-wrap items-center gap-2">
+          <span className="mr-1 text-[12.5px] text-faint">Pasangan populer</span>
+          {POPULAR_PAIRS.map((p) => {
+            const on = p.sell === sellId && p.buyback === buyId;
+            return (
+              <button
+                key={p.label}
+                type="button"
+                aria-pressed={on}
+                onClick={() => {
+                  setSellId(p.sell);
+                  setBuyId(p.buyback);
+                }}
+                className={cn(
+                  'min-h-11 cursor-pointer rounded-full border px-3.5 text-[12.5px]',
+                  on
+                    ? 'border-goldline bg-goldsoft text-text'
+                    : 'border-line bg-transparent text-muted hover:text-text',
+                )}
+              >
+                {p.label}
+              </button>
+            );
+          })}
+        </div>
+        <RangeControl
+          className="mt-4"
+          value={range}
+          onChange={setRange}
+          lastDate={lastDate}
+          minDate={allDays?.[0]?.date}
+        />
+      </section>
+
+      {problem ? (
+        <section className="wrap pb-[22px]">
+          <div className={cn(PANEL, 'text-sm leading-relaxed text-muted')} role="status">
+            {problem}
+          </div>
+        </section>
+      ) : (
+        <>
+          <section className="wrap pb-[22px]">
+            <div className="grid grid-cols-[repeat(auto-fit,minmax(min(230px,100%),1fr))] gap-3.5">
+              <Kpi
+                gold
+                label="Spread hari ini"
+                value={stats ? formatPct(stats.last.pct, 2, false) : EMPTY}
+                sub={
+                  stats
+                    ? `${formatRupiah(stats.last.spread)} per gram · ${formatDate(stats.last.date)}`
+                    : 'Belum ada hari dengan jual dan buyback'
+                }
+              />
+              <Kpi
+                label={`Rata-rata ${typeof range === 'string' ? range : 'rentang'}`}
+                value={stats ? formatPct(stats.avgPct, 2, false) : EMPTY}
+                sub={stats ? `dari ${formatNumber(stats.count)} hari data` : EMPTY}
+              />
+              <Kpi
+                label={`Tersempit ${typeof range === 'string' ? range : 'rentang'}`}
+                value={stats ? formatPct(stats.min.pct, 2, false) : EMPTY}
+                sub={stats ? formatDate(stats.min.date) : EMPTY}
+              />
+              <Kpi
+                label="Titik impas"
+                value={stats?.breakEven != null ? formatPct(stats.breakEven, 2) : EMPTY}
+                sub="kenaikan buyback yang dibutuhkan"
+              />
+            </div>
+          </section>
+
+          <section className="wrap pb-[22px]">
+            <div className={PANEL}>
+              <h2 className="m-0 text-[19px] font-semibold">Harga jual vs buyback</h2>
+              <p className="num m-0 mt-1.5 mb-4 text-[13px] text-muted">
+                {pairLabel} · per gram
+                {days.length > 0
+                  ? ` · ${formatDate(days[0]!.date)} – ${formatDate(days.at(-1)!.date)}`
+                  : ''}
+              </p>
+              {error ? (
+                <Hint>Data gagal dimuat. Muat ulang halaman.</Hint>
+              ) : loading || !allDays ? (
+                <Hint>Memuat data…</Hint>
+              ) : days.length === 0 ? (
+                <Hint>
+                  Belum ada hari dengan harga jual dan buyback sekaligus untuk pasangan dan rentang
+                  ini.
+                </Hint>
+              ) : (
+                <SpreadBandChart
+                  sell={sellSeries}
+                  buyback={buySeries}
+                  gaps={gaps}
+                  ariaLabel={`Harga jual dan buyback ${pairLabel}`}
+                  height={330}
+                />
+              )}
+              <SourceStamp source={sell.source} date={stats?.last.date ?? asOf} className="mt-3">
+                {stampNote || null}
+              </SourceStamp>
+            </div>
+          </section>
+        </>
+      )}
+
+      <section className="wrap grid grid-cols-[repeat(auto-fit,minmax(min(420px,100%),1fr))] gap-5 pb-[22px]">
+        <div className={PANEL}>
+          <h2 className="m-0 text-[17px] font-semibold">Spread % dari waktu ke waktu</h2>
+          <p className="m-0 mt-1.5 mb-3 text-[13px] text-muted">
+            Garis putus-putus = rata-rata Antam LM · titik = spread tersempit
+            {tabDays && tabDays.length > 0 && tabDays[0]!.date > (from ?? '')
+              ? ' · Tabungan Emas hanya tersedia 360 hari terakhir'
+              : ''}
+          </p>
+          {error ? (
+            <Hint>Data gagal dimuat.</Hint>
+          ) : !lmDays || !tabDays ? (
+            <Hint>Memuat data…</Hint>
+          ) : pctSeries.length === 0 ? (
+            <Hint>Tidak ada data pada rentang ini.</Hint>
+          ) : (
+            <TimeSeriesChart
+              series={pctSeries}
+              valueFormat="percent"
+              height={250}
+              ariaLabel="Spread persen Antam Logam Mulia dan Tabungan Emas"
+            />
+          )}
+          <SourceStamp source="logammulia" date={lmStats?.last.date ?? asOf} className="mt-3">
+            Antam 1 g
+          </SourceStamp>
+          <SourceStamp source="pegadaian" date={tabDays?.at(-1)?.date ?? asOf} className="mt-1">
+            Tabungan Emas, per gram
+          </SourceStamp>
+        </div>
+
+        <div className={PANEL}>
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div className="min-w-0">
+              <h2 className="m-0 text-[17px] font-semibold">Spread % per gramasi hari ini</h2>
+              <p className="m-0 mt-1.5 mb-4 text-[13px] text-muted">{bar?.note}</p>
+            </div>
+            <div className="w-[190px] max-w-full">
+              <label htmlFor="barSrc" className="sr-only">
+                Sumber
+              </label>
+              <select
+                id="barSrc"
+                className={FIELD}
+                value={bar?.id}
+                onChange={(e) => setBarId(e.target.value)}
+              >
+                {bars.map((b) => (
+                  <option key={b.id} value={b.id}>
+                    {b.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+          {barItems.length > 0 ? (
+            <BarChart items={barItems} ariaLabel="Spread persen per gramasi" decimals={1} />
+          ) : (
+            <Hint>Belum ada data.</Hint>
+          )}
+          {barMissing > 0 ? (
+            <p className="m-0 mt-3 text-xs text-faint">
+              {EMPTY} = sumber tidak menampilkan buyback untuk gramasi ini ({barMissing} gramasi).
+            </p>
+          ) : null}
+          {bar ? (
+            <SourceStamp source={bar.source} date={bar.date ?? asOf} at={bar.at} className="mt-3" />
+          ) : null}
+        </div>
+      </section>
+
+      <section className="wrap grid grid-cols-[repeat(auto-fit,minmax(min(420px,100%),1fr))] gap-5 pb-16">
+        <div className={cn(PANEL, 'flex flex-col gap-[18px]')}>
+          <div>
+            <h2 className="m-0 text-[17px] font-semibold">Emas fisik vs tabungan emas</h2>
+            <p className="m-0 mt-2 text-[13.5px] leading-[1.6] text-muted">
+              Spread per gram hari ini. Tabungan emas tidak menanggung ongkos cetak per keping,
+              sehingga jarak jual–buyback-nya biasanya lebih sempit.
+            </p>
+          </div>
+          <div className="flex flex-col gap-3">
+            {compare.map((c) => (
+              <div key={`${c.name}${c.src}`} className="flex flex-col gap-1.5">
+                <div className="flex flex-wrap justify-between gap-x-2.5 text-[13px]">
+                  <span className="flex min-w-0 items-center gap-2">
+                    <span className={cn('size-[9px] flex-none rounded-[2px]', BG[c.color])} />
+                    <span className="font-semibold">{c.name}</span>
+                    <span className="text-muted">· {c.src}</span>
+                  </span>
+                  <span className="num font-semibold">{formatPct(c.pct, 2, false)}</span>
+                </div>
+                <div className="h-3 overflow-hidden rounded-[5px] bg-surface2">
+                  <div
+                    className={cn('h-full rounded-[5px]', BG[c.color])}
+                    style={{
+                      width: `${c.pct !== null && cmpMax > 0 ? ((c.pct / cmpMax) * 100).toFixed(1) : 0}%`,
+                    }}
+                  />
+                </div>
+                <span className="num text-xs text-faint">
+                  {c.sell !== null && c.buyback !== null
+                    ? `jual ${formatRupiah(c.sell)} · buyback ${formatRupiah(c.buyback)}`
+                    : 'Data belum lengkap'}
+                </span>
+              </div>
+            ))}
+          </div>
+          {compare[0]?.date ? (
+            <SourceStamp source={compare[0].source} date={compare[0].date} at={compare[0].at}>
+              Logam Mulia, UBS Lifestyle
+            </SourceStamp>
+          ) : null}
+        </div>
+
+        <div className={cn(PANEL, 'flex flex-col gap-[18px]')}>
+          <div>
+            <h2 className="m-0 text-[17px] font-semibold">Pasangan lintas sumber</h2>
+            <p className="m-0 mt-2 text-[13.5px] leading-[1.6] text-muted">
+              {problem
+                ? problem
+                : `${pairLabel}. Dicocokkan pada brand, produk, dan gramasi yang sama di tanggal yang sama; buyback UBS memakai tahun produksi berjalan.`}
+            </p>
+          </div>
+          {pairToday && pairToday.sell !== null && pairToday.buyback !== null ? (
+            <>
+              <div className="grid grid-cols-3 gap-px overflow-hidden rounded-[14px] border border-line bg-line max-sm:grid-cols-1">
+                <div className="min-w-0 bg-surface p-3.5">
+                  <div className="text-xs text-faint">Jual · {sell.short}</div>
+                  <div className="num mt-1 text-lg font-semibold">
+                    {formatRupiah(pairToday.sell)}
+                  </div>
+                </div>
+                <div className="min-w-0 bg-surface p-3.5">
+                  <div className="text-xs text-faint">Buyback · {buy.short}</div>
+                  <div className="num mt-1 text-lg font-semibold">
+                    {formatRupiah(pairToday.buyback)}
+                  </div>
+                </div>
+                <div className="min-w-0 bg-surface p-3.5">
+                  <div className="text-xs text-faint">Spread</div>
+                  <div className="num mt-1 text-lg font-semibold text-gold">
+                    {formatPct(
+                      ((pairToday.sell - pairToday.buyback) / pairToday.sell) * 100,
+                      2,
+                      false,
+                    )}
+                  </div>
+                  <div className="num mt-0.5 text-xs text-muted">
+                    {formatRupiah(pairToday.sell - pairToday.buyback)}
+                  </div>
+                </div>
+              </div>
+              <div className="flex flex-col gap-1">
+                <SourceStamp
+                  source={sell.source}
+                  date={pairToday.sellDate ?? asOf}
+                  at={pairToday.sellAt}
+                >
+                  harga jual
+                </SourceStamp>
+                {sell.source !== buy.source ? (
+                  <SourceStamp
+                    source={buy.source}
+                    date={pairToday.buyDate ?? asOf}
+                    at={pairToday.buyAt}
+                  >
+                    buyback
+                  </SourceStamp>
+                ) : null}
+              </div>
+            </>
+          ) : problem ? null : (
+            <p className="m-0 text-sm text-muted">
+              Data hari ini belum lengkap untuk pasangan ini (jual atau buyback kosong).
+            </p>
+          )}
+        </div>
+      </section>
+    </>
+  );
+}
