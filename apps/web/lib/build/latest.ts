@@ -52,7 +52,9 @@ type PickRow = Pick<PriceRow, 'date' | 'sell_price' | 'buyback_price'>;
 /** Nilai per hari kalender `[end − 29, end]`; null untuk hari tanpa titik. */
 export function buildSpark(rows: readonly PickRow[], end: string, days = SPARK_DAYS): Spark {
   const start = addDaysIso(end, -(days - 1));
-  const byDate = new Map(rows.filter((r) => r.date >= start && r.date <= end).map((r) => [r.date, r]));
+  const byDate = new Map(
+    rows.filter((r) => r.date >= start && r.date <= end).map((r) => [r.date, r]),
+  );
   const sell: (number | null)[] = [];
   const buyback: (number | null)[] = [];
   for (let d = start; d <= end; d = addDaysIso(d, 1)) {
@@ -121,7 +123,10 @@ function scalePoint(p: PricePoint | null, w: number, perGram: boolean): PricePoi
   return { date: p.date, sell: perGramPrice(p.sell, w), buyback: perGramPrice(p.buyback, w) };
 }
 
-export function buildHighlight(group: FileGroup, latest: readonly LatestSeries[]): Highlight | null {
+export function buildHighlight(
+  group: FileGroup,
+  latest: readonly LatestSeries[],
+): Highlight | null {
   const fileLastDate = group.rows.at(-1)?.date;
   if (!fileLastDate) return null;
   const picked = pickHighlightSeries(splitSeries(group), fileLastDate);
@@ -165,7 +170,10 @@ export function buildHighlight(group: FileGroup, latest: readonly LatestSeries[]
     buyback: g(ls.buyback),
     prev: scalePoint(ls.prev, w, perGram),
     change: {
-      sell: ls.change.sell && { abs: round(ls.change.sell.abs * factor, 2), pct: ls.change.sell.pct },
+      sell: ls.change.sell && {
+        abs: round(ls.change.sell.abs * factor, 2),
+        pct: ls.change.sell.pct,
+      },
       buyback: ls.change.buyback && {
         abs: round(ls.change.buyback.abs * factor, 2),
         pct: ls.change.buyback.pct,

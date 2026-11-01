@@ -97,7 +97,9 @@ export function buildMetaCatalog(items: readonly CatalogItem[], today: string): 
   }
   const out = [...map.values()];
   for (const g of out) g.weights.sort((a, b) => a - b);
-  return out.sort((a, b) => compareFileIds(seriesFileId(a), seriesFileId(b)) || (a.product < b.product ? -1 : 1));
+  return out.sort(
+    (a, b) => compareFileIds(seriesFileId(a), seriesFileId(b)) || (a.product < b.product ? -1 : 1),
+  );
 }
 
 export function buildMetaFiles(groups: readonly FileGroup[]): MetaSeriesFile[] {

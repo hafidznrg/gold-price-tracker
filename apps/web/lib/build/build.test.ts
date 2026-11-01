@@ -213,7 +213,12 @@ describe('series ringkas', () => {
   });
 
   it('menolak dua lokasi dalam satu file', () => {
-    expect(() => groupByFile([price({ date: '2026-10-30' }), price({ date: '2026-10-31', location: 'surabaya' })])).toThrow(/lokasi/);
+    expect(() =>
+      groupByFile([
+        price({ date: '2026-10-30' }),
+        price({ date: '2026-10-31', location: 'surabaya' }),
+      ]),
+    ).toThrow(/lokasi/);
   });
 
   it('toSeriesFile tidak mengubah nilai', () => {
@@ -359,9 +364,21 @@ describe('makro ada', () => {
   };
   const macroRows = [
     macro({ date: '2026-10-30', series: 'xau_usd_oz', value: 4100 }),
-    macro({ date: '2026-10-01', series: 'xau_usd_oz', frequency: 'M', value: 4000, source: 'worldbank' }),
+    macro({
+      date: '2026-10-01',
+      series: 'xau_usd_oz',
+      frequency: 'M',
+      value: 4000,
+      source: 'worldbank',
+    }),
     macro({ date: '2026-10-30', series: 'usd_idr_jisdor', value: 18000 }),
-    macro({ date: '1998-01-01', series: 'usd_idr_annual', frequency: 'A', value: 10013.62, source: 'wdi' }),
+    macro({
+      date: '1998-01-01',
+      series: 'usd_idr_annual',
+      frequency: 'A',
+      value: 10013.62,
+      source: 'wdi',
+    }),
   ];
   const { latest, meta, files } = buildOutputs(input({ macro: macroRows, spot }));
 
@@ -392,17 +409,38 @@ describe('makro ada', () => {
       [
         'xau_usd_oz',
         false,
-        { kind: 'macro', series: 'xau_usd_oz', date: '2026-10-30', frequency: 'D', value: 4100, unit: 'USD/ozt' },
+        {
+          kind: 'macro',
+          series: 'xau_usd_oz',
+          date: '2026-10-30',
+          frequency: 'D',
+          value: 4100,
+          unit: 'USD/ozt',
+        },
       ],
       [
         'usd_idr_jisdor',
         false,
-        { kind: 'macro', series: 'usd_idr_jisdor', date: '2026-10-30', frequency: 'D', value: 18000, unit: 'IDR/USD' },
+        {
+          kind: 'macro',
+          series: 'usd_idr_jisdor',
+          date: '2026-10-30',
+          frequency: 'D',
+          value: 18000,
+          unit: 'IDR/USD',
+        },
       ],
       [
         'usd_idr_annual',
         true,
-        { kind: 'macro', series: 'usd_idr_annual', date: '1998-01-01', frequency: 'A', value: 10013.62, unit: 'IDR/USD' },
+        {
+          kind: 'macro',
+          series: 'usd_idr_annual',
+          date: '1998-01-01',
+          frequency: 'A',
+          value: 10013.62,
+          unit: 'IDR/USD',
+        },
       ],
     ]);
     expect(macroDl[0]!.files[0]).toEqual({
@@ -452,7 +490,11 @@ describe('meta.json', () => {
 
   it('series dengan cakupan tanggal', () => {
     const lm1 = meta.series.find((s) => s.key === 'logammulia:antam:gold_bar::1')!;
-    expect(lm1).toMatchObject({ rows: 2, first_date: '2026-10-30', first_buyback_date: '2026-10-30' });
+    expect(lm1).toMatchObject({
+      rows: 2,
+      first_date: '2026-10-30',
+      first_buyback_date: '2026-10-30',
+    });
     const ubsOld = meta.series.find((s) => s.key === 'ubslifestyle:ubs:gold_bar::1')!;
     expect(ubsOld.first_sell_date).toBeNull();
   });

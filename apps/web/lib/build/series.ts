@@ -63,14 +63,24 @@ export function toSeriesFile(group: FileGroup): SeriesFile {
     product: group.product,
     location: group.location,
     fields: SERIES_FIELDS,
-    rows: group.rows.map(
-      (r): SeriesRowTuple => [r.date, r.variant, r.weight_g, r.sell_price, r.buyback_price],
-    ),
+    rows: group.rows.map((r): SeriesRowTuple => [
+      r.date,
+      r.variant,
+      r.weight_g,
+      r.sell_price,
+      r.buyback_price,
+    ]),
   };
 }
 
 export function refOf(r: PriceRow): SeriesRef {
-  return { source: r.source, brand: r.brand, product: r.product, variant: r.variant, w: r.weight_g };
+  return {
+    source: r.source,
+    brand: r.brand,
+    product: r.product,
+    variant: r.variant,
+    w: r.weight_g,
+  };
 }
 
 export interface SeriesGroup {
@@ -94,7 +104,5 @@ export function splitSeries(group: FileGroup): SeriesGroup[] {
     }
     s.rows.push(r);
   }
-  return [...map.values()].sort(
-    (a, b) => cmp(a.ref.variant, b.ref.variant) || a.ref.w - b.ref.w,
-  );
+  return [...map.values()].sort((a, b) => cmp(a.ref.variant, b.ref.variant) || a.ref.w - b.ref.w);
 }
