@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 import { DataAge } from '@/components/data-age';
 import { TodayBoard } from '@/components/today-board';
@@ -96,6 +97,10 @@ function whenOf(source: string, date: string | null, at: string | null): string 
   const verb = source === 'pegadaian' ? 'harga terbit' : '';
   return `${formatDate(date, false)} · ${verb} ${formatTimeWib(at)}`.replace('  ', ' ');
 }
+
+export const metadata: Metadata = {
+  title: { absolute: 'Gold Price Tracker — harga emas hari ini' },
+};
 
 export default function HomePage() {
   const latest = readLatest();

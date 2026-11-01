@@ -22,10 +22,22 @@ const instrumentSerif = Instrument_Serif({
   display: 'swap',
 });
 
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://gold-price-tracker.vercel.app';
+const DESCRIPTION =
+  'Harga jual dan buyback emas batangan Antam, UBS, dan Galeri24 serta Tabungan Emas Pegadaian, dikumpulkan otomatis setiap hari sebagai data terbuka.';
+
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
   title: { default: SITE_NAME, template: `%s — ${SITE_NAME}` },
-  description:
-    'Harga jual dan buyback emas batangan Antam, UBS, dan Galeri24 serta Tabungan Emas Pegadaian, dikumpulkan otomatis setiap hari sebagai data terbuka.',
+  description: DESCRIPTION,
+  openGraph: {
+    type: 'website',
+    siteName: SITE_NAME,
+    locale: 'id_ID',
+    title: SITE_NAME,
+    description: DESCRIPTION,
+  },
+  twitter: { card: 'summary_large_image', title: SITE_NAME, description: DESCRIPTION },
 };
 
 export const viewport: Viewport = {

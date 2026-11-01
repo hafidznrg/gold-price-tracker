@@ -14,7 +14,12 @@ import {
 } from '@/lib/format';
 import { cn } from '@/lib/utils';
 
-export const metadata: Metadata = { title: 'Data' };
+export const metadata: Metadata = {
+  title: 'Data',
+  description:
+    'Unduh data harga emas batangan Indonesia dan pembanding dunia (XAU/USD, USD/IDR) dalam format CSV dan JSON, diperbarui setiap hari.',
+  openGraph: { title: 'Data' },
+};
 
 /** Keterangan kartu (teks mockup); kunci = `DownloadEntry.id`. Tanpa entri → tanpa keterangan. */
 const DESC: Record<string, string> = {

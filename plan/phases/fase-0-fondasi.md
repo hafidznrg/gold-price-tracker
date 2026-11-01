@@ -49,7 +49,7 @@
 
 | Tugas | Status | Yang tersisa |
 | --- | --- | --- |
-| P0-01 | ⏳ | Dicek lewat API GitHub: repo publik ✅, **belum ada ruleset** untuk `main`, **belum ada LICENSE**. Ruleset diatur pemilik repo di *Settings → Rules* (blokir force-push + penghapusan, tanpa wajib PR, D-17); LICENSE MIT bisa ditambahkan lewat PR |
+| P0-01 | ⏳ | Dicek lewat API GitHub: repo publik ✅, **belum ada ruleset** untuk `main`, **belum ada LICENSE**. Ruleset diatur pemilik repo di *Settings → Rules* (blokir force-push + penghapusan, tanpa wajib PR, D-17); LICENSE MIT ✅ ditambahkan 1 Nov 2026; tinggal ruleset |
 | P0-09 | ✅ 1 Nov 2026 | Situs versi baru tanpa endpoint lama; fixture raw `harga-emas-2026-10-26.json` dan run harian `scrape-retail` dari runner GitHub sejak 26 Okt 2026 (D-26) |
 
 **Kriteria selesai:**

@@ -8,7 +8,8 @@
     "prebuild": "tsx scripts/build-data.ts",
     "build": "next build",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run --passWithNoTests"
+    "test": "vitest run --passWithNoTests",
+    "e2e": "playwright test"
   },
   "dependencies": {
     "@gold/schema": "workspace:*",

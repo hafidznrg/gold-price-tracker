@@ -7,7 +7,12 @@ import { PageIntro } from '@/components/page-intro';
 import { readMeta } from '@/lib/data/load-fs';
 import { explorerOptions } from '@/lib/explorer';
 
-export const metadata: Metadata = { title: 'Explorer' };
+export const metadata: Metadata = {
+  title: 'Explorer',
+  description:
+    'Telusuri dan bandingkan seri harga emas batangan: gabungkan brand, sumber, gramasi, dan jenis harga dalam satu grafik yang bisa dibagikan lewat URL.',
+  openGraph: { title: 'Explorer' },
+};
 
 export default function ExplorerPage() {
   const meta = readMeta();

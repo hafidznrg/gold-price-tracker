@@ -6,3 +6,7 @@ next-env.d.ts
 
 # JSON/CSV hasil scripts/build-data.ts (sumber kebenaran tetap data/ di root)
 public/data/
+
+# Keluaran Playwright
+test-results/
+playwright-report/

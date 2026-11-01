@@ -38,14 +38,17 @@
   - *1 Nov 2026:* `app/spread/page.tsx` + `components/spread-board.tsx` + `lib/spread.ts` (diuji). Pemilih pasangan beli di A → jual ke B (hanya brand dan produk sama; FR-29 penuh di Fase 4), KPI (hari ini, rata-rata, tersempit, titik impas), band jual–buyback dengan celah berarsir, spread % Antam LM vs Tabungan Emas, bar spread % per gramasi dari `latest` (tanpa buyback → "—"), kartu emas fisik vs tabungan. Buyback UBS menyambung varian 2026 + backfill `''` (2026 menang). Tanpa state URL.
 - [x] **P3-08** **Data** (`/data`): kartu unduhan CSV/JSON per seri (harga ritel dan pembanding dunia), masing-masing dengan data terakhir (tanggal/jam, nilai terakhir, umur) dari `meta.json`. Tanpa kamus kolom, status sumber, dan dokumentasi API (D-34). — `FR-23` · S
   - *1 Nov 2026:* `app/data/page.tsx` dari `meta.downloads`: kartu per seri dengan data terakhir (tanggal/jam, nilai, umur) dan tombol CSV/JSON; kartu batangan Pegadaian berisi baris per brand; bagian pembanding dunia menampilkan keadaan kosong selama `data/macro/` kosong. Komponen bersama: `Segmented`, `RangeControl` (+ `rangeToDates`), `DataAge`, chip "Data … WIB" di header.
-- [ ] **P3-09** Atribusi sumber dan waktu update di setiap tampilan harga, disclaimer "bukan rekomendasi investasi", penjelasan PPh 22 pada buyback. — `FR-26` · S
+- [x] **P3-09** Atribusi sumber dan waktu update di setiap tampilan harga, disclaimer "bukan rekomendasi investasi", penjelasan PPh 22 pada buyback. — `FR-26` · S
   - *1 Nov 2026 (sebagian):* `SourceStamp` + `sourceStampText` siap; disclaimer dan PPh 22 sudah di footer. Dipasang di tiap tampilan harga bersama P3-05–P3-07. Temuan: `source_updated_at` Pegadaian = waktu terbit entri harga (`idHarga`/`id`, ±10.06–10.30 WIB), bukan jam snapshot ±18.32 (D-25) → stempel menulis "harga terbit …". UBS hanya tanggal (D-19).
+  - *1 Nov 2026:* audit selesai: `SourceStamp` di Hari ini, Explorer, Spread; waktu update per kartu di Data; disclaimer + PPh 22 di footer. Dicek oleh smoke test (footer).
 
 ### Rilis
 
 - [ ] **P3-10** Proyek Vercel sesuai WORKFLOWS §7: root `apps/web`, file di luar root disertakan, Node 22, *Ignored Build Step*, domain (jawab **Q-5**). — `NFR-01` · S
 - [ ] **P3-11** Smoke test Playwright di CI (setiap halaman render, filter URL dipulihkan saat reload) + audit Lighthouse mobile. — `NFR-08`, `NFR-09` · S
+  - *1 Nov 2026 (sebagian):* `e2e/smoke.spec.ts` (11 tes: render 4 halaman tanpa error konsol/halaman/4xx, tanpa geser horizontal di 360 px, Explorer pulih dari URL setelah reload dan URL ikut berubah saat rentang diganti, 404) terhadap `out/` lewat `scripts/serve-out.mjs` (port 4317); jalan di job `check` `ci.yml` setelah `pnpm --filter web build`. **Sisa:** audit Lighthouse mobile.
 - [ ] **P3-12** Checklist rilis: meta tag/OG image, favicon, halaman 404, README repo menautkan situs. — · S
+  - *1 Nov 2026 (sebagian):* metadata per halaman, Open Graph + Twitter card (`app/opengraph-image.tsx`, statis), `app/icon.svg`, 404 sesuai gaya situs, bagian "Situs web" + "Lisensi" di README. **Sisa:** URL situs nyata (`NEXT_PUBLIC_SITE_URL`, fallback sementara `gold-price-tracker.vercel.app`) dan tautan di README setelah P3-10.
 
 ## Kriteria selesai
 

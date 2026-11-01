@@ -135,6 +135,23 @@ Backfill tidak menimpa nilai yang sama, mencatat nilai yang berbeda sebagai revi
 
 `GITHUB_TOKEN` bawaan cukup untuk commit data dan Issue.
 
+## Situs web
+
+Situs statis (`apps/web`, Next.js static export): Hari ini, Explorer, Spread, dan Data. Alamat: menyusul (P3-10).
+
+```bash
+pnpm --filter web exec tsx scripts/build-data.ts  # CSV di data/ -> JSON di apps/web/public/data
+pnpm --filter web exec next dev -p 3100         # dev server di http://localhost:3100
+pnpm --filter web build        # build produksi ke apps/web/out (menjalankan build-data lebih dulu)
+pnpm --filter web e2e          # smoke test Playwright terhadap out/ (butuh build; pertama kali: pnpm --filter web exec playwright install chromium)
+```
+
+Atur `NEXT_PUBLIC_SITE_URL` saat build agar tag Open Graph memakai domain yang benar.
+
+## Lisensi
+
+Kode berlisensi [MIT](./LICENSE). Data harga adalah milik masing-masing penerbit (lihat Catatan data di bawah).
+
 ## Catatan data
 
 Harga adalah milik masing-masing penerbit (PT Antam Tbk, PT Pegadaian, PT Untung Bersama Sejahtera). Proyek ini non-komersial dan **bukan rekomendasi investasi**; harga resmi selalu mengacu ke situs penerbit.
