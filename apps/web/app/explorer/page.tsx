@@ -5,6 +5,7 @@ import { Suspense } from 'react';
 import { ExplorerBoard } from '@/components/explorer-board';
 import { PageIntro } from '@/components/page-intro';
 import { readMeta } from '@/lib/data/load-fs';
+import { calendarFromMeta } from '@/lib/calendar';
 import { explorerOptions } from '@/lib/explorer';
 
 export const metadata: Metadata = {
@@ -35,6 +36,7 @@ export default function ExplorerPage() {
             options={explorerOptions(meta)}
             asOf={meta.as_of ?? new Date().toISOString().slice(0, 10)}
             stamps={stamps}
+            calendar={calendarFromMeta(meta)}
           />
         </Suspense>
       </NuqsAdapter>

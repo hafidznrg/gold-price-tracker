@@ -207,14 +207,21 @@ export function seriesPoints(
 }
 
 /**
- * Titik untuk grafik: tiap celah (≥ 2 hari tanpa data di antara dua tanggal) diberi satu titik
+ * Titik untuk grafik: tiap celah (≥ 2 hari terbit tanpa data, lihat `findGaps`) diberi satu titik
  * `null` di hari pertamanya supaya garis terputus, dan dilaporkan sebagai rentang celah.
  */
-export function chartPoints(points: SeriesPoint[]): {
+export function chartPoints(
+  points: SeriesPoint[],
+  isExpected?: (date: string) => boolean,
+): {
   points: [string, number | null][];
   gaps: { from: string; to: string }[];
 } {
-  const gaps = findGaps(points.map((p) => p.date));
+  const gaps = findGaps(
+    points.map((p) => p.date),
+    2,
+    isExpected,
+  );
   const out: [string, number | null][] = points.map((p) => [p.date, p.value]);
   for (const g of gaps) out.push([g.from, null]);
   out.sort((a, b) => (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0));

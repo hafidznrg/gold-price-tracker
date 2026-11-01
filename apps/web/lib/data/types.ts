@@ -310,6 +310,8 @@ export interface MetaFile {
   macro: MetaMacroSeries[];
   events: EventConfig[];
   downloads: DownloadEntry[];
+  /** Tanggal libur (`holidays.yml`), untuk hari yang diharapkan ada data. */
+  holidays: string[];
 }
 
 /** Token warna Tailwind (`globals.css`). */

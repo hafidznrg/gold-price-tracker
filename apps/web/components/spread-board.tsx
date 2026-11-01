@@ -25,6 +25,7 @@ import {
   POPULAR_PAIRS,
 } from '@/lib/spread';
 import { cn } from '@/lib/utils';
+import { expectedFor, labelGaps, type DataCalendar } from '@/lib/calendar';
 
 export interface BarSource {
   id: string;
@@ -45,6 +46,8 @@ export interface SpreadBoardProps {
   bars: BarSource[];
   /** Tanggal data terbaru (patokan rentang). */
   asOf: string;
+  /** Kalender terbit sumber, agar akhir pekan/libur tidak dianggap celah. */
+  calendar: DataCalendar;
 }
 
 const FIELD = 'h-11 w-full rounded-field border border-line bg-surface2 px-3 text-sm text-text';
@@ -96,6 +99,7 @@ export function SpreadBoard({
   compare,
   bars,
   asOf,
+  calendar,
 }: SpreadBoardProps) {
   const [sellId, setSellId] = useState('lm-antam');
   const [buyId, setBuyId] = useState('lm-antam');
@@ -125,8 +129,15 @@ export function SpreadBoard({
   const days = useMemo(() => (allDays ? sliceDays(allDays, from, to) : []), [allDays, from, to]);
   const stats = useMemo(() => spreadStats(days), [days]);
   const gaps = useMemo(
-    () => findGaps(days.map((d) => d.date)).map((g) => ({ ...g, label: 'Tidak ada data' })),
-    [days],
+    () =>
+      labelGaps(
+        findGaps(
+          days.map((d) => d.date),
+          2,
+          expectedFor(calendar, [sell.source, buy.source]),
+        ),
+      ),
+    [days, calendar, sell.source, buy.source],
   );
 
   const sellSeries: TimeSeries = useMemo(

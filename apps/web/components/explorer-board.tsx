@@ -48,6 +48,7 @@ import {
   formatWeight,
 } from '@/lib/format';
 import { cn } from '@/lib/utils';
+import { expectedFor, labelGaps, type DataCalendar } from '@/lib/calendar';
 
 export interface ExplorerBoardProps {
   options: ExplorerOption[];
@@ -55,6 +56,8 @@ export interface ExplorerBoardProps {
   asOf: string;
   /** Stempel per sumber dari meta.json. */
   stamps: Partial<Record<PriceSource, { date: string | null; at: string | null }>>;
+  /** Kalender terbit sumber, agar akhir pekan/libur tidak dianggap celah. */
+  calendar: DataCalendar;
 }
 
 const FIELD = 'h-11 w-full rounded-field border border-line bg-surface2 px-3 text-sm text-text';
@@ -115,7 +118,7 @@ function uniq<T>(xs: T[]): T[] {
   return [...new Set(xs)];
 }
 
-export function ExplorerBoard({ options, asOf, stamps }: ExplorerBoardProps) {
+export function ExplorerBoard({ options, asOf, stamps, calendar }: ExplorerBoardProps) {
   const [query, setQuery] = useQueryStates(
     { s: parseAsString, r: parseAsString },
     { history: 'replace' },
@@ -155,9 +158,9 @@ export function ExplorerBoard({ options, asOf, stamps }: ExplorerBoardProps) {
     return active.map((a) => {
       const file = files[a.opt.file];
       const points: SeriesPoint[] = file ? seriesPoints(file, a.opt, a.pick.price) : [];
-      return { ...a, points, chart: chartPoints(points) };
+      return { ...a, points, chart: chartPoints(points, expectedFor(calendar, [a.opt.source])) };
     });
-  }, [active, files, loading]);
+  }, [active, files, loading, calendar]);
 
   const lastDate = useMemo(
     () =>
@@ -185,14 +188,7 @@ export function ExplorerBoard({ options, asOf, stamps }: ExplorerBoardProps) {
       })),
     [built],
   );
-  const gaps = useMemo(
-    () =>
-      mergeGaps((built ?? []).map((b) => b.chart.gaps)).map((g) => ({
-        ...g,
-        label: 'Tidak ada data',
-      })),
-    [built],
-  );
+  const gaps = useMemo(() => labelGaps(mergeGaps((built ?? []).map((b) => b.chart.gaps))), [built]);
   const chartRange = useMemo(
     () => (eff.from ? { from: eff.from, to: eff.to } : undefined),
     [eff.from, eff.to],
@@ -437,8 +433,9 @@ export function ExplorerBoard({ options, asOf, stamps }: ExplorerBoardProps) {
             />
           )}
           <p className="m-0 mt-3 text-xs leading-relaxed text-faint">
-            Area berarsir = hari tanpa data pada series yang bersangkutan (garis diputus, tidak
-            disambung). Emas fisik: harga per keping; Tabungan Emas: harga per gram.
+            Area berarsir = hari terbit tanpa data dari sumber (garis diputus). Akhir pekan dan hari
+            libur ketika sumber memang tidak terbit tidak dihitung sebagai celah. Emas fisik: harga
+            per keping; Tabungan Emas: harga per gram.
             {hasLate ? ' Series yang lebih pendek mulai dari tanggal datanya yang pertama.' : ''}
           </p>
 

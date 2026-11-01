@@ -12,6 +12,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parse as parseYaml } from 'yaml';
 import {
+  HolidaysFile,
   CatalogFile,
   EventsFile,
   SourceStatusFile,
@@ -104,6 +105,7 @@ function main(): void {
     status: statusRaw === null ? {} : SourceStatusFile.parse(statusRaw),
     catalog: expandCatalog(CatalogFile.parse(yaml('catalog.yml'))),
     events: EventsFile.parse(yaml('events.yml')).events,
+    holidays: HolidaysFile.parse(yaml('holidays.yml')).holidays.map((h) => h.date),
   });
 
   rmSync(OUT, { recursive: true, force: true });

@@ -1,7 +1,8 @@
 import type { Metadata } from 'next';
 import { PageIntro } from '@/components/page-intro';
 import { SpreadBoard, type BarSource } from '@/components/spread-board';
-import { readLatest } from '@/lib/data/load-fs';
+import { calendarFromMeta } from '@/lib/calendar';
+import { readLatest, readMeta } from '@/lib/data/load-fs';
 import {
   buildOptions,
   compareItems,
@@ -74,6 +75,7 @@ export default function SpreadPage() {
         compare={compareItems(latest)}
         bars={bars}
         asOf={latest.as_of ?? new Date().toISOString().slice(0, 10)}
+        calendar={calendarFromMeta(readMeta())}
       />
     </>
   );

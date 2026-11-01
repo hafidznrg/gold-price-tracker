@@ -98,14 +98,25 @@ function addDay(iso: string, n: number): string {
   return new Date(Date.parse(`${iso}T00:00:00Z`) + n * DAY_MS).toISOString().slice(0, 10);
 }
 
-/** Celah di antara tanggal berurutan: run ≥ `minRun` hari kalender tanpa data. */
-export function findGaps(dates: string[], minRun = 2): { from: string; to: string }[] {
+/**
+ * Celah di antara tanggal berurutan: ≥ `minRun` hari tanpa data yang menurut `isExpected`
+ * seharusnya terbit. Hari libur/akhir pekan sumber tidak dihitung, sehingga garis disambung.
+ */
+export function findGaps(
+  dates: string[],
+  minRun = 2,
+  isExpected: (date: string) => boolean = () => true,
+): { from: string; to: string }[] {
   const out: { from: string; to: string }[] = [];
   for (let i = 1; i < dates.length; i++) {
     const prev = dates[i - 1] as string;
     const cur = dates[i] as string;
     const run = Math.round((Date.parse(cur) - Date.parse(prev)) / DAY_MS) - 1;
-    if (run >= minRun) out.push({ from: addDay(prev, 1), to: addDay(cur, -1) });
+    if (run < minRun) continue;
+    // Hanya hari yang memang diharapkan terbit yang dihitung sebagai data hilang.
+    let missing = 0;
+    for (let d = addDay(prev, 1); d < cur; d = addDay(d, 1)) if (isExpected(d)) missing++;
+    if (missing >= minRun) out.push({ from: addDay(prev, 1), to: addDay(cur, -1) });
   }
   return out;
 }

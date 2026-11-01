@@ -116,3 +116,22 @@ describe('compatible', () => {
     expect(compatible(o({}), o({ brand: 'ubs' }))).toBe(false);
   });
 });
+
+describe('findGaps dengan kalender sumber', () => {
+  // Senin–Jumat; 2026-03-19 (Kamis) libur Nyepi.
+  const weekdays = (d: string) => {
+    const wd = new Date(`${d}T00:00:00Z`).getUTCDay();
+    return wd >= 1 && wd <= 5 && d !== '2026-03-19';
+  };
+  it('akhir pekan dan libur tidak dihitung sebagai celah', () => {
+    // Jumat 13 → Senin 16 Mar: Sabtu–Minggu saja.
+    expect(findGaps(['2026-03-13', '2026-03-16'], 2, weekdays)).toEqual([]);
+    // Rabu 18 → Senin 23 Mar: Kamis libur, Jumat hilang (1 hari terbit) → bukan celah.
+    expect(findGaps(['2026-03-18', '2026-03-23'], 2, weekdays)).toEqual([]);
+  });
+  it('dua hari terbit yang hilang tetap celah', () => {
+    expect(findGaps(['2026-03-16', '2026-03-19'], 2, weekdays)).toEqual([
+      { from: '2026-03-17', to: '2026-03-18' },
+    ]);
+  });
+});
