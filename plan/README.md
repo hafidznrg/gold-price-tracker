@@ -59,7 +59,7 @@ flowchart LR
 | 0 | 11/12 selesai; G0 terpenuhi untuk semua sumber (P0-09 ditutup: Logam Mulia jalan dari runner sejak 26 Okt, D-26). Sisa: P0-01 ruleset + LICENSE | 25 Okt 2026 | |
 | 1 | 11/13 selesai (P1-01–P1-07, P1-09, P1-10, P1-12, P1-13); ketiga scraper aktif di `scrape-retail.yml` (Logam Mulia lewat stealth, D-26; run pertama di Actions sukses). P1-05 selesai (Telegram + Issue terbukti lewat `notify-test.yml`); P1-08 terimplementasi, menunggu bukti di run nyata | 26 Okt 2026 | |
 | 2 | 2/13 selesai (P2-11 `derive.ts`, P2-13 `events.yml`). Job backfill P2-06/08/09/10 terimplementasi dan teruji ke sumber asli (Q-3 terjawab, D-33), dicentang setelah run `backfill.yml` ter-commit; menunggu P2-01/P2-02 (validasi + merge makro) | 1 Nov 2026 | |
-| 3 | 9/12 selesai (P3-01–P3-09); P3-11 dan P3-12 sebagian (sisa Lighthouse dan URL situs). Smoke test Playwright jalan di CI. Berikutnya: P3-10 Vercel + domain (Q-5), lalu audit Lighthouse | 1 Nov 2026 | |
+| 3 | 11/12 selesai; situs tayang di <https://gold.hafidznrg.my.id> (P3-10, Q-5). Sisa P3-11: audit Lighthouse mobile. G3 menunggu data ritel ≥ 14 hari (±9 Nov) dan G1 | 1 Nov 2026 | |
 | 4 | Belum mulai | | |
 | 5 | Belum mulai | | |
 
@@ -83,3 +83,4 @@ flowchart LR
 | 1 Nov 2026 | Fase 3 mulai: P3-01–P3-04 (`apps/web` Next.js 16 + tema mockup, `build-data`, `lib/data`, `components/charts`) |
 | 1 Nov 2026 | Gelombang 3a: komponen bersama (`SourceStamp`, `RangeControl`, `Segmented`, chip data di header) dan halaman Data (P3-08); jam Pegadaian = waktu terbit harga, bukan snapshot |
 | 1 Nov 2026 | Gelombang 4: smoke test Playwright di CI (P3-11), audit atribusi (P3-09), metadata/OG/ikon (P3-12), LICENSE MIT |
+| 1 Nov 2026 | Situs tayang di gold.hafidznrg.my.id lewat Vercel (P3-10, Q-5 terjawab); README menautkan situs (P3-12). Perbaikan: celah grafik mengikuti kalender terbit sumber; `apps/web/lib/build` sebelumnya terabaikan `.gitignore` |

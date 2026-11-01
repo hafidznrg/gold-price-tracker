@@ -183,7 +183,7 @@ Ringkasan; rincian dan alasannya di [DECISIONS.md](./DECISIONS.md).
 | Q-2 | Apakah grafik histori UBS Lifestyle memuat endpoint JSON yang bisa dipakai untuk backfill? | **Terjawab (P0-07):** ya, tetapi hanya buyback 1 g sejak Nov 2023, bercelah, tahun produksi tidak diketahui — TECH-SPEC §5.1 |
 | Q-3 | Sumber kurs USD/IDR tahunan 1996–1998 yang terverifikasi | **Terjawab (P2-10, 1 Nov 2026):** World Bank WDI `PA.NUS.FCRF` (IMF IFS) lewat API — 2.342,30 / 2.909,38 / 10.013,62; dicek silang dengan OECD MEI dan rata-rata ECB 1999 (D-33) |
 | Q-4 | Perlukah *self-hosted runner* Indonesia? | **Terjawab (P0-11, 25 Okt 2026):** tidak untuk UBS Lifestyle, Pegadaian, xaus, JISDOR, World Bank, Frankfurter — semua lolos dari runner GitHub di AS. Logam Mulia belum dapat dinilai (situs maintenance untuk semua pengunjung) |
-| Q-5 | Nama domain dan nama produk | Sebelum rilis publik (Fase 3) |
+| Q-5 | Nama domain dan nama produk | **Terjawab (P3-10, 1 Nov 2026):** domain `gold.hafidznrg.my.id` (Vercel); nama tampilan "Harga Emas Historis" |
 | Q-6 | `update_calendar` tiap sumber (apakah UBS/Pegadaian/Logam Mulia update di akhir pekan dan hari libur) | Observasi 2 minggu di Fase 1. Temuan awal UBS: Senin–Sabtu, sebagian libur tetap update (TECH-SPEC §5.1). Pegadaian: harga Minggu ada, diterbitkan Sabtu malam sebagai periode I (TECH-SPEC §5.2) |
 
 ## 14. Rencana rilis

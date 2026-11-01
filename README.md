@@ -137,7 +137,7 @@ Backfill tidak menimpa nilai yang sama, mencatat nilai yang berbeda sebagai revi
 
 ## Situs web
 
-Situs statis (`apps/web`, Next.js static export): Hari ini, Explorer, Spread, dan Data. Alamat: menyusul (P3-10).
+Situs statis (`apps/web`, Next.js static export): Hari ini, Explorer, Spread, dan Data. Alamat: <https://gold.hafidznrg.my.id> (Vercel, dibangun ulang otomatis setiap ada commit data).
 
 ```bash
 pnpm --filter web exec tsx scripts/build-data.ts  # CSV di data/ -> JSON di apps/web/public/data

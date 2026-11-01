@@ -44,11 +44,13 @@
 
 ### Rilis
 
-- [ ] **P3-10** Proyek Vercel sesuai WORKFLOWS §7: root `apps/web`, file di luar root disertakan, Node 22, *Ignored Build Step*, domain (jawab **Q-5**). — `NFR-01` · S
+- [x] **P3-10** Proyek Vercel sesuai WORKFLOWS §7: root `apps/web`, file di luar root disertakan, Node 22, *Ignored Build Step*, domain (jawab **Q-5**). — `NFR-01` · S
+  - *1 Nov 2026:* proyek Vercel `gold-price-tracker` terhubung ke repo, root `apps/web` + file di luar root, Node 22, `ENABLE_EXPERIMENTAL_COREPACK=1`, `NEXT_PUBLIC_SITE_URL` (tipe Config). Domain **gold.hafidznrg.my.id** (Q-5); `/`, `/explorer`, `/data/meta.json` menjawab 200. *Ignored Build Step* diatur pemilik proyek di dashboard; bukti deploy otomatis dari commit data bot dicek saat run berikutnya.
 - [ ] **P3-11** Smoke test Playwright di CI (setiap halaman render, filter URL dipulihkan saat reload) + audit Lighthouse mobile. — `NFR-08`, `NFR-09` · S
-  - *1 Nov 2026 (sebagian):* `e2e/smoke.spec.ts` (11 tes: render 4 halaman tanpa error konsol/halaman/4xx, tanpa geser horizontal di 360 px, Explorer pulih dari URL setelah reload dan URL ikut berubah saat rentang diganti, 404) terhadap `out/` lewat `scripts/serve-out.mjs` (port 4317); jalan di job `check` `ci.yml` setelah `pnpm --filter web build`. **Sisa:** audit Lighthouse mobile.
-- [ ] **P3-12** Checklist rilis: meta tag/OG image, favicon, halaman 404, README repo menautkan situs. — · S
+  - *1 Nov 2026 (sebagian):* `e2e/smoke.spec.ts` (11 tes: render 4 halaman tanpa error konsol/halaman/4xx, tanpa geser horizontal di 360 px, Explorer pulih dari URL setelah reload dan URL ikut berubah saat rentang diganti, 404) terhadap `out/` lewat `scripts/serve-out.mjs` (port 4317); jalan di job `check` `ci.yml` setelah `pnpm --filter web build`. **Sisa:** audit Lighthouse mobile (kuota anonim PageSpeed API habis 1 Nov 2026; jalankan lewat pagespeed.web.dev atau Lighthouse lokal).
+- [x] **P3-12** Checklist rilis: meta tag/OG image, favicon, halaman 404, README repo menautkan situs. — · S
   - *1 Nov 2026 (sebagian):* metadata per halaman, Open Graph + Twitter card (`app/opengraph-image.tsx`, statis), `app/icon.svg`, 404 sesuai gaya situs, bagian "Situs web" + "Lisensi" di README. **Sisa:** URL situs nyata (`NEXT_PUBLIC_SITE_URL`, fallback sementara `gold-price-tracker.vercel.app`) dan tautan di README setelah P3-10.
+  - *1 Nov 2026:* README menautkan <https://gold.hafidznrg.my.id>; `og:image` memakai domain final.
 
 ## Kriteria selesai
 
