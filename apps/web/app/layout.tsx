@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import { Instrument_Serif, Inter } from 'next/font/google';
 import type { ReactNode } from 'react';
+import { DataStatusChip } from '@/components/data-status-chip';
 import { SiteFooter } from '@/components/site-footer';
 import { SITE_NAME, SiteHeader } from '@/components/site-header';
 import { DEFAULT_THEME, themeInitScript } from '@/lib/theme';
@@ -48,7 +49,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
       </head>
       <body className="flex min-h-screen flex-col">
-        <SiteHeader />
+        <SiteHeader status={<DataStatusChip />} />
         <main className="flex-1">{children}</main>
         <SiteFooter />
       </body>

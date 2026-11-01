@@ -33,8 +33,10 @@
 - [ ] **P3-05** **Hari ini** (`/`): kartu per brand (jual, buyback, spread, perubahan vs kemarin untuk 1 g) + kartu Tabungan Emas per gram, filter Semua / Emas fisik / Tabungan emas, tabel semua gramasi dengan sparkline 30 hari; umur data per sumber. — `FR-20` · M
 - [ ] **P3-06** **Explorer** (`/explorer`): pemilih series (brand × sumber × gramasi × jenis harga), kontrol rentang 7H–Semua + kustom, semua state di URL via `nuqs`. — `FR-21`, `FR-24`, `FR-25` · L
 - [ ] **P3-07** **Spread** (`/spread`): area band jual–buyback, line spread %, bar spread % per gramasi hari ini. — `FR-22` · M
-- [ ] **P3-08** **Data** (`/data`): kartu unduhan CSV/JSON per seri (harga ritel dan pembanding dunia), masing-masing dengan data terakhir (tanggal/jam, nilai terakhir, umur) dari `meta.json`. Tanpa kamus kolom, status sumber, dan dokumentasi API (D-34). — `FR-23` · S
+- [x] **P3-08** **Data** (`/data`): kartu unduhan CSV/JSON per seri (harga ritel dan pembanding dunia), masing-masing dengan data terakhir (tanggal/jam, nilai terakhir, umur) dari `meta.json`. Tanpa kamus kolom, status sumber, dan dokumentasi API (D-34). — `FR-23` · S
+  - *1 Nov 2026:* `app/data/page.tsx` dari `meta.downloads`: kartu per seri dengan data terakhir (tanggal/jam, nilai, umur) dan tombol CSV/JSON; kartu batangan Pegadaian berisi baris per brand; bagian pembanding dunia menampilkan keadaan kosong selama `data/macro/` kosong. Komponen bersama: `Segmented`, `RangeControl` (+ `rangeToDates`), `DataAge`, chip "Data … WIB" di header.
 - [ ] **P3-09** Atribusi sumber dan waktu update di setiap tampilan harga, disclaimer "bukan rekomendasi investasi", penjelasan PPh 22 pada buyback. — `FR-26` · S
+  - *1 Nov 2026 (sebagian):* `SourceStamp` + `sourceStampText` siap; disclaimer dan PPh 22 sudah di footer. Dipasang di tiap tampilan harga bersama P3-05–P3-07. Temuan: `source_updated_at` Pegadaian = waktu terbit entri harga (`idHarga`/`id`, ±10.06–10.30 WIB), bukan jam snapshot ±18.32 (D-25) → stempel menulis "harga terbit …". UBS hanya tanggal (D-19).
 
 ### Rilis
 
