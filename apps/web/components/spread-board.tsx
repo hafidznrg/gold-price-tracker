@@ -1,13 +1,14 @@
 'use client';
 
 import type { PriceSource } from '@gold/schema';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { BarChart, type BarItem } from '@/components/charts/bar-chart';
 import { SpreadBandChart } from '@/components/charts/spread-band-chart';
 import { TimeSeriesChart, type TimeSeries } from '@/components/charts/time-series-chart';
 import { RangeControl, type RangeValue } from '@/components/range-control';
 import { SourceStamp } from '@/components/source-stamp';
-import { fetchSeries, type ColorToken, type SeriesFile } from '@/lib/data';
+import { useSeriesFiles } from '@/components/use-series-files';
+import type { ColorToken } from '@/lib/data';
 import { EMPTY, formatDate, formatNumber, formatPct, formatRupiah } from '@/lib/format';
 import { rangeToDates } from '@/lib/range';
 import {
@@ -56,29 +57,6 @@ const BG: Record<ColorToken, string> = {
   gold: 'bg-gold',
   muted: 'bg-muted',
 };
-
-type Files = Record<string, SeriesFile>;
-
-/** Muat file series yang diperlukan (cache di lapisan data); hanya yang belum ada. */
-function useSeriesFiles(ids: string[]): { files: Files; loading: boolean; error: string | null } {
-  const [files, setFiles] = useState<Files>({});
-  const [error, setError] = useState<string | null>(null);
-  const key = ids.join('|');
-  useEffect(() => {
-    let alive = true;
-    for (const id of key.split('|')) {
-      fetchSeries(id).then(
-        (f) => alive && setFiles((cur) => (cur[id] ? cur : { ...cur, [id]: f })),
-        (e: unknown) => alive && setError(e instanceof Error ? e.message : String(e)),
-      );
-    }
-    return () => {
-      alive = false;
-    };
-  }, [key]);
-  const loading = key.split('|').some((id) => !files[id]);
-  return { files, loading: loading && !error, error };
-}
 
 function Kpi({
   label,
