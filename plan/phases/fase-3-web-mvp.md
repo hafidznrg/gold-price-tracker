@@ -7,6 +7,8 @@
 | **Perkiraan usaha** | 5–7 hari |
 | **Gerbang keluar** | **G3 — rilis publik** |
 
+> **Acuan visual:** [mockup/](../mockup/) — tata letak, token desain, dan konvensi tampilan setiap halaman. Angka di mockup ilustrasi; aturan data tetap mengikuti DATA-MODEL dan DECISIONS.
+
 ## Ruang lingkup
 
 **Masuk:** proyek Next.js, `build-data`, komponen grafik, empat halaman P0, URL state, atribusi dan disclaimer, deploy Vercel, smoke test.
@@ -24,10 +26,10 @@
 
 ### Halaman P0
 
-- [ ] **P3-05** **Hari ini** (`/`): kartu per brand (jual, buyback, spread, perubahan vs kemarin untuk 1 g) + tabel semua gramasi dengan sparkline 30 hari; umur data per sumber. — `FR-20` · M
+- [ ] **P3-05** **Hari ini** (`/`): kartu per brand (jual, buyback, spread, perubahan vs kemarin untuk 1 g) + kartu Tabungan Emas per gram, filter Semua / Emas fisik / Tabungan emas, tabel semua gramasi dengan sparkline 30 hari; umur data per sumber. — `FR-20` · M
 - [ ] **P3-06** **Explorer** (`/explorer`): pemilih series (brand × sumber × gramasi × jenis harga), kontrol rentang 7H–Semua + kustom, semua state di URL via `nuqs`. — `FR-21`, `FR-24`, `FR-25` · L
 - [ ] **P3-07** **Spread** (`/spread`): area band jual–buyback, line spread %, bar spread % per gramasi hari ini. — `FR-22` · M
-- [ ] **P3-08** **Data** (`/data`): unduh CSV/JSON, kamus kolom, tabel status sumber dari `data/meta/status.json`. — `FR-23` · S
+- [ ] **P3-08** **Data** (`/data`): kartu unduhan CSV/JSON per seri (harga ritel dan pembanding dunia), masing-masing dengan data terakhir (tanggal/jam, nilai terakhir, umur) dari `meta.json`. Tanpa kamus kolom, status sumber, dan dokumentasi API (D-34). — `FR-23` · S
 - [ ] **P3-09** Atribusi sumber dan waktu update di setiap tampilan harga, disclaimer "bukan rekomendasi investasi", penjelasan PPh 22 pada buyback. — `FR-26` · S
 
 ### Rilis

@@ -28,8 +28,9 @@
 
 - [x] **P0-07** **UBS Lifestyle:** simpan ≥ 2 fixture HTML. Petakan struktur tabel per tahun produksi dan blok "Updated". Cek tab Network apakah grafik histori 7H–3T memuat endpoint JSON (jawab **Q-2**). — `FR-01`, `FR-08` · S
 - [x] **P0-08** **Pegadaian:** di DevTools → Network, temukan request yang mengembalikan harga. Catat URL, method, header wajib, dan bentuk respons. Simpan fixture. Catat apakah buyback per brand tersedia (bahan **Q-1**). — `FR-02` · M
-- [ ] **P0-09** **Logam Mulia:** prototipe lokal Playwright + `playwright-extra` + stealth sesuai TECH-SPEC §5.3. Simpan fixture respons jual dan buyback (potong ke ±200 titik terakhir agar kecil). — `FR-03` · M
+- [x] **P0-09** **Logam Mulia:** prototipe lokal Playwright + `playwright-extra` + stealth sesuai TECH-SPEC §5.3. Simpan fixture respons jual dan buyback (potong ke ±200 titik terakhir agar kecil). — `FR-03` · M
   - *25 Okt 2026:* prototipe selesai (`scripts/prototype-logammulia.ts`), tetapi situs 503 maintenance ("mempersiapkan aplikasi versi terbaru"); fixture jual/buyback **tertunda** sampai situs kembali. Lihat TECH-SPEC §5.3.
+  - *1 Nov 2026 — ditutup:* endpoint `/data-base-price/*` tidak ada lagi di situs versi baru (D-24), sehingga fixture endpoint tidak bisa dibuat. Penggantinya fixture raw asli `test/fixtures/logammulia/harga-emas-2026-10-26.json` (teks tabel + seri grafik 1 g jual dan buyback, D-26). Fetch dari runner GitHub terbukti lewat commit harian `scrape-retail` sejak 26 Okt 2026 (`1a80fc5`, `logammulia✓ +12`).
 - [x] **P0-10** **Makro:** verifikasi `xaus.com/api/v1/history` dan `/spot`, Frankfurter (`EUR/IDR`, `EUR/USD`), struktur XLS Pink Sheet World Bank (baris/kolom emas), dan cara mengambil histori JISDOR. Simpan fixture masing-masing. — `FR-05`–`FR-07` · M
 - [x] **P0-11** Workflow `probe.yml` (WORKFLOWS §3.6; `workflow_dispatch`, input `source`) yang menjalankan `probe` untuk setiap sumber **dari runner GitHub** tanpa menulis data. Jalankan dan catat hasilnya; ini menjawab **Q-4** (perlu *self-hosted runner* atau tidak). — `NFR-04` · S
 - [x] **P0-12** Dokumentasikan temuan riset di TECH-SPEC §5 (endpoint final Pegadaian, cara JISDOR, kolom XLS) dan catat keputusan baru di DECISIONS.md. — · S
@@ -42,25 +43,25 @@
 - Hasil `probe.yml` dari runner GitHub tercatat untuk setiap sumber.
 - Q-2 dan Q-4 terjawab; Q-1 punya temuan awal.
 
-## Status (25 Okt 2026)
+## Status (1 Nov 2026)
 
-**Tugas:** 10 dari 12 selesai.
+**Tugas:** 11 dari 12 selesai.
 
 | Tugas | Status | Yang tersisa |
 | --- | --- | --- |
 | P0-01 | ⏳ | Dicek lewat API GitHub: repo publik ✅, **belum ada ruleset** untuk `main`, **belum ada LICENSE**. Ruleset diatur pemilik repo di *Settings → Rules* (blokir force-push + penghapusan, tanpa wajib PR, D-17); LICENSE MIT bisa ditambahkan lewat PR |
-| P0-09 | ⏳ tertahan | Logam Mulia 503 maintenance sejak 25 Okt 2026. Prototipe siap; ambil fixture jual/buyback dan jalankan `probe.yml source=logammulia` setelah situs kembali |
+| P0-09 | ✅ 1 Nov 2026 | Situs versi baru tanpa endpoint lama; fixture raw `harga-emas-2026-10-26.json` dan run harian `scrape-retail` dari runner GitHub sejak 26 Okt 2026 (D-26) |
 
 **Kriteria selesai:**
 
 | Kriteria | Status |
 | --- | --- |
 | CI hijau di `main`; uji skema dan util lulus | ✅ |
-| Setiap sumber punya ≥ 1 fixture | ✅ untuk 6 sumber · ⚠️ Logam Mulia hanya fixture halaman maintenance, belum respons data |
-| Hasil `probe.yml` dari runner GitHub tercatat untuk setiap sumber | ✅ (Logam Mulia tercatat sebagai 503 maintenance) |
-| Q-2 dan Q-4 terjawab; Q-1 punya temuan awal | ✅ Q-2 (P0-07) · ✅ Q-4 (P0-11, kecuali Logam Mulia) · ✅ Q-1 temuan awal (P0-08) |
+| Setiap sumber punya ≥ 1 fixture | ✅ semua 7 sumber (Logam Mulia: raw `harga-emas-2026-10-26.json`, D-26) |
+| Hasil `probe.yml` dari runner GitHub tercatat untuk setiap sumber | ✅ (Logam Mulia: 503 maintenance di `probe` 25 Okt; fetch terbukti lewat `scrape-retail` sejak 26 Okt) |
+| Q-2 dan Q-4 terjawab; Q-1 punya temuan awal | ✅ Q-2 (P0-07) · ✅ Q-4 (P0-11; Logam Mulia lolos dari runner lewat stealth, D-26) · ✅ Q-1 temuan awal (P0-08) |
 
-**G0:** terpenuhi untuk UBS Lifestyle, Pegadaian, xaus, JISDOR, World Bank, dan Frankfurter (opsi 1: fetch terbukti dari runner GitHub). **Belum** untuk Logam Mulia: kegagalannya bukan dari runner, sehingga opsi 2 (self-hosted runner atau terima kosong sesuai D-06) belum relevan sampai situs kembali dan bisa diuji.
+**G0:** terpenuhi untuk UBS Lifestyle, Pegadaian, xaus, JISDOR, World Bank, dan Frankfurter (opsi 1: fetch terbukti dari runner GitHub). Logam Mulia menyusul (opsi 1) setelah situs versi baru: `scrape-retail` dari runner GitHub sukses setiap hari sejak 26 Okt 2026 (D-26). **G0 terpenuhi untuk semua sumber**; sisa P0-01 (ruleset + LICENSE) tidak menghalangi gerbang.
 
 **Dampak ke fase berikutnya:** Fase 1 dapat dimulai karena urutan kerjanya (P1-01 validate → P1-02 merge → P1-03 UBS → P1-04 workflow) tidak bergantung pada Logam Mulia; hanya **P1-06** yang menunggu P0-09. Fase 2 tidak terpengaruh. Bila Logam Mulia masih tutup ketika P1-06 tiba, catat di DECISIONS.md apakah menunggu atau menerima seri kosong (D-06).
 
@@ -79,7 +80,7 @@ Run [`probe` #40160955522](https://github.com/hafidznrg/gold-price-tracker/actio
 | --- | --- | --- | --- | --- | --- |
 | UBS Lifestyle | ✅ | 200 · 200 | 2026-10-24 | Halaman 188 KB + grafik; titik terakhir = buyback 1 g | ✅ |
 | Pegadaian | ✅ | 200 | 2026-10-24 | `/gold/prices/table` tanpa token, tidak diblokir dari AS | ✅ |
-| Logam Mulia | ❌ | 503 | — | Halaman "Maintenance" (Akamai), sama seperti dari jaringan Indonesia — **bukan** blokir runner | ⏳ menunggu situs kembali (P0-09) |
+| Logam Mulia | ❌ | 503 | — | Halaman "Maintenance" (Akamai), sama seperti dari jaringan Indonesia — **bukan** blokir runner | ✅ via `scrape-retail` sejak 26 Okt (D-26) |
 | xaus | ✅ | 200 · 200 | 2026-10-23 | Penutupan Jumat (diambil Minggu) | ✅ |
 | JISDOR | ✅ | 200 · 200 | 2026-10-23 | `GET` 10 hari + postback ekspor XLSX 30 hari dari runner berhasil | ✅ |
 | World Bank | ✅ | 200 · 200 | 2026-09-01 | Tautan XLSX ditemukan dari halaman; kolom Gold ada | ✅ |

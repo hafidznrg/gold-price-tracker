@@ -268,3 +268,13 @@ Log keputusan produk dan teknis (format ringkas ala ADR). Keputusan baru ditamba
   - **Sambungan 1999**: rata-rata 259 hari ECB (`usd_idr_ecb`) = 7.849,92, sedangkan WDI 1999 = 7.855,15 (−0,07%) dan OECD = 7.848,94 (+0,01%). Pergantian seri `annual` → `ecb` di awal 1999 tidak menimbulkan lompatan.
 - Yang tidak dipakai: IMF IFS langsung (host `dataservices.imf.org` tidak dapat di-resolve, portal IMF sudah dipindah) dan FRED (timeout dari jaringan lokal).
 **Konsekuensi:** Q-3 terjawab. Agregat tahunan `usd_idr` 1996–1998 memakai tingkat `A` (D-31) dan tooltip menyebut WDI. Grafik kelipatan dengan tahun dasar 1996 bergantung pada nilai 2.342,30. Memakai OECD sebagai gantinya akan menggeser kelipatan kurs sekitar +0,7%, masih dalam toleransi cek silang G2.
+
+### D-34 — Tampilan web mengikuti mockup
+
+**Konteks:** 1 Nov 2026 mockup tujuh halaman web dibuat dan disimpan di `mockup/` (acuan visual Fase 3–4), dengan dua masukan pemilik proyek: Tabungan Emas Pegadaian (D-30) ikut tampil sebagai pelengkap emas fisik, dan halaman Data cukup berisi unduhan.
+**Keputusan:**
+- **Tabungan Emas di web:** kartu tersendiri di Hari ini (harga per gram = harga per 0,01 g ÷ `weight_g`, harga asli per 0,01 g tetap ditampilkan), filter Semua / Emas fisik / Tabungan emas, tab di tabel gramasi (harga linear terhadap berat), seri di Explorer, garis spread % di Spread, garis dan baris di Bandingkan, opsi sumber di Kalkulator.
+- **Halaman Data** hanya berisi kartu unduhan per seri dengan *data terakhir* (tanggal/jam, nilai terakhir, umur). Kamus kolom dan status sumber tidak ditampilkan di web (status sumber masuk halaman Kualitas data, FR-36); dokumentasi API statis pindah ke README repo (P4-10).
+- **Warna arah harga:** hijau = naik, merah = turun (konvensi pasar Indonesia), selalu disertai ▲/▼ dan tanda +/−. Warna tidak menilai baik/buruk, kecuali untung/rugi di Kalkulator; spread memakai warna aksen netral.
+- Mockup mengatur tampilan; bila bertentangan dengan PRD, DATA-MODEL, atau DECISIONS, dokumen-dokumen itu yang berlaku.
+**Konsekuensi:** FR-20, FR-23, FR-30, P3-05, P3-08, P4-05, P4-10 diperbarui. Token desain dan pemetaan mockup → data ada di `mockup/README.md`.

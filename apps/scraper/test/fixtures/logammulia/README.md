@@ -12,4 +12,4 @@ Riset P0-09, prototipe `apps/scraper/scripts/prototype-logammulia.ts` (Playwrigh
 
 **Situs versi baru (26 Okt 2026):** endpoint lama tidak ada lagi; API `api.logammulia.com` terenkripsi; tanpa stealth dijawab Akamai "Access Denied". Lihat TECH-SPEC §5.3 dan D-24.
 
-**Tidak ada** fixture respons endpoint jual (`/data-base-price/gold_eai/sell`) dan buyback (`/data-base-price/gold/buy`): seluruh domain sedang maintenance saat riset. Ambil dengan prototipe setelah situs kembali, potong ke ±200 titik terakhir, lalu perbarui tabel ini.
+**Tidak ada** fixture respons endpoint jual (`/data-base-price/gold_eai/sell`) dan buyback (`/data-base-price/gold/buy`): endpoint itu tidak ada lagi di situs versi baru. Fixture data untuk P0-09 adalah `harga-emas-2026-10-26.json` (ditutup 1 Nov 2026).

@@ -10,6 +10,7 @@ Folder ini adalah panduan implementasi proyek. Mulai dari PRD untuk memahami **a
 | [WORKFLOWS.md](./WORKFLOWS.md) | YAML GitHub Actions, kontrak antar job, notifikasi, matriks kegagalan, kredensial, Vercel |
 | [DECISIONS.md](./DECISIONS.md) | Log keputusan produk dan teknis |
 | [phases/](./phases/) | Satu file per fase: tujuan, tugas, kriteria selesai, gerbang keluar |
+| [mockup/](./mockup/) | Mockup web semua halaman (acuan visual Fase 3–4): token desain, konvensi tampilan, pemetaan ke data nyata |
 
 ## Fase implementasi
 
@@ -55,9 +56,9 @@ flowchart LR
 
 | Fase | Status | Mulai | Selesai |
 | --- | --- | --- | --- |
-| 0 | 10/12 selesai; G0 terpenuhi kecuali Logam Mulia (P0-09 tertahan: situs maintenance). Sisa: P0-01 ruleset + LICENSE | 25 Okt 2026 | |
+| 0 | 11/12 selesai; G0 terpenuhi untuk semua sumber (P0-09 ditutup: Logam Mulia jalan dari runner sejak 26 Okt, D-26). Sisa: P0-01 ruleset + LICENSE | 25 Okt 2026 | |
 | 1 | 11/13 selesai (P1-01–P1-07, P1-09, P1-10, P1-12, P1-13); ketiga scraper aktif di `scrape-retail.yml` (Logam Mulia lewat stealth, D-26; run pertama di Actions sukses). P1-05 selesai (Telegram + Issue terbukti lewat `notify-test.yml`); P1-08 terimplementasi, menunggu bukti di run nyata | 26 Okt 2026 | |
-| 2 | Belum mulai | | |
+| 2 | 2/13 selesai (P2-11 `derive.ts`, P2-13 `events.yml`). Job backfill P2-06/08/09/10 terimplementasi dan teruji ke sumber asli (Q-3 terjawab, D-33), dicentang setelah run `backfill.yml` ter-commit; menunggu P2-01/P2-02 (validasi + merge makro) | 1 Nov 2026 | |
 | 3 | Belum mulai | | |
 | 4 | Belum mulai | | |
 | 5 | Belum mulai | | |
@@ -77,3 +78,5 @@ flowchart LR
 | 27 Okt 2026 | Cron GitHub terlambat 5,7–6,9 jam → tanggal sasaran dari jadwal cron (`plan` output `date`); D-27. P1-05 Telegram + Issue terimplementasi (menunggu bot) |
 | 31 Okt 2026 | P1-05 terbukti (`notify-test.yml`); P1-12 karantina: perintah `quarantine` + `quarantine.yml`; P1-13 kerangka `backfill` + `backfill.yml`; P1-09 backfill buyback 1 g UBS sejak Nov 2023 (543 baris, D-28) |
 | 31 Okt 2026 | P1-10 README Operasional; histori LM 1 g sejak 2010 dari arsip (D-29); Pegadaian Tabungan Emas + backfill 360 hari (D-30) |
+| 1 Nov 2026 | Fase 2 mulai: `derive.ts` (P2-11, D-31), job backfill ecb/worldbank/jisdor/annual-fx (P2-06/08/09/10, D-32, D-33; Q-3 terjawab), `config/events.yml` (P2-13). P0-09 ditutup, G0 lengkap |
+| 1 Nov 2026 | Tambah `mockup/`: mockup 7 halaman web (Hari ini, Explorer, Spread, Data, Bandingkan, Kalkulator, Kelipatan) termasuk Tabungan Emas; FR-20/23/30 dan tugas fase 3–4 diselaraskan (D-34) |

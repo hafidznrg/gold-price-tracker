@@ -7,6 +7,8 @@
 | **Perkiraan usaha** | 5–7 hari |
 | **Gerbang keluar** | **G4** |
 
+> **Acuan visual:** [mockup/](../mockup/) — tata letak, token desain, dan konvensi tampilan setiap halaman. Angka di mockup ilustrasi; aturan data tetap mengikuti DATA-MODEL dan DECISIONS.
+
 ## Ruang lingkup
 
 **Masuk:** semua FR P1, ditambah FR-04 (tabel gramasi Antam LM, P2) bila waktu memungkinkan.
@@ -24,7 +26,7 @@
 
 ### Halaman baru
 
-- [ ] **P4-05** **Bandingkan** (`/bandingkan`): Antam vs UBS vs Galeri24 pada gramasi sama; Antam LM vs Antam Pegadaian; mode per gram atau indeks. — `FR-30` · M
+- [ ] **P4-05** **Bandingkan** (`/bandingkan`): Antam vs UBS vs Galeri24 vs Tabungan Emas pada berat sama; Antam LM vs Antam Pegadaian; mode per gram atau indeks. — `FR-30` · M
 - [ ] **P4-06** **Kalkulator** (`/kalkulator`): input tanggal beli, sumber beli, gramasi, jumlah, sumber jual → nilai sekarang, untung/rugi (Rp dan %), titik impas, grafik dengan penanda tanggal beli. — `FR-31` · M
 
 ### Spot dunia dan premi
@@ -35,7 +37,7 @@
 
 ### Data dan sumber tambahan
 
-- [ ] **P4-10** Dokumentasi API statis di halaman Data: daftar endpoint, format, contoh pemakaian di spreadsheet. — `FR-34` · S
+- [ ] **P4-10** Dokumentasi API statis di README repo (bukan di halaman Data, D-34): daftar endpoint, format, contoh pemakaian di spreadsheet. — `FR-34` · S
 - [ ] **P4-11** *(P2)* Scrape tabel harga Antam LM per gramasi dengan sesi browser yang sama; bila gagal, tetap simpan 1 g. — `FR-04` · M
 - [ ] **P4-12** Perluas smoke test dan uji unit untuk halaman dan perhitungan baru. — `NFR-10` · S
 

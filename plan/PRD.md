@@ -4,7 +4,7 @@
 | --- | --- |
 | **Status** | Disetujui untuk implementasi |
 | **Pemilik** | Hafidz |
-| **Versi** | 1.1 — 25 Okt 2026 (lihat §16) |
+| **Versi** | 1.2 — 1 Nov 2026 (lihat §16) |
 | **Dokumen sumber** | Artifact "Fondasi Platform Harga Emas Historis" |
 | **Dokumen terkait** | [TECH-SPEC.md](./TECH-SPEC.md) · [DATA-MODEL.md](./DATA-MODEL.md) · [WORKFLOWS.md](./WORKFLOWS.md) · [DECISIONS.md](./DECISIONS.md) · [phases/](./phases/) |
 
@@ -98,17 +98,17 @@ Prioritas: **P0** = wajib untuk rilis publik (MVP) · **P1** = wajib untuk v1 le
 
 | ID | Kebutuhan | Prioritas | Fase |
 | --- | --- | --- | --- |
-| FR-20 | Halaman **Hari ini**: kartu per brand (jual, buyback, spread, perubahan vs kemarin, 1 g) + tabel semua gramasi dengan sparkline 30 hari | P0 | 3 |
+| FR-20 | Halaman **Hari ini**: kartu per brand (jual, buyback, spread, perubahan vs kemarin, 1 g) + kartu Tabungan Emas (per gram), filter emas fisik / tabungan, tabel semua gramasi dengan sparkline 30 hari (D-34) | P0 | 3 |
 | FR-21 | Halaman **Explorer**: pilih ≥ 1 series (brand × sumber × gramasi × jenis harga) dan rentang waktu bebas; line chart dengan zoom | P0 | 3 |
 | FR-22 | Halaman **Spread**: area band jual–buyback, line spread %, bar spread % per gramasi hari ini | P0 | 3 |
-| FR-23 | Halaman **Data**: unduh CSV/JSON, kamus kolom, status tiap sumber, umur data terakhir | P0 | 3 |
+| FR-23 | Halaman **Data**: unduh CSV/JSON per seri, masing-masing dengan **data terakhir** (tanggal/jam, nilai terakhir, umur). Kamus kolom, status sumber, dan dokumentasi API tidak ditampilkan di halaman ini (D-34) | P0 | 3 |
 | FR-24 | Kontrol rentang: 7H, 1B, 3B, 6B, YTD, 1T, Semua, kustom | P0 | 3 |
 | FR-25 | Semua state filter tersimpan di query URL (bisa dibagikan) | P0 | 3 |
 | FR-26 | Atribusi sumber + waktu update di setiap tampilan harga; disclaimer "bukan rekomendasi investasi"; penjelasan PPh 22 buyback | P0 | 3 |
 | FR-27 | Mode nilai: nominal Rp, per gram, indeks (=100 di awal periode), % perubahan | P1 | 4 |
 | FR-28 | Agregasi: harian, mingguan, bulanan (penutupan periode, opsional min–maks) | P1 | 4 |
 | FR-29 | Pasangan spread bebas: harga jual sumber A vs buyback sumber B | P1 | 4 |
-| FR-30 | Halaman **Bandingkan**: Antam vs UBS vs Galeri24 pada gramasi sama, termasuk Antam LM vs Antam Pegadaian | P1 | 4 |
+| FR-30 | Halaman **Bandingkan**: Antam vs UBS vs Galeri24 vs Tabungan Emas pada berat sama (per gram), termasuk Antam LM vs Antam Pegadaian | P1 | 4 |
 | FR-31 | Halaman **Kalkulator**: beli tanggal X di sumber A, jual hari ini ke sumber B → untung/rugi dan titik impas | P1 | 4 |
 | FR-32 | **Grafik kelipatan** (skala log): emas Rp/gram vs emas US$/oz vs kurs, pilihan tahun dasar dan agregasi, titik spot hari ini bergaris putus, anotasi peristiwa dari `config/events.yml`, subjudul kelipatan + CAGR otomatis | P1 | 4 |
 | FR-33 | **Premi Antam vs spot**: harga Antam 1 g ÷ Rp/gram spot − 1, dari waktu ke waktu | P1 | 4 |
@@ -217,3 +217,4 @@ Ringkasan; rincian dan alasannya di [DECISIONS.md](./DECISIONS.md).
 | --- | --- | --- |
 | 1.0 | 25 Okt 2026 | Versi awal dari artifact fondasi |
 | 1.1 | 25 Okt 2026 | Tinjauan skema & workflow: tambah DATA-MODEL.md (ERD, kamus data, aturan merge, *as-of join*) dan WORKFLOWS.md; FR-15 karantina, FR-16 log revisi, FR-17 monitor kesegaran; pemisahan `config/` vs `data/`; kolom `run_id`; NFR-03 diperjelas; Q-6 |
+| 1.2 | 1 Nov 2026 | Mockup web (`mockup/`): FR-20 dan FR-30 memuat Tabungan Emas, FR-23 disederhanakan menjadi unduhan + data terakhir (D-34) |
