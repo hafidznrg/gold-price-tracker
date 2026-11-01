@@ -45,7 +45,8 @@ Semua backfill dijalankan lewat `backfill.yml` (dibuat di P1-13): pertama `dry_r
 - [x] **P2-11** Modul turunan `packages/schema/src/derive.ts` sesuai DATA-MODEL §6: rumus, *as-of join* dengan toleransi (kurs ≤ d; premi memakai spot < d), resolusi frekuensi untuk agregat tahunan (D ≥ 80% → M → A) dengan seri sumber tercatat, *forward-fill* berpenanda. Uji unit untuk setiap aturan. — `FR-32`, `FR-33` · M
   - *31 Okt 2026:* `packages/schema/src/derive.ts` (diekspor dari `@gold/schema`): rumus §6.1, `asOf`/`usdIdrLookup`/`goldIdrGramSeries`/`premiumAt`/`premiumAntamSeries`/`priceOn`/`matchAcrossSources`/`forwardFill` (§6.2), `aggregate` tahun/bulan dengan `series`/`frequency`/`coverage` tercatat (§6.3). Detail aturan cakupan di D-31. Uji `test/derive.test.ts` (29 kasus) dengan data sintetis; belum diuji terhadap data makro nyata (menunggu P2-03 dst.).
 - [ ] **P2-12** Skrip cek silang `scripts/check-macro.ts`: hitung kelipatan 1996 → kini untuk emas Rp/gram, emas US$/oz, dan kurs; cocokkan dengan grafik referensi (×80, ×10,3, ×7,7 per 23 Okt 2026, rata-rata tahunan); hitung premi Antam di 3 tanggal acak. — `G2` · S
-- [ ] **P2-13** Isi `config/events.yml`: Krisis 1998, Puncak 2011, dan peristiwa lain yang relevan. — `FR-32` · S
+- [x] **P2-13** Isi `config/events.yml`: Krisis 1998, Puncak 2011, dan peristiwa lain yang relevan. — `FR-32` · S
+  - *1 Nov 2026:* 9 peristiwa di `config/events.yml`: Rupiah mengambang bebas (1997), Krisis 1998, Krisis keuangan global (2008), Puncak 2011, Emas anjlok April 2013, Kurs JISDOR mulai (sambungan seri 2013), Pandemi COVID-19, Rekor 2020, Emas tembus US$4.000 (2025). Masing-masing dicocokkan dengan Pink Sheet bulanan / ECB harian / WDI tahunan (catatan per entri di file). Tanggal harian emas sejak 2021 dicek ulang dengan histori xaus di P2-12. Uji `config.test.ts`: terurut, tanggal & label unik.
 
 ## Kriteria selesai
 

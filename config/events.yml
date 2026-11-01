@@ -1,8 +1,28 @@
 # EVENT (DATA-MODEL §3.5): anotasi peristiwa untuk grafik kelipatan (FR-32).
 # kind: crisis | peak | policy | other
 #
-# Diisi di P2-13 (Krisis 1998, Puncak 2011, dll.) setelah tanggalnya diverifikasi terhadap data makro.
-# Contoh:
-#   - { date: '2011-09-06', label: Puncak 2011, kind: peak }
+# P2-13 (1 Nov 2026). `date` = tanggal peristiwa. Setiap entri dicocokkan dengan data makro
+# (Pink Sheet bulanan, ECB harian, WDI tahunan) seperti dicatat di komentarnya. Tanggal harian
+# emas sejak 2021 bisa dicek ulang dengan histori xaus (P2-07) di P2-12.
+# Urut naik menurut tanggal, satu entri per tanggal.
 
-events: []
+events:
+  # Pita intervensi rupiah dihapus. WDI: rata-rata 1997 = 2.909 vs 1996 = 2.342.
+  - { date: '1997-08-14', label: Rupiah mengambang bebas, kind: policy }
+  # Puncak krisis politik. WDI: rata-rata 1998 = 10.014 (×3,4 dari 1997).
+  - { date: '1998-05-21', label: Krisis 1998, kind: crisis }
+  # Lehman Brothers bangkrut. ECB: 9.450 (15 Sep) → 12.550 (24 Nov 2008), tertinggi 2008–2009;
+  # Pink Sheet: emas turun 940 (Jul) → 761 (Nov).
+  - { date: '2008-09-15', label: Krisis keuangan global, kind: crisis }
+  # Pink Sheet: Sep 2011 = 1.772, rata-rata bulanan tertinggi 2001–2018.
+  - { date: '2011-09-06', label: Puncak 2011, kind: peak }
+  # Pink Sheet: 1.593 (Mar) → 1.488 (Apr) → 1.414 (Mei 2013).
+  - { date: '2013-04-15', label: Emas anjlok April 2013, kind: other }
+  # Sambungan seri kurs: ECB → JISDOR (D-31, risiko Fase 2).
+  - { date: '2013-05-20', label: Kurs JISDOR mulai, kind: other }
+  # WHO menetapkan pandemi. ECB: kurs tertinggi 2020 = 16.678 (1 Apr).
+  - { date: '2020-03-11', label: Pandemi COVID-19, kind: crisis }
+  # Pink Sheet: Agu 2020 = 1.969, rata-rata bulanan tertinggi 2019–2022.
+  - { date: '2020-08-06', label: Rekor 2020, kind: peak }
+  # Pink Sheet: Okt 2025 = 4.058, bulan pertama di atas US$4.000.
+  - { date: '2025-10-08', label: Emas tembus US$4.000, kind: peak }

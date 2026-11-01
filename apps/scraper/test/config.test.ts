@@ -37,6 +37,17 @@ describe('config/ repo', async () => {
     expect(new Set(dates).size).toBe(dates.length);
   });
 
+  it('events.yml: terurut, satu entri per tanggal, label unik, sejak 1996', () => {
+    const dates = config.events.map((e) => e.date);
+    expect(dates).toEqual([...dates].sort());
+    expect(new Set(dates).size).toBe(dates.length);
+    expect(new Set(config.events.map((e) => e.label)).size).toBe(dates.length);
+    expect(dates[0]! >= '1996-01-01').toBe(true);
+    for (const label of ['Krisis 1998', 'Puncak 2011']) {
+      expect(config.events.map((e) => e.label)).toContain(label);
+    }
+  });
+
   it('cuti bersama jatuh di hari kerja', () => {
     for (const h of config.holidays.filter((x) => x.kind === 'cuti_bersama')) {
       expect([1, 2, 3, 4, 5], `${h.date} ${h.name}`).toContain(weekdayIso(h.date));
