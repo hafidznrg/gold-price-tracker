@@ -30,7 +30,8 @@
 
 ### Halaman P0
 
-- [ ] **P3-05** **Hari ini** (`/`): kartu per brand (jual, buyback, spread, perubahan vs kemarin untuk 1 g) + kartu Tabungan Emas per gram, filter Semua / Emas fisik / Tabungan emas, tabel semua gramasi dengan sparkline 30 hari; umur data per sumber. — `FR-20` · M
+- [x] **P3-05** **Hari ini** (`/`): kartu per brand (jual, buyback, spread, perubahan vs kemarin untuk 1 g) + kartu Tabungan Emas per gram, filter Semua / Emas fisik / Tabungan emas, tabel semua gramasi dengan sparkline 30 hari; umur data per sumber. — `FR-20` · M
+  - *1 Nov 2026:* `app/page.tsx` (statis) + `components/today-board.tsx` (filter, kartu, tabel) + `lib/today.ts`. Kartu spot dunia "Belum tersedia" selama `spot = null`; perubahan null → "—"; `SourceStamp` di tiap kartu dan tabel; tab tabel per sumber × brand dari `meta.catalog` (bawaan UBS Lifestyle seperti mockup), pemilih tahun produksi UBS muncul bila ≥ 2 varian. Gramasi Tabungan Emas di tabel = konstanta tampilan `SAVINGS_WEIGHTS` (katalog hanya 0,01 g).
 - [ ] **P3-06** **Explorer** (`/explorer`): pemilih series (brand × sumber × gramasi × jenis harga), kontrol rentang 7H–Semua + kustom, semua state di URL via `nuqs`. — `FR-21`, `FR-24`, `FR-25` · L
 - [ ] **P3-07** **Spread** (`/spread`): area band jual–buyback, line spread %, bar spread % per gramasi hari ini. — `FR-22` · M
 - [x] **P3-08** **Data** (`/data`): kartu unduhan CSV/JSON per seri (harga ritel dan pembanding dunia), masing-masing dengan data terakhir (tanggal/jam, nilai terakhir, umur) dari `meta.json`. Tanpa kamus kolom, status sumber, dan dokumentasi API (D-34). — `FR-23` · S
