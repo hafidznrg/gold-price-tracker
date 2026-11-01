@@ -184,6 +184,7 @@ Log keputusan produk dan teknis (format ringkas ala ADR). Keputusan baru ditamba
 - Run manual tanpa daftar sumber melewati sumber `evening` sebelum 18.45 WIB; sumber yang disebut eksplisit tetap dijalankan.
 - Alternatif ditolak: tetap di slot siang dan menerima `tglBerlaku` = kemarin. Datanya tetap benar per tanggal, tetapi harga hari D baru tercatat D+1 dan aturan stale butuh pengecualian lag khusus Pegadaian.
 **Konsekuensi:** NFR-02 Pegadaian menjadi ≤ 21.30 WIB. Perubahan harga dalam sehari (periode II) hanya terlihat lewat snapshot malam, jadi slot retry tidak lagi menangkap revisi intraday. Tanggal campur antar brand kecil kemungkinannya (satu snapshot untuk semua vendor), tetapi aturan `VALIDATION_FAILED` dari D-23 tetap berlaku. `freshness.yml` (Fase 5) dijadwalkan setelah slot retry malam. Bila jam snapshot bergeser, ubah cron dan `EVENING_FROM` bersama-sama.
+**Catatan tampilan (1 Nov 2026):** jam snapshot ±18.32 hanya menentukan jadwal scrape. `source_updated_at` Pegadaian diisi waktu entri harga dibuat (`idHarga` untuk batangan, `id` untuk Tabungan Emas; ±10.06–10.30 WIB pada periode II), jadi web menampilkannya sebagai "harga terbit …", bukan jam snapshot (`lib/source-stamp.ts`, P3-09).
 
 ### D-26 — Logam Mulia lewat Playwright + stealth (menggantikan sebagian D-24)
 

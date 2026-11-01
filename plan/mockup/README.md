@@ -61,7 +61,7 @@ Semua angka di mockup **ilustrasi**. Saat membangun, pakai data dan ID dari DATA
 | Di mockup | Di data |
 | --- | --- |
 | Tabungan Emas Pegadaian, ditampilkan per gram | `source=pegadaian`, `brand=pegadaian`, `product=gold_savings`, `weight_g=0.01`; harga disimpan per 0,01 g (D-30). Tampilan per gram = harga ÷ `weight_g` |
-| Waktu update per sumber | Dari `source_updated_at` / `status.json`. Pegadaian = snapshot harian ±18.32 WIB (D-25); UBS Lifestyle tidak punya jam yang dapat dipercaya, tampilkan tanggal saja (D-19); Logam Mulia dari "Terakhir diperbarui" (D-26) |
+| Waktu update per sumber | Dari `source_updated_at` / `status.json`. Pegadaian = waktu terbit harga (`idHarga`/`id`, mis. ±10.06–10.30 WIB), ditampilkan "harga terbit …"; jam snapshot ±18.32 di mockup tidak dipakai (D-25); UBS Lifestyle tidak punya jam yang dapat dipercaya, tampilkan tanggal saja (D-19); Logam Mulia dari "Terakhir diperbarui" (D-26) |
 | Logam Mulia: "Harga dasar", 12 gramasi, buyback hanya 1 g | D-24/D-26: `sell_price` = Harga Dasar tanpa PPh 0,25%, `buyback_price` hanya 1 g |
 | Cakupan histori (Explorer apa adanya) | Antam LM 1 g jual sejak Jan 2010 & buyback sejak Nov 2015 (arsip, D-29), celah 24–25 Okt 2026; buyback UBS 1 g sejak Nov 2023 dengan celah sumber, `variant=''` (D-28); Tabungan Emas 360 hari (D-30); sisanya sejak 26 Okt 2026. Seri pendek mulai dari tanggal pertamanya. Grafik 1 tahun di Bandingkan/Spread masih ilustrasi |
 | Seri UBS buyback backfill vs harian | Dua seri berbeda (`variant=''` vs `variant=YYYY`); tampilan menyambungkannya secara eksplisit (D-28) |
