@@ -9,6 +9,7 @@ yarn-error.log*
 # ── Build output ────────────────────────────────────────────
 dist/
 build/
+!apps/web/lib/build/
 out/
 .next/
 .turbo/
