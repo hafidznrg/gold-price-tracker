@@ -1,0 +1,165 @@
+@import 'tailwindcss';
+@import 'tw-animate-css';
+
+/* Tema: gelap default (:root), terang lewat <html data-theme="light">. Nilai = plan/mockup/README.md. */
+@custom-variant dark (&:where([data-theme='dark'], [data-theme='dark'] *));
+@custom-variant light (&:where([data-theme='light'], [data-theme='light'] *));
+
+:root,
+[data-theme='dark'] {
+  --bg: #0e0f12;
+  --surface: #16181d;
+  --surface2: #1d2027;
+  --line: #2a2e37;
+  --grid: #22252d;
+  --text: #edeae3;
+  --muted: #ababa4;
+  --faint: #8e9097;
+  --gold: #ddb563;
+  --goldsoft: rgba(221, 181, 99, 0.13);
+  --goldline: rgba(221, 181, 99, 0.38);
+  --up: #6cc59a;
+  --down: #f28c6c;
+  --antam: #ddb563;
+  --ubs: #7ea8ff;
+  --g24: #ee8a60;
+  --tab: #5fd0b8;
+  --btn: #edeae3;
+  --btntext: #0e0f12;
+  color-scheme: dark;
+}
+
+[data-theme='light'] {
+  --bg: #f4f4f1;
+  --surface: #ffffff;
+  --surface2: #f0efea;
+  --line: #e1dfd8;
+  --grid: #eceae4;
+  --text: #15171c;
+  --muted: #55575e;
+  --faint: #686a71;
+  --gold: #8a6618;
+  --goldsoft: rgba(176, 132, 40, 0.12);
+  --goldline: rgba(138, 102, 24, 0.35);
+  --up: #1e7a4e;
+  --down: #b4442a;
+  --antam: #b8892b;
+  --ubs: #2f64d6;
+  --g24: #c4562e;
+  --tab: #0f7f6c;
+  --btn: #15171c;
+  --btntext: #ffffff;
+  color-scheme: light;
+}
+
+@theme inline {
+  /* Token proyek → kelas Tailwind: bg-surface, text-muted, border-line, text-gold, … */
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface2: var(--surface2);
+  --color-line: var(--line);
+  --color-grid: var(--grid);
+  --color-text: var(--text);
+  --color-muted: var(--muted);
+  --color-faint: var(--faint);
+  --color-gold: var(--gold);
+  --color-goldsoft: var(--goldsoft);
+  --color-goldline: var(--goldline);
+  --color-up: var(--up);
+  --color-down: var(--down);
+  --color-antam: var(--antam);
+  --color-ubs: var(--ubs);
+  --color-g24: var(--g24);
+  --color-tab: var(--tab);
+  --color-btn: var(--btn);
+  --color-btntext: var(--btntext);
+
+  /* Alias shadcn/ui agar komponen hasil `shadcn add` langsung memakai token proyek. */
+  --color-background: var(--bg);
+  --color-foreground: var(--text);
+  --color-card: var(--surface);
+  --color-card-foreground: var(--text);
+  --color-popover: var(--surface);
+  --color-popover-foreground: var(--text);
+  --color-primary: var(--btn);
+  --color-primary-foreground: var(--btntext);
+  --color-secondary: var(--surface2);
+  --color-secondary-foreground: var(--text);
+  --color-muted-foreground: var(--muted);
+  --color-accent: var(--goldsoft);
+  --color-accent-foreground: var(--gold);
+  --color-destructive: var(--down);
+  --color-border: var(--line);
+  --color-input: var(--line);
+  --color-ring: var(--gold);
+
+  /* Tipografi: next/font menyuntik --font-inter dan --font-instrument-serif di <html>. */
+  --font-sans: var(--font-inter), system-ui, sans-serif;
+  --font-serif: var(--font-instrument-serif), Georgia, serif;
+
+  /* Bentuk (mockup README): kartu 18–22 px, kontrol 10–12 px, chip 999 px. */
+  --radius-card: 22px;
+  --radius-card-sm: 18px;
+  --radius-control: 12px;
+  --radius-field: 10px;
+  --radius: 12px;
+
+  --container-content: 1240px;
+}
+
+/* Wadah konten: maks. 1240 px, padding 32 px (18 px di ≤ 640 px). */
+@utility wrap {
+  width: 100%;
+  max-width: var(--container-content);
+  margin-inline: auto;
+  padding-inline: 32px;
+  box-sizing: border-box;
+  @media (max-width: 640px) {
+    padding-inline: 18px;
+  }
+}
+
+/* Judul serif mockup (.serif). */
+@utility serif {
+  font-family: var(--font-serif);
+  font-weight: 400;
+  letter-spacing: -0.01em;
+}
+
+/* Label kecil kapital (eyebrow): 11–12 px, letter-spacing .12–.16em. */
+@utility eyebrow {
+  font-size: 12px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+@layer base {
+  html {
+    background: var(--bg);
+  }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-sans);
+    font-feature-settings: 'tnum' 1;
+    -webkit-font-smoothing: antialiased;
+  }
+  *,
+  ::before,
+  ::after {
+    border-color: var(--line);
+  }
+  a {
+    color: var(--gold);
+  }
+  a:hover {
+    color: var(--text);
+  }
+  :focus-visible {
+    outline: 2px solid var(--gold);
+    outline-offset: 2px;
+  }
+}

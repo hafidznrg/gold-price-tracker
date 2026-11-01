@@ -19,10 +19,14 @@
 
 ### Fondasi web
 
-- [ ] **P3-01** Next.js (App Router, SSG/static export) di `apps/web`, Tailwind + shadcn/ui, tema terang/gelap, layout responsif mulai 360 px, navigasi antar halaman. — `NFR-09` · M
-- [ ] **P3-02** `scripts/build-data.ts`: dari CSV menghasilkan `latest.json`, `series/{source}-{brand}.json` (dengan kolom `variant`), `meta.json`, dan salinan CSV (TECH-SPEC §8). Dijalankan di `prebuild`. Uji unit untuk format output. — `FR-23`, `NFR-08` · M
-- [ ] **P3-03** Lapisan akses data bertipe (dari `packages/schema`): katalog series, loader JSON, format rupiah `id-ID`, label sumber. — · S
-- [ ] **P3-04** Komponen `<TimeSeriesChart>` berbasis ECharts: multi-series, `dataZoom`, tooltip Rp, celah untuk hari tanpa data, responsif, warna konsisten per brand. — `FR-21` · M
+- [x] **P3-01** Next.js (App Router, SSG/static export) di `apps/web`, Tailwind + shadcn/ui, tema terang/gelap, layout responsif mulai 360 px, navigasi antar halaman. — `NFR-09` · M
+  - *1 Nov 2026:* Next 16 (static export, Turbopack), React 19, Tailwind v4 + shadcn (`components/ui/button`). Token tema mockup → kelas Tailwind (`bg-surface`, `text-muted`, `text-antam`, `rounded-card`, `max-w-content`, …), tema gelap default + terang (`data-theme`, tanpa kedip), Instrument Serif + Inter. `SiteHeader` (slot `status`), `SiteNav`, `ThemeToggle`, `SiteFooter` (disclaimer + PPh 22), `PageIntro`; halaman `/`, `/explorer`, `/spread`, `/data` masih placeholder. Penyimpangan: chip "Data … WIB" di header menunggu `meta.json`; nav pindah baris sendiri di layar sempit. **Catatan lockfile:** setiap `pnpm add` menghapus `integrity` entri `xlsx` di `pnpm-lock.yaml` → kembalikan sebelum commit, cek dengan `pnpm install --frozen-lockfile`.
+- [x] **P3-02** `scripts/build-data.ts`: dari CSV menghasilkan `latest.json`, `series/{source}-{brand}.json` (dengan kolom `variant`), `meta.json`, dan salinan CSV (TECH-SPEC §8). Dijalankan di `prebuild`. Uji unit untuk format output. — `FR-23`, `NFR-08` · M
+  - *1 Nov 2026:* logika murni `lib/build/*` (`buildOutputs`) + I/O `scripts/build-data.ts`. Keluaran: `series/{source}-{brand}.json` (Tabungan Emas di `pegadaian-pegadaian.json`, nilai per 0,01 g), `latest.json` (perubahan, spread %, sparkline 30 hari, `highlights` dalam satuan tampilan), `meta.json` (katalog, status, events, `downloads`), `csv/*`, `macro/*` bila ada. Data nyata: 57 series, ±1,1 MB. `data/macro/` masih kosong → `spot = null`. File `derived/*` belum (Fase 4).
+- [x] **P3-03** Lapisan akses data bertipe (dari `packages/schema`): katalog series, loader JSON, format rupiah `id-ID`, label sumber. — · S
+  - *1 Nov 2026:* `lib/data/` (tipe, `fetch*` klien, `read*` saat build, kunci series `logammulia:antam:gold_bar::1`, `perGramPrice`, label sumber/brand, token warna) dan `lib/format.ts` (`formatRupiah`, `formatPct`, `formatChange`, `formatDataAge`, …).
+- [x] **P3-04** Komponen `<TimeSeriesChart>` berbasis ECharts: multi-series, `dataZoom`, tooltip Rp, celah untuk hari tanpa data, responsif, warna konsisten per brand. — `FR-21` · M
+  - *1 Nov 2026:* `components/charts/`: `TimeSeriesChart` (multi-series, `dataZoom`, celah berarsir `gaps`, garis putus, `band`, log, rentang terkontrol), `SpreadBandChart`, `BarChart` (SVG), `Sparkline` (SVG). ECharts di-*tree-shake* dan dimuat lewat `import()`; warna dibaca dari CSS variable dan dibangun ulang saat tema berganti.
 
 ### Halaman P0
 
