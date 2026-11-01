@@ -1,4 +1,4 @@
-import { isExpectedDay, type UpdateCalendar } from '@gold/schema';
+import type { UpdateCalendar } from '@gold/schema';
 import type { MetaFile } from './data/types';
 
 /** Kalender terbit per sumber + tanggal libur, dari meta.json (untuk deteksi celah). */
@@ -11,6 +11,27 @@ export function calendarFromMeta(meta: Pick<MetaFile, 'sources' | 'holidays'>): 
   const calendars: DataCalendar['calendars'] = {};
   for (const s of meta.sources) calendars[s.id] = s.update_calendar;
   return { calendars, holidays: meta.holidays ?? [] };
+}
+
+// Salinan ringan `isExpectedDay` @gold/schema: impor nilai dari paket itu menyeret zod dan
+// date-fns-tz (~117 KB) ke bundel klien. Aturannya identik (DATA-MODEL §7).
+function isExpectedDay(
+  calendar: UpdateCalendar,
+  date: string,
+  holidays: readonly { date: string }[],
+): boolean {
+  const weekday = new Date(`${date}T00:00:00Z`).getUTCDay();
+  const isWeekday = weekday >= 1 && weekday <= 5;
+  switch (calendar) {
+    case 'daily':
+      return true;
+    case 'weekdays':
+      return isWeekday;
+    case 'business_days_id':
+      return isWeekday && !holidays.some((h) => h.date === date);
+    case 'monthly':
+      return false;
+  }
 }
 
 /**

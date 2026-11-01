@@ -197,6 +197,13 @@ export const DAY_MS = 86_400_000;
 
 /** "2026-10-30" → timestamp UTC tengah malam. Tanggal tak valid → NaN. */
 export function isoToTime(iso: string): number {
+  // Jalur cepat tanpa regex: dipanggil per titik data (ribuan kali).
+  if (iso.length >= 10 && iso.charCodeAt(4) === 45 && iso.charCodeAt(7) === 45) {
+    const y = +iso.slice(0, 4);
+    const m = +iso.slice(5, 7);
+    const d = +iso.slice(8, 10);
+    if (y >= 0 && m >= 0 && d >= 0) return Date.UTC(y, m - 1, d);
+  }
   const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso);
   if (!m) return Number.NaN;
   return Date.UTC(Number(m[1]), Number(m[2]) - 1, Number(m[3]));

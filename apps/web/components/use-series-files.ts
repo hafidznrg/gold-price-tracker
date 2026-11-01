@@ -16,12 +16,19 @@ export function useSeriesFiles(ids: string[]): {
   const key = ids.join('|');
   useEffect(() => {
     let alive = true;
-    for (const id of key.split('|').filter(Boolean)) {
-      fetchSeries(id).then(
-        (f) => alive && setFiles((cur) => (cur[id] ? cur : { ...cur, [id]: f })),
-        (e: unknown) => alive && setError(e instanceof Error ? e.message : String(e)),
-      );
-    }
+    // Satu pembaruan state untuk semua file yang baru dimuat → satu render ulang, bukan satu per file.
+    const missing = key.split('|').filter(Boolean);
+    Promise.all(missing.map((id) => fetchSeries(id).then((f) => [id, f] as const))).then(
+      (loaded) => {
+        if (!alive) return;
+        setFiles((cur) => {
+          const next = { ...cur };
+          for (const [id, f] of loaded) if (!next[id]) next[id] = f;
+          return next;
+        });
+      },
+      (e: unknown) => alive && setError(e instanceof Error ? e.message : String(e)),
+    );
     return () => {
       alive = false;
     };

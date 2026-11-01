@@ -1,4 +1,5 @@
-import { JAKARTA_TZ } from '@gold/schema';
+// Sama dengan JAKARTA_TZ di @gold/schema (tidak diimpor agar zod tidak masuk bundel klien).
+const JAKARTA_TZ = 'Asia/Jakarta';
 
 // Format tampilan id-ID mengikuti mockup: "Rp2.512.000", "+0,64%", "30 Okt 2026", "08.32 WIB".
 // Tanda minus memakai U+2212 (−) seperti mockup.

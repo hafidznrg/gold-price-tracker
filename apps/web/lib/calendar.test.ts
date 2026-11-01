@@ -28,3 +28,24 @@ describe('labelGaps', () => {
     expect(labelGaps([g, g, g])[0]?.label).toBeUndefined();
   });
 });
+
+describe('salinan isExpectedDay', () => {
+  it('sama dengan @gold/schema untuk semua kalender sepanjang 2026', async () => {
+    const { isExpectedDay } = await import('@gold/schema');
+    const holidays = ['2026-01-01', '2026-03-19', '2026-12-25'];
+    const calendars = ['daily', 'weekdays', 'business_days_id', 'monthly'] as const;
+    for (const c of calendars) {
+      const web = expectedFor({ calendars: { s: c }, holidays }, ['s']);
+      for (let t = Date.UTC(2026, 0, 1); t <= Date.UTC(2026, 11, 31); t += 86_400_000) {
+        const d = new Date(t).toISOString().slice(0, 10);
+        expect(web(d), `${c} ${d}`).toBe(
+          isExpectedDay(
+            c,
+            d,
+            holidays.map((date) => ({ date })),
+          ),
+        );
+      }
+    }
+  });
+});

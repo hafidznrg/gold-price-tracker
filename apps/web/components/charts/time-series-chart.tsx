@@ -62,6 +62,12 @@ export interface TimeSeriesChartProps {
 
 const COMPACT_WIDTH = 520;
 
+/** Jalankan saat utas utama senggang (fallback setTimeout); batas tunggu 1,5 dtk. */
+function idle(fn: () => void): void {
+  if (typeof requestIdleCallback === 'function') requestIdleCallback(fn, { timeout: 1500 });
+  else setTimeout(fn, 200);
+}
+
 /** Pola arsir 135° (setara repeating-linear-gradient mockup) untuk markArea celah. */
 function makeHatch(color: string): ImagePatternObject | string {
   if (typeof document === 'undefined') return color;
@@ -169,13 +175,38 @@ export function TimeSeriesChart({
     ro.observe(el);
     setCompact(el.clientWidth < COMPACT_WIDTH);
 
-    import('./echarts-setup').then(({ init }) => {
-      initFn = init;
-      tryInit();
-    });
+    // ECharts (~150 KB) hanya dimuat saat wadah mendekati viewport dan browser sedang senggang,
+    // lalu inisialisasi diberi jeda agar tidak menumpuk jadi satu tugas panjang di utas utama.
+    let loadStarted = false;
+    const load = () => {
+      if (loadStarted || disposed) return;
+      loadStarted = true;
+      idle(() => {
+        import('./echarts-setup').then(({ init }) => {
+          if (disposed) return;
+          initFn = init;
+          setTimeout(tryInit, 0);
+        });
+      });
+    };
+    let io: IntersectionObserver | null = null;
+    if (typeof IntersectionObserver === 'undefined') load();
+    else {
+      io = new IntersectionObserver(
+        (entries) => {
+          if (entries.some((e) => e.isIntersecting)) {
+            io?.disconnect();
+            load();
+          }
+        },
+        { rootMargin: '400px 0px' },
+      );
+      io.observe(el);
+    }
 
     return () => {
       disposed = true;
+      io?.disconnect();
       ro.disconnect();
       chart?.dispose();
       chartRef.current = null;

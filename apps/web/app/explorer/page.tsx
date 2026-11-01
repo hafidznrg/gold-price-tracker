@@ -31,7 +31,14 @@ export default function ExplorerPage() {
         lead="Gabungkan brand, sumber, gramasi, dan jenis harga dalam satu grafik. Setiap pengaturan tersimpan di URL sehingga bisa dibagikan apa adanya."
       />
       <NuqsAdapter>
-        <Suspense fallback={<p className="wrap py-10 text-sm text-muted">Memuat Explorer…</p>}>
+        <Suspense
+          fallback={
+            // Tinggi dipesan (≈ papan Explorer) agar footer tidak melompat saat papan menggantikan fallback.
+            <div className="min-h-[1500px] sm:min-h-[1000px]">
+              <p className="wrap py-10 text-sm text-muted">Memuat Explorer…</p>
+            </div>
+          }
+        >
           <ExplorerBoard
             options={explorerOptions(meta)}
             asOf={meta.as_of ?? new Date().toISOString().slice(0, 10)}
