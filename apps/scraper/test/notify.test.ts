@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { MergeSummary, SourceResult } from '../src/pipeline/merge';
 import {
   deliver,
+  formatTelegram,
   githubIssueClient,
   issueMarker,
   planNotifications,
@@ -303,5 +304,17 @@ describe('klien HTTP', () => {
     expect((err as Error).message).toBe('sendMessage: HTTP 401');
     expect((err as Error).message).not.toContain('SECRET');
     expect(reqs[0]!.body).toEqual({ chat_id: '42', text: 'hai', disable_web_page_preview: true });
+  });
+});
+
+describe('formatTelegram', () => {
+  it('judul mengikuti workflow, default scrape-retail', () => {
+    const lines = [{ subject: 'xaus', text: '❌ xaus: failed', oncePerDay: false }];
+    expect(formatTelegram(lines, RUN)).toBe(
+      `gold-price-tracker · scrape-retail\n❌ xaus: failed\n${RUN}`,
+    );
+    expect(formatTelegram(lines, RUN, 'scrape-macro').split('\n')[0]).toBe(
+      'gold-price-tracker · scrape-macro',
+    );
   });
 });

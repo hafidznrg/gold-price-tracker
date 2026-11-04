@@ -175,8 +175,12 @@ export function planNotifications(
   return plan;
 }
 
-export function formatTelegram(lines: TelegramLine[], runUrl: string): string {
-  return ['gold-price-tracker · scrape-retail', ...lines.map((l) => l.text), runUrl].join('\n');
+export function formatTelegram(
+  lines: TelegramLine[],
+  runUrl: string,
+  workflow = 'scrape-retail',
+): string {
+  return [`gold-price-tracker · ${workflow}`, ...lines.map((l) => l.text), runUrl].join('\n');
 }
 
 // --- Pengiriman ---------------------------------------------------------------------------
@@ -199,6 +203,8 @@ export interface Notifier {
   telegram: ((text: string) => Promise<void>) | null;
   now: Date;
   log: (msg: string) => void;
+  /** Judul pesan Telegram; kosong = `scrape-retail`. */
+  workflow?: string;
 }
 
 /** Tanggal kalender Asia/Jakarta (UTC+7, tanpa DST). */
@@ -257,7 +263,7 @@ export async function deliver(
     if (n.telegram) {
       const send = n.telegram;
       await attempt('Telegram', async () => {
-        await send(formatTelegram(lines, runUrl));
+        await send(formatTelegram(lines, runUrl, n.workflow));
         n.log(`Telegram terkirim (${lines.length} baris)`);
       });
     } else {

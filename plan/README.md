@@ -58,7 +58,7 @@ flowchart LR
 | --- | --- | --- | --- |
 | 0 | 11/12 selesai; G0 terpenuhi untuk semua sumber (P0-09 ditutup: Logam Mulia jalan dari runner sejak 26 Okt, D-26). Sisa: P0-01 ruleset + LICENSE | 25 Okt 2026 | |
 | 1 | 11/13 selesai (P1-01–P1-07, P1-09, P1-10, P1-12, P1-13); ketiga scraper aktif di `scrape-retail.yml` (Logam Mulia lewat stealth, D-26; run pertama di Actions sukses). P1-05 selesai (Telegram + Issue terbukti lewat `notify-test.yml`); P1-08 terimplementasi, menunggu bukti di run nyata | 26 Okt 2026 | |
-| 2 | 8/13 selesai (P2-01, P2-02, P2-06, P2-08, P2-09, P2-10, P2-11 `derive.ts`, P2-13 `events.yml`). Validasi + merge makro (D-35); histori makro ter-commit 4 Nov 2026: `xau_usd_oz` bulanan 1996+, `usd_idr_ecb` 1999+, `usd_idr_jisdor` 2013+, `usd_idr_annual` 1996–1998. Sisa: scraper harian xaus/JISDOR + `scrape-macro.yml` (P2-03–P2-05), backfill xaus (P2-07), cek silang (P2-12) | 1 Nov 2026 | |
+| 2 | 11/13 selesai (P2-01, P2-02, P2-03, P2-04, P2-05, P2-06, P2-08, P2-09, P2-10, P2-11 `derive.ts`, P2-13 `events.yml`). Validasi + merge makro (D-35); histori makro ter-commit 4 Nov 2026: `xau_usd_oz` bulanan 1996+, `usd_idr_ecb` 1999+, `usd_idr_jisdor` 2013+, `usd_idr_annual` 1996–1998. Scraper harian xaus/JISDOR/worldbank + `scrape-macro.yml` terimplementasi 4 Nov 2026 (D-36; bukti run terjadwal menyusul). Sisa: backfill xaus (P2-07), cek silang (P2-12) | 4 Nov 2026 | |
 | 3 | 11/12 selesai; situs tayang di <https://gold.hafidznrg.my.id> (P3-10, Q-5). Sisa P3-11: audit Lighthouse mobile. G3 menunggu data ritel ≥ 14 hari (±9 Nov) dan G1 | 1 Nov 2026 | |
 | 4 | Belum mulai | | |
 | 5 | Belum mulai | | |

@@ -292,3 +292,14 @@ Log keputusan produk dan teknis (format ringkas ala ADR). Keputusan baru ditamba
 - **Raw makro:** ekstensi `csv` dan `xlsx`; XLSX (dibawa base64 di `RawPayload`) disimpan sebagai byte aslinya, sha256 dihitung atas byte itu.
 - **Nilai makro dibandingkan dalam bentuk CSV** (maks. 6 desimal) untuk klasifikasi unchanged/update dan `REVISION`.
 **Konsekuensi:** `backfill --job {worldbank,ecb,jisdor,annual-fx}` tidak lagi ditolak CLI. Karantina makro berlokasi di `data/quarantine/{xaus|jisdor|worldbank}/` dan `approve` memakai aturan yang sama dengan harga.
+
+### D-36 — Scrape makro harian: fallback JISDOR, spot, dan World Bank bulanan
+
+**Konteks:** P2-03–P2-05. Pipeline `scrape` semula hanya mengenal baris harga; `plan` tidak tahu data makro; dari mesin lokal koneksi TCP ke bi.go.id ±19,5 detik (batas connect `fetch` Node 10 detik), dari runner GitHub normal.
+**Keputusan:**
+- **Fallback JISDOR di dalam modul `jisdor`**, bukan job terpisah: bila `GET` BI gagal setelah 3 percobaan `fetchOk` (jaringan, connect timeout, HTTP ≠ 200, blokir), diambil Frankfurter 14 hari terakhir (URL dan parser `backfill/ecb.ts`) dan ditulis ke `usd_idr_ecb`. Run tetap `success` (artifact bersumber `jisdor`), dengan alasan di `error_message`; raw menyimpan CSV dan alasannya. Halaman terbaca tanpa tabel atau header berubah = `PARSE_ERROR`, tanpa fallback (perubahan sumber harus terlihat). Timeout global tidak dinaikkan; `UND_ERR_CONNECT_TIMEOUT` dipetakan ke `FETCH_TIMEOUT`.
+- **Jendela xaus** = penutupan dengan `hari ini − 10 ≤ d < hari ini` (hari kalender; tanggal sasaran dari `ctx.date`, D-27), dibawa di raw agar `parse` tetap murni. V-10 dipanggil di `parse`: histori tidak `fresh` atau spot `stale` menggagalkan seluruh run (`STALE_SOURCE`).
+- **`spot.json`** dibangun pipeline: nilai emas dari `parse`, kurs dari baris `usd_idr_jisdor`/`usd_idr_ecb` terbaru di `data/macro/` saat scrape (tanggal terbaru menang, JISDOR bila sama). JISDOR hari yang sama baru masuk di merge berikutnya, jadi spot bisa tertinggal satu hari kerja kurs.
+- **World Bank** memakai ulang job backfill P2-06 (fetch + parse), tetapi hanya 3 bulan terakhir yang di-upsert (bulan terbaru + revisi dua bulan sebelumnya) agar rilis bulanan tidak merevisi ratusan baris dan memicu V-11. `plan` memilihnya bila tanggal sasaran ≥ 5 dan baris `M` bulan lalu belum ada; `--sources worldbank` eksplisit melewati aturan.
+- **`targetDate`** (D-27) kini memahami cron `M H * * D` dengan hari-minggu (`1-5`): kemunculan terakhir ≤ waktu run yang jatuh di hari itu.
+**Konsekuensi:** Telegram dari `notify` masih berjudul `scrape-retail` (perbaikan kosmetik tertunda). Status `stale` tidak dipakai untuk makro; keterlambatan data ditangkap `freshness.yml`.

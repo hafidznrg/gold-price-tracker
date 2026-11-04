@@ -1,4 +1,5 @@
 import {
+  addDaysIso,
   jakartaDate,
   jakartaIso,
   ScraperId,
@@ -29,7 +30,13 @@ export const SCHEDULES: Partial<Record<Workflow, Record<string, ScheduleSlot>>> 
     '5 12 * * *': { slot: 'primary', window: 'evening' }, // 19.05 WIB
     '5 14 * * *': { slot: 'retry', window: 'evening' }, // 21.05 WIB
   },
+  'scrape-macro': {
+    '40 9 * * 1-5': { slot: 'primary', window: 'day' }, // 16.40 WIB hari kerja, setelah JISDOR 15.15
+  },
 };
+
+/** World Bank (bulanan) baru dipilih mulai tanggal ini: rilis Pink Sheet ±tanggal 2 (TECH-SPEC §5.6). */
+export const WORLDBANK_FROM_DAY = 5;
 
 /**
  * Jam Jakarta (`HH:mm`) mulai jendela `evening`: snapshot Pegadaian terbit ±18.32 WIB (D-25).
@@ -46,6 +53,11 @@ export interface PlanInput {
   /** Input manual `sources`, dipisah koma; kosong = semua yang aktif. */
   sources: string;
   force: boolean;
+  /**
+   * Tanggal (`YYYY-MM-01`) baris `xau_usd_oz` frekuensi `M` yang sudah ada; menentukan apakah
+   * rata-rata bulan lalu masih perlu diambil (scrape-macro). Kosong = belum ada satu pun.
+   */
+  monthlyGold?: readonly string[];
   config: ProjectConfig;
   status: SourceStatusFile;
   now: Date;
@@ -77,18 +89,33 @@ export function doneToday(entry: SourceStatusEntry | undefined, today: string): 
 
 const DAY_MS = 24 * 3600_000;
 
+/** Hari dalam seminggu (0 = Minggu) dari field cron `*`, `1-5`, `1,3`, `1-3,5`. */
+function weekdays(field: string): Set<number> {
+  const days = new Set<number>();
+  for (const part of field === '*' ? ['0-6'] : field.split(',')) {
+    const [from, to = from] = part.split('-').map(Number);
+    for (let d = from!; d <= to!; d++) days.add(d % 7);
+  }
+  return days;
+}
+
 /**
  * Tanggal Jakarta yang menjadi sasaran run (D-27). Run terjadwal memakai tanggal kemunculan
  * cron terakhir ≤ `now`, karena cron GitHub bisa terlambat berjam-jam (26 Okt: 5,7–6,9 jam)
  * sehingga slot malam berjalan lewat tengah malam WIB. Run manual dan cron yang tidak
- * berbentuk `M H * * *` memakai tanggal `now`.
+ * berbentuk `M H * * D` (D = `*` atau hari-minggu `1-5`) memakai tanggal `now`.
  */
 export function targetDate(event: string, schedule: string, now: Date): string {
-  const m = /^(\d{1,2}) (\d{1,2}) \* \* \*$/.exec(schedule.trim());
+  const m = /^(\d{1,2}) (\d{1,2}) \* \* (\*|[0-7](?:-[0-7])?(?:,[0-7](?:-[0-7])?)*)$/.exec(
+    schedule.trim(),
+  );
   if (event !== 'schedule' || !m) return jakartaDate(now);
+  const days = weekdays(m[3]!);
   const at = new Date(now);
   at.setUTCHours(Number(m[2]), Number(m[1]), 0, 0);
-  if (at.getTime() > now.getTime()) at.setTime(at.getTime() - DAY_MS);
+  for (let i = 0; i < 8 && !(at.getTime() <= now.getTime() && days.has(at.getUTCDay())); i++) {
+    at.setTime(at.getTime() - DAY_MS);
+  }
   return jakartaDate(at);
 }
 
@@ -135,6 +162,17 @@ export function plan(input: PlanInput): PlanResult {
     if (manualAll && s.schedule_window === 'evening' && beforeEvening) {
       skipped.push({ source: s.id, reason: `jendela malam mulai ${EVENING_FROM} WIB` });
       return false;
+    }
+    if (s.id === 'worldbank' && !(slot === 'manual' && requested.length > 0)) {
+      const lastMonth = `${addDaysIso(`${today.slice(0, 7)}-01`, -1).slice(0, 7)}-01`;
+      if (Number(today.slice(8, 10)) < WORLDBANK_FROM_DAY) {
+        skipped.push({ source: s.id, reason: `tanggal < ${WORLDBANK_FROM_DAY}` });
+        return false;
+      }
+      if (input.monthlyGold?.includes(lastMonth)) {
+        skipped.push({ source: s.id, reason: `rata-rata ${lastMonth.slice(0, 7)} sudah ada` });
+        return false;
+      }
     }
     if (slot === 'retry') {
       if (doneToday(entry, today)) {

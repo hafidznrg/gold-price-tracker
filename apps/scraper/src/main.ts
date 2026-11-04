@@ -30,6 +30,7 @@ import {
   resolveQuarantineIssue,
 } from './pipeline/quarantine';
 import { describeRun, scrape } from './pipeline/scrape';
+import { readMacro } from './pipeline/store';
 import { DEFAULT_USER_AGENT } from './probe/http';
 import { BACKFILL_JOB_IDS, BACKFILL_TASKS, getBackfillJob } from './backfill';
 import { formatReport, runProbe, writeStepSummary } from './probe/run';
@@ -70,6 +71,12 @@ const COMMANDS: Record<string, Command> = {
       const rootDir = requireRoot(values);
       const workflow = parseEnum(Workflow, values.workflow, '--workflow');
       const [config, status] = await Promise.all([loadConfig(rootDir), loadStatus(rootDir)]);
+      const monthlyGold =
+        workflow === 'scrape-macro'
+          ? (await readMacro(rootDir, 'xau_usd_oz'))
+              .filter((r) => r.frequency === 'M')
+              .map((r) => r.date)
+          : [];
       let result;
       try {
         result = plan({
@@ -78,6 +85,7 @@ const COMMANDS: Record<string, Command> = {
           schedule: str(values.schedule),
           sources: str(values.sources),
           force: str(values.force) === 'true',
+          monthlyGold,
           config,
           status,
           now: new Date(),
@@ -185,6 +193,8 @@ const COMMANDS: Record<string, Command> = {
       'run-url': { type: 'string' },
       /** `false` = hanya step summary (backfill: tanpa Telegram/Issue sumber harian). */
       deliver: { type: 'string' },
+      /** Judul pesan Telegram (`scrape-retail` · `scrape-macro`). */
+      workflow: { type: 'string' },
     },
     run: async (values) => {
       let summary: MergeSummary | null = null;
@@ -214,6 +224,10 @@ const COMMANDS: Record<string, Command> = {
             : null,
         now: new Date(),
         log: (msg) => console.log(msg),
+        workflow:
+          values.workflow === undefined
+            ? undefined
+            : parseEnum(Workflow, values.workflow, '--workflow'),
       });
       // Notifikasi yang gagal terkirim harus terlihat sebagai job merah.
       return errors > 0 ? EXIT.FAILED : EXIT.OK;

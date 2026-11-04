@@ -9,6 +9,8 @@ export interface FetchContext {
   runId: string;
   userAgent: string;
   now: Date;
+  /** Tanggal Jakarta sasaran run (D-27); kosong = tanggal `now`. */
+  date?: string;
   /** Jeda antar request ke sumber yang sama (NFR-12); 0 di uji. */
   pauseMs?: number;
   /** Jeda dasar sebelum retry; 0 di uji. */
@@ -42,6 +44,10 @@ export interface ParseResult<Row> {
   stale: string | null;
   /** Jumlah titik histori di respons (Logam Mulia, aturan V-07). */
   historyPoints?: number;
+  /** Spot emas (hanya xaus); pipeline menambahkan kurs USD/IDR terakhir menjadi `spot.json`. */
+  spot?: { xau_usd_oz: number; fetched_at: string; stale: boolean };
+  /** Catatan non-fatal untuk `RUN.error_message` pada run yang tetap berhasil (mis. fallback). */
+  note?: string;
 }
 
 export interface SourceScraper<Row extends PriceRow | MacroRow = PriceRow | MacroRow> {

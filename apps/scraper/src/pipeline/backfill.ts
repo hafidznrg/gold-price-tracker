@@ -5,7 +5,7 @@ import { utcIso, type ErrorCode, type MacroRow, type PriceRow } from '@gold/sche
 import type { BackfillJob } from '../backfill/types';
 import { loadConfig } from '../config';
 import type { ParseResult, RawPayload } from '../sources/types';
-import { ARTIFACT_FILES, type RawExtension, type ScrapeRun } from './artifact';
+import { ARTIFACT_FILES, rawBytes, rawExtension, type ScrapeRun } from './artifact';
 import { errorCodeOf, errorMessageOf, ScrapeError } from './errors';
 import { readPrices, sha256 } from './store';
 import type { Candidate, MacroCandidate } from './upsert';
@@ -29,23 +29,6 @@ export interface BackfillOptions {
   pauseMs?: number;
   retryDelayMs?: number;
 }
-
-const rawExtension = (raw: RawPayload): RawExtension => {
-  switch (raw.contentType) {
-    case 'text/html':
-      return 'html';
-    case 'text/csv':
-      return 'csv';
-    case 'application/octet-stream':
-      return 'xlsx'; // job makro: berkas XLSX yang dibawa sebagai base64 (worldbank, jisdor)
-    default:
-      return 'json';
-  }
-};
-
-/** Isi berkas raw: XLSX disimpan sebagai byte aslinya, bukan base64. */
-const rawBytes = (raw: RawPayload): string | Buffer =>
-  raw.contentType === 'application/octet-stream' ? Buffer.from(raw.body, 'base64') : raw.body;
 
 const inRange = (date: string, from?: string, to?: string) =>
   (!from || date >= from) && (!to || date <= to);

@@ -24,9 +24,12 @@
 
 ### Pengambilan harian
 
-- [ ] **P2-03** Scraper `xaus.ts`: upsert penutupan **10 hari terakhir** dari `/api/v1/history` ke `xau_usd_oz` (`D`), tanpa hari berjalan; spot ke `data/macro/spot.json`. Tolak respons `stale: true`. — `FR-05` · S
-- [ ] **P2-04** Scraper `jisdor.ts`: upsert 10 hari terakhir ke `usd_idr_jisdor` (`D`) dari tabel `GET` halaman BI (10 hari kerja; TECH-SPEC §5.5). Fallback: Frankfurter harian ke `usd_idr_ecb` (seri terpisah, tidak menimpa JISDOR). — `FR-06` · M
-- [ ] **P2-05** Workflow `scrape-macro.yml` (WORKFLOWS §3.3): cron `40 9 * * 1-5`, `plan` memilih `xaus`, `jisdor`, dan `worldbank` bila rata-rata bulan lalu belum ada (tanggal ≥ 5), `concurrency: data-write`. — `FR-09`, `NFR-02` · S
+- [x] **P2-03** Scraper `xaus.ts`: upsert penutupan **10 hari terakhir** dari `/api/v1/history` ke `xau_usd_oz` (`D`), tanpa hari berjalan; spot ke `data/macro/spot.json`. Tolak respons `stale: true`. — `FR-05` · S
+  - *4 Nov 2026:* `src/sources/xaus.ts` (`xaus@1.0.0`): `/history` (penutupan `d >= hari ini − 10`, `d < hari ini`) → `xau_usd_oz` `D`; `/spot?compact=1` → `spot.json` (kurs USD/IDR terakhir dari `data/macro/`, JISDOR menang bila tanggal sama). V-10 lewat `checkXausFresh` di `parse` → run `failed` `STALE_SOURCE` tanpa baris dan tanpa spot. Pipeline `scrape.ts` kini menangani sumber makro (artifact `kind: 'macro'`, `validateMacro`). Uji `test/macro-sources.test.ts` (fixture P0-10, fetch palsu). Uji ke situs asli: 7 baris 26 Okt → 3 Nov, spot 4030,6.
+- [x] **P2-04** Scraper `jisdor.ts`: upsert 10 hari terakhir ke `usd_idr_jisdor` (`D`) dari tabel `GET` halaman BI (10 hari kerja; TECH-SPEC §5.5). Fallback: Frankfurter harian ke `usd_idr_ecb` (seri terpisah, tidak menimpa JISDOR). — `FR-06` · M
+  - *4 Nov 2026:* `src/sources/jisdor.ts` (`jisdor@1.0.0`): tabel `table-striped` halaman BI (tanggal Indonesia, `parseRupiah`) → `usd_idr_jisdor`. Bila akses BI gagal (setelah 3 percobaan `fetchOk`, termasuk connect timeout 10 detik), fallback Frankfurter 14 hari ke `usd_idr_ecb` (parser `ecb.ts`); run `success` dengan catatan di `error_message`. Halaman terbaca tapi tabel berubah = `PARSE_ERROR`, tanpa fallback. Timeout global tidak diubah. Uji ke situs asli: BI terbaca (10 baris, data_date 4 Nov) tanpa fallback; jalur fallback hanya diuji dengan fetch palsu.
+- [x] **P2-05** Workflow `scrape-macro.yml` (WORKFLOWS §3.3): cron `40 9 * * 1-5`, `plan` memilih `xaus`, `jisdor`, dan `worldbank` bila rata-rata bulan lalu belum ada (tanggal ≥ 5), `concurrency: data-write`. — `FR-09`, `NFR-02` · S
+  - *4 Nov 2026:* `.github/workflows/scrape-macro.yml` (cermin `scrape-retail.yml` tanpa matrix browser), `SCHEDULES['scrape-macro']`, `targetDate` memahami cron `M H * * 1-5` (D-27), `plan` menambah `worldbank` bila tanggal ≥ 5 dan baris `M` bulan lalu belum ada di `xau_usd_oz.csv` (`--sources worldbank` eksplisit melewati aturan). Sumber `xaus`/`jisdor`/`worldbank` diaktifkan di `sources.yml` (worldbank memakai ulang job P2-06, 3 bulan terakhir; D-36). Terimplementasi; bukti run terjadwal menyusul.
 
 ### Backfill
 

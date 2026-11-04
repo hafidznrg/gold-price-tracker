@@ -17,6 +17,12 @@ export function errorCodeOf(err: unknown): ErrorCode {
   if (err instanceof Error && (err.name === 'TimeoutError' || err.name === 'AbortError')) {
     return 'FETCH_TIMEOUT';
   }
+  // undici melaporkan batas connect 10 s sebagai `TypeError: fetch failed` dengan `cause.code`.
+  if (
+    (err as { cause?: { code?: string } } | undefined)?.cause?.code === 'UND_ERR_CONNECT_TIMEOUT'
+  ) {
+    return 'FETCH_TIMEOUT';
+  }
   return 'UNKNOWN';
 }
 

@@ -21,6 +21,7 @@ import {
   Workflow,
 } from '@gold/schema';
 import { z } from 'zod';
+import type { RawPayload } from '../sources/types';
 
 // WORKFLOWS §2.1 — artifact `out-{source}` dari job scrape ke job merge:
 //   run.json   baris RUN tanpa hitungan insert/update/unchanged (+ metadata raw & kode keluar)
@@ -39,6 +40,24 @@ export const ARTIFACT_FILES = {
 
 export const RAW_EXTENSIONS = ['html', 'json', 'csv', 'xlsx'] as const;
 export type RawExtension = (typeof RAW_EXTENSIONS)[number];
+
+/** Ekstensi berkas raw menurut tipe isi `RawPayload`; `octet-stream` = XLSX (dibawa base64). */
+export function rawExtension(raw: Pick<RawPayload, 'contentType'>): RawExtension {
+  switch (raw.contentType) {
+    case 'text/html':
+      return 'html';
+    case 'text/csv':
+      return 'csv';
+    case 'application/octet-stream':
+      return 'xlsx'; // sumber makro: berkas XLSX yang dibawa sebagai base64 (worldbank, jisdor)
+    default:
+      return 'json';
+  }
+}
+
+/** Isi berkas raw: XLSX disimpan sebagai byte aslinya, bukan base64. */
+export const rawBytes = (raw: RawPayload): string | Buffer =>
+  raw.contentType === 'application/octet-stream' ? Buffer.from(raw.body, 'base64') : raw.body;
 
 const Count = z.number().int().nonnegative();
 
