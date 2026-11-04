@@ -1,4 +1,4 @@
-import type { MacroRow, MacroSource, PriceRow, PriceSource, Series } from '@gold/schema';
+import type { MacroRow, MacroSource, PriceRow, PriceSource, ScraperId, Series } from '@gold/schema';
 import type { ParsedRow, ParseResult, RawPayload } from '../sources/types';
 
 // WORKFLOWS §3.4 — kontrak job backfill. Sama dengan modul sumber (TECH-SPEC §3): fetch
@@ -45,14 +45,19 @@ export interface PriceBackfillJob extends BaseBackfillJob {
 }
 
 /**
- * Job histori makro (TECH-SPEC §5.6): mengisi satu seri `data/macro/{series}.csv`. Pipeline
- * `backfill`/`merge` untuk baris makro menyusul di P2-01/P2-02; sampai itu CLI menolak job ini.
+ * Job histori makro (TECH-SPEC §5.6): mengisi satu seri `data/macro/{series}.csv`. Artifact-nya
+ * berkontrak sama dengan scrape (`run.kind = 'macro'`); validasi V-01 saja (D-35).
  */
 export interface MacroBackfillJob extends BaseBackfillJob {
   kind: 'macro';
   series: Series;
   /** Penyedia data (kolom `source` CSV makro). */
   source: MacroSource;
+  /**
+   * Modul scraper pemilik seri ini: dicatat di RUN, `status.json`, `data/raw/` dan folder
+   * karantina (`ScraperId` tidak memuat `ecb`/`wdi`, jadi kurs ECB dan tahunan ikut `jisdor`).
+   */
+  scraper: ScraperId;
   /** Fungsi murni: tidak boleh melakukan I/O. */
   parse(raw: RawPayload): ParseResult<MacroRow>;
 }

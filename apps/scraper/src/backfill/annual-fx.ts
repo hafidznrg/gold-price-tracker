@@ -67,6 +67,7 @@ export const annualFx: MacroBackfillJob = {
   kind: 'macro',
   series: 'usd_idr_annual',
   source: 'wdi',
+  scraper: 'jisdor',
   parserVersion: 'annual-fx@1.0.0',
   async fetchRaw(ctx) {
     const fetchedAt = utcIso();

@@ -3,14 +3,19 @@ import { mkdir, readdir, readFile, rename, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { gunzipSync } from 'node:zlib';
 import {
+  readMacroCsv,
   readPriceCsv,
   RunRecord,
   SourceStatusFile,
+  SpotSnapshot,
+  writeMacroCsv,
   writePriceCsv,
+  type MacroRow,
   type PriceRow,
   type PriceSource,
   type Revision,
   type ScraperId,
+  type Series,
 } from '@gold/schema';
 
 // Tata letak `data/` (DATA-MODEL §1). Semua path yang dicatat di data (RUN.raw_paths,
@@ -22,6 +27,8 @@ export const absolute = (root: string, relative: string) => path.join(root, ...r
 export const PATHS = {
   prices: (source: PriceSource, year: string) => rel('data', 'prices', source, `${year}.csv`),
   pricesDir: (source: PriceSource) => rel('data', 'prices', source),
+  macro: (series: Series) => rel('data', 'macro', `${series}.csv`),
+  spot: rel('data', 'macro', 'spot.json'),
   runs: (year: string) => rel('data', 'meta', 'runs', `${year}.jsonl`),
   revisions: (year: string) => rel('data', 'meta', 'revisions', `${year}.jsonl`),
   status: rel('data', 'meta', 'status.json'),
@@ -92,6 +99,38 @@ export async function writePrices(
     written.push(file);
   }
   return written;
+}
+
+// ── MACRO_OBSERVATION, SPOT_SNAPSHOT ────────────────────────────────────────
+
+/** Semua baris satu seri makro (satu file, tanpa partisi tahun). */
+export async function readMacro(root: string, series: Series): Promise<MacroRow[]> {
+  const text = await readText(absolute(root, PATHS.macro(series)));
+  if (text === null) return [];
+  try {
+    return readMacroCsv(text);
+  } catch (err) {
+    throw new Error(`${PATHS.macro(series)}: ${(err as Error).message}`);
+  }
+}
+
+/** Tulis ulang `data/macro/{series}.csv` (terurut menurut kunci); false bila isinya sama. */
+export async function writeMacro(
+  root: string,
+  series: Series,
+  rows: readonly MacroRow[],
+): Promise<boolean> {
+  const file = PATHS.macro(series);
+  const content = writeMacroCsv(rows.filter((r) => r.series === series));
+  if ((await readText(absolute(root, file))) === content) return false;
+  await writeFileAtomic(absolute(root, file), content);
+  return true;
+}
+
+/** Tulis `data/macro/spot.json` (ditimpa setiap run makro yang membawa spot). */
+export async function writeSpot(root: string, spot: SpotSnapshot): Promise<void> {
+  const body = SpotSnapshot.parse(spot);
+  await writeFileAtomic(absolute(root, PATHS.spot), JSON.stringify(body, null, 2) + '\n');
 }
 
 // ── RUN, REVISION (jsonl) ───────────────────────────────────────────────────

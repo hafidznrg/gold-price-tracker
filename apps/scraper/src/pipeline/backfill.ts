@@ -1,23 +1,24 @@
 import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { gzipSync } from 'node:zlib';
-import { utcIso, type ErrorCode, type PriceRow } from '@gold/schema';
-import type { PriceBackfillJob } from '../backfill/types';
+import { utcIso, type ErrorCode, type MacroRow, type PriceRow } from '@gold/schema';
+import type { BackfillJob } from '../backfill/types';
 import { loadConfig } from '../config';
 import type { ParseResult, RawPayload } from '../sources/types';
 import { ARTIFACT_FILES, type RawExtension, type ScrapeRun } from './artifact';
 import { errorCodeOf, errorMessageOf, ScrapeError } from './errors';
 import { readPrices, sha256 } from './store';
-import type { Candidate } from './upsert';
-import { validateBackfill, type HeldBatch } from './validate';
+import type { Candidate, MacroCandidate } from './upsert';
+import { validateBackfill, validateBackfillMacro, type HeldBatch } from './validate';
 
 // Job backfill (WORKFLOWS §3.4): fetch → parse → saring rentang → validasi backfill, lalu tulis
 // artifact dengan kontrak yang sama seperti scrape (§2.1) agar `merge --origin backfill`
 // memakainya. Tidak pernah menulis ke data/. Kode keluar: 0 sukses/partial, 1 gagal.
+// Job makro (`kind: 'macro'`) menghasilkan artifact `run.kind = 'macro'` tanpa `spot.json`.
 
 export interface BackfillOptions {
   root: string;
-  job: PriceBackfillJob;
+  job: BackfillJob;
   out: string;
   runId: string;
   userAgent: string;
@@ -29,11 +30,29 @@ export interface BackfillOptions {
   retryDelayMs?: number;
 }
 
-const rawExtension = (raw: RawPayload): RawExtension =>
-  raw.contentType === 'text/html' ? 'html' : 'json';
+const rawExtension = (raw: RawPayload): RawExtension => {
+  switch (raw.contentType) {
+    case 'text/html':
+      return 'html';
+    case 'text/csv':
+      return 'csv';
+    case 'application/octet-stream':
+      return 'xlsx'; // job makro: berkas XLSX yang dibawa sebagai base64 (worldbank, jisdor)
+    default:
+      return 'json';
+  }
+};
+
+/** Isi berkas raw: XLSX disimpan sebagai byte aslinya, bukan base64. */
+const rawBytes = (raw: RawPayload): string | Buffer =>
+  raw.contentType === 'application/octet-stream' ? Buffer.from(raw.body, 'base64') : raw.body;
 
 const inRange = (date: string, from?: string, to?: string) =>
   (!from || date >= from) && (!to || date <= to);
+
+type Selected =
+  | { kind: 'prices'; rows: Candidate[]; held: HeldBatch[] }
+  | { kind: 'macro'; rows: MacroCandidate[]; held: HeldBatch<MacroCandidate>[] };
 
 export async function backfill(opts: BackfillOptions): Promise<ScrapeRun> {
   const now = opts.now ?? new Date();
@@ -43,10 +62,12 @@ export async function backfill(opts: BackfillOptions): Promise<ScrapeRun> {
   await mkdir(opts.out, { recursive: true });
   let raw: RawPayload | null = null;
   let rawMeta: ScrapeRun['raw'] = null;
-  let parsed: ParseResult<PriceRow> | null = null;
+  let rowsParsed = 0;
   let failure: { code: ErrorCode; message: string } | null = null;
-  let rows: Candidate[] = [];
-  let held: HeldBatch[] = [];
+  let selected: Selected =
+    job.kind === 'macro'
+      ? { kind: 'macro', rows: [], held: [] }
+      : { kind: 'prices', rows: [], held: [] };
 
   try {
     raw = await job.fetchRaw({
@@ -67,38 +88,55 @@ export async function backfill(opts: BackfillOptions): Promise<ScrapeRun> {
   if (raw) {
     const ext = rawExtension(raw);
     const file = `raw.${ext}.gz`;
-    await writeFile(path.join(opts.out, file), gzipSync(raw.body));
-    rawMeta = { file, ext, fetched_at: raw.fetchedAt, sha256: sha256(raw.body) };
+    const bytes = rawBytes(raw);
+    await writeFile(path.join(opts.out, file), gzipSync(bytes));
+    rawMeta = { file, ext, fetched_at: raw.fetchedAt, sha256: sha256(bytes) };
+    let parsed: ParseResult<PriceRow> | ParseResult<MacroRow> | null = null;
     try {
       parsed = job.parse(raw);
     } catch (err) {
       const code = err instanceof ScrapeError ? err.code : 'PARSE_ERROR';
       failure = { code, message: errorMessageOf(err) };
     }
-  }
-
-  if (parsed) {
-    const inWindow = parsed.rows.filter((r) => inRange(r.date, opts.from, opts.to));
-    const selected = job.select
-      ? job.select(inWindow, await readPrices(opts.root, job.source))
-      : inWindow;
-    const result = validateBackfill(selected, config.catalog);
-    if (result.outcome === 'failed') {
-      failure = { code: result.error_code, message: result.error_message };
-    } else if (result.outcome === 'ok') {
-      rows = result.rows;
-      held = result.held;
+    if (parsed) {
+      rowsParsed = parsed.rows.length;
+      if (job.kind === 'macro') {
+        const inWindow = (parsed.rows as MacroCandidate[]).filter((r) =>
+          inRange(r.date, opts.from, opts.to),
+        );
+        const result = validateBackfillMacro(inWindow, { series: job.series, source: job.source });
+        if (result.outcome === 'failed') {
+          failure = { code: result.error_code, message: result.error_message };
+        } else {
+          selected = { kind: 'macro', rows: result.rows, held: result.held };
+        }
+      } else {
+        const inWindow = (parsed.rows as Candidate[]).filter((r) =>
+          inRange(r.date, opts.from, opts.to),
+        );
+        const chosen = job.select
+          ? job.select(inWindow, await readPrices(opts.root, job.source))
+          : inWindow;
+        const result = validateBackfill(chosen, config.catalog);
+        if (result.outcome === 'failed') {
+          failure = { code: result.error_code, message: result.error_message };
+        } else if (result.outcome === 'ok') {
+          selected = { kind: 'prices', rows: result.rows, held: result.held };
+        }
+      }
     }
   }
 
-  const rowsParsed = parsed?.rows.length ?? 0;
+  const { rows, held } = selected;
   const rowsHeld = held.reduce((n, b) => n + b.rows.length, 0);
   const status = failure ? 'failed' : rowsHeld > 0 ? 'partial' : 'success';
-  const dates = [...rows, ...held.flatMap((b) => b.rows)].map((r) => r.date).sort();
+  const all: { date: string }[] = [...rows, ...held.flatMap((b): { date: string }[] => b.rows)];
+  const dates = all.map((r) => r.date).sort();
 
   const run: ScrapeRun = {
     run_id: opts.runId,
-    source: job.source,
+    source: job.kind === 'macro' ? job.scraper : job.source,
+    ...(job.kind === 'macro' ? { kind: 'macro' as const } : {}),
     workflow: 'backfill',
     trigger: 'workflow_dispatch',
     slot: 'backfill',

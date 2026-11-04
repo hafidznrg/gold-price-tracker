@@ -1,6 +1,8 @@
 import { readdir, readFile, unlink } from 'node:fs/promises';
 import {
   jakartaDate,
+  macroRowKey,
+  MacroRow,
   PriceRow,
   priceRowKey,
   PriceSource,
@@ -8,6 +10,7 @@ import {
   ScraperId,
   utcIso,
   type Revision,
+  type Series,
 } from '@gold/schema';
 import { loadConfig } from '../config';
 import type { IssueClient } from './notify';
@@ -15,16 +18,29 @@ import {
   absolute,
   appendRevisions,
   PATHS,
+  readMacro,
   readPrices,
   writeFileAtomic,
+  writeMacro,
   writePrices,
 } from './store';
-import { cell, classify, indexByKey, PRICE_VALUE_FIELDS } from './upsert';
-import { revalidateHeld } from './validate';
+import {
+  cell,
+  classify,
+  classifyMacro,
+  indexByKey,
+  indexMacroByKey,
+  macroCell,
+  MACRO_VALUE_FIELDS,
+  PRICE_VALUE_FIELDS,
+} from './upsert';
+import { revalidateHeld, revalidateHeldMacro } from './validate';
 
 // WORKFLOWS §3.5 — putuskan satu batch karantina. `approve`: validasi ulang (kecuali aturan
 // pemicu), upsert ke CSV, REVISION `quarantine_approved`. `reject`: tidak menulis baris.
 // Keduanya memindahkan file ke `data/quarantine/_resolved/{source}/` dengan keputusan.
+// Sumber di luar PriceSource (xaus, jisdor, worldbank) berisi baris makro: upsert ke
+// data/macro/{series}.csv dengan aturan yang sama.
 
 export type QuarantineDecisionInput = 'approve' | 'reject';
 
@@ -109,53 +125,102 @@ export async function decideQuarantine(opts: QuarantineOptions): Promise<Quarant
   if (opts.decision === 'approve') {
     const priceSource = PriceSource.safeParse(source);
     if (!priceSource.success) {
-      throw new QuarantineError(`approve untuk sumber makro ${source} belum didukung (Fase 2)`);
-    }
-    const rows = batch.rows.map((r) => PriceRow.parse(r));
-    const [config, existing] = await Promise.all([
-      loadConfig(opts.root),
-      readPrices(opts.root, priceSource.data),
-    ]);
-    const problems = revalidateHeld(batch.reason_code, rows, config.catalog, existing);
-    if (problems.length > 0) {
-      throw new QuarantineError(
-        `${rel} tidak bisa disetujui:\n${problems.map((p) => `  - ${p}`).join('\n')}`,
+      const rows = batch.rows.map((r) => MacroRow.parse(r));
+      const series = [...new Set(rows.map((r) => r.series))].sort() as Series[];
+      const existingBySeries = new Map(
+        await Promise.all(series.map(async (x) => [x, await readMacro(opts.root, x)] as const)),
       );
-    }
+      const problems = revalidateHeldMacro(
+        batch.reason_code,
+        rows,
+        [...existingBySeries.values()].flat(),
+      );
+      if (problems.length > 0) {
+        throw new QuarantineError(
+          `${rel} tidak bisa disetujui:\n${problems.map((p) => `  - ${p}`).join('\n')}`,
+        );
+      }
+      for (const x of series) {
+        const index = indexMacroByKey(existingBySeries.get(x)!);
+        let touched = false;
+        for (const row of rows.filter((r) => r.series === x)) {
+          const c = classifyMacro(index, row);
+          if (c.kind === 'unchanged') {
+            unchanged++;
+            continue;
+          }
+          index.set(macroRowKey(row), row);
+          touched = true;
+          if (c.kind === 'insert') inserted++;
+          else updated++;
+          const fields = c.kind === 'update' ? c.changed : MACRO_VALUE_FIELDS;
+          for (const field of fields) {
+            const oldValue = c.kind === 'update' ? macroCell(c.current[field]) : '';
+            const newValue = macroCell(row[field]);
+            if (oldValue === newValue) continue;
+            revisions.push({
+              table: 'macro',
+              row_key: macroRowKey(row),
+              field,
+              old_value: oldValue,
+              new_value: newValue,
+              run_id: opts.runId,
+              revised_at: nowIso,
+              reason: 'quarantine_approved',
+            });
+          }
+        }
+        if (touched) await writeMacro(opts.root, x, [...index.values()]);
+      }
+      await appendRevisions(opts.root, jakartaDate(now).slice(0, 4), revisions);
+    } else {
+      const rows = batch.rows.map((r) => PriceRow.parse(r));
+      const [config, existing] = await Promise.all([
+        loadConfig(opts.root),
+        readPrices(opts.root, priceSource.data),
+      ]);
+      const problems = revalidateHeld(batch.reason_code, rows, config.catalog, existing);
+      if (problems.length > 0) {
+        throw new QuarantineError(
+          `${rel} tidak bisa disetujui:\n${problems.map((p) => `  - ${p}`).join('\n')}`,
+        );
+      }
 
-    const index = indexByKey(existing);
-    const years = new Set<string>();
-    for (const row of rows) {
-      const c = classify(index, row);
-      if (c.kind === 'unchanged') {
-        unchanged++;
-        continue;
+      const index = indexByKey(existing);
+      const years = new Set<string>();
+      for (const row of rows) {
+        const c = classify(index, row);
+        if (c.kind === 'unchanged') {
+          unchanged++;
+          continue;
+        }
+        // Baris tetap membawa scraped_at/run_id run yang mengamatinya; persetujuan tercatat di
+        // REVISION dan file _resolved.
+        index.set(priceRowKey(row), row);
+        years.add(row.date.slice(0, 4));
+        if (c.kind === 'insert') inserted++;
+        else updated++;
+        const fields = c.kind === 'update' ? c.changed : PRICE_VALUE_FIELDS;
+        for (const field of fields) {
+          const oldValue = c.kind === 'update' ? cell(c.current[field]) : '';
+          const newValue = cell(row[field]);
+          if (oldValue === newValue) continue;
+          revisions.push({
+            table: 'price',
+            row_key: priceRowKey(row),
+            field,
+            old_value: oldValue,
+            new_value: newValue,
+            run_id: opts.runId,
+            revised_at: nowIso,
+            reason: 'quarantine_approved',
+          });
+        }
       }
-      // Baris tetap membawa scraped_at/run_id run yang mengamatinya; persetujuan tercatat di
-      // REVISION dan file _resolved.
-      index.set(priceRowKey(row), row);
-      years.add(row.date.slice(0, 4));
-      if (c.kind === 'insert') inserted++;
-      else updated++;
-      const fields = c.kind === 'update' ? c.changed : PRICE_VALUE_FIELDS;
-      for (const field of fields) {
-        const oldValue = c.kind === 'update' ? cell(c.current[field]) : '';
-        const newValue = cell(row[field]);
-        if (oldValue === newValue) continue;
-        revisions.push({
-          table: 'price',
-          row_key: priceRowKey(row),
-          field,
-          old_value: oldValue,
-          new_value: newValue,
-          run_id: opts.runId,
-          revised_at: nowIso,
-          reason: 'quarantine_approved',
-        });
-      }
+      if (years.size > 0)
+        await writePrices(opts.root, priceSource.data, [...index.values()], years);
+      await appendRevisions(opts.root, jakartaDate(now).slice(0, 4), revisions);
     }
-    if (years.size > 0) await writePrices(opts.root, priceSource.data, [...index.values()], years);
-    await appendRevisions(opts.root, jakartaDate(now).slice(0, 4), revisions);
   }
 
   const resolved = QuarantineBatch.parse({

@@ -279,3 +279,16 @@ Log keputusan produk dan teknis (format ringkas ala ADR). Keputusan baru ditamba
 - **Warna arah harga:** hijau = naik, merah = turun (konvensi pasar Indonesia), selalu disertai ▲/▼ dan tanda +/−. Warna tidak menilai baik/buruk, kecuali untung/rugi di Kalkulator; spread memakai warna aksen netral.
 - Mockup mengatur tampilan; bila bertentangan dengan PRD, DATA-MODEL, atau DECISIONS, dokumen-dokumen itu yang berlaku.
 **Konsekuensi:** FR-20, FR-23, FR-30, P3-05, P3-08, P4-05, P4-10 diperbarui. Token desain dan pemetaan mockup → data ada di `mockup/README.md`.
+
+### D-35 — Validasi dan merge baris makro
+
+**Konteks:** P2-01 dan P2-02. V-08/V-09 (TECH-SPEC §7) menyebut batas "per hari", tetapi seri makro punya frekuensi `D`, `M`, `A`; backfill makro (D-32) menulis histori panjang yang memang memuat lonjakan besar; `ScraperId` tidak memuat `ecb` dan `wdi`.
+**Keputusan:**
+- **V-08/V-09 hanya baris `D`.** Rata-rata bulanan/tahunan wajar bergerak jauh antarperiode (kurs 1997 → 1998 +244%); `M`/`A` hanya lolos V-01. Baris `D` dibandingkan dengan nilai diterima terakhir seri yang sama (data di CSV dan baris batch yang lolos), berapa pun jarak harinya, seperti V-05. Baris yang melompat tidak menjadi pembanding, jadi satu lonjakan tidak menahan hari sesudahnya sedangkan pergeseran level permanen menahan semua hari berikutnya sampai disetujui. Batas tepat (+5% / +8%) lolos.
+- **Backfill makro hanya V-01** (plus seri/penyedia baris harus sama dengan job), sama seperti backfill harga: V-05/V-08/V-09/V-11 tidak berlaku, diff dry run menggantikan tinjauannya.
+- **V-10** adalah fungsi murni `checkXausFresh({ historyStatus, spotStale })` → `STALE_SOURCE` tingkat run, dipanggil scraper xaus (P2-03).
+- **Artifact makro:** `run.json` mendapat `kind: 'macro'` (kosong = harga, artifact lama tidak berubah); `rows.json`/`held.json` berisi baris makro; `spot.json` opsional ditimpa merge ke `data/macro/spot.json` (divalidasi `SpotSnapshot`).
+- **`run.source` job backfill makro = modul scraper pemilik seri** (`MacroBackfillJob.scraper`): worldbank → `worldbank`, jisdor/ecb/annual-fx → `jisdor`. Raw, karantina, dan RUN memakai nama itu; `ecb`/`wdi` tetap hanya nilai kolom `source` CSV.
+- **Raw makro:** ekstensi `csv` dan `xlsx`; XLSX (dibawa base64 di `RawPayload`) disimpan sebagai byte aslinya, sha256 dihitung atas byte itu.
+- **Nilai makro dibandingkan dalam bentuk CSV** (maks. 6 desimal) untuk klasifikasi unchanged/update dan `REVISION`.
+**Konsekuensi:** `backfill --job {worldbank,ecb,jisdor,annual-fx}` tidak lagi ditolak CLI. Karantina makro berlokasi di `data/quarantine/{xaus|jisdor|worldbank}/` dan `approve` memakai aturan yang sama dengan harga.

@@ -80,6 +80,7 @@ export const worldbank: MacroBackfillJob = {
   kind: 'macro',
   series: 'xau_usd_oz',
   source: 'worldbank',
+  scraper: 'worldbank',
   parserVersion: 'worldbank@1.0.0',
   async fetchRaw(ctx) {
     const fetchedAt = utcIso();

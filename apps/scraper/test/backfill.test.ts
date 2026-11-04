@@ -1,6 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
-import { readPriceCsv, type PriceRow } from '@gold/schema';
+import { readPriceCsv, ScraperId, type PriceRow } from '@gold/schema';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { parse as parseYaml } from 'yaml';
 import { BACKFILL_JOB_IDS, getBackfillJob } from '../src/backfill';
@@ -192,12 +192,12 @@ describe('job backfill', () => {
       expect(error.mock.calls.join('\n')).toContain('belum diimplementasikan (P2-07)');
     });
 
-    it('job makro ditolak sebelum fetch sampai merge makro ada → kode 2', async () => {
-      const out = path.join(root, 'out', 'backfill');
-      expect(await main(['backfill', '--job', 'ecb', '--root', root, '--out', out])).toBe(
-        EXIT.USAGE,
-      );
-      expect(error.mock.calls.join('\n')).toContain('(P2-01, P2-02)');
+    it('job makro tidak lagi ditolak: terdaftar dengan scraper pemilik seri (pipeline di macro-pipeline.test.ts)', () => {
+      for (const id of ['worldbank', 'ecb', 'jisdor', 'annual-fx'] as const) {
+        const job = getBackfillJob(id);
+        expect(job?.kind).toBe('macro');
+        expect(ScraperId.safeParse(job?.kind === 'macro' ? job.scraper : null).success).toBe(true);
+      }
     });
 
     it('argumen tidak valid → kode 2', async () => {

@@ -63,6 +63,7 @@ export const ecb: MacroBackfillJob = {
   kind: 'macro',
   series: 'usd_idr_ecb',
   source: 'ecb',
+  scraper: 'jisdor',
   parserVersion: 'ecb@1.0.0',
   async fetchRaw(ctx) {
     const fetchedAt = utcIso();

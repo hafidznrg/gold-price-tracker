@@ -17,8 +17,10 @@
 
 ### Skema dan penyimpanan
 
-- [ ] **P2-01** Tambah aturan V-08 s.d. V-10 ke `validate.ts` untuk `MacroRow` (V-08/V-09 tingkat baris → karantina). — `FR-10` · S
-- [ ] **P2-02** Perluas `merge.ts` untuk `data/macro/{series}.csv` (kunci `date + series + frequency`, aturan upsert yang sama) dan penulisan `data/macro/spot.json`. — `FR-12`, `FR-16` · S
+- [x] **P2-01** Tambah aturan V-08 s.d. V-10 ke `validate.ts` untuk `MacroRow` (V-08/V-09 tingkat baris → karantina). — `FR-10` · S
+  - *4 Nov 2026:* `validateMacro` (V-01 run; V-08 ±5% kurs, V-09 ±8% emas → karantina `PRICE_JUMP`; V-11), `checkXausFresh` (V-10 → `STALE_SOURCE`, untuk scraper xaus P2-03), `revalidateHeldMacro`, `validateBackfillMacro`. V-08/V-09 hanya frekuensi `D`, dibandingkan dengan nilai diterima terakhir seri (data lama + baris batch); backfill tidak memakainya (D-35). Uji `test/macro-pipeline.test.ts`.
+- [x] **P2-02** Perluas `merge.ts` untuk `data/macro/{series}.csv` (kunci `date + series + frequency`, aturan upsert yang sama) dan penulisan `data/macro/spot.json`. — `FR-12`, `FR-16` · S
+  - *4 Nov 2026:* artifact `run.kind = 'macro'` (+ `spot.json` opsional) di-upsert ke `data/macro/{series}.csv` dengan insert/unchanged/update + REVISION (`table: macro`); `pipeline/backfill.ts` dan `quarantine` (approve/reject) menangani baris makro; penolakan job makro di CLI dihapus. Raw XLSX/CSV berekstensi `xlsx`/`csv` (D-35). Job backfill P2-06/08/09/10 kini bisa dijalankan lewat `backfill.yml` (dry run dulu).
 
 ### Pengambilan harian
 

@@ -1,7 +1,14 @@
-import { canonicalWeight, priceRowKey, type PriceRow } from '@gold/schema';
+import {
+  canonicalWeight,
+  formatMacroValue,
+  macroRowKey,
+  priceRowKey,
+  type MacroRow,
+  type PriceRow,
+} from '@gold/schema';
 import type { ParsedRow } from '../sources/types';
 
-// DATA-MODEL §5 — klasifikasi berbasis nilai (D-14). Dipakai validate (V-11) dan merge.
+// DATA-MODEL §5 — klasifikasi berbasis nilai (D-14). Dipakai validate (V-11), merge, dan quarantine.
 
 export type Candidate = ParsedRow<PriceRow>;
 
@@ -43,3 +50,39 @@ export function seriesKey(row: Omit<Candidate, 'date'> | Omit<PriceRow, 'date'>)
 export function cell(value: string | number | null): string {
   return value === null ? '' : String(value);
 }
+
+// ── MACRO_OBSERVATION ───────────────────────────────────────────────────────
+// Aturan yang sama dengan harga (DATA-MODEL §5), kunci `date + series + frequency`, satu kolom
+// nilai. Nilai dibandingkan dalam bentuk CSV (maks. 6 desimal) agar derau float tidak dihitung
+// sebagai revisi.
+
+export type MacroCandidate = ParsedRow<MacroRow>;
+
+export const MACRO_VALUE_FIELDS = ['value'] as const;
+export type MacroValueField = (typeof MACRO_VALUE_FIELDS)[number];
+
+export type MacroClassification =
+  | { kind: 'insert' }
+  | { kind: 'unchanged'; current: MacroRow }
+  | { kind: 'update'; current: MacroRow; changed: MacroValueField[] };
+
+export function indexMacroByKey(rows: readonly MacroRow[]): Map<string, MacroRow> {
+  return new Map(rows.map((r) => [macroRowKey(r), r]));
+}
+
+export function classifyMacro(
+  existing: ReadonlyMap<string, MacroRow>,
+  row: MacroCandidate,
+): MacroClassification {
+  const current = existing.get(macroRowKey(row));
+  if (!current) return { kind: 'insert' };
+  const changed = MACRO_VALUE_FIELDS.filter(
+    (f) => formatMacroValue(current[f]) !== formatMacroValue(row[f]),
+  );
+  return changed.length === 0
+    ? { kind: 'unchanged', current }
+    : { kind: 'update', current, changed };
+}
+
+/** Nilai sel makro untuk `REVISION.old_value`/`new_value`: bentuk yang sama dengan CSV. */
+export const macroCell = (value: number): string => formatMacroValue(value);

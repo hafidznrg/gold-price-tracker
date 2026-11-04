@@ -3,6 +3,8 @@ import path from 'node:path';
 import { gunzipSync } from 'node:zlib';
 import {
   jakartaDate,
+  macroRowKey,
+  MacroRow,
   priceRowKey,
   PriceRow,
   PriceSource,
@@ -11,9 +13,11 @@ import {
   utcIso,
   type ErrorCode,
   type Origin,
+  type QuarantineReason,
   type Revision,
   type RunStatus,
   type ScraperId,
+  type Series,
   type Slot,
   type SourceStatusEntry,
   type SourceStatusFile,
@@ -27,18 +31,33 @@ import {
   lastRawSha,
   PATHS,
   rawPath,
+  readMacro,
   readPrices,
   readStatusFile,
   sha256,
   appendRuns,
   writeFileAtomic,
+  writeMacro,
   writePrices,
+  writeSpot,
   writeStatusFile,
 } from './store';
-import { cell, classify, indexByKey, type Candidate } from './upsert';
+import {
+  cell,
+  classify,
+  classifyMacro,
+  indexByKey,
+  indexMacroByKey,
+  macroCell,
+  type Candidate,
+  type MacroCandidate,
+} from './upsert';
 
 // DATA-MODEL §5 — job merge: upsert CSV, raw delta (dedupe sha256), karantina, RUN, REVISION,
 // status.json, lalu summary.json + pesan commit untuk job commit & notify (WORKFLOWS §2.1).
+// Artifact makro (`run.kind = 'macro'`) di-upsert ke data/macro/{series}.csv dengan aturan yang
+// sama (kunci date+series+frequency, satu kolom nilai) dan menimpa data/macro/spot.json bila
+// membawa spot (WORKFLOWS §3.3).
 
 export interface MergeOptions {
   root: string;
@@ -133,6 +152,13 @@ function missingRun(source: ScraperId, opts: MergeOptions, slot: Slot, now: stri
 
 const complete = (row: Candidate, scrapedAt: string, runId: string, origin: Origin): PriceRow =>
   PriceRow.parse({ ...row, scraped_at: scrapedAt, run_id: runId, origin });
+
+const completeMacro = (
+  row: MacroCandidate,
+  scrapedAt: string,
+  runId: string,
+  origin: Origin,
+): MacroRow => MacroRow.parse({ ...row, scraped_at: scrapedAt, run_id: runId, origin });
 
 function nextStatus(
   prev: SourceStatusEntry | undefined,
@@ -232,7 +258,34 @@ export async function merge(opts: MergeOptions): Promise<MergeSummary> {
     let runStatus = run.status;
     const writesData = artifact && (run.status === 'success' || run.status === 'partial');
 
-    if (writesData) {
+    /** Tulis batch karantina (satu file per alasan) dan hitung barisnya. */
+    const hold = <R>(
+      batches: readonly { reason_code: QuarantineReason; rows: readonly R[] }[],
+      build: (row: R) => PriceRow | MacroRow,
+    ) => {
+      const many = batches.length > 1;
+      for (const batch of batches) {
+        const file = PATHS.quarantine(
+          run.source,
+          quarantineFile(run.data_date ?? today, opts.runId, batch.reason_code, many),
+        );
+        const body = QuarantineBatch.parse({
+          run_id: opts.runId,
+          source: run.source,
+          reason_code: batch.reason_code,
+          rows: batch.rows.map(build),
+          decision: 'pending',
+        });
+        held += batch.rows.length;
+        quarantinePaths.push(file);
+        changed.add(file);
+        later(() =>
+          writeFileAtomic(absolute(opts.root, file), JSON.stringify(body, null, 2) + '\n'),
+        );
+      }
+    };
+
+    if (artifact?.kind === 'prices' && writesData) {
       const source = PriceSource.parse(run.source);
       const existing = await readPrices(opts.root, source);
       const index = indexByKey(existing);
@@ -272,25 +325,57 @@ export async function merge(opts: MergeOptions): Promise<MergeSummary> {
         });
       }
 
-      const many = artifact.held.length > 1;
-      for (const batch of artifact.held) {
-        const file = PATHS.quarantine(
-          run.source,
-          quarantineFile(run.data_date ?? today, opts.runId, batch.reason_code, many),
-        );
-        const body = QuarantineBatch.parse({
-          run_id: opts.runId,
-          source: run.source,
-          reason_code: batch.reason_code,
-          rows: batch.rows.map((r) => complete(r, nowIso, opts.runId, opts.origin)),
-          decision: 'pending',
-        });
-        held += batch.rows.length;
-        quarantinePaths.push(file);
-        changed.add(file);
-        later(() =>
-          writeFileAtomic(absolute(opts.root, file), JSON.stringify(body, null, 2) + '\n'),
-        );
+      hold(artifact.held, (r) => complete(r, nowIso, opts.runId, opts.origin));
+      runStatus = held > 0 ? 'partial' : 'success';
+    } else if (artifact?.kind === 'macro' && writesData) {
+      const bySeries = new Map<Series, MacroCandidate[]>();
+      for (const row of artifact.rows) {
+        bySeries.set(row.series, [...(bySeries.get(row.series) ?? []), row]);
+      }
+      for (const [series, rows] of [...bySeries].sort(([a], [b]) => (a < b ? -1 : 1))) {
+        const index = indexMacroByKey(await readMacro(opts.root, series));
+        let touched = false;
+        for (const row of rows) {
+          const c = classifyMacro(index, row);
+          if (c.kind === 'unchanged') {
+            unchanged++;
+            continue;
+          }
+          const next = completeMacro(row, nowIso, opts.runId, opts.origin);
+          index.set(macroRowKey(next), next);
+          touched = true;
+          if (c.kind === 'insert') {
+            inserted++;
+            continue;
+          }
+          updated++;
+          for (const field of c.changed) {
+            revisions.push({
+              table: 'macro',
+              row_key: macroRowKey(next),
+              field,
+              old_value: macroCell(c.current[field]),
+              new_value: macroCell(next[field]),
+              run_id: opts.runId,
+              revised_at: nowIso,
+              reason: 'source_changed',
+            });
+          }
+        }
+        if (touched) {
+          const all = [...index.values()];
+          changed.add(PATHS.macro(series));
+          later(async () => {
+            await writeMacro(opts.root, series, all);
+          });
+        }
+      }
+      hold(artifact.held, (r) => completeMacro(r, nowIso, opts.runId, opts.origin));
+      // spot.json ditimpa setiap run makro yang membawanya (tidak masuk CSV, DATA-MODEL §3.3).
+      if (artifact.spot) {
+        const spot = artifact.spot;
+        changed.add(PATHS.spot);
+        later(() => writeSpot(opts.root, spot));
       }
       runStatus = held > 0 ? 'partial' : 'success';
     }

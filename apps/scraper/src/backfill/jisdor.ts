@@ -79,6 +79,7 @@ export const jisdor: MacroBackfillJob = {
   kind: 'macro',
   series: 'usd_idr_jisdor',
   source: 'bi',
+  scraper: 'jisdor',
   parserVersion: 'jisdor@1.0.0',
   async fetchRaw(ctx) {
     const fetchedAt = utcIso();

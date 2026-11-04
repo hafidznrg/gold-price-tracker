@@ -52,7 +52,7 @@ sequenceDiagram
 | Dari → ke | Isi | Lokasi |
 | --- | --- | --- |
 | `plan` → `scrape` | `matrix` = `{"include":[{"source":"ubslifestyle","browser":false}, …]}`, `slot` = `primary`/`retry`/`manual`, `date` (tanggal sasaran, D-27), `has_work`, `sources` (CSV) | `outputs` job |
-| `scrape` → `merge` | `run.json` (baris `RUN` tanpa hitungan insert/update), `rows.json` (baris lolos validasi run-level), `held.json` (baris untuk karantina), `raw.{html,json}.gz` | artifact `out-{source}` |
+| `scrape` → `merge` | `run.json` (baris `RUN` tanpa hitungan insert/update), `rows.json` (baris lolos validasi run-level), `held.json` (baris untuk karantina), `raw.{html,json,csv,xlsx}.gz`; sumber makro menambah `run.kind = 'macro'` (baris makro) dan `spot.json` opsional (ditimpa ke `data/macro/spot.json`) | artifact `out-{source}` |
 | `merge` → `notify` | `summary.json`: hasil per sumber (status, error_code, hitungan, path karantina), `commit_sha`, `merge_ok` | artifact `run-summary` |
 
 Bila artifact `out-{source}` tidak ada (job scrape mati sebelum upload), `merge` mencatat sumber itu sebagai `failed` dengan `error_code = UNKNOWN` berdasarkan daftar `sources` dari `plan`.
@@ -320,7 +320,7 @@ Backfill menghormati aturan merge yang sama: baris yang sudah ada dari `scrape` 
 
 Implementasi (P1-13):
 
-- **Perintah `backfill`** memakai registry `BACKFILL_JOB_IDS` (`apps/scraper/src/backfill/`); tes memastikan isinya sama dengan pilihan `job` di YAML. Job yang belum punya modul keluar dengan kode 2 sambil menyebut tugasnya (`ubs-history` → P1-09, makro → P2-06…P2-10). Hasilnya artifact berkontrak §2.1 dengan `workflow: backfill`, `slot: backfill`, `data_date` = tanggal terakhir. Baris di luar `--from`/`--to` dihitung `rows_rejected`.
+- **Perintah `backfill`** memakai registry `BACKFILL_JOB_IDS` (`apps/scraper/src/backfill/`); tes memastikan isinya sama dengan pilihan `job` di YAML. Job yang belum punya modul keluar dengan kode 2 sambil menyebut tugasnya (`xaus` → P2-07). Job makro menghasilkan artifact `run.kind = 'macro'` yang sama. Hasilnya artifact berkontrak §2.1 dengan `workflow: backfill`, `slot: backfill`, `data_date` = tanggal terakhir. Baris di luar `--from`/`--to` dihitung `rows_rejected`.
 - **Validasi backfill** (`validateBackfill`): V-01 dan V-03 tingkat run, V-02 → karantina `UNKNOWN_ITEM`. Rentang kosong = `failed`. V-04, V-05, V-06, dan V-11 tidak berlaku; tinjauan diff menggantikannya.
 - **`merge` tidak memperbarui `status.json`** untuk run `slot: backfill`, jadi kesegaran dan `consecutive_failures` sumber harian tidak terganggu. RUN tetap dicatat.
 - **`dry_run`:** merge berjalan sungguhan di checkout runner yang sekali pakai, bukan `--dry-run`. Hasilnya `git diff` nyata: diffstat di step summary, dan `data.diff` (tanpa `data/raw`) + `summary.json` di artifact `backfill-diff` (7 hari). Tidak ada commit.
