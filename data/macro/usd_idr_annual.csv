@@ -1,0 +1,4 @@
+date,series,frequency,value,unit,source,scraped_at,run_id,origin
+1996-01-01,usd_idr_annual,A,2342.3,IDR/USD,wdi,2026-11-04T01:16:53Z,41752919606-1,backfill
+1997-01-01,usd_idr_annual,A,2909.38,IDR/USD,wdi,2026-11-04T01:16:53Z,41752919606-1,backfill
+1998-01-01,usd_idr_annual,A,10013.62,IDR/USD,wdi,2026-11-04T01:16:53Z,41752919606-1,backfill
