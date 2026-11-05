@@ -303,3 +303,13 @@ Log keputusan produk dan teknis (format ringkas ala ADR). Keputusan baru ditamba
 - **World Bank** memakai ulang job backfill P2-06 (fetch + parse), tetapi hanya 3 bulan terakhir yang di-upsert (bulan terbaru + revisi dua bulan sebelumnya) agar rilis bulanan tidak merevisi ratusan baris dan memicu V-11. `plan` memilihnya bila tanggal sasaran ≥ 5 dan baris `M` bulan lalu belum ada; `--sources worldbank` eksplisit melewati aturan.
 - **`targetDate`** (D-27) kini memahami cron `M H * * D` dengan hari-minggu (`1-5`): kemunculan terakhir ≤ waktu run yang jatuh di hari itu.
 **Konsekuensi:** Telegram dari `notify` masih berjudul `scrape-retail` (perbaikan kosmetik tertunda). Status `stale` tidak dipakai untuk makro; keterlambatan data ditangkap `freshness.yml`.
+
+### D-37 — Cek silang makro: titik akhir, Rp/gram 1996 turunan, dan proksi bulanan
+
+**Konteks:** P2-07 dan P2-12 (G2). Grafik referensi (×80 / ×10,3 / ×7,7 per 23 Okt 2026) tidak cocok dengan rata-rata tahunan 2026 berjalan (×86,6 / ×11,6 / ×7,5), dan data Rp/gram hanya ada sejak 2010 (Antam).
+**Keputusan:**
+- **Referensi = ujung kanan grafik:** `check-macro` melaporkan dua pembanding terhadap rata-rata 1996 yang sama — rata-rata 2026 berjalan (resolusi frekuensi §6.3) dan titik harian terakhir ≤ 23 Okt (emas D × kurs as-of). Hanya yang kedua yang dicocokkan dengan ×80 / ×10,3 / ×7,7; selisih rata-rata berjalan dijelaskan, bukan dianggap galat.
+- **Rp/gram 1996 diturunkan per bulan** (`xau_usd_oz` bulanan × kurs bulanan, lalu rata-rata), bukan dari hasil kali dua rata-rata tahunan, supaya identitas Rp/gram ≈ US$/oz × kurs benar-benar diuji (sisa 0,24%) dan bukan benar secara konstruksi.
+- **Premi Antam sebelum histori harian xaus (2021-11)** memakai proksi: emas `M` bulan itu × kurs as-of hari sebelumnya, ditandai `basis M` di laporan; setelah itu `derive.premiumAt` (penutupan < tanggal harga).
+- **Backfill xaus** memakai ulang `parseHistory`/`closingRows` milik scraper harian dan tidak mengambil spot; jendela 10 hari tidak berlaku, seluruh penutupan sampai kemarin ditulis. Kunci baris yang sama membuat tumpang tindih dengan scrape harian menjadi unchanged/update, tidak ganda.
+**Konsekuensi:** `check-macro` perlu dijalankan ulang setelah backfill xaus ter-commit agar [2b] dan premi harian memakai data repo. Skrip tinggal di `apps/scraper/scripts/` (tsconfig dan dependensi sudah ada), bukan `scripts/` di akar yang belum punya paket.

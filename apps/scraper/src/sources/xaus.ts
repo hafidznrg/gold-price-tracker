@@ -21,7 +21,7 @@ export interface XausRaw {
   spot: string;
 }
 
-interface History {
+export interface History {
   data_state?: { status?: string | null };
   points?: unknown;
 }
@@ -38,26 +38,26 @@ function json<T>(label: string, text: string): T {
   }
 }
 
-export function parse(raw: RawPayload): ParseResult<MacroRow> {
-  const body = JSON.parse(raw.body) as XausRaw;
-  const history = json<History>('histori xaus', body.history);
-  const spot = json<Spot>('spot xaus', body.spot);
-
-  // V-10: sebelum apa pun dibaca, respons basi menggagalkan run.
-  const stale = checkXausFresh({
-    historyStatus: history.data_state?.status ?? null,
-    spotStale: spot.stale ?? null,
-  });
+/** Baca respons `/history` dan terapkan V-10: respons basi menggagalkan seluruh run. */
+export function parseHistory(text: string): History {
+  const history = json<History>('histori xaus', text);
+  const stale = checkXausFresh({ historyStatus: history.data_state?.status ?? null });
   if (stale) throw new ScrapeError(stale.error_code, stale.error_message);
+  return history;
+}
 
+/**
+ * Penutupan harian `xau_usd_oz` (D) dengan `from ≤ d < before`; `before` = hari berjalan, yang
+ * belum final. Titik yang bentuknya salah menggagalkan seluruh respons. Terurut naik.
+ */
+export function closingRows(history: History, from: string, before: string): ParsedRow<MacroRow>[] {
   if (!Array.isArray(history.points)) throw new ScrapeError('PARSE_ERROR', 'histori tanpa points');
-  const from = addDaysIso(body.today, -WINDOW_DAYS);
   const rows: ParsedRow<MacroRow>[] = [];
   for (const p of history.points as { d?: unknown; c?: unknown }[]) {
     if (typeof p.d !== 'string' || !isIsoDate(p.d) || typeof p.c !== 'number' || !(p.c > 0)) {
       throw new ScrapeError('PARSE_ERROR', `titik histori tidak valid: ${JSON.stringify(p)}`);
     }
-    if (p.d < from || p.d >= body.today) continue; // hari berjalan belum final
+    if (p.d < from || p.d >= before) continue;
     rows.push({
       date: p.d,
       series: 'xau_usd_oz',
@@ -67,6 +67,19 @@ export function parse(raw: RawPayload): ParseResult<MacroRow> {
       source: 'xaus',
     });
   }
+  return rows.sort((a, b) => (a.date < b.date ? -1 : 1));
+}
+
+export function parse(raw: RawPayload): ParseResult<MacroRow> {
+  const body = JSON.parse(raw.body) as XausRaw;
+  const history = parseHistory(body.history);
+  const spot = json<Spot>('spot xaus', body.spot);
+
+  const stale = checkXausFresh({ spotStale: spot.stale ?? null });
+  if (stale) throw new ScrapeError(stale.error_code, stale.error_message);
+
+  const from = addDaysIso(body.today, -WINDOW_DAYS);
+  const rows = closingRows(history, from, body.today);
   if (rows.length === 0) {
     throw new ScrapeError('PARSE_ERROR', `tidak ada penutupan ${from} s/d kemarin (${body.today})`);
   }
@@ -74,7 +87,6 @@ export function parse(raw: RawPayload): ParseResult<MacroRow> {
     throw new ScrapeError('PARSE_ERROR', `spot_usd_oz tidak valid: ${String(spot.spot_usd_oz)}`);
   }
 
-  rows.sort((a, b) => (a.date < b.date ? -1 : 1));
   return {
     rows,
     dataDate: rows.at(-1)!.date,

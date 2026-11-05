@@ -184,16 +184,12 @@ describe('job backfill', () => {
     const error = vi.spyOn(console, 'error').mockImplementation(() => {});
     afterEach(() => error.mockClear());
 
-    it('job belum diimplementasikan → kode 2 dengan nama tugas', async () => {
-      const out = path.join(root, 'out', 'backfill');
-      expect(await main(['backfill', '--job', 'xaus', '--root', root, '--out', out])).toBe(
-        EXIT.USAGE,
-      );
-      expect(error.mock.calls.join('\n')).toContain('belum diimplementasikan (P2-07)');
+    it('setiap job di BACKFILL_JOB_IDS sudah terdaftar (tidak ada lagi jalur "belum diimplementasikan")', () => {
+      for (const id of BACKFILL_JOB_IDS) expect(getBackfillJob(id)?.id).toBe(id);
     });
 
     it('job makro tidak lagi ditolak: terdaftar dengan scraper pemilik seri (pipeline di macro-pipeline.test.ts)', () => {
-      for (const id of ['worldbank', 'ecb', 'jisdor', 'annual-fx'] as const) {
+      for (const id of ['worldbank', 'xaus', 'ecb', 'jisdor', 'annual-fx'] as const) {
         const job = getBackfillJob(id);
         expect(job?.kind).toBe('macro');
         expect(ScraperId.safeParse(job?.kind === 'macro' ? job.scraper : null).success).toBe(true);

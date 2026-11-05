@@ -10,7 +10,8 @@
     "lint": "eslint . && prettier --check .",
     "format": "prettier --write .",
     "typecheck": "pnpm -r typecheck",
-    "test": "pnpm -r test"
+    "test": "pnpm -r test",
+    "check:macro": "pnpm --filter scraper check:macro"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.5",

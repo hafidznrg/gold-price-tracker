@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "start": "tsx src/cli.ts",
+    "check:macro": "tsx scripts/check-macro.ts",
     "typecheck": "tsc -p tsconfig.json",
     "test": "vitest run"
   },
