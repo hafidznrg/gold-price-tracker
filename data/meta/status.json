@@ -1,11 +1,11 @@
 {
   "logammulia": {
-    "last_run_id": "41819201063-1",
+    "last_run_id": "42016867783-1",
     "last_status": "success",
-    "last_success_at": "2026-11-04T11:12:21Z",
-    "last_data_date": "2026-11-04",
+    "last_success_at": "2026-11-05T11:11:59Z",
+    "last_data_date": "2026-11-05",
     "consecutive_failures": 0,
-    "updated_at": "2026-11-04T11:12:39Z"
+    "updated_at": "2026-11-05T11:12:17Z"
   },
   "pegadaian": {
     "last_run_id": "41898833799-1",
@@ -16,11 +16,11 @@
     "updated_at": "2026-11-04T19:39:09Z"
   },
   "ubslifestyle": {
-    "last_run_id": "41819201063-1",
+    "last_run_id": "42016867783-1",
     "last_status": "success",
-    "last_success_at": "2026-11-04T11:12:01Z",
-    "last_data_date": "2026-11-04",
+    "last_success_at": "2026-11-05T11:11:45Z",
+    "last_data_date": "2026-11-05",
     "consecutive_failures": 0,
-    "updated_at": "2026-11-04T11:12:39Z"
+    "updated_at": "2026-11-05T11:12:17Z"
   }
 }
