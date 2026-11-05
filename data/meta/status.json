@@ -1,4 +1,12 @@
 {
+  "jisdor": {
+    "last_run_id": "42076517205-1",
+    "last_status": "success",
+    "last_success_at": "2026-11-05T17:38:36Z",
+    "last_data_date": "2026-11-05",
+    "consecutive_failures": 0,
+    "updated_at": "2026-11-05T17:39:03Z"
+  },
   "logammulia": {
     "last_run_id": "42016867783-1",
     "last_status": "success",
@@ -22,5 +30,13 @@
     "last_data_date": "2026-11-05",
     "consecutive_failures": 0,
     "updated_at": "2026-11-05T11:12:17Z"
+  },
+  "xaus": {
+    "last_run_id": "42076517205-1",
+    "last_status": "success",
+    "last_success_at": "2026-11-05T17:38:43Z",
+    "last_data_date": "2026-11-04",
+    "consecutive_failures": 0,
+    "updated_at": "2026-11-05T17:39:03Z"
   }
 }
