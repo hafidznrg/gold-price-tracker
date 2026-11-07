@@ -10,14 +10,18 @@ import {
   type SpotSnapshot,
 } from '@gold/schema';
 import {
+  ANNUAL_PATH,
+  GOLD_IDR_GRAM_PATH,
   LATEST_PATH,
   META_PATH,
+  PREMIUM_ANTAM_PATH,
   macroCsvPath,
   macroJsonPath,
   seriesCsvPath,
   seriesJsonPath,
 } from '../data/paths';
 import type { LatestFile, MetaFile } from '../data/types';
+import { buildAnnualFile, buildGoldIdrGramFile, buildPremiumAntamFile } from './derived';
 import { buildLatest } from './latest';
 import { buildMacroFiles } from './macro';
 import { buildMeta } from './meta';
@@ -86,6 +90,18 @@ export function buildOutputs(input: BuildInput): BuildResult {
     files.push({ path: macroJsonPath(m.series), content: toJson(m) });
     const rows = input.macro.filter((r) => r.series === m.series);
     files.push({ path: macroCsvPath(m.series), content: writeMacroCsv(rows) });
+  }
+  // derived/*.json hanya bila ada data makro (tanpa itu tidak ada yang bisa dihitung).
+  if (input.macro.length > 0) {
+    const configs = input.sources.macro_series;
+    files.push(
+      { path: GOLD_IDR_GRAM_PATH, content: toJson(buildGoldIdrGramFile(input.macro, configs)) },
+      { path: ANNUAL_PATH, content: toJson(buildAnnualFile(input.macro, configs)) },
+      {
+        path: PREMIUM_ANTAM_PATH,
+        content: toJson(buildPremiumAntamFile(input.prices, input.macro, configs)),
+      },
+    );
   }
   files.sort((a, b) => (a.path < b.path ? -1 : a.path > b.path ? 1 : 0));
   return { files, latest, meta };

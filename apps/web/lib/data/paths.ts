@@ -27,3 +27,7 @@ export function macroCsvPath(series: Series): string {
 export function dataUrl(path: string): string {
   return `${DATA_BASE_URL}/${path}`;
 }
+
+export const GOLD_IDR_GRAM_PATH = 'derived/gold-idr-gram.json';
+export const ANNUAL_PATH = 'derived/annual.json';
+export const PREMIUM_ANTAM_PATH = 'derived/premium-antam.json';

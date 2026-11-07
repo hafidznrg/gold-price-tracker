@@ -19,15 +19,26 @@ import {
   type SeriesPoint,
 } from '@/lib/data';
 import {
+  aggregateClose,
+  applyMode,
   chartPoints,
   DEFAULT_PICKS,
+  decodeAgg,
+  decodeFlag,
+  decodeMode,
   DEFAULT_RANGE,
   decodePicks,
   decodeRange,
   effectiveRange,
+  encodeAgg,
+  encodeFlag,
+  encodeMode,
   encodePick,
   encodePicks,
   encodeRange,
+  fillGaps,
+  fillNotes,
+  gramDivisor,
   MAX_SERIES,
   mergeGaps,
   optionColor,
@@ -35,8 +46,13 @@ import {
   resolvePick,
   samePicks,
   seriesPoints,
+  viewChartPoints,
+  viewGaps,
+  type Aggregation,
   type ExplorerOption,
   type SeriesPick,
+  type ValueMode,
+  type ViewOptions,
 } from '@/lib/explorer';
 import {
   changeDirection,
@@ -78,10 +94,39 @@ function seriesLabel(o: ExplorerOption, price: PriceField): string {
     .join(' · ');
 }
 
-function seriesMeta(o: ExplorerOption, price: PriceField): string {
+const MODE_OPTIONS: { value: ValueMode; label: string }[] = [
+  { value: 'nominal', label: 'Nominal' },
+  { value: 'gram', label: 'Per gram' },
+  { value: 'index', label: 'Indeks' },
+  { value: 'pct', label: '% ubah' },
+];
+const AGG_OPTIONS: { value: Aggregation; label: string }[] = [
+  { value: 'd', label: 'Harian' },
+  { value: 'w', label: 'Mingguan' },
+  { value: 'm', label: 'Bulanan' },
+];
+const AGG_NOUN: Record<Aggregation, string> = { d: 'harian', w: 'mingguan', m: 'bulanan' };
+const VALUE_FORMAT = {
+  nominal: 'rupiah',
+  gram: 'rupiah',
+  index: 'number',
+  pct: 'percent',
+} as const;
+
+function chartTitle(mode: ValueMode, agg: Aggregation): string {
+  const head = {
+    nominal: 'Harga emas',
+    gram: 'Harga emas per gram',
+    index: 'Indeks harga (=100 di awal rentang)',
+    pct: 'Perubahan harga sejak awal rentang',
+  }[mode];
+  return `${head} · ${AGG_NOUN[agg]}`;
+}
+
+function seriesMeta(o: ExplorerOption, price: PriceField, perGram = false): string {
   const first = o.first[price];
   return [
-    o.kind === 'fisik' ? 'per keping' : 'per gram',
+    o.kind === 'fisik' && !perGram ? 'per keping' : 'per gram',
     o.source === 'logammulia' && price === 'sell' ? 'harga dasar' : null,
     first ? `sejak ${formatDate(first)}` : null,
   ]
@@ -120,10 +165,39 @@ function uniq<T>(xs: T[]): T[] {
 
 export function ExplorerBoard({ options, asOf, stamps, calendar }: ExplorerBoardProps) {
   const [query, setQuery] = useQueryStates(
-    { s: parseAsString, r: parseAsString },
+    {
+      s: parseAsString,
+      r: parseAsString,
+      m: parseAsString,
+      agg: parseAsString,
+      band: parseAsString,
+      ffill: parseAsString,
+    },
     { history: 'replace' },
   );
   const range = useMemo(() => decodeRange(query.r), [query.r]);
+  const view: ViewOptions = useMemo(
+    () => ({
+      mode: decodeMode(query.m),
+      agg: decodeAgg(query.agg),
+      band: decodeFlag(query.band),
+      ffill: decodeFlag(query.ffill),
+    }),
+    [query.m, query.agg, query.band, query.ffill],
+  );
+  const bandOn = view.band && view.agg !== 'd';
+  const setView = useCallback(
+    (patch: Partial<ViewOptions>) => {
+      const n = { ...view, ...patch };
+      void setQuery({
+        m: encodeMode(n.mode),
+        agg: encodeAgg(n.agg),
+        band: encodeFlag(n.band),
+        ffill: encodeFlag(n.ffill),
+      });
+    },
+    [view, setQuery],
+  );
   const active = useMemo(
     () =>
       decodePicks(query.s).flatMap((pick) => {
@@ -176,19 +250,39 @@ export function ExplorerBoard({ options, asOf, stamps, calendar }: ExplorerBoard
   );
   const eff = effectiveRange(range, lastDate, minDate === '9999' ? null : minDate);
 
+  // Titik tampilan per series: agregasi -> isi celah (opsional) -> mode nilai (P4-01..03).
+  const shown = useMemo(
+    () =>
+      (built ?? []).map((b) => {
+        let vp = aggregateClose(b.points, view.agg);
+        if (view.ffill) vp = fillGaps(vp, view.agg, expectedFor(calendar, [b.opt.source]));
+        vp = applyMode(vp, view.mode, gramDivisor(b.opt), eff.from, eff.to);
+        // Isi celah aktif: tidak ada celah untuk digambar (nilai disalin dan diberi penanda).
+        const gaps = view.ffill ? [] : viewGaps(b.chart.gaps, view.agg);
+        return { b, vp, gaps };
+      }),
+    [built, view, calendar, eff.from, eff.to],
+  );
   const series: TimeSeries[] = useMemo(
     () =>
-      (built ?? []).map((b) => ({
+      shown.map(({ b, vp, gaps: own }) => ({
         id: b.id,
         label: seriesLabel(b.opt, b.pick.price),
         color: optionColor(b.opt),
         dashed: b.pick.price === 'buyback',
         width: b.pick.price === 'buyback' ? 1.8 : 2.2,
-        points: b.chart.points,
+        points: viewChartPoints(vp, own, view.ffill),
+        envelope: bandOn
+          ? {
+              min: vp.flatMap((p): [string, number][] => (p.min === null ? [] : [[p.date, p.min]])),
+              max: vp.flatMap((p): [string, number][] => (p.max === null ? [] : [[p.date, p.max]])),
+            }
+          : undefined,
+        notes: view.ffill ? fillNotes(vp) : undefined,
       })),
-    [built],
+    [shown, view.ffill, bandOn],
   );
-  const gaps = useMemo(() => labelGaps(mergeGaps((built ?? []).map((b) => b.chart.gaps))), [built]);
+  const gaps = useMemo(() => labelGaps(mergeGaps(shown.map((x) => x.gaps))), [shown]);
   const chartRange = useMemo(
     () => (eff.from ? { from: eff.from, to: eff.to } : undefined),
     [eff.from, eff.to],
@@ -201,9 +295,15 @@ export function ExplorerBoard({ options, asOf, stamps, calendar }: ExplorerBoard
     [eff.from, eff.to, setRange],
   );
 
+  // Ringkasan memakai harga harian asli (tanpa agregasi/isi celah); mode per gram ikut dibagi.
   const stats = useMemo(
-    () => (built ?? []).map((b) => ({ b, s: rangeStats(b.points, eff.from, eff.to) })),
-    [built, eff.from, eff.to],
+    () =>
+      (built ?? []).map((b) => {
+        const d = view.mode === 'gram' ? gramDivisor(b.opt) : 1;
+        const pts = d === 1 ? b.points : b.points.map((p) => ({ ...p, value: p.value / d }));
+        return { b, s: rangeStats(pts, eff.from, eff.to) };
+      }),
+    [built, eff.from, eff.to, view.mode],
   );
 
   // --- Pemilih series -----------------------------------------------------
@@ -234,7 +334,17 @@ export function ExplorerBoard({ options, asOf, stamps, calendar }: ExplorerBoard
   const [base, setBase] = useState('');
   const [copied, setCopied] = useState<'ok' | 'fail' | null>(null);
   useEffect(() => setBase(window.location.origin + window.location.pathname), []);
-  const shareUrl = `${base}?s=${encodePicks(active.map((a) => a.pick))}&r=${encodeRange(range)}`;
+  const shareUrl =
+    `${base}?s=${encodePicks(active.map((a) => a.pick))}&r=${encodeRange(range)}` +
+    [
+      ['m', encodeMode(view.mode)],
+      ['agg', encodeAgg(view.agg)],
+      ['band', encodeFlag(view.band)],
+      ['ffill', encodeFlag(view.ffill)],
+    ]
+      .filter(([, v]) => v !== null)
+      .map(([k, v]) => `&${k}=${v}`)
+      .join('');
   async function copy() {
     try {
       await navigator.clipboard.writeText(shareUrl);
@@ -276,7 +386,9 @@ export function ExplorerBoard({ options, asOf, stamps, calendar }: ExplorerBoard
                 <Swatch color={optionColor(a.opt)} dashed={a.pick.price === 'buyback'} />
                 <div className="min-w-0 flex-1">
                   <div className="text-[13.5px] font-semibold">{label}</div>
-                  <div className="mt-0.5 text-xs text-muted">{seriesMeta(a.opt, a.pick.price)}</div>
+                  <div className="mt-0.5 text-xs text-muted">
+                    {seriesMeta(a.opt, a.pick.price, view.mode === 'gram')}
+                  </div>
                 </div>
                 <button
                   type="button"
@@ -391,6 +503,66 @@ export function ExplorerBoard({ options, asOf, stamps, calendar }: ExplorerBoard
                 : '+ Tambah ke grafik'}
           </button>
         </div>
+
+        <div className={cn(CARD, 'flex flex-col gap-4')}>
+          <h2 className="m-0 text-[15px] font-semibold">Tampilan</h2>
+          <div className="flex flex-col gap-2">
+            <span className="text-xs text-muted">Mode nilai</span>
+            <Segmented
+              label="Mode nilai"
+              className="grid grid-cols-2"
+              options={MODE_OPTIONS}
+              value={view.mode}
+              onChange={(mode) => setView({ mode })}
+            />
+          </div>
+          <div className="flex flex-col gap-2">
+            <span className="text-xs text-muted">Agregasi (penutupan periode)</span>
+            <Segmented
+              label="Agregasi"
+              className="grid grid-cols-3"
+              options={AGG_OPTIONS}
+              value={view.agg}
+              onChange={(agg) => setView({ agg })}
+            />
+          </div>
+          <label
+            className={cn(
+              'flex min-h-11 items-start gap-3 text-[13.5px] leading-snug',
+              view.agg === 'd' ? 'cursor-not-allowed opacity-60' : 'cursor-pointer',
+            )}
+          >
+            <input
+              type="checkbox"
+              checked={bandOn}
+              disabled={view.agg === 'd'}
+              onChange={(e) => setView({ band: e.target.checked })}
+              className="mt-0.5 size-[18px] accent-gold"
+            />
+            <span>
+              Pita min–maks
+              <br />
+              <span className="text-xs text-muted">
+                Terendah–tertinggi dalam periode. Hanya untuk agregasi mingguan/bulanan.
+              </span>
+            </span>
+          </label>
+          <label className="flex min-h-11 cursor-pointer items-start gap-3 text-[13.5px] leading-snug">
+            <input
+              type="checkbox"
+              checked={view.ffill}
+              onChange={(e) => setView({ ffill: e.target.checked })}
+              className="mt-0.5 size-[18px] accent-gold"
+            />
+            <span>
+              Isi celah (forward-fill)
+              <br />
+              <span className="text-xs text-muted">
+                Hanya tampilan, diberi penanda. Default: celah tetap terlihat.
+              </span>
+            </span>
+          </label>
+        </div>
       </aside>
 
       <div className="flex min-w-0 flex-[999_1_600px] flex-col gap-5">
@@ -404,7 +576,7 @@ export function ExplorerBoard({ options, asOf, stamps, calendar }: ExplorerBoard
         <div className={PANEL}>
           <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
             <div className="min-w-0">
-              <h2 className="m-0 text-[19px] font-semibold">Harga emas · harian</h2>
+              <h2 className="m-0 text-[19px] font-semibold">{chartTitle(view.mode, view.agg)}</h2>
               <p className="num m-0 mt-1.5 text-[13px] text-muted">
                 {eff.from ? `${formatDate(eff.from)} – ` : 'sampai '}
                 {formatDate(eff.to)} · {formatNumber(active.length)} series
@@ -426,6 +598,7 @@ export function ExplorerBoard({ options, asOf, stamps, calendar }: ExplorerBoard
               gaps={gaps}
               showZoom
               legend={false}
+              valueFormat={VALUE_FORMAT[view.mode]}
               height={420}
               range={chartRange}
               onRangeChange={onChartRange}
@@ -437,6 +610,17 @@ export function ExplorerBoard({ options, asOf, stamps, calendar }: ExplorerBoard
             libur ketika sumber memang tidak terbit tidak dihitung sebagai celah. Emas fisik: harga
             per keping; Tabungan Emas: harga per gram.
             {hasLate ? ' Series yang lebih pendek mulai dari tanggal datanya yang pertama.' : ''}
+            {view.mode === 'gram' ? ' Mode per gram: harga keping dibagi beratnya.' : ''}
+            {view.mode === 'index' || view.mode === 'pct'
+              ? ' Indeks dan % ubah dihitung per series dari titik pertamanya yang terlihat di rentang; mengubah rentang menghitung ulang dasar.'
+              : ''}
+            {view.agg !== 'd'
+              ? ` Titik ${AGG_NOUN[view.agg]} = harga penutupan periode (hari data terakhir).`
+              : ''}
+            {bandOn ? ' Pita = harga terendah sampai tertinggi dalam periode.' : ''}
+            {view.ffill
+              ? ' Isi celah aktif: nilai yang disalin dari hari sebelumnya ditandai "isi dari ..." di tooltip dan bukan data baru dari sumber.'
+              : ''}
           </p>
 
           {built && built.length > 0 ? (

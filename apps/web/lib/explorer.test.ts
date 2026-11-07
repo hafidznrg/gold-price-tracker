@@ -2,6 +2,20 @@ import { describe, expect, it } from 'vitest';
 import type { MetaFile, SeriesRowTuple } from './data';
 import {
   DEFAULT_PICKS,
+  aggregateClose,
+  applyMode,
+  decodeAgg,
+  decodeFlag,
+  decodeMode,
+  encodeAgg,
+  encodeMode,
+  fillGaps,
+  fillNotes,
+  gramDivisor,
+  periodOf,
+  periodSpan,
+  viewChartPoints,
+  viewGaps,
   MAX_SERIES,
   chartPoints,
   decodePick,
@@ -192,5 +206,187 @@ describe('rangeStats', () => {
       to: '2026-10-31',
     });
     expect(effectiveRange('7H', '2026-10-31', '2010-01-04').from).toBe('2026-10-25');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Tampilan (P4-01..03)
+
+const pt = (date: string, value: number) => ({ date, value });
+const view = (date: string, value: number) => ({
+  date,
+  value,
+  min: null,
+  max: null,
+  filledFrom: null,
+});
+
+describe('parameter tampilan di URL', () => {
+  it('bolak-balik; nilai asing → bawaan', () => {
+    for (const m of ['nominal', 'gram', 'index', 'pct'] as const) {
+      expect(decodeMode(encodeMode(m))).toBe(m);
+    }
+    for (const a of ['d', 'w', 'm'] as const) expect(decodeAgg(encodeAgg(a))).toBe(a);
+    expect(encodeMode('nominal')).toBeNull();
+    expect(encodeAgg('d')).toBeNull();
+    expect(decodeMode('foo')).toBe('nominal');
+    expect(decodeAgg('x')).toBe('d');
+    expect(decodeFlag('1')).toBe(true);
+    expect(decodeFlag('true')).toBe(false);
+    expect(decodeFlag(null)).toBe(false);
+  });
+});
+
+describe('periode', () => {
+  it('mingguan = Senin; bulanan = YYYY-MM', () => {
+    expect(periodOf('2026-10-28', 'w')).toBe('2026-10-26');
+    expect(periodOf('2026-11-01', 'w')).toBe('2026-10-26');
+    expect(periodOf('2026-10-26', 'w')).toBe('2026-10-26');
+    expect(periodOf('2026-10-28', 'm')).toBe('2026-10');
+    expect(periodSpan('2026-10-26', 'w')).toEqual(['2026-10-26', '2026-11-01']);
+    expect(periodSpan('2026-12', 'm')).toEqual(['2026-12-01', '2026-12-31']);
+    expect(periodSpan('2024-02', 'm')).toEqual(['2024-02-01', '2024-02-29']);
+  });
+});
+
+describe('aggregateClose', () => {
+  const pts = [
+    pt('2026-10-26', 10),
+    pt('2026-10-28', 14),
+    pt('2026-10-30', 12),
+    pt('2026-11-03', 20),
+    pt('2026-11-04', 18),
+  ];
+  it('harian apa adanya', () => {
+    expect(aggregateClose(pts, 'd')).toHaveLength(5);
+  });
+  it('mingguan: penutupan = titik terakhir pekan, dengan min–maks', () => {
+    expect(aggregateClose(pts, 'w')).toEqual([
+      { date: '2026-10-30', value: 12, min: 10, max: 14, filledFrom: null },
+      { date: '2026-11-04', value: 18, min: 18, max: 20, filledFrom: null },
+    ]);
+  });
+  it('bulanan', () => {
+    expect(aggregateClose(pts, 'm').map((p) => [p.date, p.value, p.min, p.max])).toEqual([
+      ['2026-10-30', 12, 10, 14],
+      ['2026-11-04', 18, 18, 20],
+    ]);
+  });
+  it('kosong → kosong', () => {
+    expect(aggregateClose([], 'w')).toEqual([]);
+  });
+});
+
+describe('applyMode', () => {
+  const pts = [view('2026-10-01', 100), view('2026-10-05', 110), view('2026-10-10', 90)];
+  it('nominal tidak mengubah; gram membagi', () => {
+    expect(applyMode(pts, 'nominal', 5, null, '2026-10-31').map((p) => p.value)).toEqual([
+      100, 110, 90,
+    ]);
+    expect(applyMode(pts, 'gram', 5, null, '2026-10-31').map((p) => p.value)).toEqual([20, 22, 18]);
+  });
+  it('indeks = 100 di titik pertama terlihat; % ubah = 0', () => {
+    const idx = applyMode(pts, 'index', 1, null, '2026-10-31').map((p) => p.value);
+    expect(idx[0]).toBe(100);
+    expect(idx[1]).toBeCloseTo(110);
+    expect(idx[2]).toBeCloseTo(90);
+    const pct = applyMode(pts, 'pct', 1, null, '2026-10-31').map((p) => p.value);
+    expect(pct[0]).toBeCloseTo(0);
+    expect(pct[1]).toBeCloseTo(10);
+    expect(pct[2]).toBeCloseTo(-10);
+  });
+  it('rentang memotong data: dasar = titik pertama di dalam rentang, titik sebelumnya relatif', () => {
+    const out = applyMode(pts, 'index', 1, '2026-10-02', '2026-10-31');
+    expect(out[0]!.value).toBeCloseTo(100 / 1.1);
+    expect(out[1]!.value).toBe(100);
+    expect(out[2]!.value).toBeCloseTo((90 / 110) * 100);
+  });
+  it('series mulai setelah awal rentang: dasar = titik pertamanya', () => {
+    const out = applyMode(pts, 'index', 1, '2026-09-01', '2026-10-31');
+    expect(out[0]!.value).toBe(100);
+  });
+  it('tanpa titik di rentang atau dasar ≤ 0 → kosong', () => {
+    expect(applyMode(pts, 'index', 1, '2026-11-01', '2026-11-30')).toEqual([]);
+    expect(applyMode([view('2026-10-01', 0)], 'pct', 1, null, '2026-10-31')).toEqual([]);
+  });
+  it('pita min–maks ikut diskalakan', () => {
+    const agg = [{ date: '2026-10-05', value: 12, min: 10, max: 14, filledFrom: null }];
+    const [p] = applyMode(agg, 'index', 1, null, '2026-10-31');
+    expect([p!.value, p!.min, p!.max]).toEqual([100, (10 / 12) * 100, (14 / 12) * 100]);
+  });
+  it('gramDivisor: Tabungan Emas sudah per gram', () => {
+    expect(gramDivisor({ product: 'gold_savings', w: 0.01 })).toBe(1);
+    expect(gramDivisor({ product: 'gold_bar', w: 5 })).toBe(5);
+  });
+});
+
+describe('fillGaps (forward-fill)', () => {
+  const weekdays = (d: string) => ![0, 6].includes(new Date(`${d}T00:00:00Z`).getUTCDay());
+  const pts = [view('2026-10-26', 10), view('2026-10-29', 12)];
+
+  it('harian: mengisi hari terbit yang kosong saja, berpenanda asal', () => {
+    const out = fillGaps(pts, 'd', weekdays);
+    expect(out.map((p) => [p.date, p.value, p.filledFrom])).toEqual([
+      ['2026-10-26', 10, null],
+      ['2026-10-27', 10, '2026-10-26'],
+      ['2026-10-28', 10, '2026-10-26'],
+      ['2026-10-29', 12, null],
+    ]);
+  });
+  it('akhir pekan yang tidak terbit tidak diisi', () => {
+    const out = fillGaps([view('2026-10-30', 5), view('2026-11-02', 6)], 'd', weekdays);
+    expect(out.map((p) => p.date)).toEqual(['2026-10-30', '2026-11-02']);
+  });
+  it('mingguan/bulanan: hanya periode yang kosong sama sekali', () => {
+    const w = fillGaps([view('2026-10-02', 1), view('2026-10-23', 4)], 'w');
+    expect(w.map((p) => [p.date, p.value, p.filledFrom])).toEqual([
+      ['2026-10-02', 1, null],
+      ['2026-10-11', 1, '2026-10-02'],
+      ['2026-10-18', 1, '2026-10-02'],
+      ['2026-10-23', 4, null],
+    ]);
+    const m = fillGaps([view('2026-01-15', 1), view('2026-04-02', 4)], 'm');
+    expect(m.map((p) => [p.date, p.filledFrom])).toEqual([
+      ['2026-01-15', null],
+      ['2026-02-28', '2026-01-15'],
+      ['2026-03-31', '2026-01-15'],
+      ['2026-04-02', null],
+    ]);
+  });
+  it('satu titik atau kosong tidak diubah', () => {
+    expect(fillGaps([view('2026-10-26', 10)], 'd')).toHaveLength(1);
+    expect(fillGaps([], 'm')).toEqual([]);
+  });
+  it('catatan tooltip hanya untuk titik isian', () => {
+    expect(fillNotes(fillGaps(pts, 'd', weekdays))).toEqual({
+      '2026-10-27': 'isi dari 2026-10-26',
+      '2026-10-28': 'isi dari 2026-10-26',
+    });
+  });
+});
+
+describe('celah dan titik grafik tampilan', () => {
+  it('viewGaps: harian apa adanya; agregasi hanya periode utuh', () => {
+    const gaps = [{ from: '2026-10-05', to: '2026-10-28' }];
+    expect(viewGaps(gaps, 'd')).toEqual(gaps);
+    expect(viewGaps(gaps, 'w')).toEqual([{ from: '2026-10-05', to: '2026-10-25' }]);
+    expect(viewGaps(gaps, 'm')).toEqual([]);
+    expect(viewGaps([{ from: '2026-10-01', to: '2026-11-30' }], 'm')).toEqual([
+      { from: '2026-10-01', to: '2026-11-30' },
+    ]);
+    expect(viewGaps([{ from: '2026-10-07', to: '2026-10-09' }], 'w')).toEqual([]);
+  });
+  it('null di awal celah hanya bila isi celah mati', () => {
+    const pts = [view('2026-10-01', 1), view('2026-10-09', 2)];
+    const gaps = [{ from: '2026-10-02', to: '2026-10-08' }];
+    expect(viewChartPoints(pts, gaps, false)).toEqual([
+      ['2026-10-01', 1],
+      ['2026-10-02', null],
+      ['2026-10-09', 2],
+    ]);
+    expect(viewChartPoints(pts, gaps, true)).toEqual([
+      ['2026-10-01', 1],
+      ['2026-10-09', 2],
+    ]);
   });
 });

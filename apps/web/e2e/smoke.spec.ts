@@ -68,6 +68,43 @@ test.describe('Explorer', () => {
     expect(errors).toEqual([]);
   });
 
+  test('mode, agregasi, pita, dan isi celah dipulihkan saat reload', async ({ page }) => {
+    const errors = collectErrors(page);
+    await page.goto(`${START}&m=idx&agg=w&band=1&ffill=1`);
+    const check = async () => {
+      await expect(page.getByRole('radio', { name: 'Indeks', exact: true })).toBeChecked();
+      await expect(page.getByRole('radio', { name: 'Mingguan', exact: true })).toBeChecked();
+      await expect(page.getByRole('checkbox', { name: /Pita min–maks/ })).toBeChecked();
+      await expect(page.getByRole('checkbox', { name: /Isi celah/ })).toBeChecked();
+      await expect(page.getByRole('heading', { name: /Indeks harga .* mingguan/ })).toBeVisible();
+    };
+    await check();
+    await page.reload();
+    await check();
+    const q = new URL(page.url()).searchParams;
+    expect([q.get('m'), q.get('agg'), q.get('band'), q.get('ffill')]).toEqual([
+      'idx',
+      'w',
+      '1',
+      '1',
+    ]);
+    expect(errors).toEqual([]);
+  });
+
+  test('mengubah tampilan memperbarui URL; bawaan tidak ditulis', async ({ page }) => {
+    await page.goto(START);
+    await page.getByRole('radio', { name: '% ubah', exact: true }).click();
+    await page.getByRole('radio', { name: 'Bulanan', exact: true }).click();
+    await page.getByRole('checkbox', { name: /Isi celah/ }).check();
+    await expect(page).toHaveURL(/[?&]m=pct(&|$)/);
+    await expect(page).toHaveURL(/[?&]agg=m(&|$)/);
+    await expect(page).toHaveURL(/[?&]ffill=1(&|$)/);
+    await page.getByRole('radio', { name: 'Nominal', exact: true }).click();
+    await page.getByRole('radio', { name: 'Harian', exact: true }).click();
+    await page.getByRole('checkbox', { name: /Isi celah/ }).uncheck();
+    await expect(page).not.toHaveURL(/[?&](m|agg|ffill)=/);
+  });
+
   test('mengubah rentang memperbarui URL', async ({ page }) => {
     await page.goto(START);
     await page.getByRole('radio', { name: '1B', exact: true }).click();

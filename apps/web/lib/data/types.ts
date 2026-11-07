@@ -67,7 +67,12 @@ export interface SeriesFile {
 // macro/{series}.json
 
 export const MACRO_FIELDS = ['date', 'frequency', 'value', 'source'] as const;
-export type MacroRowTuple = [date: string, frequency: Frequency, value: number, source: MacroSource];
+export type MacroRowTuple = [
+  date: string,
+  frequency: Frequency,
+  value: number,
+  source: MacroSource,
+];
 
 /** `public/data/macro/{series}.json` — seri makro mentah semua frekuensi. */
 export interface MacroFile {
@@ -316,3 +321,63 @@ export interface MetaFile {
 
 /** Token warna Tailwind (`globals.css`). */
 export type ColorToken = 'antam' | 'ubs' | 'g24' | 'tab' | 'gold' | 'muted';
+
+// ---------------------------------------------------------------------------
+// derived/*.json (DATA-MODEL §6, dihitung saat build)
+
+export const GOLD_IDR_GRAM_FIELDS = ['date', 'idr_gram', 'xau_usd_oz', 'usd_idr', 'fx'] as const;
+
+/** `[date, Rp/gram, US$/oz, kurs, indeks ke fx_series]`. */
+export type GoldIdrGramTuple = [
+  date: string,
+  idrGram: number,
+  xauUsdOz: number,
+  usdIdr: number,
+  fx: number,
+];
+
+/** `public/data/derived/gold-idr-gram.json` — Rp/gram spot harian = US$/oz × kurs ÷ 31,1035. */
+export interface GoldIdrGramFile {
+  fields: typeof GOLD_IDR_GRAM_FIELDS;
+  /** Seri kurs yang dipakai; kolom `fx` menunjuk indeks daftar ini. */
+  fx_series: Series[];
+  rows: GoldIdrGramTuple[];
+}
+
+/** Nilai agregat tahunan dan resolusi frekuensi yang dipakai (DATA-MODEL §6.3). */
+export interface AnnualValue {
+  value: number;
+  series: Series;
+  /** `D` (≥ 80% hari kerja), `M`, atau `A`. */
+  frequency: Frequency;
+  /** Jumlah titik yang dirata-ratakan. */
+  points: number;
+  /** Cakupan hari kerja data `D` (0–1); null bila berasal dari `M`/`A`. */
+  coverage: number | null;
+}
+
+export interface AnnualRow {
+  year: number;
+  gold_usd: AnnualValue | null;
+  usd_idr: AnnualValue | null;
+  /** Rata-rata bulanan (emas bulanan × kurs bulanan ÷ 31,1035); null bila tak ada bulan berpasangan. */
+  idr_gram: { value: number; months: number } | null;
+}
+
+/** `public/data/derived/annual.json`. */
+export interface AnnualFile {
+  /** Agregat dipotong di tanggal data harian terakhir (tahun berjalan = sampai tanggal itu). */
+  until: string | null;
+  rows: AnnualRow[];
+}
+
+export const PREMIUM_ANTAM_FIELDS = ['date', 'pct', 'spot_date'] as const;
+
+/** `[date, premi %, tanggal spot yang dipakai (< date)]`. */
+export type PremiumAntamTuple = [date: string, pct: number, spotDate: string];
+
+/** `public/data/derived/premium-antam.json` — premi LM 1 g jual vs spot, *as-of join* (§6.2). */
+export interface PremiumAntamFile {
+  fields: typeof PREMIUM_ANTAM_FIELDS;
+  rows: PremiumAntamTuple[];
+}

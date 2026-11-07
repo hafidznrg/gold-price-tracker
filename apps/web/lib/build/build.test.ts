@@ -7,7 +7,13 @@ import {
   type PriceRow,
   type SpotSnapshot,
 } from '@gold/schema';
-import type { MacroFile, SeriesFile } from '../data/types';
+import type {
+  AnnualFile,
+  GoldIdrGramFile,
+  MacroFile,
+  PremiumAntamFile,
+  SeriesFile,
+} from '../data/types';
 import { buildSpark, computeChange, computeSpread } from './latest';
 import { buildOutputs, type BuildInput } from './outputs';
 import { groupByFile, toSeriesFile } from './series';
@@ -401,6 +407,66 @@ describe('makro ada', () => {
       spot_date: '2026-10-30',
       pct: Math.round((2526000 / gram - 1) * 100 * 1e4) / 1e4,
     });
+  });
+
+  it('derived/gold-idr-gram.json: Rp/gram harian + seri kurs per titik', () => {
+    const f = parseOut<GoldIdrGramFile>(files, 'derived/gold-idr-gram.json');
+    expect(f.fields).toEqual(['date', 'idr_gram', 'xau_usd_oz', 'usd_idr', 'fx']);
+    expect(f.fx_series).toEqual(['usd_idr_jisdor']);
+    expect(f.rows).toEqual([
+      ['2026-10-30', Math.round(((4100 * 18000) / 31.1034768) * 100) / 100, 4100, 18000, 0],
+    ]);
+  });
+
+  it('derived/premium-antam.json: as-of join ke penutupan sebelum tanggal harga', () => {
+    const f = parseOut<PremiumAntamFile>(files, 'derived/premium-antam.json');
+    const gram = (4100 * 18000) / 31.1034768;
+    // 2026-10-30 tidak punya spot sebelumnya dalam toleransi: tidak ada titik.
+    expect(f.rows).toEqual([
+      ['2026-10-31', Math.round((2526000 / gram - 1) * 100 * 1e4) / 1e4, '2026-10-30'],
+    ]);
+  });
+
+  it('derived/annual.json: resolusi frekuensi dan Rp/gram bulanan per tahun', () => {
+    const rows = [
+      ...Array.from({ length: 12 }, (_, i) =>
+        macro({
+          date: `1998-${String(i + 1).padStart(2, '0')}-01`,
+          series: 'xau_usd_oz',
+          frequency: 'M',
+          value: 290,
+          source: 'worldbank',
+        }),
+      ),
+      macro({
+        date: '1998-01-01',
+        series: 'usd_idr_annual',
+        frequency: 'A',
+        value: 10013.62,
+        source: 'wdi',
+      }),
+      macro({ date: '2026-10-30', series: 'xau_usd_oz', value: 4100 }),
+    ];
+    const f = parseOut<AnnualFile>(
+      buildOutputs(input({ macro: rows })).files,
+      'derived/annual.json',
+    );
+    expect(f.until).toBe('2026-10-30');
+    const y = f.rows.find((r) => r.year === 1998)!;
+    expect(y.gold_usd).toEqual({
+      value: 290,
+      series: 'xau_usd_oz',
+      frequency: 'M',
+      points: 12,
+      coverage: null,
+    });
+    expect(y.usd_idr).toMatchObject({ series: 'usd_idr_annual', frequency: 'A', value: 10013.62 });
+    expect(y.idr_gram!.months).toBe(12);
+    expect(y.idr_gram!.value).toBeCloseTo((290 * 10013.62) / 31.1034768, 2);
+  });
+
+  it('tanpa data makro tidak ada berkas derived', () => {
+    expect(buildOutputs(input()).files.some((f) => f.path.startsWith('derived/'))).toBe(false);
   });
 
   it('kartu unduhan makro; seri tahunan statis', () => {

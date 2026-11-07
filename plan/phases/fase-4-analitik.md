@@ -19,9 +19,12 @@
 
 ### Kontrol analitik (Explorer & Spread)
 
-- [ ] **P4-01** Mode nilai: nominal Rp, per gram, indeks (=100 di awal periode), % perubahan. — `FR-27` · M
-- [ ] **P4-02** Agregasi harian / mingguan / bulanan dengan nilai penutupan periode, opsional pita min–maks. — `FR-28` · M
-- [ ] **P4-03** Opsi *forward-fill* berlabel; default tetap menampilkan celah. — `FR-35` · S
+- [x] **P4-01** Mode nilai: nominal Rp, per gram, indeks (=100 di awal periode), % perubahan. — `FR-27` · M
+  - *7 Nov 2026:* parameter URL `m=gram|idx|pct` (tanpa = nominal); indeks dan % ubah berbasis titik pertama tiap series yang terlihat di rentang (`lib/explorer.ts`). Kartu ringkasan tetap nominal harian (per gram bila mode per gram).
+- [x] **P4-02** Agregasi harian / mingguan / bulanan dengan nilai penutupan periode, opsional pita min–maks. — `FR-28` · M
+  - *7 Nov 2026:* `agg=w|m` (tanpa = harian), nilai penutupan periode; pita min–maks `band=1` hanya untuk mingguan/bulanan. Celah ditampilkan bila satu minggu/bulan penuh kosong.
+- [x] **P4-03** Opsi *forward-fill* berlabel; default tetap menampilkan celah. — `FR-35` · S
+  - *7 Nov 2026:* `ffill=1`; titik terisi berlabel "isi dari <tanggal>" di tooltip dan catatan kaki, arsiran celah disembunyikan. Salinan klien `lib/forward-fill.ts` diuji setara dengan `derive.ts` (`@gold/schema` tidak masuk bundel klien).
 - [ ] **P4-04** Pasangan spread bebas: jual dari sumber A vs buyback dari sumber B (mis. beli UBS di Pegadaian, jual ke UBS Lifestyle). — `FR-29` · M
 
 ### Halaman baru
@@ -31,7 +34,8 @@
 
 ### Spot dunia dan premi
 
-- [ ] **P4-07** Perluas `build-data`: `macro/*.json`, `derived/gold-idr-gram.json`, `derived/annual.json`, `derived/premium-antam.json`, isi `spot.json` di `latest.json`; memakai `derive.ts` dari P2-11. — `FR-34` · S
+- [x] **P4-07** Perluas `build-data`: `macro/*.json`, `derived/gold-idr-gram.json`, `derived/annual.json`, `derived/premium-antam.json`, isi `spot.json` di `latest.json`; memakai `derive.ts` dari P2-11. — `FR-34` · S
+  - *7 Nov 2026:* `macro/*.json` dan spot di `latest.json` sudah ada sejak Fase 3. Baru: `lib/build/derived.ts` → `derived/gold-idr-gram.json` (±50 KB), `derived/annual.json` (±8 KB, Rp/gram tahunan diturunkan per bulan seperti D-37; 1996 = 29.187,62), `derived/premium-antam.json` (±62 KB, premi %). Ditulis hanya bila data makro ada.
 - [ ] **P4-08** **Grafik kelipatan** (`/kelipatan`): sumbu Y log berlabel ×1, ×2, ×5, ×10…; tiga garis (emas Rp/gram, emas US$/oz, kurs) diindeks ke tahun dasar; pilihan tahun dasar dan agregasi (rata-rata tahunan atau penutupan akhir tahun); titik spot hari ini bergaris putus; anotasi peristiwa dari `config/events.yml` (`markLine`); subjudul kelipatan + CAGR otomatis; label kelipatan di ujung garis; opsi garis Antam LM sejak 2010. — `FR-32` · L
 - [ ] **P4-09** **Premi Antam vs spot**: grafik premi % dari waktu ke waktu di halaman Bandingkan, dengan penjelasan komponen premi (ongkos cetak, margin, pajak). — `FR-33` · M
 

@@ -53,6 +53,10 @@ export interface TimeSeries {
   width?: number;
   /** Tandai titik terendah dengan bulatan + label (mis. "spread tersempit" di Spread). */
   highlightMin?: boolean;
+  /** Pita min–maks per titik (agregasi mingguan/bulanan); digambar di bawah garis, tampil di tooltip. */
+  envelope?: { min: SeriesPoint[]; max: SeriesPoint[] };
+  /** Catatan tooltip per tanggal ISO (mis. "isi dari 2026-03-04" untuk titik forward-fill). */
+  notes?: Record<string, string>;
   points: SeriesPoint[];
 }
 
@@ -240,7 +244,14 @@ export function percentToTime(extent: [number, number], pct: number): number {
 /** Baris tooltip untuk satu tanggal: seri di luar rentangnya disembunyikan, celah = "—". */
 export function tooltipRows(
   at: number,
-  series: { label: string; color: string; data: Datum[] }[],
+  series: {
+    label: string;
+    color: string;
+    data: Datum[];
+    /** Rentang min–maks (waktu → [min, maks]) dan catatan (waktu → teks), ditambahkan ke nilai. */
+    envelope?: Map<number, [number, number]>;
+    notes?: Map<number, string>;
+  }[],
   fmt: (v: number | null) => string,
 ): TooltipRow[] {
   const rows: TooltipRow[] = [];
@@ -250,7 +261,13 @@ export function tooltipRows(
     if (!a || !b || at < a[0] || at > b[0]) continue;
     const hit = s.data.find((d) => d[0] === at);
     const v = hit ? hit[1] : null;
-    rows.push({ label: s.label, color: s.color, value: fmt(v), muted: v === null });
+    const env = v === null ? undefined : s.envelope?.get(at);
+    const note = v === null ? undefined : s.notes?.get(at);
+    const value =
+      fmt(v) +
+      (env ? ` · min–maks ${fmt(env[0])} – ${fmt(env[1])}` : '') +
+      (note ? ` · ${note}` : '');
+    rows.push({ label: s.label, color: s.color, value, muted: v === null });
   }
   return rows;
 }
@@ -375,7 +392,61 @@ export function buildTimeSeriesOption(input: BuildInput): {
     }
   }
 
-  const tooltipSeries = resolved.map((s) => ({ label: s.label, color: s.rgb, data: s.data }));
+  // Pita min–maks per seri: dasar transparan + selisih bertumpuk (tidak untuk skala log).
+  const envelopes: LineSeriesOption[] = [];
+  const envelopeMaps = new Map<string, Map<number, [number, number]>>();
+  for (const s of resolved) {
+    if (!s.envelope || yLog) continue;
+    const { base, diff } = alignBand(toSeriesData(s.envelope.max), toSeriesData(s.envelope.min));
+    envelopeMaps.set(
+      s.id,
+      new Map(
+        base.flatMap((b, i) => {
+          const d = diff[i]![1];
+          return b[1] === null || d === null
+            ? []
+            : [[b[0], [b[1], b[1] + d]] as [number, [number, number]]];
+        }),
+      ),
+    );
+    const common: LineSeriesOption = {
+      type: 'line',
+      stack: `__band_env_${s.id}`,
+      showSymbol: false,
+      symbol: 'none',
+      silent: true,
+      connectNulls: false,
+      lineStyle: { opacity: 0, width: 0 },
+      emphasis: { disabled: true },
+      tooltip: { show: false },
+      z: 1,
+    };
+    envelopes.push(
+      { ...common, id: `__band_env_lo_${s.id}`, name: `__band_env_lo_${s.id}`, data: base },
+      {
+        ...common,
+        id: `__band_env_hi_${s.id}`,
+        name: `__band_env_hi_${s.id}`,
+        data: diff,
+        areaStyle: { color: s.rgb, opacity: 0.16 },
+      },
+    );
+  }
+
+  const tooltipSeries = resolved.map((s) => ({
+    label: s.label,
+    color: s.rgb,
+    data: s.data,
+    envelope: envelopeMaps.get(s.id),
+    notes: s.notes
+      ? new Map(
+          Object.entries(s.notes).flatMap(([iso, text]) => {
+            const t = isoToTime(iso);
+            return Number.isNaN(t) ? [] : [[t, text] as [number, string]];
+          }),
+        )
+      : undefined,
+  }));
 
   const dataZoom: DataZoomComponentOption[] = showZoom
     ? [
@@ -472,7 +543,7 @@ export function buildTimeSeriesOption(input: BuildInput): {
       },
     },
     dataZoom,
-    series: [...helpers, ...lines],
+    series: [...helpers, ...envelopes, ...lines],
   };
   return { option, extent };
 }
