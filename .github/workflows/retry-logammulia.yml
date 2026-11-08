@@ -51,15 +51,23 @@ jobs:
               -H 'Accept: application/vnd.github.raw' |
               node .github/scripts/logammulia-retry-check.mjs --attempts "$ATTEMPTS" "$@"
           }
+          # 0 = coba ulang, 1 = tidak perlu (skrip keluar 10); kode lain = error, job gagal.
+          should_retry() {
+            local rc=0
+            check "$@" || rc=$?
+            [ "$rc" -eq 0 ] && return 0
+            [ "$rc" -eq 10 ] && return 1
+            echo "::error::Pengecekan gagal (exit $rc)"; exit "$rc"
+          }
 
-          if [ -n "$TRIGGER_RUN_ID" ]; then check --trigger "$TRIGGER_RUN_ID" || exit 0
-          else check || exit 0; fi
+          if [ -n "$TRIGGER_RUN_ID" ]; then should_retry --trigger "$TRIGGER_RUN_ID" || exit 0
+          else should_retry || exit 0; fi
 
           # Batas putaran juga di sini, untuk berjaga bila run hasil dispatch tidak sempat mencatat RUN.
           for _ in $(seq 1 "$ATTEMPTS"); do
             echo "Menunggu $WAIT_MINUTES menit"
             sleep $((WAIT_MINUTES * 60))
-            check || exit 0
+            should_retry || exit 0
             since="$(date -u +%FT%TZ)"
             gh workflow run scrape-retail.yml --ref main -f sources=logammulia -f force=false
             id=''

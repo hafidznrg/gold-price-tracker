@@ -1,7 +1,6 @@
 // WORKFLOWS §3.9, D-40 — perlukah logammulia dicoba ulang? Dipakai oleh retry-logammulia.yml.
 // stdin: data/meta/runs/{yyyy}.jsonl. Keluar 0 = coba ulang, 10 = tidak (alasan di stdout).
 //   node logammulia-retry-check.mjs --attempts 3 [--trigger <run_id>] [--now <ISO>]
-import { readFileSync } from 'node:fs';
 import process from 'node:process';
 import { parseArgs } from 'node:util';
 
@@ -15,7 +14,10 @@ const attempts = Number(values.attempts ?? 3);
 const jakartaDate = (iso) => new Date(Date.parse(iso) + 7 * 3600_000).toISOString().slice(0, 10);
 const today = jakartaDate(values.now ?? new Date().toISOString());
 
-const runs = readFileSync(0, 'utf8')
+// stdin dibaca async: readFileSync(0) gagal EAGAIN bila stdin pipe non-blocking (runner Actions).
+let input = '';
+for await (const chunk of process.stdin) input += chunk;
+const runs = input
   .split('\n')
   .filter((l) => l.trim())
   .map((l) => JSON.parse(l))
