@@ -29,7 +29,8 @@
 
 ### Halaman baru
 
-- [ ] **P4-05** **Bandingkan** (`/bandingkan`): Antam vs UBS vs Galeri24 vs Tabungan Emas pada berat sama; Antam LM vs Antam Pegadaian; mode per gram atau indeks. — `FR-30` · M
+- [x] **P4-05** **Bandingkan** (`/bandingkan`): Antam vs UBS vs Galeri24 vs Tabungan Emas pada berat sama; Antam LM vs Antam Pegadaian; mode per gram atau indeks. — `FR-30` · M
+  - *8 Nov 2026:* `/bandingkan` (`components/bandingkan-board.tsx`, `lib/bandingkan.ts`): enam series tetap (LM Antam, Pegadaian Antam, UBS Lifestyle, Pegadaian UBS, Pegadaian Galeri24, Tabungan Emas = per gram × berat), gramasi = yang dijual ≥ 2 series fisik; UBS memakai variant tahun produksi berjalan, cadangan variant kosong. URL: `w` (bawaan 1), `m=idx`, `r` (bawaan 1T). Deviasi mockup: tambah `RangeControl` (indeks butuh titik awal), tanpa label nilai di ujung garis (tooltip).
 - [ ] **P4-06** **Kalkulator** (`/kalkulator`): input tanggal beli, sumber beli, gramasi, jumlah, sumber jual → nilai sekarang, untung/rugi (Rp dan %), titik impas, grafik dengan penanda tanggal beli. — `FR-31` · M
 
 ### Spot dunia dan premi
@@ -38,6 +39,7 @@
   - *7 Nov 2026:* `macro/*.json` dan spot di `latest.json` sudah ada sejak Fase 3. Baru: `lib/build/derived.ts` → `derived/gold-idr-gram.json` (±50 KB), `derived/annual.json` (±8 KB, Rp/gram tahunan diturunkan per bulan seperti D-37; 1996 = 29.187,62), `derived/premium-antam.json` (±62 KB, premi %). Ditulis hanya bila data makro ada.
 - [ ] **P4-08** **Grafik kelipatan** (`/kelipatan`): sumbu Y log berlabel ×1, ×2, ×5, ×10…; tiga garis (emas Rp/gram, emas US$/oz, kurs) diindeks ke tahun dasar; pilihan tahun dasar dan agregasi (rata-rata tahunan atau penutupan akhir tahun); titik spot hari ini bergaris putus; anotasi peristiwa dari `config/events.yml` (`markLine`); subjudul kelipatan + CAGR otomatis; label kelipatan di ujung garis; opsi garis Antam LM sejak 2010. — `FR-32` · L
 - [ ] **P4-09** **Premi Antam vs spot**: grafik premi % dari waktu ke waktu di halaman Bandingkan, dengan penjelasan komponen premi (ongkos cetak, margin, pajak). — `FR-33` · M
+  - *8 Nov 2026:* `components/premium-section.tsx` dari `derived/premium-antam.json` + kartu komponen premi dan catatan spot indikatif (GC=F). **Sisa:** riwayat baru sejak 6 Nov 2021 (spot harian xaus 5 tahun), belum sejak 2010 seperti FR-33/mockup — butuh premi bulanan dari `xau_usd_oz` bulanan untuk 2010–2021.
 
 ### Data dan sumber tambahan
 

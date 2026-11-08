@@ -1,6 +1,13 @@
 import type { Series } from '@gold/schema';
-import { LATEST_PATH, META_PATH, dataUrl, macroJsonPath, seriesJsonPath } from './paths';
-import type { LatestFile, MacroFile, MetaFile, SeriesFile } from './types';
+import {
+  LATEST_PATH,
+  META_PATH,
+  PREMIUM_ANTAM_PATH,
+  dataUrl,
+  macroJsonPath,
+  seriesJsonPath,
+} from './paths';
+import type { LatestFile, MacroFile, MetaFile, PremiumAntamFile, SeriesFile } from './types';
 
 // Loader klien: fetch dari /data/... (static export). Hasil di-cache per path selama sesi;
 // permintaan yang gagal dihapus dari cache agar bisa dicoba lagi.
@@ -46,6 +53,11 @@ export async function fetchMacro(series: Series): Promise<MacroFile | null> {
     if (err instanceof Error && err.message.includes('HTTP 404')) return null;
     throw err;
   }
+}
+
+/** Premi Antam vs spot harian (derived, dihitung saat build). */
+export function fetchPremiumAntam(): Promise<PremiumAntamFile> {
+  return cached<PremiumAntamFile>(PREMIUM_ANTAM_PATH);
 }
 
 /** Untuk uji: kosongkan cache. */

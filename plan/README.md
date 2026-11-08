@@ -60,7 +60,7 @@ flowchart LR
 | 1 | 11/13 selesai (P1-01–P1-07, P1-09, P1-10, P1-12, P1-13); ketiga scraper aktif di `scrape-retail.yml` (Logam Mulia lewat stealth, D-26; run pertama di Actions sukses). P1-05 selesai (Telegram + Issue terbukti lewat `notify-test.yml`); P1-08 terimplementasi, menunggu bukti di run nyata | 26 Okt 2026 | |
 | 2 | 13/13 selesai. Validasi + merge makro (D-35); histori makro ter-commit: `xau_usd_oz` bulanan 1996+ dan harian 5 tahun (P2-07, 6 Nov 2026), `usd_idr_ecb` 1999+, `usd_idr_jisdor` 2013+, `usd_idr_annual` 1996–1998. Scraper harian + `scrape-macro.yml` aktif (D-36). `check-macro` lulus pada data repo (D-37). Kriteria G2 terpenuhi; penutupan fase menunggu `scrape-macro` hijau 5 hari kerja (pertama 5 Nov 2026) | 1 Nov 2026 | |
 | 3 | 11/12 selesai; situs tayang di <https://gold.hafidznrg.my.id> (P3-10, Q-5). Sisa P3-11: audit Lighthouse mobile. G3 menunggu data ritel ≥ 14 hari (±9 Nov) dan G1 | 1 Nov 2026 | |
-| 4 | 4/12 selesai (gelombang 1: P4-01, P4-02, P4-03, P4-07): mode nilai, agregasi + pita min–maks, isi celah di Explorer; file `derived/*` | 7 Nov 2026 | |
+| 4 | 5/12 selesai (P4-01, P4-02, P4-03, P4-05, P4-07): Explorer mode nilai/agregasi/isi celah, `derived/*`, halaman Bandingkan. P4-09 premi tayang, riwayat baru sejak 2021 | 7 Nov 2026 | |
 | 5 | Belum mulai | | |
 
 ## Riwayat revisi

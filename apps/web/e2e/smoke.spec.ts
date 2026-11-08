@@ -8,6 +8,11 @@ const PAGES = [
     heading: /Jarak antara harga beli\s+dan jual kembali/,
     marker: /Rp\s?\d{1,3}(\.\d{3})+/,
   },
+  {
+    path: '/bandingkan',
+    heading: /Emas fisik dan tabungan\s+di berat yang sama/,
+    marker: /Rp\s?\d{1,3}(\.\d{3})+/,
+  },
   { path: '/data', heading: /Unduh\s+setiap seri/, marker: /Data terakhir/ },
 ] as const;
 
@@ -110,6 +115,49 @@ test.describe('Explorer', () => {
     await page.getByRole('radio', { name: '1B', exact: true }).click();
     await expect(page).toHaveURL(/[?&]r=1B(&|$)/);
     await expect(page.getByRole('radio', { name: '1B', exact: true })).toBeChecked();
+  });
+});
+
+test.describe('Bandingkan', () => {
+  const START = '/bandingkan?w=5&m=idx&r=6B';
+
+  async function expectState(page: Page) {
+    await expect(page.getByRole('radio', { name: '5 g', exact: true })).toBeChecked();
+    await expect(page.getByRole('radio', { name: 'Indeks', exact: true })).toBeChecked();
+    await expect(page.getByRole('radio', { name: '6B', exact: true })).toBeChecked();
+    await expect(page.getByRole('heading', { name: /Indeks harga jual .* 5 g/ })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /Hari ini . 5 g/ })).toBeVisible();
+  }
+
+  test('gramasi, mode, dan rentang dipulihkan saat reload', async ({ page }) => {
+    const errors = collectErrors(page);
+    await page.goto(START);
+    await expectState(page);
+    await page.reload();
+    await expectState(page);
+    const q = new URL(page.url()).searchParams;
+    expect([q.get('w'), q.get('m'), q.get('r')]).toEqual(['5', 'idx', '6B']);
+    await page.waitForLoadState('load');
+    expect(errors).toEqual([]);
+  });
+
+  test('mengubah pilihan memperbarui URL; bawaan tidak ditulis', async ({ page }) => {
+    await page.goto('/bandingkan');
+    await page.getByRole('radio', { name: '10 g', exact: true }).click();
+    await page.getByRole('radio', { name: 'Indeks', exact: true }).click();
+    await expect(page).toHaveURL(/[?&]w=10(&|$)/);
+    await expect(page).toHaveURL(/[?&]m=idx(&|$)/);
+    await page.getByRole('radio', { name: '1 g', exact: true }).click();
+    await page.getByRole('radio', { name: 'Per gram', exact: true }).click();
+    await expect(page).not.toHaveURL(/[?&](w|m)=/);
+  });
+
+  test('premi Antam memuat penjelasan dan peringatan spot indikatif', async ({ page }) => {
+    await page.goto('/bandingkan');
+    await expect(page.getByRole('heading', { name: /Berapa mahal emas ritel/ })).toBeVisible();
+    await expect(page.getByText(/Spot dunia bersifat indikatif/)).toBeVisible();
+    await expect(page.getByText('Ongkos cetak & sertifikat')).toBeVisible();
+    await expect(page.getByText('Margin distribusi')).toBeVisible();
   });
 });
 
