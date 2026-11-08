@@ -4,6 +4,7 @@ import {
   SourcesFile,
   expandCatalog,
   type MacroRow,
+  type MacroSeriesConfig,
   type PriceRow,
   type SpotSnapshot,
 } from '@gold/schema';
@@ -14,6 +15,7 @@ import type {
   PremiumAntamFile,
   SeriesFile,
 } from '../data/types';
+import { buildPremiumAntamMonthly } from './derived';
 import { buildSpark, computeChange, computeSpread } from './latest';
 import { buildOutputs, type BuildInput } from './outputs';
 import { groupByFile, toSeriesFile } from './series';
@@ -425,6 +427,40 @@ describe('makro ada', () => {
     expect(f.rows).toEqual([
       ['2026-10-31', Math.round((2526000 / gram - 1) * 100 * 1e4) / 1e4, '2026-10-30'],
     ]);
+    // Bulan titik harian pertama tidak diulang sebagai premi bulanan.
+    expect(f.monthly.every((m) => m[0] < '2026-10')).toBe(true);
+  });
+
+  it('premi bulanan: rata-rata Antam sebulan ÷ Rp/gram spot bulanan, hanya sebelum spot harian', () => {
+    const configs = [
+      { id: 'xau_usd_oz', concept: 'gold_usd', unit: 'USD/ozt', source: 'xaus', precedence: 1 },
+      { id: 'usd_idr_ecb', concept: 'usd_idr', unit: 'IDR/USD', source: 'ecb', precedence: 1 },
+    ] as unknown as MacroSeriesConfig[];
+    const m = (date: string, series: MacroRow['series'], value: number) =>
+      macro({ date, series, frequency: 'M', value });
+    const lm = (date: string, sell: number) =>
+      ({
+        date,
+        source: 'logammulia',
+        brand: 'antam',
+        product: 'gold_bar',
+        weight_g: 1,
+        sell_price: sell,
+      }) as unknown as PriceRow;
+    const gram = (1200 * 9000) / 31.1034768;
+    const out = buildPremiumAntamMonthly(
+      [
+        lm('2012-03-05', 500000),
+        lm('2012-03-20', 520000),
+        lm('2012-04-02', 530000),
+        lm('2012-05-02', 1),
+      ],
+      [m('2012-03-01', 'xau_usd_oz', 1200), m('2012-03-01', 'usd_idr_ecb', 9000)],
+      configs,
+      '2012-05-02',
+    );
+    // April tanpa data makro dilewati; Mei = bulan harian pertama, tidak masuk.
+    expect(out).toEqual([['2012-03', Math.round((510000 / gram - 1) * 100 * 1e4) / 1e4, 'M', 2]]);
   });
 
   it('derived/annual.json: resolusi frekuensi dan Rp/gram bulanan per tahun', () => {

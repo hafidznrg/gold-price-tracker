@@ -11,6 +11,7 @@ import {
 import {
   GOLD_IDR_GRAM_FIELDS,
   PREMIUM_ANTAM_FIELDS,
+  PREMIUM_ANTAM_MONTHLY_FIELDS,
   type AnnualFile,
   type AnnualRow,
   type AnnualValue,
@@ -88,7 +89,58 @@ export function buildAnnualFile(
   return { until, rows };
 }
 
-/** Premi Antam LM 1 g jual vs spot (spot = penutupan terakhir < tanggal harga, toleransi 5 hari). */
+function isAntamLm1g(r: PriceRow): r is PriceRow & { sell_price: number } {
+  return (
+    r.source === 'logammulia' &&
+    r.brand === 'antam' &&
+    r.product === 'gold_bar' &&
+    r.weight_g === 1 &&
+    r.sell_price !== null
+  );
+}
+
+/**
+ * Premi bulanan untuk bulan-bulan **sebelum** titik premi harian pertama (D-38): rata-rata harga
+ * Antam 1 g dalam bulan itu ÷ Rp/gram spot bulanan − 1. Rp/gram spot bulanan = emas US$/oz bulanan ×
+ * kurs bulanan (`aggregate`, resolusi D → M → A, DATA-MODEL §6.3) ÷ 31,1035 — sama seperti
+ * `annual.json`. Ini bukan *as-of join* harian, jadi ditandai terpisah dan tidak dicampur ke rata-rata.
+ */
+export function buildPremiumAntamMonthly(
+  prices: readonly PriceRow[],
+  macro: readonly MacroRow[],
+  configs: readonly MacroSeriesConfig[],
+  before: string | null,
+): PremiumAntamFile['monthly'] {
+  const antam = new Map<string, number[]>();
+  for (const r of prices) {
+    if (!isAntamLm1g(r)) continue;
+    if (before !== null && r.date.slice(0, 7) >= before.slice(0, 7)) continue;
+    const m = r.date.slice(0, 7);
+    antam.set(m, [...(antam.get(m) ?? []), r.sell_price]);
+  }
+  if (antam.size === 0) return [];
+  const gold = new Map(aggregate(macro, configs, 'gold_usd', 'month').map((p) => [p.period, p]));
+  const fx = new Map(aggregate(macro, configs, 'usd_idr', 'month').map((p) => [p.period, p]));
+  const out: PremiumAntamFile['monthly'] = [];
+  for (const [month, sells] of [...antam].sort(([a], [b]) => (a < b ? -1 : 1))) {
+    const g = gold.get(month);
+    const f = fx.get(month);
+    if (!g || !f || (g.frequency !== 'D' && g.frequency !== 'M')) continue;
+    const avgSell = sells.reduce((a, b) => a + b, 0) / sells.length;
+    out.push([
+      month,
+      round((avgSell / goldIdrGram(g.value, f.value) - 1) * 100),
+      g.frequency,
+      sells.length,
+    ]);
+  }
+  return out;
+}
+
+/**
+ * Premi Antam LM 1 g jual vs spot: harian (spot = penutupan terakhir < tanggal harga, toleransi
+ * 5 hari) ditambah premi bulanan untuk histori sebelum spot harian tersedia (D-38).
+ */
 export function buildPremiumAntamFile(
   prices: readonly PriceRow[],
   macro: readonly MacroRow[],
@@ -100,5 +152,11 @@ export function buildPremiumAntamFile(
     round(p.value * 100),
     p.spot_date,
   ]);
-  return { fields: PREMIUM_ANTAM_FIELDS, rows };
+  const monthly = buildPremiumAntamMonthly(prices, macro, configs, rows[0]?.[0] ?? null);
+  return {
+    fields: PREMIUM_ANTAM_FIELDS,
+    rows,
+    monthly_fields: PREMIUM_ANTAM_MONTHLY_FIELDS,
+    monthly,
+  };
 }

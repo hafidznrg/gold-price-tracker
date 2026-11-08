@@ -38,8 +38,9 @@
 - [x] **P4-07** Perluas `build-data`: `macro/*.json`, `derived/gold-idr-gram.json`, `derived/annual.json`, `derived/premium-antam.json`, isi `spot.json` di `latest.json`; memakai `derive.ts` dari P2-11. — `FR-34` · S
   - *7 Nov 2026:* `macro/*.json` dan spot di `latest.json` sudah ada sejak Fase 3. Baru: `lib/build/derived.ts` → `derived/gold-idr-gram.json` (±50 KB), `derived/annual.json` (±8 KB, Rp/gram tahunan diturunkan per bulan seperti D-37; 1996 = 29.187,62), `derived/premium-antam.json` (±62 KB, premi %). Ditulis hanya bila data makro ada.
 - [ ] **P4-08** **Grafik kelipatan** (`/kelipatan`): sumbu Y log berlabel ×1, ×2, ×5, ×10…; tiga garis (emas Rp/gram, emas US$/oz, kurs) diindeks ke tahun dasar; pilihan tahun dasar dan agregasi (rata-rata tahunan atau penutupan akhir tahun); titik spot hari ini bergaris putus; anotasi peristiwa dari `config/events.yml` (`markLine`); subjudul kelipatan + CAGR otomatis; label kelipatan di ujung garis; opsi garis Antam LM sejak 2010. — `FR-32` · L
-- [ ] **P4-09** **Premi Antam vs spot**: grafik premi % dari waktu ke waktu di halaman Bandingkan, dengan penjelasan komponen premi (ongkos cetak, margin, pajak). — `FR-33` · M
-  - *8 Nov 2026:* `components/premium-section.tsx` dari `derived/premium-antam.json` + kartu komponen premi dan catatan spot indikatif (GC=F). **Sisa:** riwayat baru sejak 6 Nov 2021 (spot harian xaus 5 tahun), belum sejak 2010 seperti FR-33/mockup — butuh premi bulanan dari `xau_usd_oz` bulanan untuk 2010–2021.
+- [x] **P4-09** **Premi Antam vs spot**: grafik premi % dari waktu ke waktu di halaman Bandingkan, dengan penjelasan komponen premi (ongkos cetak, margin, pajak). — `FR-33` · M
+  - *8 Nov 2026:* `components/premium-section.tsx` dari `derived/premium-antam.json` + kartu komponen premi dan catatan spot indikatif (GC=F). Riwayat harian baru sejak 6 Nov 2021 (spot harian xaus 5 tahun).
+  - *8 Nov 2026:* premi bulanan Jan 2010 – Okt 2021 (`monthly` di `premium-antam.json`, `buildPremiumAntamMonthly`), garis tipis terpisah dari harian (D-38). Rentang 10,1–24,3%.
 
 ### Data dan sumber tambahan
 

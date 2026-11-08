@@ -5,7 +5,7 @@ import { TimeSeriesChart, type TimeSeries } from '@/components/charts/time-serie
 import { SourceStamp } from '@/components/source-stamp';
 import { fetchPremiumAntam, type PremiumAntamFile } from '@/lib/data';
 import { premiumStats } from '@/lib/bandingkan';
-import { formatDate, formatPct } from '@/lib/format';
+import { formatDate, formatMonthYear, formatPct } from '@/lib/format';
 
 const EXPLAIN: { title: string; body: string }[] = [
   {
@@ -43,7 +43,27 @@ export function PremiumSection() {
   const stats = useMemo(() => (file ? premiumStats(file.rows) : null), [file]);
   const series: TimeSeries[] = useMemo(() => {
     if (!file || !stats) return [];
+    const monthly = file.monthly ?? [];
+    const monthlySeries: TimeSeries[] =
+      monthly.length === 0
+        ? []
+        : [
+            {
+              id: 'premi-bulanan',
+              label: 'Premi bulanan (sebelum spot harian)',
+              color: 'gold',
+              width: 1.4,
+              points: monthly.map((m) => [`${m[0]}-15`, m[1]]),
+              notes: Object.fromEntries(
+                monthly.map((m) => [
+                  `${m[0]}-15`,
+                  `rata-rata bulan ${m[0]} · ${m[3]} hari harga Antam · emas US$ ${m[2] === 'D' ? 'harian' : 'bulanan'}`,
+                ]),
+              ),
+            },
+          ];
     return [
+      ...monthlySeries,
       {
         id: 'premi',
         label: 'Premi Antam 1 g vs spot',
@@ -76,7 +96,8 @@ export function PremiumSection() {
             </h2>
             <p className="m-0 mt-3 text-sm leading-[1.6] text-muted">
               Premi = harga Antam 1 g ÷ (XAU/USD × USD/IDR ÷ 31,1035) − 1. Memakai spot penutupan
-              hari sebelumnya, karena Antam menetapkan harga pagi berdasarkan penutupan itu.
+              hari sebelumnya, karena Antam menetapkan harga pagi berdasarkan penutupan itu. Sebelum
+              spot harian tersedia, premi dihitung per bulan dari rata-rata bulanan (garis tipis).
             </p>
           </div>
           <div className="flex flex-wrap gap-7">
@@ -117,9 +138,12 @@ export function PremiumSection() {
               ariaLabel="Premi Antam 1 gram terhadap harga emas dunia dari waktu ke waktu"
             />
             <SourceStamp source="logammulia" date={stats.last.date} className="mt-3">
-              Antam 1 g · spot penutupan {formatDate(stats.last.spotDate)} · riwayat tersedia sejak{' '}
-              {formatDate(stats.firstDate)} · terendah {formatPct(stats.min.pct, 1, false)} (
-              {formatDate(stats.min.date)}), tertinggi {formatPct(stats.max.pct, 1, false)} (
+              Antam 1 g · spot penutupan {formatDate(stats.last.spotDate)} ·{' '}
+              {file.monthly?.[0]
+                ? `premi bulanan ${formatMonthYear(`${file.monthly[0][0]}-01`)} – ${formatMonthYear(`${file.monthly.at(-1)![0]}-01`)}, harian sejak `
+                : 'riwayat tersedia sejak '}
+              {formatDate(stats.firstDate)} · terendah (harian) {formatPct(stats.min.pct, 1, false)}{' '}
+              ({formatDate(stats.min.date)}), tertinggi {formatPct(stats.max.pct, 1, false)} (
               {formatDate(stats.max.date)})
             </SourceStamp>
           </>

@@ -313,3 +313,12 @@ Log keputusan produk dan teknis (format ringkas ala ADR). Keputusan baru ditamba
 - **Premi Antam sebelum histori harian xaus (2021-11)** memakai proksi: emas `M` bulan itu × kurs as-of hari sebelumnya, ditandai `basis M` di laporan; setelah itu `derive.premiumAt` (penutupan < tanggal harga).
 - **Backfill xaus** memakai ulang `parseHistory`/`closingRows` milik scraper harian dan tidak mengambil spot; jendela 10 hari tidak berlaku, seluruh penutupan sampai kemarin ditulis. Kunci baris yang sama membuat tumpang tindih dengan scrape harian menjadi unchanged/update, tidak ganda.
 **Konsekuensi:** `check-macro` perlu dijalankan ulang setelah backfill xaus ter-commit agar [2b] dan premi harian memakai data repo. Skrip tinggal di `apps/scraper/scripts/` (tsconfig dan dependensi sudah ada), bukan `scripts/` di akar yang belum punya paket.
+
+### D-38 — Premi Antam bulanan 2010–2021 di halaman Bandingkan
+
+**Konteks:** P4-09 / FR-33 meminta grafik premi Antam vs spot sejak 2010, tetapi spot harian (xaus) baru ada sejak 6 Nov 2021. Histori Antam LM 1 g sejak Jan 2010 (D-29) dan `xau_usd_oz` bulanan sejak 1996 sudah ada.
+**Keputusan:**
+- `derived/premium-antam.json` mendapat bagian `monthly` (`[bulan, premi %, frekuensi emas, jumlah hari Antam]`) untuk bulan-bulan **sebelum bulan** titik harian pertama: rata-rata harga Antam 1 g sebulan ÷ Rp/gram spot bulanan − 1, dengan emas dan kurs bulanan dari `aggregate` (resolusi D → M → A, DATA-MODEL §6.3) — rumus yang sama dengan `annual.json`.
+- Berbeda dari proksi `check-macro` (D-37, emas `M` × kurs as-of per hari): di web dipakai rata-rata bulanan di kedua sisi supaya satu titik per bulan dan konsisten dengan agregat tahunan. Keduanya hanya estimasi tren.
+- Grafik memisahkan dua resolusi: garis tipis tanpa area = bulanan, garis dengan area = harian; tooltip bulanan menyebut jumlah hari harga Antam dan frekuensi emas. Angka "Hari ini", rata-rata, terendah, dan tertinggi tetap dari data harian saja.
+**Konsekuensi:** Premi tampil Jan 2010 → kini (142 titik bulanan + harian), file ±67 KB. Bila kelak tersedia spot harian sebelum 2021, bagian `monthly` menyusut otomatis karena dipotong di bulan titik harian pertama.

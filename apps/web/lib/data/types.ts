@@ -376,8 +376,26 @@ export const PREMIUM_ANTAM_FIELDS = ['date', 'pct', 'spot_date'] as const;
 /** `[date, premi %, tanggal spot yang dipakai (< date)]`. */
 export type PremiumAntamTuple = [date: string, pct: number, spotDate: string];
 
-/** `public/data/derived/premium-antam.json` — premi LM 1 g jual vs spot, *as-of join* (§6.2). */
+export const PREMIUM_ANTAM_MONTHLY_FIELDS = ['month', 'pct', 'gold_frequency', 'days'] as const;
+
+/**
+ * `[bulan YYYY-MM, premi %, frekuensi emas US$ yang dipakai (D/M), jumlah hari harga Antam]`:
+ * rata-rata harga Antam 1 g sebulan ÷ Rp/gram spot bulanan (resolusi DATA-MODEL §6.3) − 1 (D-38).
+ */
+export type PremiumAntamMonthlyTuple = [
+  month: string,
+  pct: number,
+  goldFrequency: 'D' | 'M',
+  days: number,
+];
+
+/**
+ * `public/data/derived/premium-antam.json` — premi LM 1 g jual vs spot: harian lewat *as-of join*
+ * (§6.2) selama spot harian ada, dan bulanan untuk bulan-bulan sebelum titik harian pertama (D-38).
+ */
 export interface PremiumAntamFile {
   fields: typeof PREMIUM_ANTAM_FIELDS;
   rows: PremiumAntamTuple[];
+  monthly_fields: typeof PREMIUM_ANTAM_MONTHLY_FIELDS;
+  monthly: PremiumAntamMonthlyTuple[];
 }
