@@ -5,13 +5,13 @@ export interface NavItem {
 
 /**
  * Navigasi utama. Fase 4 menambah Bandingkan, Kalkulator, Kelipatan (urutan mockup: sebelum Data).
- * Kalkulator baru ditautkan setelah halamannya ada, agar tidak ada tautan rusak.
  */
 export const NAV_ITEMS: readonly NavItem[] = [
   { href: '/', label: 'Hari ini' },
   { href: '/explorer', label: 'Explorer' },
   { href: '/spread', label: 'Spread' },
   { href: '/bandingkan', label: 'Bandingkan' },
+  { href: '/kalkulator', label: 'Kalkulator' },
   { href: '/kelipatan', label: 'Kelipatan' },
   { href: '/data', label: 'Data' },
 ];

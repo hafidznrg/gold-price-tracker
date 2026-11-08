@@ -14,6 +14,11 @@ const PAGES = [
     marker: /Rp\s?\d{1,3}(\.\d{3})+/,
   },
   {
+    path: '/kalkulator',
+    heading: /Kalau dijual hari ini,\s+untung berapa\?/,
+    marker: /Rp\s?\d{1,3}(\.\d{3})+/,
+  },
+  {
     path: '/kelipatan',
     heading: /Emas naik\s+×\d+[,.]?\d*\s+dalam rupiah sejak 1996/,
     marker: /Rp\s?\d{1,3}(\.\d{3})+/,
@@ -212,6 +217,51 @@ test.describe('Kelipatan', () => {
       'xaus · harian',
     );
     await expect(page.getByText(/Spot dari xaus.com bersifat indikatif/)).toBeVisible();
+  });
+});
+
+test.describe('Kalkulator', () => {
+  const START = '/kalkulator?d=2024-03-15&q=3';
+
+  async function expectState(page: Page) {
+    await expect(page.getByLabel('Tanggal beli')).toHaveValue('2024-03-15');
+    await expect(page.getByLabel('Jumlah keping')).toHaveValue('3');
+    await expect(page.getByLabel('Dibeli di')).toHaveValue('lm-antam');
+    await expect(page.getByTestId('kalk-profit')).toContainText(/[▲▼]|Rp0/);
+  }
+
+  test('tanggal dan jumlah dipulihkan saat reload', async ({ page }) => {
+    const errors = collectErrors(page);
+    await page.goto(START);
+    await expectState(page);
+    await page.reload();
+    await expectState(page);
+    const q = new URL(page.url()).searchParams;
+    expect([q.get('d'), q.get('q')]).toEqual(['2024-03-15', '3']);
+    await page.waitForLoadState('load');
+    expect(errors).toEqual([]);
+  });
+
+  test('mengubah jumlah memperbarui hasil dan URL; bawaan tidak ditulis', async ({ page }) => {
+    await page.goto('/kalkulator?d=2024-03-15');
+    const modal = page
+      .getByText('Modal', { exact: true })
+      .locator('xpath=following-sibling::div[1]');
+    const before = await modal.innerText();
+    await page.getByRole('button', { name: 'Tambah keping' }).click();
+    await expect(page).toHaveURL(/[?&]q=2(&|$)/);
+    await expect(modal).not.toHaveText(before);
+    await page.getByRole('button', { name: 'Kurangi keping' }).click();
+    await expect(page).not.toHaveURL(/[?&]q=/);
+    await expect(modal).toHaveText(before);
+  });
+
+  test('tanggal sebelum data pertama menampilkan pesan dan tanggal paling awal', async ({
+    page,
+  }) => {
+    await page.goto('/kalkulator?d=2005-01-03');
+    await expect(page.getByText(/Data paling awal: 4 Jan 2010/).first()).toBeVisible();
+    await expect(page.getByRole('button', { name: /Pakai 4 Jan 2010/ })).toBeVisible();
   });
 });
 
