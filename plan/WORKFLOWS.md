@@ -14,6 +14,7 @@ Spesifikasi rinci setiap workflow, kontrak antar job, perilaku saat gagal, dan k
 | `quarantine.yml` | Manual | Setujui/tolak baris yang ditahan | Ya | 1 |
 | `backfill.yml` | Manual | Isi histori sekali jalan | Ya | 1–2 |
 | `scrape-macro.yml` | Cron 16.40 WIB hari kerja, manual | XAU/USD, USD/IDR, refresh bulanan World Bank | Ya | 2 |
+| `retry-logammulia.yml` | Selesainya run terjadwal `scrape-retail`, manual | Picu ulang `scrape-retail` untuk `logammulia` bila gagal karena blokir/jaringan (D-40) | Tidak (lewat `scrape-retail`) | 1 |
 | `freshness.yml` | Cron 22.15 WIB harian | Deteksi sumber/workflow yang berhenti | Tidak (hanya Issue) | 5 |
 
 Semua workflow yang menulis data memakai `concurrency: { group: data-write, cancel-in-progress: false }` di tingkat workflow, sehingga tidak pernah ada dua penulis bersamaan.
@@ -391,6 +392,19 @@ jobs:
   # Fase 3+: job smoke Playwright terhadap hasil build
 ```
 
+### 3.9 `retry-logammulia.yml`
+
+D-40. Pemicu `workflow_run` (`scrape-retail`, `completed`) dan manual (input `attempts` = 3, `wait_minutes` = 30). `permissions: { actions: write, contents: read }`, `concurrency: retry-logammulia` (antre, tidak membatalkan). Job hanya berjalan bila run pemicu ber-event `schedule`, sehingga run hasil dispatch (termasuk dari workflow ini) tidak memicu putaran baru.
+
+Langkahnya membaca `data/meta/runs/{yyyy}.jsonl` dari `main` lewat API lalu menjalankan `.github/scripts/logammulia-retry-check.mjs`. Coba ulang hanya bila run `logammulia` terakhir:
+
+- berasal dari run pemicu (`run_id` = `{id}-{attempt}`; run jendela malam tanpa `logammulia` langsung selesai);
+- `failed` dengan `error_code` `BLOCKED`, `FETCH_HTTP`, `FETCH_TIMEOUT`, atau `UNKNOWN` (bukan `PARSE_ERROR`/validasi);
+- dimulai pada tanggal WIB hari ini;
+- dan run `slot = manual` `logammulia` hari ini (termasuk dari pemilik) masih < `attempts`.
+
+Bila lolos: tunggu `wait_minutes`, cek ulang, `gh workflow run scrape-retail.yml -f sources=logammulia`, tunggu run itu selesai (`gh run watch`), ulangi paling banyak `attempts` kali. Data ditulis oleh `scrape-retail` seperti biasa; tiap percobaan yang gagal tetap mengirim notifikasi.
+
 ## 4. Notifikasi
 
 | Kondisi | Step summary | Telegram | GitHub Issue |
@@ -408,7 +422,7 @@ Pesan Telegram berisi: sumber, status, `error_code`, ringkasan pesan, tautan run
 
 | Skenario | Hasil |
 | --- | --- |
-| Satu sumber diblokir | Job matrix sumber itu merah; sumber lain tetap ditulis; Issue + Telegram |
+| Satu sumber diblokir | Job matrix sumber itu merah; sumber lain tetap ditulis; Issue + Telegram. Logam Mulia: `retry-logammulia.yml` mencoba ulang ≤ 3× per hari dengan jeda 30 menit (D-40) |
 | Situs belum update di slot primary | Kode 3, tidak menulis; slot retry mencoba lagi |
 | Lonjakan harga > 10% | Baris ke karantina, sisanya ditulis; Issue `quarantine` |
 | Struktur HTML berubah | `PARSE_ERROR`/`SCHEMA_INVALID`, tidak menulis; raw tersimpan untuk perbaikan + `reparse` |

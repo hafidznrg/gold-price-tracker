@@ -1,0 +1,76 @@
+name: retry-logammulia
+
+# WORKFLOWS §3.9, D-40 — bila run terjadwal scrape-retail gagal untuk logammulia karena blokir
+# atau gangguan jaringan, picu ulang scrape-retail (sources=logammulia) beberapa kali dengan jeda.
+# Tiap run baru mendapat runner (dan IP) baru. Workflow ini tidak menulis data sendiri.
+
+on:
+  workflow_run:
+    workflows: [scrape-retail]
+    types: [completed]
+  workflow_dispatch:
+    inputs:
+      attempts:
+        description: Jumlah run manual logammulia maksimum per hari
+        default: '3'
+      wait_minutes:
+        description: Jeda sebelum tiap percobaan (menit)
+        default: '30'
+
+permissions:
+  actions: write # gh workflow run
+  contents: read
+
+concurrency:
+  group: retry-logammulia
+  cancel-in-progress: false
+
+jobs:
+  retry:
+    # Hanya bereaksi pada run terjadwal; run hasil dispatch (termasuk milik workflow ini) diabaikan.
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.event == 'schedule'
+    runs-on: ubuntu-latest
+    timeout-minutes: 240
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      ATTEMPTS: ${{ inputs.attempts || '3' }}
+      WAIT_MINUTES: ${{ inputs.wait_minutes || '30' }}
+      # logammulia harus ikut di run pemicu, agar run jendela malam tidak memulai putaran baru.
+      TRIGGER_RUN_ID: ${{ github.event_name == 'workflow_run' && format('{0}-{1}', github.event.workflow_run.id, github.event.workflow_run.run_attempt) || '' }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: .github/scripts
+      - name: Coba ulang logammulia
+        run: |
+          set -euo pipefail
+          # Log RUN dibaca ulang dari main tiap kali (merge run sebelumnya sudah commit).
+          check() {
+            gh api "repos/$GH_REPO/contents/data/meta/runs/$(date -u +%Y).jsonl?ref=main" \
+              -H 'Accept: application/vnd.github.raw' |
+              node .github/scripts/logammulia-retry-check.mjs --attempts "$ATTEMPTS" "$@"
+          }
+
+          if [ -n "$TRIGGER_RUN_ID" ]; then check --trigger "$TRIGGER_RUN_ID" || exit 0
+          else check || exit 0; fi
+
+          # Batas putaran juga di sini, untuk berjaga bila run hasil dispatch tidak sempat mencatat RUN.
+          for _ in $(seq 1 "$ATTEMPTS"); do
+            echo "Menunggu $WAIT_MINUTES menit"
+            sleep $((WAIT_MINUTES * 60))
+            check || exit 0
+            since="$(date -u +%FT%TZ)"
+            gh workflow run scrape-retail.yml --ref main -f sources=logammulia -f force=false
+            id=''
+            for _ in $(seq 1 30); do
+              sleep 10
+              id="$(gh run list --workflow scrape-retail.yml --event workflow_dispatch -L 5 \
+                --json databaseId,createdAt \
+                -q "map(select(.createdAt >= \"$since\")) | sort_by(.createdAt) | .[0].databaseId // empty")"
+              [ -n "$id" ] && break
+            done
+            if [ -z "$id" ]; then echo "::error::Run hasil dispatch tidak ditemukan"; exit 1; fi
+            echo "Run $GITHUB_SERVER_URL/$GH_REPO/actions/runs/$id"
+            gh run watch "$id" --interval 30 >/dev/null || true
+          done

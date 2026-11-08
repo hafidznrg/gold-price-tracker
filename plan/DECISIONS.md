@@ -328,3 +328,12 @@ Log keputusan produk dan teknis (format ringkas ala ADR). Keputusan baru ditamba
 **Konteks:** P4-06. Data buyback Logam Mulia hanya berisi baris 1 g (sejak Nov 2015, D-29), sehingga pembelian Antam LM selain 1 g tidak punya tempat jual di Kalkulator. Logam Mulia menetapkan satu harga buyback per gram yang berlaku untuk semua ukuran keping (dikonfirmasi pemilik proyek, 8 Nov 2026).
 **Keputusan:** sumber di `BUYBACK_PER_GRAM` (`lm-antam`) memakai buyback berat itu sendiri bila ada, jika tidak buyback 1 g × berat (`sellOption`, `perGram: true`). Sumber lain tetap ketat: hanya buyback yang tercatat untuk berat itu. UI menyebut "harga buyback per gram (baris 1 g) × berat" di catatan sumber.
 **Konsekuensi:** Antam LM 0,5 g – 1.000 g bisa dihitung untung/ruginya terhadap buyback LM. Pembelian Antam di Pegadaian juga bisa dijual ke buyback LM untuk semua berat. Tidak ada perubahan data atau build; aturan hanya di `apps/web/lib/kalkulator.ts`.
+
+### D-40 — Coba ulang otomatis Logam Mulia saat diblokir (mengubah sebagian D-26)
+
+**Konteks:** 8 Nov 2026 Akamai menolak tiga runner GitHub Actions berturut-turut (westus3, westus2, slot retry) dengan HTTP 403 `BLOCKED`. Padahal 26 Okt–7 Nov run dari region lain lolos, dan dari IP rumah tetap HTTP 200. Tiap run mendapat runner dan IP Azure acak, sehingga run baru punya peluang lolos. Data 8 Nov ditambal dengan scrape + merge lokal (`local-20261108133821`).
+**Keputusan:**
+- Workflow baru `retry-logammulia.yml` (WORKFLOWS §3.9): setelah run **terjadwal** `scrape-retail` gagal untuk `logammulia` dengan `BLOCKED`/`FETCH_HTTP`/`FETCH_TIMEOUT`/`UNKNOWN`, workflow ini memicu `scrape-retail` (`sources=logammulia`) dengan jeda 30 menit, paling banyak 3 run manual per tanggal WIB (termasuk run manual pemilik).
+- Batasan D-26 "tanpa retry agresif" dilonggarkan menjadi batas di atas: tetap satu halaman per run, tanpa rotasi IP/proxy, tanpa penyelesai tantangan. `PARSE_ERROR` dan kegagalan validasi tidak dicoba ulang.
+- Sumber lain tidak ikut; mereka tetap memakai slot primary/retry biasa.
+**Konsekuensi:** paling banyak 5 permintaan ke logammulia.com per hari (2 slot + 3 coba ulang). Tiap percobaan gagal tetap mengirim Telegram dan memperbarui Issue `pipeline-failure`. Bila blokir mencakup seluruh IP Azure, coba ulang tidak membantu; fallback tetap self-hosted runner atau tambal lokal (D-26).
