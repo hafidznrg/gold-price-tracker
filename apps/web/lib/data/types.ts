@@ -356,10 +356,21 @@ export interface AnnualValue {
   coverage: number | null;
 }
 
+/** Nilai penutupan akhir tahun: titik terakhir ≤ 31 Des (atau ≤ `until`) pada seri dan frekuensi yang sama dengan agregat tahun itu. */
+export interface AnnualEnd {
+  /** Tanggal titik yang dipakai (frekuensi `M`/`A`: tanggal baris sumber). */
+  date: string;
+  value: number;
+}
+
 export interface AnnualRow {
   year: number;
   gold_usd: AnnualValue | null;
   usd_idr: AnnualValue | null;
+  /** Penutupan akhir tahun emas dan kurs (resolusi frekuensi yang sama dengan agregat, DATA-MODEL §6.3). */
+  year_end: { gold_usd: AnnualEnd | null; usd_idr: AnnualEnd | null };
+  /** Antam LM 1 g jual (Rp, harga per 1 g): rata-rata harian dan harga terakhir tahun itu; null sebelum 2010. */
+  antam_lm: { avg: number; end: number; end_date: string; days: number } | null;
   /** Rata-rata bulanan (emas bulanan × kurs bulanan ÷ 31,1035); null bila tak ada bulan berpasangan. */
   idr_gram: { value: number; months: number } | null;
 }

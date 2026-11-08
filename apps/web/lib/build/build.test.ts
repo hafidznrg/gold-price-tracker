@@ -499,6 +499,39 @@ describe('makro ada', () => {
     expect(y.usd_idr).toMatchObject({ series: 'usd_idr_annual', frequency: 'A', value: 10013.62 });
     expect(y.idr_gram!.months).toBe(12);
     expect(y.idr_gram!.value).toBeCloseTo((290 * 10013.62) / 31.1034768, 2);
+    // Penutupan akhir tahun: titik terakhir pada seri+frekuensi yang sama dengan agregat tahun itu.
+    expect(y.year_end.gold_usd).toEqual({ date: '1998-12-01', value: 290 });
+    expect(y.year_end.usd_idr).toEqual({ date: '1998-01-01', value: 10013.62 });
+    expect(y.antam_lm).toBeNull();
+  });
+
+  it('derived/annual.json: penutupan akhir tahun harian dan Antam LM 1 g', () => {
+    const lm = (date: string, sell: number) =>
+      price({
+        date,
+        source: 'logammulia',
+        brand: 'antam',
+        product: 'gold_bar',
+        weight_g: 1,
+        sell_price: sell,
+      });
+    const rows = [
+      macro({ date: '2026-01-01', series: 'xau_usd_oz', value: 4000 }),
+      macro({ date: '2026-01-02', series: 'xau_usd_oz', value: 4100 }),
+      macro({ date: '2026-01-02', series: 'usd_idr_jisdor', value: 16000 }),
+    ];
+    const f = parseOut<AnnualFile>(
+      buildOutputs(
+        input({
+          macro: rows,
+          prices: [lm('2026-01-01', 2000000), lm('2026-01-02', 2100000)],
+        }),
+      ).files,
+      'derived/annual.json',
+    );
+    const y = f.rows.find((r) => r.year === 2026)!;
+    expect(y.year_end.gold_usd).toEqual({ date: '2026-01-02', value: 4100 });
+    expect(y.antam_lm).toEqual({ avg: 2050000, end: 2100000, end_date: '2026-01-02', days: 2 });
   });
 
   it('tanpa data makro tidak ada berkas derived', () => {

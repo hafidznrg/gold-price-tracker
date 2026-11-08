@@ -96,7 +96,7 @@ export function buildOutputs(input: BuildInput): BuildResult {
     const configs = input.sources.macro_series;
     files.push(
       { path: GOLD_IDR_GRAM_PATH, content: toJson(buildGoldIdrGramFile(input.macro, configs)) },
-      { path: ANNUAL_PATH, content: toJson(buildAnnualFile(input.macro, configs)) },
+      { path: ANNUAL_PATH, content: toJson(buildAnnualFile(input.macro, configs, input.prices)) },
       {
         path: PREMIUM_ANTAM_PATH,
         content: toJson(buildPremiumAntamFile(input.prices, input.macro, configs)),

@@ -8,6 +8,7 @@ import {
   DataZoomSliderComponent,
   GridComponent,
   MarkAreaComponent,
+  MarkLineComponent,
   MarkPointComponent,
   TooltipComponent,
 } from 'echarts/components';
@@ -21,6 +22,7 @@ use([
   DataZoomInsideComponent,
   DataZoomSliderComponent,
   MarkAreaComponent,
+  MarkLineComponent,
   MarkPointComponent,
   CanvasRenderer,
 ]);

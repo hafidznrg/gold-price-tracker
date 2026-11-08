@@ -17,6 +17,7 @@ import {
 import {
   buildTimeSeriesOption,
   type ChartBand,
+  type ChartEvent,
   type ChartGap,
   type ChartRange,
   percentToTime,
@@ -27,6 +28,7 @@ import { useThemeAttribute } from './use-theme-attribute';
 
 export type {
   ChartBand,
+  ChartEvent,
   ChartGap,
   ChartRange,
   SeriesPoint,
@@ -47,6 +49,16 @@ export interface TimeSeriesChartProps {
   band?: ChartBand;
   /** Sumbu Y logaritmik (Kelipatan). Band diabaikan pada skala log. */
   yLog?: boolean;
+  /** Anotasi peristiwa (`markLine` vertikal) — hanya yang jatuh di rentang data. */
+  events?: ChartEvent[];
+  /** Garis acuan horizontal (mis. ×1). */
+  baseline?: number;
+  /** Tick sumbu Y yang dipaksakan + batas sumbu (skala log, mis. 1, 2, 5, 10). */
+  yTicks?: number[];
+  yMin?: number;
+  yMax?: number;
+  /** Ruang kanan grid untuk label ujung garis (px). */
+  gridRight?: number;
   /** Jendela zoom terkendali (tanggal ISO). Diterapkan saat nilainya berubah. */
   range?: ChartRange;
   /** Dipanggil saat pengguna zoom/geser (tanggal ISO, dibulatkan ke hari). */
@@ -101,6 +113,12 @@ export function TimeSeriesChart({
   gaps,
   band,
   yLog = false,
+  events,
+  baseline,
+  yTicks,
+  yMin,
+  yMax,
+  gridRight,
   range,
   onRangeChange,
   legend = 'top',
@@ -230,6 +248,12 @@ export function TimeSeriesChart({
       gaps,
       band,
       yLog,
+      events,
+      baseline,
+      yTicks,
+      yMin,
+      yMax,
+      gridRight,
       showZoom,
       compact,
       zoom: zoomRef.current,
@@ -238,7 +262,23 @@ export function TimeSeriesChart({
     extentRef.current = extent;
     bucketRef.current = spanBucket(visibleSpanDays(extent, zoomRef.current));
     chart.setOption(option, { notMerge: true });
-  }, [ready, series, valueFormat, gaps, band, yLog, showZoom, compact, theme]);
+  }, [
+    ready,
+    series,
+    valueFormat,
+    gaps,
+    band,
+    yLog,
+    events,
+    baseline,
+    yTicks,
+    yMin,
+    yMax,
+    gridRight,
+    showZoom,
+    compact,
+    theme,
+  ]);
 
   // Rentang terkendali dari luar (mis. tombol 7H–Semua / URL).
   useEffect(() => {
@@ -256,11 +296,13 @@ export function TimeSeriesChart({
   }, [ready, rangeFrom, rangeTo, showZoom]);
 
   const legendItems = useMemo<LegendItem[]>(() => {
-    const items: LegendItem[] = series.map((s) => ({
-      label: s.label,
-      color: s.color,
-      dashed: s.dashed,
-    }));
+    const items: LegendItem[] = series
+      .filter((s) => s.legend !== false)
+      .map((s) => ({
+        label: s.legendLabel ?? s.label,
+        color: s.color,
+        dashed: s.dashed,
+      }));
     if (band && !yLog)
       items.push({ label: band.label ?? 'Spread', color: band.color ?? 'goldsoft', swatch: 'box' });
     return items;

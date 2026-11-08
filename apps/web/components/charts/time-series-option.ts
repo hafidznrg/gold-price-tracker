@@ -7,6 +7,7 @@ import type {
   DataZoomComponentOption,
   GridComponentOption,
   MarkAreaComponentOption,
+  MarkLineComponentOption,
   MarkPointComponentOption,
   TooltipComponentOption,
 } from 'echarts/components';
@@ -34,6 +35,7 @@ export type ChartOption = ComposeOption<
   | TooltipComponentOption
   | DataZoomComponentOption
   | MarkAreaComponentOption
+  | MarkLineComponentOption
   | MarkPointComponentOption
 >;
 
@@ -57,7 +59,23 @@ export interface TimeSeries {
   envelope?: { min: SeriesPoint[]; max: SeriesPoint[] };
   /** Catatan tooltip per tanggal ISO (mis. "isi dari 2026-03-04" untuk titik forward-fill). */
   notes?: Record<string, string>;
+  /** Label tebal di ujung kanan garis (mis. "×86,6" di Kelipatan). */
+  endLabel?: string;
+  /** Bulatan bertepi pada titik terakhir (mis. titik spot hari ini). */
+  endDot?: boolean;
+  /** Nama di legenda bila beda dari `label` (label dipakai tooltip). */
+  legendLabel?: string;
+  /** `false` = tidak masuk legenda (mis. ruas putus-putus yang berpasangan dengan garis utama). */
+  legend?: false;
+  /** Tooltip hanya untuk titik setelah tanggal ISO ini (menghindari baris ganda di titik sambungan). */
+  tooltipAfter?: string;
   points: SeriesPoint[];
+}
+
+/** Peristiwa bertanggal: garis vertikal putus-putus + label (`markLine`), mis. dari events.yml. */
+export interface ChartEvent {
+  date: string;
+  label: string;
 }
 
 /** Rentang tanpa data (inklusif). Digambar sebagai area berarsir + label, tidak disambung. */
@@ -100,6 +118,16 @@ export interface BuildInput {
   hatch?: string | ImagePatternObject;
   /** Lebar kolom label sumbu Y (px). */
   yAxisWidth?: number;
+  /** Anotasi peristiwa (hanya yang jatuh di rentang data). Dipasang pada seri pertama. */
+  events?: ChartEvent[];
+  /** Garis acuan horizontal tipis (mis. ×1 di Kelipatan). */
+  baseline?: number;
+  /** Nilai tick sumbu Y yang dipaksakan (skala log: 1, 2, 5, 10 …) beserta batas sumbunya. */
+  yTicks?: number[];
+  yMin?: number;
+  yMax?: number;
+  /** Ruang kanan grid untuk label ujung garis (px). */
+  gridRight?: number;
 }
 
 export const BAND_LOWER_ID = '__band_lower';
@@ -226,6 +254,77 @@ export function buildGapMarkArea(
   } as MarkAreaComponentOption;
 }
 
+const EVENT_NEAR_MS = 365 * DAY_MS;
+
+type EventPosition = 'insideEndTop' | 'insideStartTop';
+
+/**
+ * Posisi label peristiwa (label vertikal di sepanjang garis). Peristiwa yang berdekatan (< 1 tahun
+ * dari sebelumnya) digeser bergantian ke ujung bawah garis supaya label tidak bertumpuk.
+ */
+export function eventPlacements(
+  events: readonly ChartEvent[],
+  extent: [number, number] | null,
+): { time: number; label: string; position: EventPosition }[] {
+  const items = events
+    .map((e) => ({ time: isoToTime(e.date), label: e.label }))
+    .filter(
+      (e) => !Number.isNaN(e.time) && (!extent || (e.time >= extent[0] && e.time <= extent[1])),
+    )
+    .sort((a, b) => a.time - b.time);
+  let prev: { time: number; position: EventPosition } | null = null;
+  return items.map((e) => {
+    const position: EventPosition =
+      prev && e.time - prev.time < EVENT_NEAR_MS
+        ? prev.position === 'insideEndTop'
+          ? 'insideStartTop'
+          : 'insideEndTop'
+        : 'insideEndTop';
+    prev = { time: e.time, position };
+    return { ...e, position };
+  });
+}
+
+/** markLine: garis peristiwa vertikal putus-putus + garis acuan horizontal tipis. */
+export function buildEventMarkLine(
+  events: readonly ChartEvent[],
+  baseline: number | undefined,
+  extent: [number, number] | null,
+  tokens: ChartTokens,
+): MarkLineComponentOption | undefined {
+  const placed = eventPlacements(events, extent);
+  if (!placed.length && baseline === undefined) return undefined;
+  const data: unknown[] = placed.map((e) => ({
+    xAxis: e.time,
+    name: e.label,
+    label: {
+      show: true,
+      formatter: e.label,
+      position: e.position,
+      rotate: 90,
+      distance: 6,
+      color: tokens.muted,
+      fontSize: 11,
+      fontFamily: tokens.fontFamily,
+    },
+  }));
+  if (baseline !== undefined) {
+    data.push({
+      yAxis: baseline,
+      lineStyle: { color: tokens.muted, type: 'solid', width: 1, opacity: 0.6 },
+      label: { show: false },
+    });
+  }
+  return {
+    silent: true,
+    symbol: 'none',
+    animation: false,
+    lineStyle: { color: tokens.faint, type: 'dashed', width: 1, opacity: 0.7 },
+    emphasis: { disabled: true },
+    data,
+  } as MarkLineComponentOption;
+}
+
 /** Lebar jendela terlihat dalam hari (untuk format label sumbu X). */
 export function visibleSpanDays(
   extent: [number, number] | null,
@@ -302,7 +401,7 @@ export function buildTimeSeriesOption(input: BuildInput): {
   const yw = input.yAxisWidth ?? (compact ? 58 : 72);
   const grid: GridComponentOption = {
     left: yw,
-    right: compact ? 10 : 14,
+    right: input.gridRight ?? (compact ? 10 : 14),
     top: 14,
     bottom: showZoom ? sliderH + 46 : 30,
     outerBoundsMode: 'none',
@@ -310,6 +409,7 @@ export function buildTimeSeriesOption(input: BuildInput): {
 
   const totalPoints = resolved.reduce((n, s) => n + s.data.length, 0);
   const markArea = buildGapMarkArea(gaps, extent, t, input.hatch);
+  const markLine = buildEventMarkLine(input.events ?? [], input.baseline, extent, t);
 
   const lines: LineSeriesOption[] = resolved.map((s, i) => {
     const width = s.width ?? (s.dashed ? 1.8 : 2.2);
@@ -318,8 +418,8 @@ export function buildTimeSeriesOption(input: BuildInput): {
       name: s.label,
       type: 'line',
       data: s.data,
-      showSymbol: false,
-      symbol: 'circle',
+      showSymbol: !!s.endDot,
+      symbol: 'none',
       symbolSize: 10,
       connectNulls: false,
       z: 3,
@@ -334,7 +434,33 @@ export function buildTimeSeriesOption(input: BuildInput): {
       emphasis: { scale: false, lineStyle: { width } },
     };
     if (s.area) line.areaStyle = { color: s.rgb, opacity: 0.12 };
+    if (s.endDot && s.data.length > 0) {
+      // Hanya titik terakhir yang diberi bulatan; titik lain tetap tanpa simbol.
+      const lastIdx = s.data.length - 1;
+      line.data = s.data.map((d, k) =>
+        k === lastIdx
+          ? {
+              value: d,
+              symbol: 'circle',
+              symbolSize: 12,
+              itemStyle: { color: t.surface, borderColor: s.rgb, borderWidth: 2.5 },
+            }
+          : d,
+      ) as LineSeriesOption['data'];
+    }
+    if (s.endLabel) {
+      line.endLabel = {
+        show: true,
+        formatter: s.endLabel,
+        color: s.rgb,
+        fontWeight: 700,
+        fontSize: 13,
+        fontFamily: t.fontFamily,
+        distance: 8,
+      };
+    }
     if (i === 0 && markArea) line.markArea = markArea;
+    if (i === 0 && markLine) line.markLine = markLine;
     if (s.highlightMin) {
       line.markPoint = {
         symbol: 'circle',
@@ -436,7 +562,7 @@ export function buildTimeSeriesOption(input: BuildInput): {
   const tooltipSeries = resolved.map((s) => ({
     label: s.label,
     color: s.rgb,
-    data: s.data,
+    data: s.tooltipAfter ? s.data.filter((d) => d[0] > isoToTime(s.tooltipAfter!)) : s.data,
     envelope: envelopeMaps.get(s.id),
     notes: s.notes
       ? new Map(
@@ -523,11 +649,18 @@ export function buildTimeSeriesOption(input: BuildInput): {
     yAxis: {
       type: yLog ? 'log' : 'value',
       ...(yLog ? { logBase: 10 } : { scale: true }),
+      ...(input.yMin !== undefined ? { min: input.yMin } : {}),
+      ...(input.yMax !== undefined ? { max: input.yMax } : {}),
       splitNumber: compact ? 4 : 5,
       axisLine: { show: false },
-      axisTick: { show: false },
+      axisTick: { show: false, ...(input.yTicks ? { customValues: input.yTicks } : {}) },
       splitLine: { lineStyle: { color: t.grid, width: 1 } },
-      axisLabel: { ...axisLabelStyle(t), margin: 10, formatter: (v: number) => fmt.axis(v) },
+      axisLabel: {
+        ...axisLabelStyle(t),
+        margin: 10,
+        formatter: (v: number) => fmt.axis(v),
+        ...(input.yTicks ? { customValues: input.yTicks } : {}),
+      },
     },
     tooltip: {
       trigger: 'axis',

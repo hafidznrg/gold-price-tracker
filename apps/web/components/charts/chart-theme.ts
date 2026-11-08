@@ -4,6 +4,8 @@
  * Semua fungsi di sini murni kecuali `readTokens` (butuh DOM) agar mudah diuji.
  */
 
+import { formatMultiple, formatMultipleAxis } from '../../lib/format';
+
 /** Token tema yang dipakai grafik. Nilai = warna konkret (canvas tidak mengerti `var()`). */
 export interface ChartTokens {
   bg: string;
@@ -150,7 +152,7 @@ export function formatPercent(v: number | null | undefined, decimals = 2): strin
   return formatNumber(v, decimals) + '%';
 }
 
-export type ValueFormat = 'rupiah' | 'percent' | 'number' | ((v: number) => string);
+export type ValueFormat = 'rupiah' | 'percent' | 'number' | 'multiple' | ((v: number) => string);
 
 /** Formatter sumbu (ringkas) dan tooltip (lengkap) untuk satu `ValueFormat`. */
 export function valueFormatters(format: ValueFormat = 'rupiah'): {
@@ -163,6 +165,11 @@ export function valueFormatters(format: ValueFormat = 'rupiah'): {
   switch (format) {
     case 'percent':
       return { axis: (v) => formatPercent(v, 1), tooltip: (v) => formatPercent(v, 2) };
+    case 'multiple':
+      return {
+        axis: formatMultipleAxis,
+        tooltip: (v) => (v === null ? '—' : formatMultiple(v)),
+      };
     case 'number':
       return {
         axis: (v) => formatNumber(v, Math.abs(v) < 10 ? 1 : 0),

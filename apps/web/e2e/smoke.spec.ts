@@ -13,6 +13,11 @@ const PAGES = [
     heading: /Emas fisik dan tabungan\s+di berat yang sama/,
     marker: /Rp\s?\d{1,3}(\.\d{3})+/,
   },
+  {
+    path: '/kelipatan',
+    heading: /Emas naik\s+×\d+[,.]?\d*\s+dalam rupiah sejak 1996/,
+    marker: /Rp\s?\d{1,3}(\.\d{3})+/,
+  },
   { path: '/data', heading: /Unduh\s+setiap seri/, marker: /Data terakhir/ },
 ] as const;
 
@@ -158,6 +163,55 @@ test.describe('Bandingkan', () => {
     await expect(page.getByText(/Spot dunia bersifat indikatif/)).toBeVisible();
     await expect(page.getByText('Ongkos cetak & sertifikat')).toBeVisible();
     await expect(page.getByText('Margin distribusi')).toBeVisible();
+  });
+});
+
+test.describe('Kelipatan', () => {
+  const START = '/kelipatan?b=2010&a=end&lm=1';
+
+  async function expectState(page: Page) {
+    await expect(page.getByRole('radio', { name: '2010', exact: true })).toBeChecked();
+    await expect(page.getByRole('radio', { name: 'Penutupan akhir tahun' })).toBeChecked();
+    await expect(page.getByRole('checkbox', { name: /Garis Antam LM/ })).toBeChecked();
+    await expect(page.getByRole('heading', { level: 1 })).toContainText('sejak 2010');
+    await expect(
+      page.getByRole('heading', { name: /sejak 2010 .penutupan akhir tahun/ }),
+    ).toBeVisible();
+  }
+
+  test('tahun dasar, agregasi, dan garis Antam dipulihkan saat reload', async ({ page }) => {
+    const errors = collectErrors(page);
+    await page.goto(START);
+    await expectState(page);
+    await page.reload();
+    await expectState(page);
+    const q = new URL(page.url()).searchParams;
+    expect([q.get('b'), q.get('a'), q.get('lm')]).toEqual(['2010', 'end', '1']);
+    await page.waitForLoadState('load');
+    expect(errors).toEqual([]);
+  });
+
+  test('mengubah pilihan memperbarui URL; bawaan tidak ditulis', async ({ page }) => {
+    await page.goto('/kelipatan');
+    await page.getByRole('radio', { name: '2005', exact: true }).click();
+    await page.getByRole('radio', { name: 'Penutupan akhir tahun' }).click();
+    await page.getByRole('checkbox', { name: /Garis Antam LM/ }).check();
+    await expect(page).toHaveURL(/[?&]b=2005(&|$)/);
+    await expect(page).toHaveURL(/[?&]a=end(&|$)/);
+    await expect(page).toHaveURL(/[?&]lm=1(&|$)/);
+    await page.getByRole('radio', { name: '1996', exact: true }).click();
+    await page.getByRole('radio', { name: 'Rata-rata tahunan' }).click();
+    await page.getByRole('checkbox', { name: /Garis Antam LM/ }).uncheck();
+    await expect(page).not.toHaveURL(/[?&](b|a|lm)=/);
+  });
+
+  test('tabel tahunan memuat sumber dan spot indikatif ditegaskan', async ({ page }) => {
+    await page.goto('/kelipatan');
+    await expect(page.getByRole('heading', { name: 'Angka di balik garis' })).toBeVisible();
+    await expect(page.getByRole('table', { name: 'Rata-rata tahunan' })).toContainText(
+      'xaus · harian',
+    );
+    await expect(page.getByText(/Spot dari xaus.com bersifat indikatif/)).toBeVisible();
   });
 });
 

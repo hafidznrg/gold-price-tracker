@@ -1,8 +1,8 @@
 import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import type { Series } from '@gold/schema';
-import { LATEST_PATH, META_PATH, macroJsonPath, seriesJsonPath } from './paths';
-import type { LatestFile, MacroFile, MetaFile, SeriesFile } from './types';
+import { ANNUAL_PATH, LATEST_PATH, META_PATH, macroJsonPath, seriesJsonPath } from './paths';
+import type { AnnualFile, LatestFile, MacroFile, MetaFile, SeriesFile } from './types';
 
 // Loader build-time (server component saat static export): baca public/data/ hasil prebuild.
 // Jangan diimpor dari komponen klien ('use client') — memakai node:fs.
@@ -26,6 +26,11 @@ export function readLatest(): LatestFile {
 
 export function readMeta(): MetaFile {
   return readJson<MetaFile>(META_PATH);
+}
+
+/** Agregat tahunan (`derived/annual.json`): rata-rata, penutupan akhir tahun, Antam LM. */
+export function readAnnual(): AnnualFile {
+  return readJson<AnnualFile>(ANNUAL_PATH);
 }
 
 export function readSeriesFile(file: string): SeriesFile {

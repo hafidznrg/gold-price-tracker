@@ -12,6 +12,7 @@ import {
   GOLD_IDR_GRAM_FIELDS,
   PREMIUM_ANTAM_FIELDS,
   PREMIUM_ANTAM_MONTHLY_FIELDS,
+  type AnnualEnd,
   type AnnualFile,
   type AnnualRow,
   type AnnualValue,
@@ -37,6 +38,64 @@ export function buildGoldIdrGramFile(
   return { fields: GOLD_IDR_GRAM_FIELDS, fx_series: fxSeries, rows };
 }
 
+function isAntamLm1g(r: PriceRow): r is PriceRow & { sell_price: number } {
+  return (
+    r.source === 'logammulia' &&
+    r.brand === 'antam' &&
+    r.product === 'gold_bar' &&
+    r.weight_g === 1 &&
+    r.sell_price !== null
+  );
+}
+
+/** Baris makro terakhir per (seri, frekuensi, tahun), hanya sampai `until`. */
+function lastByYear(
+  macro: readonly MacroRow[],
+  until: string | null,
+): Map<string, { date: string; value: number }> {
+  const out = new Map<string, { date: string; value: number }>();
+  for (const r of macro) {
+    if (until !== null && r.date > until) continue;
+    const k = `${r.series}|${r.frequency}|${r.date.slice(0, 4)}`;
+    const cur = out.get(k);
+    if (!cur || r.date > cur.date) out.set(k, { date: r.date, value: r.value });
+  }
+  return out;
+}
+
+function yearEnd(
+  last: ReadonlyMap<string, { date: string; value: number }>,
+  year: number,
+  p: AnnualValue | null,
+): AnnualEnd | null {
+  if (!p) return null;
+  const hit = last.get(`${p.series}|${p.frequency}|${year}`);
+  return hit ? { date: hit.date, value: round(hit.value, 2) } : null;
+}
+
+/** Antam LM 1 g jual per tahun: rata-rata harian dan harga terakhir. */
+function antamByYear(prices: readonly PriceRow[]): Map<number, NonNullable<AnnualRow['antam_lm']>> {
+  const acc = new Map<number, { sum: number; days: number; endDate: string; end: number }>();
+  for (const r of prices) {
+    if (!isAntamLm1g(r)) continue;
+    const y = Number(r.date.slice(0, 4));
+    const cur = acc.get(y) ?? { sum: 0, days: 0, endDate: '', end: 0 };
+    cur.sum += r.sell_price;
+    cur.days += 1;
+    if (r.date >= cur.endDate) {
+      cur.endDate = r.date;
+      cur.end = r.sell_price;
+    }
+    acc.set(y, cur);
+  }
+  return new Map(
+    [...acc].map(([y, a]) => [
+      y,
+      { avg: Math.round(a.sum / a.days), end: a.end, end_date: a.endDate, days: a.days },
+    ]),
+  );
+}
+
 function annualValue(p: AggregatePoint | undefined): AnnualValue | null {
   if (!p) return null;
   return {
@@ -57,6 +116,7 @@ function annualValue(p: AggregatePoint | undefined): AnnualValue | null {
 export function buildAnnualFile(
   macro: readonly MacroRow[],
   configs: readonly MacroSeriesConfig[],
+  prices: readonly PriceRow[] = [],
 ): AnnualFile {
   const until = macro
     .filter((r) => r.frequency === 'D')
@@ -75,28 +135,24 @@ export function buildAnnualFile(
     idrByYear.set(year, [...(idrByYear.get(year) ?? []), goldIdrGram(gold, fx.value)]);
   }
   const years = [...new Set([...goldY, ...fxY].map((p) => Number(p.period)))].sort((a, b) => a - b);
+  const last = lastByYear(macro, until);
+  const antam = antamByYear(prices);
   const rows = years.map((year): AnnualRow => {
     const idr = idrByYear.get(year);
+    const gold_usd = annualValue(goldY.find((p) => Number(p.period) === year));
+    const usd_idr = annualValue(fxY.find((p) => Number(p.period) === year));
     return {
       year,
-      gold_usd: annualValue(goldY.find((p) => Number(p.period) === year)),
-      usd_idr: annualValue(fxY.find((p) => Number(p.period) === year)),
+      gold_usd,
+      usd_idr,
+      year_end: { gold_usd: yearEnd(last, year, gold_usd), usd_idr: yearEnd(last, year, usd_idr) },
+      antam_lm: antam.get(year) ?? null,
       idr_gram: idr
         ? { value: round(idr.reduce((a, b) => a + b, 0) / idr.length, 2), months: idr.length }
         : null,
     };
   });
   return { until, rows };
-}
-
-function isAntamLm1g(r: PriceRow): r is PriceRow & { sell_price: number } {
-  return (
-    r.source === 'logammulia' &&
-    r.brand === 'antam' &&
-    r.product === 'gold_bar' &&
-    r.weight_g === 1 &&
-    r.sell_price !== null
-  );
 }
 
 /**

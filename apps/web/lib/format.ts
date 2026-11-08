@@ -87,6 +87,20 @@ export function formatNumber(n: number, digits = 0): string {
   });
 }
 
+/**
+ * Kelipatan terhadap tahun dasar: "×86,6", "×7,72", "×122". Desimal menyesuaikan besaran agar
+ * angka kecil tidak kehilangan informasi (×1,05) dan angka besar tidak berisik.
+ */
+export function formatMultiple(k: number | null | undefined): string {
+  if (k === null || k === undefined || Number.isNaN(k)) return EMPTY;
+  return `×${formatNumber(k, k >= 100 ? 0 : k >= 10 ? 1 : 2)}`;
+}
+
+/** Label sumbu skala log: "×0,5", "×1", "×2", "×5", "×10" (tanpa desimal bila bulat). */
+export function formatMultipleAxis(k: number): string {
+  return `×${formatNumber(k, Number.isInteger(k) ? 0 : 1)}`;
+}
+
 /** "Rp2.512.000"; null/NaN → "—". Dibulatkan ke rupiah kecuali `digits` diberi. */
 export function formatRupiah(n: number | null | undefined, digits = 0): string {
   if (n === null || n === undefined || Number.isNaN(n)) return EMPTY;
