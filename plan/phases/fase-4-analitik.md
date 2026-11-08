@@ -25,7 +25,8 @@
   - *7 Nov 2026:* `agg=w|m` (tanpa = harian), nilai penutupan periode; pita min–maks `band=1` hanya untuk mingguan/bulanan. Celah ditampilkan bila satu minggu/bulan penuh kosong.
 - [x] **P4-03** Opsi *forward-fill* berlabel; default tetap menampilkan celah. — `FR-35` · S
   - *7 Nov 2026:* `ffill=1`; titik terisi berlabel "isi dari <tanggal>" di tooltip dan catatan kaki, arsiran celah disembunyikan. Salinan klien `lib/forward-fill.ts` diuji setara dengan `derive.ts` (`@gold/schema` tidak masuk bundel klien).
-- [ ] **P4-04** Pasangan spread bebas: jual dari sumber A vs buyback dari sumber B (mis. beli UBS di Pegadaian, jual ke UBS Lifestyle). — `FR-29` · M
+- [x] **P4-04** Pasangan spread bebas: jual dari sumber A vs buyback dari sumber B (mis. beli UBS di Pegadaian, jual ke UBS Lifestyle). — `FR-29` · M
+  - *8 Nov 2026:* sudah terpenuhi oleh halaman Spread Fase 3 (P3-07): pemilih "Beli di (harga jual)" × "Jual ke (harga buyback)" lintas sumber per gramasi, pasangan populer (Antam: Pegadaian → Logam Mulia, UBS: Pegadaian → UBS Lifestyle, dll.), band jual–buyback, spread % dan titik impas. Kartu "Pasangan bebas" terpisah sempat dibuat lalu dibatalkan karena menduplikasi pemilih itu.
 
 ### Halaman baru
 
