@@ -265,6 +265,32 @@ test.describe('Kalkulator', () => {
   });
 });
 
+test('navigasi utama memuat ketujuh halaman dan semua tautannya sampai', async ({ page }) => {
+  const errors = collectErrors(page);
+  await page.goto('/');
+  const nav = page.getByRole('navigation', { name: 'Navigasi utama' }).first();
+  const links = nav.getByRole('link');
+  await expect(links).toHaveCount(PAGES.length);
+  const hrefs = await links.evaluateAll((els) => els.map((e) => e.getAttribute('href')));
+  expect(hrefs).toEqual(PAGES.map((p) => p.path));
+  for (const p of PAGES) {
+    await page.goto('/');
+    await page
+      .getByRole('navigation', { name: 'Navigasi utama' })
+      .first()
+      .locator(`a[href="${p.path}"]`)
+      .click();
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText(p.heading);
+    await expect(
+      page
+        .getByRole('navigation', { name: 'Navigasi utama' })
+        .first()
+        .locator('a[aria-current="page"]'),
+    ).toHaveAttribute('href', p.path);
+  }
+  expect(errors).toEqual([]);
+});
+
 test('rute tak dikenal menampilkan halaman 404', async ({ page }) => {
   const res = await page.goto('/tidak-ada-halaman');
   expect(res?.status()).toBe(404);

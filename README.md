@@ -137,7 +137,7 @@ Backfill tidak menimpa nilai yang sama, mencatat nilai yang berbeda sebagai revi
 
 ## Situs web
 
-Situs statis (`apps/web`, Next.js static export): Hari ini, Explorer, Spread, dan Data. Alamat: <https://gold.hafidznrg.my.id> (Vercel, dibangun ulang otomatis setiap ada commit data).
+Situs statis (`apps/web`, Next.js static export): Hari ini, Explorer, Spread, Bandingkan, Kalkulator, Kelipatan, dan Data. Alamat: <https://gold.hafidznrg.my.id> (Vercel, dibangun ulang otomatis setiap ada commit data).
 
 ```bash
 pnpm --filter web exec tsx scripts/build-data.ts  # CSV di data/ -> JSON di apps/web/public/data
@@ -147,6 +147,64 @@ pnpm --filter web e2e          # smoke test Playwright terhadap out/ (butuh buil
 ```
 
 Atur `NEXT_PUBLIC_SITE_URL` saat build agar tag Open Graph memakai domain yang benar.
+
+## API statis
+
+Data yang dipakai situs juga bisa diambil langsung. Semua file dibuat saat build dari CSV di `data/` dan disajikan sebagai file statis di `https://gold.hafidznrg.my.id/data/` (selanjutnya `{BASE}`). Tidak ada server, kunci API, maupun batas permintaan, tetapi juga tidak ada header CORS khusus: pemakaian dari skrip, spreadsheet, atau server aman, sedangkan `fetch` dari halaman web lain bisa diblokir browser.
+
+Semua file dibangun ulang setiap ada commit data (sekali sehari per sumber, lihat [Jadwal](#jadwal)). Tidak ada jaminan versi selain `schema_version` di `latest.json` dan `meta.json`: bentuk file boleh bertambah kolom/kunci, dan perubahan yang memutus kompatibilitas menaikkan versi mayor.
+
+| Endpoint | Isi | Diperbarui |
+| --- | --- | --- |
+| `{BASE}/latest.json` | Harga terbaru, perubahan, dan sparkline per seri; spot emas; status sumber | Harian |
+| `{BASE}/meta.json` | Katalog sumber, seri, rentang data, peristiwa, dan daftar file untuk diunduh | Harian |
+| `{BASE}/series/{file}.json` | Seri harian satu sumber × brand × produk, mis. `logammulia-antam`, `pegadaian-galeri24`, `ubslifestyle-ubs` (daftar lengkap di `meta.json`) | Harian |
+| `{BASE}/macro/{series}.json` | Seri makro mentah: `xau_usd_oz`, `usd_idr_jisdor`, `usd_idr_ecb`, `usd_idr_annual` | Harian (`annual`: tahunan) |
+| `{BASE}/derived/gold-idr-gram.json` | Emas spot dalam Rp/gram (US$/oz × kurs ÷ 31,1035) | Harian |
+| `{BASE}/derived/annual.json` | Agregat tahunan emas, kurs, Antam 1 g, dan Rp/gram sejak 1996 | Harian |
+| `{BASE}/derived/premium-antam.json` | Premi Antam 1 g terhadap spot (harian dan bulanan) | Harian |
+| `{BASE}/csv/{file}.csv` | CSV lengkap untuk setiap `series/` dan `macro/` di atas, mis. `csv/logammulia-antam.csv`, `csv/xau_usd_oz.csv` | Harian |
+
+Baris data berbentuk tuple (array) dengan urutan kolom yang tertera di properti `fields`, supaya file kecil. Harga dalam rupiah per keping (bukan per gram) kecuali disebut lain; `null` berarti sumber tidak menampilkan harga itu.
+
+| File | `fields` | Contoh |
+| --- | --- | --- |
+| `series/*.json` | `date, variant, w, sell, buyback` (`w` = gram, `variant` = tahun produksi UBS atau kosong) | `["2026-11-07","",1,2545000,2350000]` |
+| `macro/*.json` | `date, frequency, value, source` (`frequency`: `D` harian, `M` bulanan, `A` tahunan) | `["1996-01-01","M",399,"worldbank"]` |
+| `derived/gold-idr-gram.json` | `date, idr_gram, xau_usd_oz, usd_idr, fx` (`fx` = indeks ke `fx_series`) | `["2021-11-05",839606.56,1816.8,14374,0]` |
+| `derived/premium-antam.json` | `rows`: `date, pct, spot_date`; `monthly`: `month, pct, gold_frequency, days` | `["2021-11-08",12.5527,"2021-11-05"]` |
+
+`derived/annual.json` berbentuk objek: `{ "until": "2026-11-06", "rows": [{ "year": 1996, "gold_usd": { "value": 387.58, ... }, "usd_idr": {...}, "antam_lm": null, "idr_gram": {...} }] }`.
+
+Contoh potongan `series/logammulia-antam.json`:
+
+```json
+{"file":"logammulia-antam","source":"logammulia","brand":"antam","product":"gold_bar","location":"jakarta",
+ "fields":["date","variant","w","sell","buyback"],
+ "rows":[["2010-01-04","",1,408000,null],["2010-01-05","",1,410000,null]]}
+```
+
+### Memakai di spreadsheet
+
+**Google Sheets.** `IMPORTDATA` hanya membaca CSV, jadi pakai endpoint `csv/`:
+
+```
+=IMPORTDATA("https://gold.hafidznrg.my.id/data/csv/logammulia-antam.csv")
+=IMPORTDATA("https://gold.hafidznrg.my.id/data/csv/xau_usd_oz.csv")
+```
+
+Kolom CSV: `date, source, brand, product, variant, weight_g, location, sell_price, buyback_price, ...` (harga) dan `date, series, frequency, value, unit, ...` (makro). Alternatif lain: CSV mentah per tahun di GitHub, mis. `https://raw.githubusercontent.com/hafidznrg/gold-price-tracker/main/data/prices/logammulia/2026.csv` dan `.../main/data/macro/xau_usd_oz.csv`. Untuk JSON, pakai Apps Script (Extensions → Apps Script), lalu panggil `=GOLD_LATEST()` di sel:
+
+```js
+function GOLD_LATEST() {
+  const j = JSON.parse(UrlFetchApp.fetch('https://gold.hafidznrg.my.id/data/series/logammulia-antam.json').getContentText());
+  return j.rows.slice(-30).map((r) => [r[0], r[3], r[4]]); // tanggal, jual, buyback
+}
+```
+
+**Excel (Power Query).** Data → Get Data → From Other Sources → From Web, isi URL JSON (mis. `.../data/series/logammulia-antam.json`). Di editor, klik `rows` → *To Table* → *Expand* kolomnya, lalu beri nama kolom sesuai `fields`. Untuk CSV, pakai From Text/CSV dengan URL file `csv/` yang sama.
+
+Data tetap milik masing-masing penerbit (lihat [Catatan data](#catatan-data)); bila dipakai ulang, sebutkan sumber aslinya dan proyek ini, dan jangan menganggapnya rekomendasi investasi.
 
 ## Lisensi
 

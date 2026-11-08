@@ -390,3 +390,60 @@ describe('celah dan titik grafik tampilan', () => {
     ]);
   });
 });
+
+describe('batas rentang dan celah (risiko Fase 4)', () => {
+  it('pekan melintasi pergantian tahun satu periode; bulan berbeda terpisah', () => {
+    const pts = [pt('2026-12-30', 1), pt('2027-01-01', 3), pt('2027-01-04', 5)];
+    expect(aggregateClose(pts, 'w').map((p) => [p.date, p.value, p.min, p.max])).toEqual([
+      ['2027-01-01', 3, 1, 3],
+      ['2027-01-04', 5, 5, 5],
+    ]);
+    expect(aggregateClose(pts, 'm').map((p) => [p.date, p.value])).toEqual([
+      ['2026-12-30', 1],
+      ['2027-01-04', 5],
+    ]);
+  });
+
+  it('indeks mingguan: dasar = penutupan pekan pertama yang terlihat di rentang', () => {
+    const pts = aggregateClose(
+      [pt('2026-10-05', 100), pt('2026-10-09', 110), pt('2026-10-14', 120), pt('2026-10-16', 150)],
+      'w',
+    );
+    // rentang mulai Rabu 14 Okt: pekan 5–11 Okt (penutupan 9 Okt) berada sebelum rentang
+    const out = applyMode(pts, 'index', 1, '2026-10-14', '2026-10-31');
+    expect(out.map((p) => p.date)).toEqual(['2026-10-09', '2026-10-16']);
+    expect(out[1]!.value).toBe(100);
+    expect(out[0]!.value).toBeCloseTo((110 / 150) * 100);
+  });
+
+  it('rentang berakhir sebelum titik pertama atau mulai sesudah titik terakhir → kosong', () => {
+    const pts = [view('2026-10-05', 100), view('2026-10-09', 110)];
+    expect(applyMode(pts, 'pct', 1, '2026-09-01', '2026-09-30')).toEqual([]);
+    expect(applyMode(pts, 'pct', 1, '2026-11-01', '2026-11-30')).toEqual([]);
+  });
+
+  it('isi celah tidak memperpanjang sebelum titik pertama atau sesudah titik terakhir', () => {
+    const out = fillGaps([view('2026-10-07', 1), view('2026-10-20', 2)], 'w');
+    expect(out[0]!.date).toBe('2026-10-07');
+    expect(out.at(-1)!.date).toBe('2026-10-20');
+    expect(out.filter((p) => p.filledFrom !== null).map((p) => p.date)).toEqual(['2026-10-18']);
+  });
+
+  it('isi celah bulanan melintasi pergantian tahun dan Februari kabisat', () => {
+    const out = fillGaps([view('2023-12-15', 1), view('2024-03-02', 4)], 'm');
+    expect(out.map((p) => [p.date, p.filledFrom])).toEqual([
+      ['2023-12-15', null],
+      ['2024-01-31', '2023-12-15'],
+      ['2024-02-29', '2023-12-15'],
+      ['2024-03-02', null],
+    ]);
+  });
+
+  it('viewGaps: celah persis satu pekan penuh Senin–Minggu tetap ada; satu hari kurang hilang', () => {
+    expect(viewGaps([{ from: '2026-10-05', to: '2026-10-11' }], 'w')).toEqual([
+      { from: '2026-10-05', to: '2026-10-11' },
+    ]);
+    expect(viewGaps([{ from: '2026-10-05', to: '2026-10-10' }], 'w')).toEqual([]);
+    expect(viewGaps([{ from: '2026-10-06', to: '2026-10-12' }], 'w')).toEqual([]);
+  });
+});

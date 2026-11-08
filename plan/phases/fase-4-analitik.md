@@ -46,9 +46,12 @@
 
 ### Data dan sumber tambahan
 
-- [ ] **P4-10** Dokumentasi API statis di README repo (bukan di halaman Data, D-34): daftar endpoint, format, contoh pemakaian di spreadsheet. — `FR-34` · S
-- [ ] **P4-11** *(P2)* Scrape tabel harga Antam LM per gramasi dengan sesi browser yang sama; bila gagal, tetap simpan 1 g. — `FR-04` · M
-- [ ] **P4-12** Perluas smoke test dan uji unit untuk halaman dan perhitungan baru. — `NFR-10` · S
+- [x] **P4-10** Dokumentasi API statis di README repo (bukan di halaman Data, D-34): daftar endpoint, format, contoh pemakaian di spreadsheet. — `FR-34` · S
+  - *8 Nov 2026:* bagian "API statis" di README.md: `latest.json`, `meta.json`, `series/{file}.json`, `macro/{series}.json`, `derived/gold-idr-gram.json`, `derived/annual.json`, `derived/premium-antam.json`, `csv/{file}.csv`; urutan field tuple + contoh, Google Sheets (`IMPORTDATA` ke CSV, Apps Script untuk JSON), Excel Power Query, tanpa jaminan CORS, versi lewat `schema_version`, data milik penerbit.
+- [x] **P4-11** *(P2)* Scrape tabel harga Antam LM per gramasi dengan sesi browser yang sama; bila gagal, tetap simpan 1 g. — `FR-04` · M
+  - *8 Nov 2026:* tabel Emas Batangan per gramasi sudah di-scrape sejak Fase 1 (`parseTable`, 12 gramasi, data sejak 26 Okt 2026). Ditambah fallback: bila tabel gagal dibaca, `parse` menyimpan satu baris 1 g dari titik grafik (jual + buyback) dengan `note` → run `success` dengan catatan di `error_message` (mekanisme sama dengan fallback JISDOR); V-04 dikecualikan hanya untuk satu baris 1 g itu (TECH-SPEC §7). Tanpa titik grafik → `PARSE_ERROR` seperti semula. Uji di `test/logammulia.test.ts`.
+- [x] **P4-12** Perluas smoke test dan uji unit untuk halaman dan perhitungan baru. — `NFR-10` · S
+  - *8 Nov 2026:* audit tes Fase 4: `lib/nav.test.ts` (7 halaman, masing-masing punya `page.tsx`), 6 kasus batas di `lib/explorer.test.ts` (batas tahun/bulan, rentang memotong agregat mingguan, batas forward-fill, Februari kabisat, `viewGaps`), e2e navigasi 7 tautan + `aria-current`. Total: web 205, scraper 330, schema 118 uji unit; 29 e2e. First Load JS (gzip, dari `out/*.html`): 185–208 KB per halaman, selisih antarhalaman ≤ 23 KB; ECharts tidak masuk chunk awal (dimuat lambat).
 
 ## Kriteria selesai
 

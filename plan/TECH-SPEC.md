@@ -294,7 +294,7 @@ Tingkat **run** = seluruh hasil sumber itu tidak ditulis (`failed`). Tingkat **b
 | V-01 | Lolos skema `zod` (tipe, kolom wajib, enum, minimal satu harga terisi) | Semua | Run | `SCHEMA_INVALID` |
 | V-02 | `source × brand × product × weight_g` ada di `config/catalog.yml` dan aktif | Harga ritel | Baris | Karantina `UNKNOWN_ITEM` → tambahkan ke katalog lalu setujui |
 | V-03 | `buyback_price < sell_price` pada baris yang sama | Harga ritel | Run | `VALIDATION_FAILED` |
-| V-04 | Jumlah baris ≥ minimum (UBS ≥ 13 untuk tahun berjalan; Pegadaian ≥ 5 per brand) | Harga ritel | Run | `VALIDATION_FAILED` |
+| V-04 | Jumlah baris ≥ minimum (UBS ≥ 13 untuk tahun berjalan; Pegadaian ≥ 5 per brand; Logam Mulia ≥ 12, kecuali fallback satu baris 1 g dari grafik saat tabel gagal dibaca, P4-11) | Harga ritel | Run | `VALIDATION_FAILED` |
 | V-05 | Harga per gram berubah ≤ ±10% dari nilai terakhir seri yang sama | Harga ritel | Baris | Karantina `PRICE_JUMP` |
 | V-06 | Tanggal data = hari ini. UBS: titik terakhir grafik yang cocok dengan buyback 1 g tabel (D-19); Pegadaian: `tglBerlaku` (D-20) | UBS, Pegadaian | Run | `stale`; gagal hanya pada hari yang diharapkan |
 | ~~V-07~~ | ~~Titik terakhir ≤ 3 hari; jumlah titik histori ≥ `status.history_points`~~ — dihapus (D-26), Logam Mulia memakai V-06 | — | — | — |

@@ -111,10 +111,41 @@ export function parse(payload: RawPayload): ParseResult<PriceRow> {
   const raw = readRaw(payload.body);
   if (!raw.text.includes(BOUTIQUE)) throw parseError(`butik bukan "${BOUTIQUE}"`);
   const updated = parseUpdated(raw.text);
-  const table = parseTable(raw.text);
-
   const sellPoint = lastOn(raw.chart.sell, updated.date);
   const buybackPoint = lastOn(raw.chart.buyback, updated.date);
+
+  let table: { weight_g: number; base: number }[];
+  try {
+    table = parseTable(raw.text);
+  } catch (err) {
+    // FR-04: tabel gagal dibaca → tetap simpan 1 g dari titik grafik hari itu. Catatan
+    // `note` masuk ke RUN.error_message (run tetap `success`, seperti fallback JISDOR) dan
+    // V-04 tidak berlaku untuk hasil fallback. Tanpa titik grafik hari itu, gagal seperti biasa.
+    if (!sellPoint) throw err;
+    const reason = err instanceof Error ? err.message : String(err);
+    const rows1g: ParsedRow<PriceRow>[] = [
+      {
+        date: updated.date,
+        source: 'logammulia',
+        brand: 'antam',
+        product: 'gold_bar',
+        variant: '',
+        weight_g: 1,
+        location: 'jakarta',
+        sell_price: sellPoint.y,
+        buyback_price: buybackPoint?.y ?? null,
+        source_updated_at: updated.at,
+      },
+    ];
+    return {
+      rows: rows1g,
+      dataDate: updated.date,
+      sourceUpdatedAt: updated.at,
+      stale: null,
+      note: `fallback grafik 1 g; tabel gagal dibaca: ${reason}`.slice(0, 500),
+    };
+  }
+
   const base1g = table.find((r) => r.weight_g === 1)?.base;
   // Seperti UBS (D-19): grafik dan tabel dimuat terpisah; bila titik 1 g hari ini ≠ tabel,
   // salah satunya belum segar dan buyback-nya tidak bisa dipasangkan dengan aman.

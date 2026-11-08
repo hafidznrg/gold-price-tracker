@@ -67,6 +67,53 @@ describe('parse Logam Mulia', () => {
     ).toThrow(/butik/);
   });
 
+  it('tabel rusak → fallback 1 g dari grafik + note (FR-04)', () => {
+    const s = parse(edit((raw) => (raw.text = raw.text.replace('Harga Dasar', 'Kolom Lain'))));
+    expect(s.rows).toHaveLength(1);
+    expect(s.rows[0]).toMatchObject({
+      weight_g: 1,
+      sell_price: 2_540_000,
+      buyback_price: 2_335_000,
+      date: '2026-10-26',
+    });
+    expect(s.stale).toBeNull();
+    expect(s.note).toMatch(/^fallback grafik 1 g; tabel gagal dibaca: .*Harga Dasar/);
+  });
+
+  it('baris tabel tak terbaca → fallback 1 g', () => {
+    const s = parse(edit((raw) => (raw.text = raw.text.replace('Rp 2,540,000', 'Rp ???'))));
+    expect(s.rows.map((x) => x.weight_g)).toEqual([1]);
+    expect(s.note).toMatch(/^fallback/);
+  });
+
+  it('tabel normal → tanpa note', () => {
+    expect(r.note).toBeUndefined();
+  });
+
+  it('tabel rusak dan grafik tanpa titik hari ini → PARSE_ERROR seperti semula', () => {
+    expect(() =>
+      parse(
+        edit((raw) => {
+          raw.text = raw.text.replace('Harga Dasar', 'Kolom Lain');
+          raw.chart.sell = raw.chart.sell.slice(0, -1);
+        }),
+      ),
+    ).toThrow(/Harga Dasar/);
+  });
+
+  it('fallback lolos validasi (V-04 dikecualikan) dan tidak stale', async () => {
+    const { catalog } = await loadConfig(ROOT);
+    const fb = parse(edit((raw) => (raw.text = raw.text.replace('Harga Dasar', 'Kolom Lain'))));
+    const v = validate({
+      source: 'logammulia',
+      parsed: fb,
+      catalog,
+      existing: [],
+      today: '2026-10-26',
+    });
+    expect(v.outcome === 'ok' && v.rows.length).toBe(1);
+  });
+
   it('lolos validasi dengan katalog proyek', async () => {
     const { catalog } = await loadConfig(ROOT);
     const v = validate({

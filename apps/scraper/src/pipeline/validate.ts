@@ -101,7 +101,11 @@ export function newestVariant(rows: readonly Pick<Candidate, 'variant'>[]): stri
 }
 
 /** V-04: jumlah baris ≥ minimum. */
-function checkMinRows(source: PriceSource, rows: readonly Candidate[]): string | null {
+function checkMinRows(
+  source: PriceSource,
+  rows: readonly Candidate[],
+  note?: string,
+): string | null {
   switch (source) {
     case 'ubslifestyle': {
       const variant = newestVariant(rows);
@@ -119,7 +123,9 @@ function checkMinRows(source: PriceSource, rows: readonly Candidate[]): string |
         : `V-04: ${short.map(([b, n]) => `${b} ${n} gramasi`).join(', ')} (minimal ${MIN_ROWS.pegadaian} per brand)`;
     }
     case 'logammulia':
-      return rows.length >= MIN_ROWS.logammulia
+      // `note` = fallback 1 g saat tabel gagal dibaca (FR-04): sengaja hanya satu baris 1 g.
+      return (note && rows.length === 1 && rows[0]!.weight_g === 1) ||
+        rows.length >= MIN_ROWS.logammulia
         ? null
         : `V-04: ${rows.length} gramasi (minimal ${MIN_ROWS.logammulia})`;
   }
@@ -158,7 +164,7 @@ export function validate(input: ValidateInput): ValidateResult {
 
   const schema = checkSchema(rows);
   if (schema) return fail('SCHEMA_INVALID', `V-01: ${schema}`);
-  const runLevel = checkSpread(rows) ?? checkMinRows(source, rows);
+  const runLevel = checkSpread(rows) ?? checkMinRows(source, rows, parsed.note);
   if (runLevel) return fail('VALIDATION_FAILED', runLevel);
 
   const stale = checkFreshness(input);
