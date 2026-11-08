@@ -83,10 +83,37 @@ export function sellCandidates(buy: CompareDef): CompareDef[] {
   return COMPARE_DEFS.filter((d) => d.brand === buy.brand && d.product === buy.product);
 }
 
-/** Ada buyback untuk berat ini? (Buyback Logam Mulia hanya 1 g; batangan Pegadaian tidak ada.) */
+/**
+ * Sumber yang buyback-nya berlaku per gram untuk semua ukuran keping (D-39): Logam Mulia
+ * menetapkan satu harga buyback per gram, dan data hanya mencatat baris 1 g.
+ */
+export const BUYBACK_PER_GRAM: ReadonlySet<string> = new Set(['lm-antam']);
+
+export interface SellOption {
+  option: ExplorerOption;
+  /** `true` = harga buyback 1 g × berat (D-39), bukan buyback keping berat itu sendiri. */
+  perGram: boolean;
+}
+
+/**
+ * Series buyback untuk menjual keping berat `w` di sumber `d`: buyback berat itu sendiri bila
+ * ada; untuk sumber di `BUYBACK_PER_GRAM`, buyback 1 g (dikali berat di `piecePoints`).
+ */
+export function sellOption(
+  d: CompareDef,
+  w: number,
+  options: readonly ExplorerOption[],
+): SellOption | null {
+  const own = findOption(d, w, options);
+  if (own && own.first.buyback !== null) return { option: own, perGram: false };
+  if (!BUYBACK_PER_GRAM.has(d.id)) return null;
+  const gram = findOption(d, 1, options);
+  return gram && gram.first.buyback !== null ? { option: gram, perGram: true } : null;
+}
+
+/** Ada buyback untuk berat ini? (Batangan Pegadaian tidak ada; Logam Mulia per gram, D-39.) */
 export function sellAvailable(d: CompareDef, w: number, options: readonly ExplorerOption[]) {
-  const o = findOption(d, w, options);
-  return o !== null && o.first.buyback !== null;
+  return sellOption(d, w, options) !== null;
 }
 
 // ---------------------------------------------------------------------------

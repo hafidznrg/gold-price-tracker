@@ -19,6 +19,7 @@ import {
   priceOn,
   sellAvailable,
   sellCandidates,
+  sellOption,
   weightsFor,
   yearAgo,
 } from './kalkulator';
@@ -287,10 +288,22 @@ describe('pilihan sumber dari katalog', () => {
   it('sumber jual: brand sama; hanya yang punya buyback untuk berat itu', () => {
     expect(sellCandidates(def('lm-antam')).map((d) => d.id)).toEqual(['lm-antam', 'pg-antam']);
     expect(sellAvailable(def('lm-antam'), 1, OPTIONS)).toBe(true);
-    expect(sellAvailable(def('lm-antam'), 5, OPTIONS)).toBe(false);
+    // D-39: buyback Logam Mulia per gram berlaku untuk semua ukuran keping.
+    expect(sellAvailable(def('lm-antam'), 5, OPTIONS)).toBe(true);
     expect(sellAvailable(def('pg-antam'), 1, OPTIONS)).toBe(false);
     expect(sellAvailable(def('tab'), 5, OPTIONS)).toBe(true);
     expect(sellAvailable(def('pg-g24'), 1, OPTIONS)).toBe(false);
+  });
+
+  it('D-39: Antam LM berat lain memakai series buyback 1 g × berat; sumber lain tetap ketat', () => {
+    const five = sellOption(def('lm-antam'), 5, OPTIONS);
+    expect(five?.perGram).toBe(true);
+    expect(five?.option.w).toBe(1);
+    expect(sellOption(def('lm-antam'), 1, OPTIONS)?.perGram).toBe(false);
+    expect(sellOption(def('pg-antam'), 5, OPTIONS)).toBeNull();
+    expect(piecePoints([{ date: '2026-11-06', value: 2350000 }], true, 5)).toEqual([
+      { date: '2026-11-06', value: 11750000 },
+    ]);
   });
 });
 
@@ -318,9 +331,15 @@ describe('keadaan di URL', () => {
     expect(decodeState({ q: '999999999' }, CTX).qty).toBe(100_000);
   });
   it('tanpa buyback untuk berat itu: sumber jual null', () => {
+    const s = decodeState({ b: 'pg-g24', w: '1' }, CTX);
+    expect(s.buyId).toBe('pg-g24');
+    expect(s.sellId).toBeNull();
+    expect(encodeState(s, CTX).s).toBeNull();
+  });
+  it('D-39: Antam LM 5 g otomatis dijual ke buyback Antam LM (per gram)', () => {
     const s = decodeState({ w: '5' }, CTX);
     expect(s.w).toBe(5);
-    expect(s.sellId).toBeNull();
+    expect(s.sellId).toBe('lm-antam');
     expect(encodeState(s, CTX).s).toBeNull();
   });
   it('ganti sumber beli menyesuaikan gramasi dan sumber jual', () => {

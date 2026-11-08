@@ -322,3 +322,9 @@ Log keputusan produk dan teknis (format ringkas ala ADR). Keputusan baru ditamba
 - Berbeda dari proksi `check-macro` (D-37, emas `M` × kurs as-of per hari): di web dipakai rata-rata bulanan di kedua sisi supaya satu titik per bulan dan konsisten dengan agregat tahunan. Keduanya hanya estimasi tren.
 - Grafik memisahkan dua resolusi: garis tipis tanpa area = bulanan, garis dengan area = harian; tooltip bulanan menyebut jumlah hari harga Antam dan frekuensi emas. Angka "Hari ini", rata-rata, terendah, dan tertinggi tetap dari data harian saja.
 **Konsekuensi:** Premi tampil Jan 2010 → kini (142 titik bulanan + harian), file ±67 KB. Bila kelak tersedia spot harian sebelum 2021, bagian `monthly` menyusut otomatis karena dipotong di bulan titik harian pertama.
+
+### D-39 — Kalkulator: buyback Logam Mulia per gram untuk semua ukuran keping
+
+**Konteks:** P4-06. Data buyback Logam Mulia hanya berisi baris 1 g (sejak Nov 2015, D-29), sehingga pembelian Antam LM selain 1 g tidak punya tempat jual di Kalkulator. Logam Mulia menetapkan satu harga buyback per gram yang berlaku untuk semua ukuran keping (dikonfirmasi pemilik proyek, 8 Nov 2026).
+**Keputusan:** sumber di `BUYBACK_PER_GRAM` (`lm-antam`) memakai buyback berat itu sendiri bila ada, jika tidak buyback 1 g × berat (`sellOption`, `perGram: true`). Sumber lain tetap ketat: hanya buyback yang tercatat untuk berat itu. UI menyebut "harga buyback per gram (baris 1 g) × berat" di catatan sumber.
+**Konsekuensi:** Antam LM 0,5 g – 1.000 g bisa dihitung untung/ruginya terhadap buyback LM. Pembelian Antam di Pegadaian juga bisa dijual ke buyback LM untuk semua berat. Tidak ada perubahan data atau build; aturan hanya di `apps/web/lib/kalkulator.ts`.

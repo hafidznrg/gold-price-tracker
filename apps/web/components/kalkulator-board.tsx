@@ -24,6 +24,7 @@ import {
   outcome,
   piecePoints,
   sellAvailable,
+  sellOption,
   sellCandidates,
   weightsFor,
   CALCULATOR_TOLERANCE_DAYS,
@@ -110,15 +111,16 @@ export function KalkulatorBoard({ options, asOf, calendar }: KalkulatorBoardProp
   const sellDef = defById(state.sellId);
 
   const buyOpt = findOption(buyDef, state.w, options);
-  const sellOpt = sellDef ? findOption(sellDef, state.w, options) : null;
+  const sell = sellDef ? sellOption(sellDef, state.w, options) : null;
+  const sellOpt = sell?.option ?? null;
 
   const needed = useMemo(
     () => [
       ...new Set([
         ...(buyOpt ? [buyOpt.file] : []),
         ...candidates.flatMap((c) => {
-          const o = c.ok ? findOption(c.d, state.w, options) : null;
-          return o ? [o.file] : [];
+          const o = c.ok ? sellOption(c.d, state.w, options) : null;
+          return o ? [o.option.file] : [];
         }),
       ]),
     ],
@@ -129,6 +131,14 @@ export function KalkulatorBoard({ options, asOf, calendar }: KalkulatorBoardProp
   /** Harga per keping satu sumber (jual atau buyback); null bila file belum dimuat / tak ada. */
   const piecesOf = useCallback(
     (d: CompareDef, price: 'sell' | 'buyback') => {
+      if (price === 'buyback') {
+        // Buyback per gram (D-39): titik 1 g dikali berat, sama seperti Tabungan Emas.
+        const sell = sellOption(d, state.w, options);
+        const f = sell ? files[sell.option.file] : undefined;
+        return sell && f
+          ? piecePoints(seriesPoints(f, sell.option, 'buyback'), sell.perGram || d.linear, state.w)
+          : null;
+      }
       const o = findOption(d, state.w, options);
       const f = o ? files[o.file] : undefined;
       return o && f ? piecePoints(seriesPoints(f, o, price), d.linear, state.w) : null;
@@ -485,6 +495,9 @@ export function KalkulatorBoard({ options, asOf, calendar }: KalkulatorBoardProp
               {sellDef ? (
                 <SourceStamp source={sellDef.source} date={sellNow?.date ?? asOf}>
                   buyback {sourceLabel(sellDef)}
+                  {sell?.perGram
+                    ? ` · harga buyback per gram (baris 1 g) × ${formatWeight(state.w)}, berlaku untuk semua ukuran keping`
+                    : ''}
                 </SourceStamp>
               ) : null}
             </>
