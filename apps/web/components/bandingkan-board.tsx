@@ -252,7 +252,7 @@ export function BandingkanBoard({ options, weights, today, asOf, calendar }: Ban
               </div>
               {rows.length === 0 ? (
                 <div role="row" className="border-t border-line px-6 py-6 text-sm text-muted">
-                  Belum ada harga hari ini untuk {wText}.
+                  <span role="cell">Belum ada harga hari ini untuk {wText}.</span>
                 </div>
               ) : (
                 rows.map((r) => {
@@ -298,14 +298,17 @@ export function BandingkanBoard({ options, weights, today, asOf, calendar }: Ban
                   );
                 })
               )}
-              <div role="row" className="border-t border-line px-6 py-3 text-[12.5px] text-muted">
+            </div>
+            {/* Catatan tabel di luar role="table": baris tanpa sel melanggar aria-required-children. */}
+            <div className="min-w-[880px]">
+              <p className="m-0 border-t border-line px-6 py-3 text-[12.5px] text-muted">
                 Tabungan emas tidak berbentuk keping: harganya linear terhadap berat (dicatat sumber
                 per 0,01 g). Mencetaknya menjadi emas fisik dikenai biaya cetak terpisah.
-              </div>
-              <div role="row" className="px-6 pb-3.5 text-[12.5px] text-muted">
+              </p>
+              <p className="m-0 px-6 pb-3.5 text-[12.5px] text-muted">
                 Harga Logam Mulia = Harga Dasar, belum termasuk PPh 0,25%; buyback Logam Mulia hanya
                 untuk 1 g.
-              </div>
+              </p>
             </div>
           </div>
           {stamps.length > 0 ? (

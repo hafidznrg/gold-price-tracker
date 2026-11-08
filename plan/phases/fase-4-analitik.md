@@ -54,6 +54,24 @@
 - [x] **P4-12** Perluas smoke test dan uji unit untuk halaman dan perhitungan baru. — `NFR-10` · S
   - *8 Nov 2026:* audit tes Fase 4: `lib/nav.test.ts` (7 halaman, masing-masing punya `page.tsx`), 6 kasus batas di `lib/explorer.test.ts` (batas tahun/bulan, rentang memotong agregat mingguan, batas forward-fill, Februari kabisat, `viewGaps`), e2e navigasi 7 tautan + `aria-current`. Total: web 205, scraper 330, schema 118 uji unit; 29 e2e. First Load JS (gzip, dari `out/*.html`): 185–208 KB per halaman, selisih antarhalaman ≤ 23 KB; ECharts tidak masuk chunk awal (dimuat lambat).
 
+## Audit G4 (8 Nov 2026)
+
+Lighthouse 12 mobile (simulasi throttling, Chrome lokal, 3 run per halaman, median) terhadap situs live:
+
+| Halaman | Performa | Aksesibilitas | Best practices | SEO | LCP | TBT | CLS |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| Hari ini | 85 | 100 | 100 | 91 | 1,30 dtk | 247 ms | 0 |
+| Explorer | 93 | 100 | 100 | 100 | 1,68 dtk | 297 ms | 0 |
+| Spread | 87 | 100 | 100 | 100 | 1,69 dtk | 273 ms | 0 |
+| Bandingkan | 84 | 95 | 100 | 100 | 2,96 dtk (3,0/1,4/3,2) | 589 ms | 0 |
+| Kalkulator | 88 | 100 | 100 | 100 | 2,98 dtk (3,0/3,1/1,5) | 226 ms | 0 |
+| Kelipatan | 70 | 100 | 100 | 100 | 2,43 dtk (2,2/4,2/2,4) | 748 ms | 0 |
+| Data | 86 | 100 | 100 | 91 | 2,76 dtk (0,9/2,8/3,0) | 123 ms | 0 |
+
+- **Diperbaiki:** `robots.txt` tidak ada (alamatnya jatuh ke 404 HTML → SEO 91) → `app/robots.ts` + `app/sitemap.ts`; dua baris catatan di tabel Bandingkan memakai `role="row"` tanpa sel (aksesibilitas 95) → dipindah ke luar `role="table"`.
+- **LCP bimodal** (≈1,4 vs ≈3,0 dtk) di Bandingkan, Kalkulator, Data: elemen LCP = paragraf lead `PageIntro` yang sudah ada di HTML statis; FCP ±0,95 dtk. Dengan font web diblokir LCP turun ke 2,0–2,6 dtk, jadi sebagian dari repaint font swap (`display: 'swap'`) dan sisanya pekerjaan JS hidrasi di simulasi Lantern. Di browser nyata LCP = FCP (judul `h1`, tanpa render ulang). Belum ada data lapangan (CrUX).
+- **Kelipatan:** TBT tertinggi (748 ms median, hingga 1,8 dtk) dari inisialisasi ECharts di atas lipatan (grafik log + `markLine` peristiwa).
+
 ## Kriteria selesai
 
 - Semua FR P1 (FR-27 s.d. FR-35) terpenuhi dan teruji.

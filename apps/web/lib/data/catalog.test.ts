@@ -26,11 +26,22 @@ describe('kunci series', () => {
   it('bolak-balik', () => {
     expect(seriesKey(ubs)).toBe('ubslifestyle:ubs:gold_bar:2026:0.5');
     expect(parseSeriesKey(seriesKey(ubs))).toEqual(ubs);
-    const lm = { source: 'logammulia', brand: 'antam', product: 'gold_bar', variant: '', w: 1 } as const;
+    const lm = {
+      source: 'logammulia',
+      brand: 'antam',
+      product: 'gold_bar',
+      variant: '',
+      w: 1,
+    } as const;
     expect(seriesKey(lm)).toBe('logammulia:antam:gold_bar::1');
     expect(parseSeriesKey('logammulia:antam:gold_bar::1')).toEqual(lm);
-    expect(priceSeriesKey({ ...lm, price: 'buyback' })).toBe('logammulia:antam:gold_bar::1:buyback');
-    expect(parsePriceSeriesKey('logammulia:antam:gold_bar::1:sell')).toEqual({ ...lm, price: 'sell' });
+    expect(priceSeriesKey({ ...lm, price: 'buyback' })).toBe(
+      'logammulia:antam:gold_bar::1:buyback',
+    );
+    expect(parsePriceSeriesKey('logammulia:antam:gold_bar::1:sell')).toEqual({
+      ...lm,
+      price: 'sell',
+    });
   });
 
   it('menolak kunci tidak valid', () => {
@@ -84,8 +95,12 @@ describe('label dan warna', () => {
   it('wording mockup', () => {
     expect(displayBrand({ brand: 'pegadaian', product: 'gold_savings' })).toBe('Tabungan Emas');
     expect(displayBrand({ brand: 'galeri24', product: 'gold_bar' })).toBe('Galeri24');
-    expect(unitLabel({ source: 'logammulia', product: 'gold_bar' })).toBe('Harga dasar · keping 1 g');
-    expect(unitLabel({ source: 'pegadaian', product: 'gold_savings' })).toBe('Harga jual · per gram');
+    expect(unitLabel({ source: 'logammulia', product: 'gold_bar' })).toBe(
+      'Harga dasar · keping 1 g',
+    );
+    expect(unitLabel({ source: 'pegadaian', product: 'gold_savings' })).toBe(
+      'Harga jual · per gram',
+    );
     expect(colorToken({ brand: 'galeri24', product: 'gold_bar' })).toBe('g24');
     expect(colorToken({ brand: 'pegadaian', product: 'gold_savings' })).toBe('tab');
   });

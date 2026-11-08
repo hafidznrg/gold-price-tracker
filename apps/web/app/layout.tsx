@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import { Instrument_Serif, Inter } from 'next/font/google';
+import { SITE_URL } from '@/lib/site';
 import type { ReactNode } from 'react';
 import { DataStatusChip } from '@/components/data-status-chip';
 import { SiteFooter } from '@/components/site-footer';
@@ -22,7 +23,6 @@ const instrumentSerif = Instrument_Serif({
   display: 'swap',
 });
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://gold-price-tracker.vercel.app';
 const DESCRIPTION =
   'Harga jual dan buyback emas batangan Antam, UBS, dan Galeri24 serta Tabungan Emas Pegadaian, dikumpulkan otomatis setiap hari sebagai data terbuka.';
 

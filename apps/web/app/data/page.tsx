@@ -5,13 +5,7 @@ import { buttonVariants } from '@/components/ui/button';
 import { dataUrl } from '@/lib/data/paths';
 import type { ColorToken, DownloadEntry } from '@/lib/data';
 import { readMeta } from '@/lib/data/load-fs';
-import {
-  formatDate,
-  formatNumber,
-  formatRupiah,
-  formatTimeWib,
-  formatWeight,
-} from '@/lib/format';
+import { formatDate, formatNumber, formatRupiah, formatTimeWib, formatWeight } from '@/lib/format';
 import { cn } from '@/lib/utils';
 
 export const metadata: Metadata = {
@@ -28,8 +22,7 @@ const DESC: Record<string, string> = {
   'ubslifestyle-ubs': '13 pecahan 0,05–100 g, semua tahun produksi',
   'pegadaian-fisik': 'Antam, UBS, dan Galeri24, 0,5–1.000 g; hanya harga jual',
   'pegadaian-pegadaian': 'Harga jual dan buyback, dicatat per 0,01 g',
-  xau_usd_oz:
-    'Harian 5 tahun (futures GC=F via xaus) + rata-rata bulanan World Bank sejak 1996',
+  xau_usd_oz: 'Harian 5 tahun (futures GC=F via xaus) + rata-rata bulanan World Bank sejak 1996',
   usd_idr_jisdor: 'Kurs acuan Bank Indonesia, hari kerja',
   usd_idr_ecb: 'Dihitung dari EUR/IDR ÷ EUR/USD, 2 desimal',
   usd_idr_annual: 'World Bank WDI, rata-rata tahunan resmi untuk 1996–1998',
@@ -49,7 +42,8 @@ const BRAND_NAME = { antam: 'Antam', ubs: 'UBS', galeri24: 'Galeri24', pegadaian
 /** Baris "kapan": tanggal + jam bila ada; UBS tanpa jam; Pegadaian = jam harga terbit. */
 function whenText(d: DownloadEntry): string {
   if (!d.last_date) return '—';
-  if (d.last?.kind === 'macro' && d.last.frequency === 'A') return `${d.last.date.slice(0, 4)} · seri statis`;
+  if (d.last?.kind === 'macro' && d.last.frequency === 'A')
+    return `${d.last.date.slice(0, 4)} · seri statis`;
   if (d.last_updated_at) {
     const verb = d.id.startsWith('pegadaian') ? 'harga terbit ' : '';
     return `${formatDate(d.last_date)} · ${verb}${formatTimeWib(d.last_updated_at)}`;
@@ -107,7 +101,9 @@ function DownloadCard({ d, builtAt }: { d: DownloadEntry; builtAt: string }) {
       <div className="mt-auto flex flex-col gap-2.5">
         <div className="flex flex-wrap items-center justify-between gap-2.5">
           <span className="num text-[12.5px] text-faint">{rangeText(d)}</span>
-          {multi ? null : <DownloadButtons json={d.files[0]?.json} csv={d.files[0]?.csv} label={d.label} />}
+          {multi ? null : (
+            <DownloadButtons json={d.files[0]?.json} csv={d.files[0]?.csv} label={d.label} />
+          )}
         </div>
         {multi
           ? d.files.map((f) => (
