@@ -337,3 +337,12 @@ Log keputusan produk dan teknis (format ringkas ala ADR). Keputusan baru ditamba
 - Batasan D-26 "tanpa retry agresif" dilonggarkan menjadi batas di atas: tetap satu halaman per run, tanpa rotasi IP/proxy, tanpa penyelesai tantangan. `PARSE_ERROR` dan kegagalan validasi tidak dicoba ulang.
 - Sumber lain tidak ikut; mereka tetap memakai slot primary/retry biasa.
 **Konsekuensi:** paling banyak 5 permintaan ke logammulia.com per hari (2 slot + 3 coba ulang). Tiap percobaan gagal tetap mengirim Telegram dan memperbarui Issue `pipeline-failure`. Bila blokir mencakup seluruh IP Azure, coba ulang tidak membantu; fallback tetap self-hosted runner atau tambal lokal (D-26).
+
+### D-41 — Slot malam terlewat lewat tengah malam: `stale` tanpa alarm (melengkapi D-27)
+
+**Konteks:** 10 Nov 2026 kedua slot malam `scrape-retail` terlambat ±7 jam (19.05 → 02.34, 21.05 → 03.43 WIB 11 Nov). Sesuai D-27 keduanya menyasar 10 Nov, tetapi Pegadaian sudah menampilkan 11 Nov, sehingga V-06 menghasilkan `stale` kode 3: job merah, Telegram dan Issue `pipeline-failure` dibuka, padahal sumbernya sehat dan snapshot 10 Nov memang tidak bisa diambil lagi (kejadian yang sama dengan 26 Okt).
+**Keputusan:**
+- `scrape` menandai **slot terlewat** bila `stale`, tanggal data > tanggal sasaran, dan tanggal WIB saat run > tanggal sasaran (`missedSlot`). Status tetap `stale` (tidak ada baris yang ditulis), `error_message` ditambah keterangan "terlewat", tetapi kode keluar **0**.
+- `notify` hanya memberi tahu `stale` yang kode keluarnya bukan 0, sehingga slot terlewat tidak mengirim Telegram atau membuka Issue. Untuk sumber ritel yang ada (semua `stale_is_error_on_expected_day: true`) perilaku lain tidak berubah.
+- Bila sumber masih menampilkan tanggal sasaran (tanggal data = sasaran), run terlambat tetap sukses seperti D-27; bila tanggal data < sasaran, tetap `stale` kode 3 seperti biasa.
+**Konsekuensi:** tanggal yang terlewat tetap hilang (terlihat sebagai `stale` di `runs/` dan `status.json`), tetapi tidak lagi tercatat sebagai kegagalan sumber. Pemicu eksternal untuk ketepatan waktu (alternatif D-27) tetap satu-satunya cara mencegah kehilangan data.

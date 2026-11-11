@@ -97,6 +97,16 @@ describe('planNotifications (WORKFLOWS §4)', () => {
     }
   });
 
+  it('stale terlewat (D-41, kode 0) di slot retry: diam', () => {
+    const p = planNotifications(
+      summary([result({ status: 'stale', slot: 'retry', expected_day: true, exit_code: 0 })]),
+      'success',
+      RUN,
+    );
+    expect(p.telegram).toEqual([]);
+    expect(opens(p)).toEqual([]);
+  });
+
   it('stale bukan hari diharapkan: diam', () => {
     const p = planNotifications(
       summary([result({ status: 'stale', slot: 'retry', expected_day: false })]),

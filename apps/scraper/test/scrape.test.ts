@@ -104,6 +104,24 @@ describe('scrape', () => {
     expect(run).toMatchObject({ status: 'success', data_date: '2026-10-24', exit_code: 0 });
   });
 
+  it('run terlambat lewat tengah malam & sumber sudah berganti tanggal → stale terlewat, kode 0 (D-41)', async () => {
+    const afterMidnight = new Date('2026-10-23T18:35:00Z'); // 01.35 WIB Sabtu 24 Okt
+    const run = await scrape(opts({ now: afterMidnight, date: '2026-10-23' }));
+    expect(run).toMatchObject({
+      status: 'stale',
+      expected_day: true,
+      exit_code: SCRAPE_EXIT.OK,
+      data_date: '2026-10-24',
+    });
+    expect(run.error_message).toContain('terlewat');
+
+    // Belum lewat tengah malam: tetap galat stale biasa.
+    const onTime = await scrape(
+      opts({ now: new Date('2026-10-23T12:00:00Z'), date: '2026-10-23' }),
+    );
+    expect(onTime).toMatchObject({ status: 'stale', exit_code: SCRAPE_EXIT.STALE });
+  });
+
   it('fetch diblokir → failed/BLOCKED, kode 1, run.json tetap ditulis tanpa raw', async () => {
     const blocked = fake(async () => {
       throw new ScrapeError('BLOCKED', 'HTTP 403 (halaman tantangan/blokir)');

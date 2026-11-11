@@ -119,7 +119,9 @@ export function planNotifications(
 
   for (const r of summary?.results ?? []) {
     const failure =
-      r.status === 'failed' || (r.status === 'stale' && r.expected_day && r.slot !== 'primary');
+      r.status === 'failed' ||
+      // exit_code 0 = stale yang tidak dianggap galat (mis. slot terlewat, D-41).
+      (r.status === 'stale' && r.expected_day && r.exit_code !== 0 && r.slot !== 'primary');
     if (failure) {
       const detail = describe(r);
       plan.telegram.push({

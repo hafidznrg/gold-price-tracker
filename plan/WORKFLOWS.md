@@ -80,7 +80,7 @@ Jika daftar kosong, `has_work=false` dan semua job lain dilewati (workflow tetap
 | --- | --- | --- |
 | 0 | `success`, `partial`, atau `stale` pada hari yang **tidak** diharapkan | Hijau |
 | 1 | `failed` (fetch, blokir, parse, skema, validasi run-level) | Merah |
-| 3 | `stale` pada hari yang diharapkan | Merah (akan dicoba lagi di slot `retry`) |
+| 3 | `stale` pada hari yang diharapkan (kecuali slot terlewat lewat tengah malam: kode 0, D-41) | Merah (akan dicoba lagi di slot `retry`) |
 
 `run.json` selalu ditulis sebelum keluar, apa pun kodenya.
 

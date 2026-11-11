@@ -60,6 +60,15 @@ async function latestUsdIdr(root: string): Promise<MacroRow | null> {
   return best;
 }
 
+/**
+ * D-41: run terjadwal yang terlambat sampai lewat tengah malam WIB (D-27), dan sumber sudah
+ * menampilkan tanggal sesudah tanggal sasaran. Snapshot tanggal sasaran tidak bisa diambil lagi,
+ * jadi `stale` ini dicatat sebagai slot terlewat (kode 0, tanpa alarm), bukan kegagalan sumber.
+ */
+export function missedSlot(dataDate: string | null | undefined, target: string, now: Date) {
+  return !!dataDate && dataDate > target && jakartaDate(now) > target;
+}
+
 export async function scrape(opts: ScrapeOptions): Promise<ScrapeRun> {
   const now = opts.now ?? new Date();
   const startedAt = utcIso(now);
@@ -78,6 +87,7 @@ export async function scrape(opts: ScrapeOptions): Promise<ScrapeRun> {
   let parsed: ParseResult<PriceRow | MacroRow> | null = null;
   let failure: { code: ErrorCode; message: string } | null = null;
   let staleReason: string | null = null;
+  let missed = false;
   let rows: unknown[] = [];
   let held: { rows: unknown[] }[] = [];
   let spot: SpotSnapshot | null = null;
@@ -149,6 +159,10 @@ export async function scrape(opts: ScrapeOptions): Promise<ScrapeRun> {
       failure = { code: result.error_code, message: result.error_message };
     } else if (result.outcome === 'stale') {
       staleReason = result.reason;
+      if (missedSlot(parsed.dataDate, today, now)) {
+        missed = true;
+        staleReason += ` · terlewat: run terlambat sampai ${jakartaDate(now)}, sumber sudah berganti tanggal (D-41)`;
+      }
     } else {
       rows = result.rows;
       held = result.held;
@@ -167,7 +181,10 @@ export async function scrape(opts: ScrapeOptions): Promise<ScrapeRun> {
   const exitCode =
     runStatus === 'failed'
       ? SCRAPE_EXIT.FAILED
-      : runStatus === 'stale' && expectedDay && sourceConfig.stale_is_error_on_expected_day
+      : runStatus === 'stale' &&
+          expectedDay &&
+          !missed &&
+          sourceConfig.stale_is_error_on_expected_day
         ? SCRAPE_EXIT.STALE
         : SCRAPE_EXIT.OK;
 
