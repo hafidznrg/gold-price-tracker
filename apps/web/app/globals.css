@@ -26,11 +26,12 @@
   --tab: #5fd0b8;
   --btn: #edeae3;
   --btntext: #0e0f12;
+  --hero: #121418;
   color-scheme: dark;
 }
 
 [data-theme='light'] {
-  --bg: #f4f4f1;
+  --bg: #f7f5f0;
   --surface: #ffffff;
   --surface2: #f0efea;
   --line: #e1dfd8;
@@ -49,6 +50,7 @@
   --tab: #0f7f6c;
   --btn: #15171c;
   --btntext: #ffffff;
+  --hero: #efece4;
   color-scheme: light;
 }
 
@@ -73,6 +75,7 @@
   --color-tab: var(--tab);
   --color-btn: var(--btn);
   --color-btntext: var(--btntext);
+  --color-hero: var(--hero);
 
   /* Alias shadcn/ui agar komponen hasil `shadcn add` langsung memakai token proyek. */
   --color-background: var(--bg);

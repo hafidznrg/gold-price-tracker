@@ -1,11 +1,11 @@
 export type Theme = 'dark' | 'light';
 
 export const THEME_STORAGE_KEY = 'gpt-theme';
-export const DEFAULT_THEME: Theme = 'dark';
+export const DEFAULT_THEME: Theme = 'light';
 
 /**
  * Skrip inline di <head>: pasang data-theme sebelum paint agar tidak ada kilatan tema salah.
- * Gelap default; pilihan tersimpan di localStorage (dibungkus try/catch).
+ * Terang default (D-43); pilihan tersimpan di localStorage (dibungkus try/catch).
  */
 export const themeInitScript = `(function(){var t='${DEFAULT_THEME}';try{var s=localStorage.getItem('${THEME_STORAGE_KEY}');if(s==='light'||s==='dark')t=s;}catch(e){}document.documentElement.setAttribute('data-theme',t);})();`;
 

@@ -1,0 +1,424 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<title>Hari ini v2 — Harga Emas Historis</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&amp;family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.t-dark{--bg:#0E0F12;--surface:#16181D;--surface2:#1D2027;--line:#2A2E37;--text:#EDEAE3;--muted:#ABABA4;--faint:#8E9097;--gold:#DDB563;--goldsoft:rgba(221,181,99,.13);--goldline:rgba(221,181,99,.38);--up:#6CC59A;--down:#F28C6C;--antam:#DDB563;--ubs:#7EA8FF;--g24:#EE8A60;--tab:#5FD0B8;--grid:#22252D;--btn:#EDEAE3;--btntext:#0E0F12;--hero:#121418;color-scheme:dark}
+.t-light{--bg:#F7F5F0;--surface:#FFFFFF;--surface2:#F0EFEA;--line:#E1DFD8;--text:#15171C;--muted:#55575E;--faint:#686A71;--gold:#8A6618;--goldsoft:rgba(176,132,40,.12);--goldline:rgba(138,102,24,.35);--up:#1E7A4E;--down:#B4442A;--antam:#B8892B;--ubs:#2F64D6;--g24:#C4562E;--tab:#0F7F6C;--grid:#ECEAE4;--btn:#15171C;--btntext:#FFFFFF;--hero:#EFECE4;color-scheme:light}
+.root{background:var(--bg);color:var(--text);font-family:Inter,system-ui,sans-serif;min-height:100vh}
+.wrap{max-width:1240px;margin-left:auto;margin-right:auto;padding-left:32px;padding-right:32px;box-sizing:border-box}
+@media (max-width:640px){.wrap{padding-left:16px;padding-right:16px}}
+.serif{font-family:"Instrument Serif",Georgia,serif;font-weight:400;letter-spacing:-0.01em}
+.num{font-variant-numeric:tabular-nums}
+button{font-family:inherit}
+a{color:var(--gold)}a:hover{color:var(--text)}
+:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+summary{cursor:pointer;list-style:none}
+summary::-webkit-details-marker{display:none}
+details[open] .chev{transform:rotate(45deg)}
+</style>
+</helmet>
+<div class="root {{themeClass}}">
+
+<header style="border-bottom:1px solid var(--line);background:var(--surface)">
+<div class="wrap" style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px 28px;padding-top:14px;padding-bottom:14px">
+<a href="Main-v2.dc.html" style="display:flex;align-items:center;gap:12px;text-decoration:none;color:var(--text)">
+<svg width="34" height="34" viewBox="0 0 36 36" aria-hidden="true"><rect x="0.5" y="0.5" width="35" height="35" rx="10" style="fill:var(--goldsoft);stroke:var(--goldline)"></rect><path d="M9.5 23.5 L13 12.5 H23 L26.5 23.5 Z" style="fill:none;stroke:var(--gold);stroke-width:1.6;stroke-linejoin:round"></path><path d="M14.5 18 H21.5" style="stroke:var(--gold);stroke-width:1.3"></path></svg>
+<span class="serif" style="font-size:22px">Harga Emas Historis</span>
+</a>
+<nav aria-label="Navigasi utama" style="display:flex;flex-wrap:wrap;gap:2px">
+<a href="Main-v2.dc.html" aria-current="page" style="padding:10px 14px;border-radius:999px;font-size:14px;text-decoration:none;background:var(--goldsoft);color:var(--gold);font-weight:600">Hari ini</a>
+<a href="Explorer.dc.html" style="padding:10px 14px;border-radius:999px;font-size:14px;text-decoration:none;color:var(--muted)">Riwayat harga</a>
+<a href="Bandingkan.dc.html" style="padding:10px 14px;border-radius:999px;font-size:14px;text-decoration:none;color:var(--muted)">Bandingkan</a>
+<a href="Spread.dc.html" style="padding:10px 14px;border-radius:999px;font-size:14px;text-decoration:none;color:var(--muted)">Selisih jual-beli</a>
+<a href="Kalkulator.dc.html" style="padding:10px 14px;border-radius:999px;font-size:14px;text-decoration:none;color:var(--muted)">Kalkulator</a>
+<a href="Kelipatan.dc.html" style="padding:10px 14px;border-radius:999px;font-size:14px;text-decoration:none;color:var(--muted)">Kelipatan</a>
+<a href="Data.dc.html" style="padding:10px 14px;border-radius:999px;font-size:14px;text-decoration:none;color:var(--muted)">Data</a>
+</nav>
+<button type="button" onClick="{{toggleTheme}}" aria-label="Ganti tema terang atau gelap" style="width:44px;height:44px;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:var(--text);display:grid;place-items:center;cursor:pointer">
+<svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" style="fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round"><circle cx="12" cy="12" r="4.2"></circle><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6"></path></svg>
+</button>
+</div>
+</header>
+
+<main>
+<section style="background:var(--hero);border-bottom:1px solid var(--line)">
+<div class="wrap" style="padding-top:36px;padding-bottom:36px;display:flex;flex-direction:column;gap:24px">
+
+<div style="display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:16px 32px">
+<div style="min-width:0">
+<p style="margin:0 0 10px;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);font-weight:600">Jumat, 30 Oktober 2026</p>
+<h1 class="serif" style="margin:0;font-size:46px;line-height:1.05">Harga emas hari ini</h1>
+<p style="margin:10px 0 0;font-size:15px;line-height:1.55;color:var(--muted);max-width:560px">Harga jual, buyback, dan selisihnya untuk keping 1 gram, dari situs resmi masing-masing penerbit.</p>
+</div>
+<div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px">
+<button type="button" onClick="{{toggleFresh}}" aria-expanded="{{freshOpen}}" style="display:inline-flex;align-items:center;gap:10px;min-height:44px;padding:0 16px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--text);font-size:13px;cursor:pointer">
+<span style="width:8px;height:8px;border-radius:50%;background:var(--up)"></span>
+<span><b style="font-weight:600">Diperbarui 30 Okt, 18.32 WIB</b> <span style="color:var(--muted)">· 4 dari 5 sumber terkini</span></span>
+<svg width="12" height="12" viewBox="0 0 24 24" aria-hidden="true" style="fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round"><path d="M6 9l6 6 6-6"></path></svg>
+</button>
+</div>
+</div>
+
+<sc-if value="{{freshOpenBool}}" hint-placeholder-val="{{false}}">
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:14px;overflow:hidden">
+<sc-for list="{{fresh}}" as="f" hint-placeholder-count="5">
+<div style="background:var(--surface);padding:12px 14px;display:flex;flex-direction:column;gap:4px">
+<span style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600"><span style="width:7px;height:7px;border-radius:50%;background:{{f.dot}}"></span>{{f.name}}</span>
+<span style="font-size:12.5px;color:var(--muted)">{{f.when}}</span>
+</div>
+</sc-for>
+</div>
+</sc-if>
+
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:14px">
+<sc-for list="{{cards}}" as="c" hint-placeholder-count="4">
+<article style="background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:18px 20px;display:flex;flex-direction:column;gap:14px">
+<div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+<div style="display:flex;align-items:center;gap:9px;min-width:0">
+<span style="width:10px;height:10px;border-radius:3px;background:{{c.color}};flex:none"></span>
+<h2 style="margin:0;font-size:16px;font-weight:600">{{c.brand}}</h2>
+<span style="font-size:12px;color:var(--faint);white-space:nowrap">{{c.unit}}</span>
+</div>
+<button type="button" onClick="{{c.toggle}}" aria-expanded="{{c.open}}" aria-label="{{c.infoLabel}}" style="width:32px;height:32px;margin:-6px -8px -6px 0;border-radius:8px;border:none;background:transparent;color:var(--faint);display:grid;place-items:center;cursor:pointer">
+<svg width="17" height="17" viewBox="0 0 24 24" aria-hidden="true" style="fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round"><circle cx="12" cy="12" r="9"></circle><path d="M12 11v6M12 7.5v.5"></path></svg>
+</button>
+</div>
+<div>
+<div class="num" style="font-size:30px;font-weight:650;letter-spacing:-.02em">{{c.sellFmt}}</div>
+<div class="num" style="font-size:13px;margin-top:4px;color:{{c.chgColor}};font-weight:500">{{c.chgText}} <span style="color:var(--faint);font-weight:400">vs kemarin</span></div>
+</div>
+<div style="display:flex;flex-direction:column;gap:8px;padding-top:12px;border-top:1px solid var(--line)">
+<div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:var(--muted)">Buyback</span><span class="num" style="font-weight:600;color:{{c.buyColor}}">{{c.buyFmt}}</span></div>
+<div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:var(--muted)">Selisih jual-beli</span><span class="num" style="font-weight:600;color:{{c.buyColor}}">{{c.spreadTxt}}</span></div>
+<div style="height:5px;border-radius:99px;background:var(--surface2);overflow:hidden"><div style="height:100%;width:{{c.meter}}%;background:{{c.color}};border-radius:99px"></div></div>
+</div>
+<sc-if value="{{c.openBool}}" hint-placeholder-val="{{false}}">
+<div style="font-size:12.5px;line-height:1.5;color:var(--muted);padding:10px 12px;background:var(--surface2);border-radius:10px">{{c.alt}}<br><span style="color:var(--faint)">{{c.src}}</span></div>
+</sc-if>
+</article>
+</sc-for>
+</div>
+
+<div aria-label="Pembanding spot dunia" style="display:flex;flex-wrap:wrap;gap:8px 28px;font-size:13px;color:var(--muted);padding:12px 16px;border:1px dashed var(--line);border-radius:12px">
+<span>Emas dunia <b class="num" style="color:var(--text);font-weight:600">{{spotUsd}}</b>/oz</span>
+<span>Kurs JISDOR <b class="num" style="color:var(--text);font-weight:600">{{fx}}</b></span>
+<span>Spot dalam rupiah <b class="num" style="color:var(--text);font-weight:600">{{spotGram}}</b>/g</span>
+<span>Premi Antam di atas spot <b class="num" style="color:var(--gold);font-weight:600">{{premi}}</b></span>
+</div>
+
+</div>
+</section>
+
+<section class="wrap" style="padding-top:48px;padding-bottom:24px">
+<div style="background:var(--surface);border:1px solid var(--line);border-radius:18px;overflow:hidden">
+<div style="padding:22px 24px 16px;display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:14px">
+<div>
+<h2 class="serif" style="margin:0;font-size:32px">Bandingkan per gramasi</h2>
+<p style="margin:6px 0 0;font-size:14px;color:var(--muted)">{{matrixHint}}</p>
+</div>
+<div style="display:flex;flex-wrap:wrap;gap:10px">
+<div role="group" aria-label="Nilai yang dibandingkan" style="display:flex;gap:4px;padding:4px;border:1px solid var(--line);border-radius:12px;background:var(--surface2)">
+<sc-for list="{{modes}}" as="p" hint-placeholder-count="3"><button type="button" aria-pressed="{{p.pressed}}" onClick="{{p.pick}}" style="min-height:36px;padding:0 14px;border-radius:9px;border:none;background:{{p.bg}};color:{{p.fg}};font-size:13px;font-weight:600;cursor:pointer">{{p.label}}</button></sc-for>
+</div>
+<div role="group" aria-label="Satuan" style="display:flex;gap:4px;padding:4px;border:1px solid var(--line);border-radius:12px;background:var(--surface2)">
+<sc-for list="{{units}}" as="p" hint-placeholder-count="2"><button type="button" aria-pressed="{{p.pressed}}" onClick="{{p.pick}}" style="min-height:36px;padding:0 14px;border-radius:9px;border:none;background:{{p.bg}};color:{{p.fg}};font-size:13px;font-weight:600;cursor:pointer">{{p.label}}</button></sc-for>
+</div>
+</div>
+</div>
+<div style="overflow-x:auto">
+<div role="table" aria-label="Perbandingan harga per gramasi" style="min-width:720px">
+<div role="row" style="display:grid;grid-template-columns:110px repeat(4,minmax(0,1fr));padding:10px 24px;border-top:1px solid var(--line);font-size:12px;color:var(--faint);font-weight:600">
+<span role="columnheader" style="letter-spacing:.08em;text-transform:uppercase">Gramasi</span>
+<sc-for list="{{cols}}" as="h" hint-placeholder-count="4"><span role="columnheader" style="display:flex;align-items:center;gap:8px;color:var(--text);font-size:13.5px"><span style="width:8px;height:8px;border-radius:2px;background:{{h.color}}"></span>{{h.brand}} <span style="color:var(--faint);font-weight:400;font-size:12px">{{h.source}}</span></span></sc-for>
+</div>
+<sc-for list="{{matrix}}" as="r" hint-placeholder-count="8">
+<div role="row" style="display:grid;grid-template-columns:110px repeat(4,minmax(0,1fr));align-items:center;padding:4px 24px;border-top:1px solid var(--line)">
+<span role="rowheader" style="font-weight:600;font-size:14.5px">{{r.w}}</span>
+<sc-for list="{{r.cells}}" as="x" hint-placeholder-count="4">
+<span role="cell" class="num" style="display:flex;align-items:center;gap:8px;padding:9px 10px;margin-right:8px;border-radius:9px;background:{{x.bg}};color:{{x.fg}};font-size:14.5px;font-weight:{{x.weight}}">{{x.txt}}<sc-if value="{{x.best}}" hint-placeholder-val="{{false}}"><span style="font-size:11px;font-weight:600;color:var(--up);border:1px solid var(--up);border-radius:999px;padding:1px 7px">{{bestLabel}}</span></sc-if></span>
+</sc-for>
+</div>
+</sc-for>
+</div>
+</div>
+<div style="padding:14px 24px;border-top:1px solid var(--line);display:flex;flex-wrap:wrap;justify-content:space-between;gap:10px;font-size:12.5px;color:var(--muted)">
+<span>— = tidak ditampilkan sumber. Buyback Antam hanya untuk 1 g; Pegadaian tidak menampilkan buyback batangan (D-07).</span>
+<a href="Bandingkan.dc.html" style="font-weight:600;text-decoration:none">Semua gramasi &amp; sumber →</a>
+</div>
+</div>
+</section>
+
+<section class="wrap" style="padding-top:24px;padding-bottom:24px">
+<div style="background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:22px 24px;display:flex;flex-direction:column;gap:18px">
+<div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:14px">
+<div>
+<h2 class="serif" style="margin:0;font-size:32px">Tren harga jual 1 gram</h2>
+<p style="margin:6px 0 0;font-size:14px;color:var(--muted)">Tabungan Emas dihitung per gram.</p>
+</div>
+<div role="group" aria-label="Periode" style="display:flex;gap:4px;padding:4px;border:1px solid var(--line);border-radius:12px;background:var(--surface2)">
+<sc-for list="{{periods}}" as="p" hint-placeholder-count="4"><button type="button" aria-pressed="{{p.pressed}}" onClick="{{p.pick}}" style="min-height:36px;min-width:48px;padding:0 12px;border-radius:9px;border:none;background:{{p.bg}};color:{{p.fg}};font-size:13px;font-weight:600;cursor:pointer">{{p.label}}</button></sc-for>
+</div>
+</div>
+<div style="display:flex;gap:10px">
+<div style="position:relative;width:64px;height:260px;flex:none">
+<sc-for list="{{yTicks}}" as="t" hint-placeholder-count="5"><span class="num" style="position:absolute;right:6px;top:{{t.top}}%;transform:translateY(-50%);font-size:11.5px;color:var(--faint)">{{t.label}}</span></sc-for>
+</div>
+<div style="flex:1;min-width:0">
+<svg viewBox="0 0 1000 260" preserveAspectRatio="none" role="img" aria-label="{{chartLabel}}" style="width:100%;height:260px;display:block">
+<path d="{{gridPath}}" vector-effect="non-scaling-stroke" style="stroke:var(--grid);stroke-width:1;fill:none"></path>
+<sc-for list="{{lines}}" as="l" hint-placeholder-count="4"><path d="{{l.d}}" vector-effect="non-scaling-stroke" style="fill:none;stroke:{{l.color}};stroke-width:2;stroke-linejoin:round"></path></sc-for>
+</svg>
+<div style="position:relative;height:22px">
+<sc-for list="{{xTicks}}" as="t" hint-placeholder-count="6"><span style="position:absolute;left:{{t.left}}%;top:6px;transform:translateX(-50%);font-size:11.5px;color:var(--faint);white-space:nowrap">{{t.label}}</span></sc-for>
+</div>
+</div>
+</div>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px">
+<sc-for list="{{stats}}" as="s" hint-placeholder-count="4">
+<div style="border:1px solid var(--line);border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:8px">
+<span style="display:flex;align-items:center;gap:8px;font-size:13.5px;font-weight:600"><span style="width:8px;height:8px;border-radius:2px;background:{{s.color}}"></span>{{s.brand}}<span class="num" style="margin-left:auto;color:{{s.chgColor}};font-weight:600">{{s.chg}}</span></span>
+<div class="num" style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;font-size:12.5px">
+<span style="display:flex;flex-direction:column;gap:2px"><span style="color:var(--faint)">Tertinggi</span><span>{{s.hi}}</span></span>
+<span style="display:flex;flex-direction:column;gap:2px"><span style="color:var(--faint)">Terendah</span><span>{{s.lo}}</span></span>
+<span style="display:flex;flex-direction:column;gap:2px"><span style="color:var(--faint)">Rata-rata</span><span>{{s.avg}}</span></span>
+</div>
+</div>
+</sc-for>
+</div>
+<div style="display:flex;justify-content:flex-end;font-size:13px"><a href="Explorer.dc.html" style="font-weight:600;text-decoration:none">Buka riwayat lengkap sejak 2010 →</a></div>
+</div>
+</section>
+
+<section class="wrap" style="padding-top:24px;padding-bottom:64px;display:flex;flex-wrap:wrap;gap:24px">
+<div style="flex:1 1 520px;min-width:0;display:flex;flex-direction:column;gap:14px">
+<h2 class="serif" style="margin:0;font-size:32px">Cara membaca angka ini</h2>
+<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px">
+<div style="background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px">
+<div style="font-weight:600;font-size:14.5px">Harga jual</div>
+<p style="margin:6px 0 0;font-size:13.5px;line-height:1.55;color:var(--muted)">Harga yang Anda bayar untuk membeli satu keping dari penerbit.</p>
+</div>
+<div style="background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px">
+<div style="font-weight:600;font-size:14.5px">Buyback</div>
+<p style="margin:6px 0 0;font-size:13.5px;line-height:1.55;color:var(--muted)">Harga yang dibayar penerbit bila Anda menjual kembali kepingnya.</p>
+</div>
+<div style="background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px">
+<div style="font-weight:600;font-size:14.5px">Selisih jual-beli (spread)</div>
+<p style="margin:6px 0 0;font-size:13.5px;line-height:1.55;color:var(--muted)">Kerugian bila dibeli lalu langsung dijual lagi. Makin kecil, makin cepat balik modal.</p>
+</div>
+<div style="background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px">
+<div style="font-weight:600;font-size:14.5px">Premi di atas spot</div>
+<p style="margin:6px 0 0;font-size:13.5px;line-height:1.55;color:var(--muted)">Seberapa mahal emas batangan dibanding harga emas dunia dalam rupiah.</p>
+</div>
+</div>
+</div>
+<div style="flex:1 1 420px;min-width:0;display:flex;flex-direction:column;gap:14px">
+<h2 class="serif" style="margin:0;font-size:32px">Pertanyaan umum</h2>
+<div style="background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden">
+<details style="padding:0 16px;border-bottom:1px solid var(--line)">
+<summary style="display:flex;justify-content:space-between;gap:12px;align-items:center;min-height:52px;font-size:14px;font-weight:600">Kapan harga diperbarui?<span class="chev" style="font-size:18px;color:var(--faint);transition:transform .15s">+</span></summary>
+<p style="margin:0 0 14px;font-size:13.5px;line-height:1.6;color:var(--muted)">Logam Mulia dan UBS dicek setiap pagi; Pegadaian di empat slot sepanjang hari. Jam pembaruan tiap sumber terlihat di tombol "Diperbarui" di atas.</p>
+</details>
+<details style="padding:0 16px;border-bottom:1px solid var(--line)">
+<summary style="display:flex;justify-content:space-between;gap:12px;align-items:center;min-height:52px;font-size:14px;font-weight:600">Kenapa harga Antam di Logam Mulia dan Pegadaian berbeda?<span class="chev" style="font-size:18px;color:var(--faint);transition:transform .15s">+</span></summary>
+<p style="margin:0 0 14px;font-size:13.5px;line-height:1.6;color:var(--muted)">Harga Logam Mulia adalah harga dasar sebelum PPh 0,25%, sedangkan Pegadaian menjual dengan harganya sendiri.</p>
+</details>
+<details style="padding:0 16px;border-bottom:1px solid var(--line)">
+<summary style="display:flex;justify-content:space-between;gap:12px;align-items:center;min-height:52px;font-size:14px;font-weight:600">Kenapa buyback Galeri24 kosong?<span class="chev" style="font-size:18px;color:var(--faint);transition:transform .15s">+</span></summary>
+<p style="margin:0 0 14px;font-size:13.5px;line-height:1.6;color:var(--muted)">Pegadaian tidak menampilkan harga buyback Galeri24, jadi kami tidak mengisinya dengan perkiraan.</p>
+</details>
+<details style="padding:0 16px">
+<summary style="display:flex;justify-content:space-between;gap:12px;align-items:center;min-height:52px;font-size:14px;font-weight:600">Apakah situs ini menjual emas?<span class="chev" style="font-size:18px;color:var(--faint);transition:transform .15s">+</span></summary>
+<p style="margin:0 0 14px;font-size:13.5px;line-height:1.6;color:var(--muted)">Tidak. Ini proyek non-komersial tanpa sponsor; datanya bisa diunduh bebas di halaman Data.</p>
+</details>
+</div>
+</div>
+</section>
+</main>
+
+<footer style="border-top:1px solid var(--line)">
+<div class="wrap" style="padding-top:36px;padding-bottom:32px;display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:28px 40px">
+<div style="display:flex;flex-direction:column;gap:10px">
+<span class="serif" style="font-size:22px">Harga Emas Historis</span>
+<p style="margin:0;font-size:13.5px;line-height:1.65;color:var(--muted)">Proyek non-komersial. Data dikumpulkan otomatis setiap hari, divalidasi, dan disimpan sebagai CSV di repositori publik.</p>
+<a href="https://github.com/hafidznrg/gold-price-tracker" style="font-size:13.5px">github.com/hafidznrg/gold-price-tracker</a>
+</div>
+<div style="display:flex;flex-direction:column;gap:10px">
+<span style="font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint);font-weight:600">Sumber data</span>
+<span style="font-size:13.5px;line-height:1.5;color:var(--muted)">Logam Mulia (Antam) · UBS Lifestyle · Pegadaian (Antam, UBS, Galeri24, Tabungan Emas) · xaus.com · Bank Indonesia JISDOR</span>
+</div>
+<div style="display:flex;flex-direction:column;gap:10px">
+<span style="font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint);font-weight:600">Catatan</span>
+<p style="margin:0;font-size:13.5px;line-height:1.6;color:var(--muted)">Bukan rekomendasi investasi. Buyback belum memperhitungkan PPh 22. Harga Logam Mulia adalah Harga Dasar, belum termasuk PPh 0,25%. Harga emas dunia bersifat indikatif.</p>
+</div>
+</div>
+</footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"tema": {"editor": "enum", "options": ["light", "dark"], "default": "light"}, "$preview": {"width": 1440, "height": 2900}}'>
+class Component extends DCLogic {
+
+M = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+state = { mode: 'jual', unit: 'keping', period: 30, open: null, fresh: false };
+rng(seed) { let s = (seed * 2654435761) >>> 0 || 1; return function () { s = (s * 1664525 + 1013904223) >>> 0; return s / 4294967296; }; }
+walk(seed, n, end, vol, drift) {
+  const r = this.rng(seed); const a = new Array(n); a[n - 1] = end;
+  for (let i = n - 2; i >= 0; i--) { a[i] = a[i + 1] / (1 + drift + (r() - 0.5) * 2 * vol); }
+  return a;
+}
+round(v, k) { return Math.round(v / k) * k; }
+mult(w) { return ({ 0.5: 1.128, 1: 1, 2: 0.992, 5: 0.987, 10: 0.984, 25: 0.981, 50: 0.98, 100: 0.979 })[w] || 1; }
+rp(n) { if (n === null || n === undefined || isNaN(n)) return '—'; return 'Rp' + Math.round(n).toLocaleString('id-ID'); }
+num(n, d) { return Number(n).toLocaleString('id-ID', { minimumFractionDigits: d, maximumFractionDigits: d }); }
+pct(n, d) { d = d === undefined ? 2 : d; return (n > 0 ? '+' : n < 0 ? '−' : '') + this.num(Math.abs(n), d) + '%'; }
+signRp(n) { return (n > 0 ? '▲ +' : n < 0 ? '▼ −' : '') + this.rp(Math.abs(n)); }
+rpShort(n) { return this.num(n / 1e6, 2) + ' jt'; }
+pills(items, cur, onPick) {
+  return items.map(it => ({ label: it[1], pressed: String(it[0] === cur), pick: () => onPick(it[0]),
+    bg: it[0] === cur ? 'var(--btn)' : 'transparent', fg: it[0] === cur ? 'var(--btntext)' : 'var(--muted)' }));
+}
+line(vals, mn, mx, W, H) {
+  const n = vals.length; let d = '';
+  for (let i = 0; i < n; i++) d += (i ? 'L' : 'M') + (n === 1 ? W / 2 : i / (n - 1) * W).toFixed(1) + ' ' + (H - (vals[i] - mn) / (mx - mn) * H).toFixed(1) + ' ';
+  return d;
+}
+ticks(mn, mx, count) {
+  const raw = (mx - mn) / count; const mag = Math.pow(10, Math.floor(Math.log10(raw))); const nr = raw / mag;
+  const step = (nr < 1.5 ? 1 : nr < 3 ? 2 : nr < 7 ? 5 : 10) * mag; const out = [];
+  for (let v = Math.ceil(mn / step) * step; v <= mx + 1e-9; v += step) out.push(v);
+  return out;
+}
+
+renderVals() {
+  const st = Object.assign({ mode: 'jual', unit: 'keping', period: 30, open: null, fresh: false }, this.state || {});
+  const theme = st.theme || this.props.tema || 'light';
+  const N = 365;
+  const brands = [
+    { id: 'antam', brand: 'Antam', source: 'Logam Mulia', color: 'var(--antam)', unit: '1 g', sell: this.walk(11, N, 2512000, 0.0062, 0.00075).map(v => this.round(v, 1000)), buy1: 2358000, buyOnly1: true,
+      alt: 'Harga dasar, belum termasuk PPh 0,25%. Di Pegadaian: Rp2.538.000.', src: 'logammulia.com · 30 Okt, 08.32 WIB' },
+    { id: 'ubs', brand: 'UBS', source: 'UBS Lifestyle', color: 'var(--ubs)', unit: '1 g', sell: this.walk(21, N, 2488800, 0.0056, 0.00074).map(v => this.round(v, 100)), buy1: 2291000,
+      alt: 'Buyback untuk tahun produksi 2026. Di Pegadaian: Rp2.501.000.', src: 'ubslifestyle.com · data 30 Okt (tanpa jam)' },
+    { id: 'g24', brand: 'Galeri24', source: 'Pegadaian', color: 'var(--g24)', unit: '1 g', sell: this.walk(31, N, 2431000, 0.0056, 0.00074).map(v => this.round(v, 1000)), buy1: null,
+      alt: 'Hanya dijual lewat Pegadaian. Pegadaian tidak menampilkan harga buyback-nya.', src: 'pegadaian.co.id · 30 Okt, 18.32 WIB' },
+    { id: 'tab', brand: 'Tabungan Emas', source: 'Pegadaian', color: 'var(--tab)', unit: 'per gram', sell: this.walk(61, N, 2385000, 0.0054, 0.00074).map(v => this.round(v, 100)), buy1: 2289000, linear: true,
+      alt: 'Tidak berbentuk keping; harga linear terhadap berat (dicatat per 0,01 g).', src: 'pegadaian.co.id · 30 Okt, 18.32 WIB' }
+  ];
+
+  const cards = brands.map(b => {
+    const last = b.sell[N - 1], prev = b.sell[N - 2], chg = last - prev;
+    const open = st.open === b.id;
+    const sp = b.buy1 ? (last - b.buy1) / last * 100 : null;
+    return {
+      brand: b.brand, color: b.color, unit: b.unit, alt: b.alt, src: 'Sumber: ' + b.src,
+      sellFmt: this.rp(last),
+      chgText: this.signRp(chg) + ' (' + this.pct(chg / prev * 100) + ')',
+      chgColor: chg > 0 ? 'var(--up)' : chg < 0 ? 'var(--down)' : 'var(--muted)',
+      buyFmt: b.buy1 ? this.rp(b.buy1) : 'tidak ditampilkan',
+      buyColor: b.buy1 ? 'var(--text)' : 'var(--faint)',
+      spreadTxt: sp === null ? '—' : this.num(sp, 2) + '% · ' + this.rp(last - b.buy1),
+      meter: b.buy1 ? (b.buy1 / last * 100).toFixed(1) : 0,
+      open: String(open), openBool: open,
+      infoLabel: 'Keterangan ' + b.brand,
+      toggle: () => this.setState({ open: open ? null : b.id })
+    };
+  });
+
+  // Matriks: tiga batangan (+ Antam di Pegadaian sebagai pembanding kanal).
+  const antamPg = this.walk(41, 2, 2538000, 0.0056, 0.00074)[1];
+  const mcols = [
+    { brand: 'Antam', source: 'Logam Mulia', color: 'var(--antam)', base: brands[0].sell[N - 1], buy1: 2358000, buyOnly1: true },
+    { brand: 'Antam', source: 'Pegadaian', color: 'var(--antam)', base: antamPg, buy1: null },
+    { brand: 'UBS', source: 'UBS Lifestyle', color: 'var(--ubs)', base: brands[1].sell[N - 1], buy1: 2291000 },
+    { brand: 'Galeri24', source: 'Pegadaian', color: 'var(--g24)', base: brands[2].sell[N - 1], buy1: null }
+  ];
+  const ws = [0.5, 1, 2, 5, 10, 25, 50, 100];
+  const perGram = st.unit === 'gram';
+  const matrix = ws.map(w => {
+    const vals = mcols.map(c => {
+      const sell = this.round(c.base * this.mult(w) * w, 1000);
+      const buy = c.buy1 && (!c.buyOnly1 || w === 1) ? this.round(c.buy1 * w * (w === 1 ? 1 : 0.998), 1000) : null;
+      const div = perGram ? w : 1;
+      if (st.mode === 'jual') return sell / div;
+      if (st.mode === 'buyback') return buy === null ? null : buy / div;
+      return buy === null ? null : (sell - buy) / sell * 100;
+    });
+    const avail = vals.filter(v => v !== null);
+    const best = avail.length < 2 ? null : (st.mode === 'buyback' ? Math.max.apply(null, avail) : Math.min.apply(null, avail));
+    return {
+      w: String(w).replace('.', ',') + ' g',
+      cells: vals.map(v => {
+        const isBest = v !== null && v === best;
+        return {
+          txt: v === null ? '—' : st.mode === 'spread' ? this.num(v, 2) + '%' : this.rp(v),
+          best: isBest,
+          bg: isBest ? 'color-mix(in srgb, var(--up) 10%, transparent)' : 'transparent',
+          fg: v === null ? 'var(--faint)' : 'var(--text)',
+          weight: isBest ? 600 : 400
+        };
+      })
+    };
+  });
+  const hints = { jual: 'Harga jual termurah di tiap gramasi ditandai.', buyback: 'Buyback tertinggi di tiap gramasi ditandai.', spread: 'Selisih jual-beli terkecil di tiap gramasi ditandai.' };
+
+  // Tren
+  const n = st.period;
+  const series = brands.map(b => b.sell.slice(N - n));
+  let mn = Infinity, mx = -Infinity;
+  series.forEach(a => a.forEach(v => { if (v < mn) mn = v; if (v > mx) mx = v; }));
+  const pad = (mx - mn) * 0.08; mn -= pad; mx += pad;
+  const tk = this.ticks(mn, mx, 4);
+  const end = Date.UTC(2026, 9, 30);
+  const xTicks = [];
+  const steps = 5;
+  for (let k = 0; k <= steps; k++) {
+    const i = Math.round(k / steps * (n - 1));
+    const d = new Date(end - (n - 1 - i) * 864e5);
+    xTicks.push({ left: (i / (n - 1) * 100).toFixed(2), label: d.getUTCDate() + ' ' + this.M[d.getUTCMonth()] + (n > 90 && k === 0 ? ' ' + d.getUTCFullYear() : '') });
+  }
+  const stats = brands.map((b, i) => {
+    const a = series[i]; const hi = Math.max.apply(null, a), lo = Math.min.apply(null, a);
+    const avg = a.reduce((s, v) => s + v, 0) / a.length; const c = (a[a.length - 1] / a[0] - 1) * 100;
+    return { brand: b.brand, color: b.color, hi: this.rp(hi), lo: this.rp(lo), avg: this.rp(avg), chg: this.pct(c, 1), chgColor: c >= 0 ? 'var(--up)' : 'var(--down)' };
+  });
+
+  const spotUsd = 4125.3, fx = 18069, spotGram = spotUsd * fx / 31.1034768;
+  return {
+    themeClass: theme === 'light' ? 't-light' : 't-dark',
+    toggleTheme: () => this.setState({ theme: theme === 'dark' ? 'light' : 'dark' }),
+    freshOpen: String(!!st.fresh), freshOpenBool: !!st.fresh,
+    toggleFresh: () => this.setState({ fresh: !st.fresh }),
+    fresh: [
+      { name: 'Logam Mulia', when: '30 Okt · 08.32 WIB', dot: 'var(--up)' },
+      { name: 'UBS Lifestyle', when: 'data 30 Okt (sumber tanpa jam)', dot: 'var(--up)' },
+      { name: 'Pegadaian', when: '30 Okt · 18.32 WIB · 1 baris ditinjau', dot: 'var(--gold)' },
+      { name: 'XAU/USD', when: 'penutupan 29 Okt', dot: 'var(--up)' },
+      { name: 'JISDOR', when: '30 Okt · 15.15 WIB', dot: 'var(--up)' }
+    ],
+    cards: cards,
+    spotUsd: 'US$' + this.num(spotUsd, 2), fx: 'Rp' + this.num(fx, 0), spotGram: this.rp(spotGram),
+    premi: this.pct((2512000 / spotGram - 1) * 100, 1),
+    modes: this.pills([['jual', 'Harga jual'], ['buyback', 'Buyback'], ['spread', 'Selisih']], st.mode, v => this.setState({ mode: v })),
+    units: this.pills([['keping', 'Per keping'], ['gram', 'Per gram']], st.unit, v => this.setState({ unit: v })),
+    cols: mcols, matrix: matrix, matrixHint: hints[st.mode],
+    bestLabel: st.mode === 'jual' ? 'termurah' : st.mode === 'buyback' ? 'tertinggi' : 'terkecil',
+    periods: this.pills([[7, '7H'], [30, '30H'], [90, '90H'], [365, '1T']], st.period, v => this.setState({ period: v })),
+    lines: brands.map((b, i) => ({ color: b.color, d: this.line(series[i], mn, mx, 1000, 260) })),
+    gridPath: tk.map(v => { const y = (260 - (v - mn) / (mx - mn) * 260).toFixed(1); return 'M0 ' + y + ' L1000 ' + y; }).join(' '),
+    yTicks: tk.map(v => ({ top: ((1 - (v - mn) / (mx - mn)) * 100).toFixed(2), label: this.rpShort(v) })),
+    xTicks: xTicks,
+    chartLabel: 'Grafik harga jual 1 gram, ' + n + ' hari terakhir, untuk Antam, UBS, Galeri24, dan Tabungan Emas',
+    stats: stats
+  };
+}
+}
+</script>
+</body>
+</html>

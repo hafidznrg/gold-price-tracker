@@ -355,3 +355,14 @@ Log keputusan produk dan teknis (format ringkas ala ADR). Keputusan baru ditamba
 - `accept_previous_day: true` (baru, default `false`): V-06 menerima tanggal data dalam rentang [sasaran − 1, max(sasaran, tanggal WIB saat run)]. Baris disimpan dengan tanggalnya sendiri (`tglBerlaku`), sehingga slot siang menambal snapshot kemarin bila slot malam gagal atau terlambat, dan run terlambat yang membaca snapshot hari berikutnya ikut menyimpannya. Upsert memperlakukan tanggal yang sudah ada sebagai unchanged atau revisi.
 - Di luar rentang (mis. snapshot dua hari lalu) tetap `stale` dengan kode 3 dan memicu alarm di slot retry.
 **Konsekuensi:** tiap tanggal punya hingga empat kesempatan selama snapshotnya tampil, bukan hanya dua slot malam. Paling banyak 4 run Pegadaian per hari (masing-masing 2 permintaan). Alarm "Pegadaian belum terbit hari ini" baru muncul keesokan harinya, karena slot malam yang membaca snapshot kemarin dianggap sukses. Tanggal tetap hilang bila snapshotnya hanya tampil singkat dan tidak ada run yang jatuh di jendela itu (kasus 10 Nov); penangkalnya tetap pemicu eksternal (D-27).
+
+### D-43 — Beranda v2: harga dulu, perbandingan lintas merek, tema terang default
+
+**Konteks:** 11 Nov 2026 beranda dibandingkan dengan harga-emas.co.id. Kartu harga pertama baru muncul sekitar 590 px dari atas: di atasnya ada judul 72 px, empat sel spot, dan lima chip status. Perbandingan antarmerek (pertanyaan utama pengunjung) hanya bisa dilakukan satu sumber per tab. Istilah nav (Explorer, Spread) asing bagi pengguna awam.
+**Keputusan:**
+- Acuan baru beranda: `plan/mockup/Main-v2.dc.html` (menggantikan `Main.dc.html` untuk `/`). Judul 46 px; empat kartu ringkas di hero (harga, perubahan, buyback, selisih + bar). Catatan sumber, PPh, dan Q-1 masuk panel ⓘ per kartu.
+- Lima chip status digabung jadi satu tombol "Diperbarui …" yang bisa dibuka. Data spot dunia jadi satu baris ringkas di bawah kartu.
+- Tabel "Semua gramasi" per sumber diganti matriks **Bandingkan per gramasi** (kolom: Antam LM, Antam Pegadaian, UBS, Galeri24; mode jual/buyback/selisih; per keping/per gram; penanda termurah/tertinggi/terkecil hanya bila ≥2 nilai tersedia). Ditambah grafik tren 1 g (7H/30H/90H/1T + tertinggi/terendah/rata-rata) dan bagian edukasi + FAQ.
+- Label nav: Explorer → "Riwayat harga", Spread → "Selisih jual-beli". Rute tidak berubah.
+- Tema default **terang**, latar terang dihangatkan (`--bg #F7F5F0`, token baru `--hero #EFECE4`). Pilihan tersimpan pengguna tetap dihormati.
+**Konsekuensi:** dikerjakan dua gelombang: (1) hero, kartu, status, spot, nav, tema, edukasi/FAQ; (2) matriks dan grafik tren. Sampai gelombang 2 selesai, tabel lama tetap tampil. Tidak ada perubahan data atau build.

@@ -8,8 +8,8 @@ export interface NavItem {
  */
 export const NAV_ITEMS: readonly NavItem[] = [
   { href: '/', label: 'Hari ini' },
-  { href: '/explorer', label: 'Explorer' },
-  { href: '/spread', label: 'Spread' },
+  { href: '/explorer', label: 'Riwayat harga' },
+  { href: '/spread', label: 'Selisih jual-beli' },
   { href: '/bandingkan', label: 'Bandingkan' },
   { href: '/kalkulator', label: 'Kalkulator' },
   { href: '/kelipatan', label: 'Kelipatan' },

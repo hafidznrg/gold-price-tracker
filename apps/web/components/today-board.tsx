@@ -2,124 +2,22 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
-import { Segmented } from '@/components/segmented';
+import { DOT } from '@/components/price-card';
 import { Sparkline } from '@/components/charts/sparkline';
-import { DataAge } from '@/components/data-age';
 import { SourceStamp } from '@/components/source-stamp';
-import { PRODUCT_FILTERS, type Change, type ColorToken, type ProductKind } from '@/lib/data';
+import type { Change, ColorToken } from '@/lib/data';
 import {
   EMPTY,
   changeDirection,
   formatChange,
-  formatChangeRupiah,
-  formatNumber,
   formatPct,
   formatRupiah,
   formatWeight,
 } from '@/lib/format';
-import type { CardModel, GroupModel, RowModel } from '@/lib/today';
+import type { GroupModel, RowModel } from '@/lib/today';
 import { cn } from '@/lib/utils';
 
-type Filter = ProductKind | 'semua';
-
-const DOT: Record<ColorToken, string> = {
-  antam: 'bg-antam',
-  ubs: 'bg-ubs',
-  g24: 'bg-g24',
-  tab: 'bg-tab',
-  gold: 'bg-gold',
-  muted: 'bg-muted',
-};
-
 const TEXT_DIR = { up: 'text-up', down: 'text-down', flat: 'text-muted' } as const;
-
-function Card({ c, builtAt }: { c: CardModel; builtAt: string }) {
-  const hasBuy = c.buyback !== null && c.sell !== null;
-  const meter = hasBuy ? ((c.buyback as number) / (c.sell as number)) * 100 : 0;
-  return (
-    <article className="flex min-w-0 flex-col gap-[18px] rounded-card border border-line bg-surface p-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-2.5">
-          <span className={cn('size-2.5 rounded-[3px]', DOT[c.color])} />
-          <h2 className="m-0 text-[19px] font-semibold">{c.title}</h2>
-        </div>
-        <DataAge
-          at={c.at}
-          date={c.date}
-          builtAt={builtAt}
-          className="rounded-full border border-line px-[11px] py-[5px]"
-        />
-      </div>
-      <div>
-        <div className="eyebrow text-[11.5px] tracking-[0.12em] text-faint">{c.unit}</div>
-        <div className="num mt-1.5 text-[34px] font-semibold tracking-[-0.025em]">
-          {formatRupiah(c.sell)}
-        </div>
-        <div
-          className={cn(
-            'num mt-1.5 text-[13.5px] font-medium',
-            TEXT_DIR[changeDirection(c.change?.abs)],
-          )}
-        >
-          {c.change ? `${formatChangeRupiah(c.change.abs)} (${formatPct(c.change.pct)})` : EMPTY}{' '}
-          <span className="font-normal text-faint">vs kemarin</span>
-        </div>
-      </div>
-      <div>
-        <Sparkline
-          values={c.sellSpark}
-          secondary={c.buySpark ?? undefined}
-          band={!!c.buySpark}
-          color={c.color}
-          width={300}
-          height={64}
-          fluid
-          strokeWidth={2}
-        />
-        <div className="mt-1.5 flex justify-between text-[11.5px] text-faint">
-          <span>30 hari</span>
-          <span>{c.buySpark ? 'jual — · buyback ┄' : 'jual —'}</span>
-        </div>
-      </div>
-      <div className="grid grid-cols-2 gap-3.5 border-t border-line pt-4">
-        <div>
-          <div className="text-xs text-faint">Buyback</div>
-          {hasBuy ? (
-            <div className="num mt-[5px] text-lg font-semibold">{formatRupiah(c.buyback)}</div>
-          ) : (
-            <div className="mt-1.5 text-[13px] leading-[1.4] text-muted">{c.noBuyback}</div>
-          )}
-        </div>
-        <div>
-          <div className="text-xs text-faint">Spread</div>
-          {hasBuy ? (
-            <div className="num mt-[5px] text-lg font-semibold">
-              {formatPct(c.spreadPct, 2, false)}{' '}
-              <span className="text-[13px] font-normal text-muted">{formatRupiah(c.spread)}</span>
-            </div>
-          ) : (
-            <div className="mt-1.5 text-[13px] leading-[1.4] text-muted">Belum bisa dihitung</div>
-          )}
-        </div>
-      </div>
-      {hasBuy ? (
-        <div>
-          <div className="h-1.5 overflow-hidden rounded-full bg-surface2">
-            <div
-              className={cn('h-full rounded-full', DOT[c.color])}
-              style={{ width: `${meter.toFixed(1)}%` }}
-            />
-          </div>
-          <div className="num mt-2 text-xs text-muted">
-            Buyback = {formatNumber(meter, 1)}% dari harga jual
-          </div>
-        </div>
-      ) : null}
-      <SourceStamp source={c.source} date={c.date} at={c.at} className="text-xs" />
-      <div className="rounded-field bg-surface2 px-3 py-2.5 text-[12.5px] text-muted">{c.note}</div>
-    </article>
-  );
-}
 
 function changeCell(change: Change | null) {
   return (
@@ -159,21 +57,11 @@ function Row({ r, color }: { r: RowModel; color: ColorToken }) {
   );
 }
 
-export function TodayBoard({
-  cards,
-  groups,
-  builtAt,
-}: {
-  cards: CardModel[];
-  groups: GroupModel[];
-  builtAt: string;
-}) {
-  const [filter, setFilter] = useState<Filter>('semua');
+export function TodayBoard({ groups }: { groups: GroupModel[] }) {
   const [tabId, setTabId] = useState<string | null>(null);
   const [variant, setVariant] = useState<string | null>(null);
 
-  const shownCards = cards.filter((c) => filter === 'semua' || c.kind === filter);
-  const shownGroups = groups.filter((g) => filter === 'semua' || g.kind === filter);
+  const shownGroups = groups;
   const cur =
     shownGroups.find((g) => g.id === tabId) ??
     shownGroups.find((g) => g.id === 'ubslifestyle-ubs') ??
@@ -188,27 +76,7 @@ export function TodayBoard({
 
   return (
     <>
-      <section className="wrap flex flex-wrap items-center justify-between gap-3 pb-[18px]">
-        <Segmented
-          label="Jenis produk"
-          options={PRODUCT_FILTERS}
-          value={filter}
-          onChange={setFilter}
-        />
-        <span className="text-[12.5px] text-muted">
-          Emas fisik per keping 1 g · tabungan emas per gram
-        </span>
-      </section>
-
-      <section className="wrap pb-7">
-        <div className="grid grid-cols-[repeat(auto-fit,minmax(min(260px,100%),1fr))] gap-[18px]">
-          {shownCards.map((c) => (
-            <Card key={c.id} c={c} builtAt={builtAt} />
-          ))}
-        </div>
-      </section>
-
-      <section className="wrap pb-16">
+      <section className="wrap pt-12 pb-6">
         <div className="overflow-hidden rounded-card border border-line bg-surface">
           <div className="flex flex-wrap items-end justify-between gap-4 px-6 pt-[26px] pb-[18px] max-sm:px-4">
             <div>
@@ -330,7 +198,7 @@ export function TodayBoard({
               href="/explorer"
               className="text-[12.5px] font-semibold text-gold no-underline hover:text-text"
             >
-              Buka di Explorer →
+              Buka di Riwayat harga →
             </Link>
           </div>
         </div>

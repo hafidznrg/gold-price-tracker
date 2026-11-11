@@ -1,8 +1,9 @@
 import type { Metadata } from 'next';
-import type { ReactNode } from 'react';
-import { DataAge } from '@/components/data-age';
+import { Freshness, type FreshnessItem } from '@/components/freshness';
+import { HomeEducation } from '@/components/home-education';
+import { PriceCard } from '@/components/price-card';
 import { TodayBoard } from '@/components/today-board';
-import { SOURCE_LABELS, type LatestSpot, type MetaSource } from '@/lib/data';
+import { SOURCE_LABELS, type LatestSpot } from '@/lib/data';
 import { readLatest, readMeta } from '@/lib/data/load-fs';
 import {
   EMPTY,
@@ -12,82 +13,63 @@ import {
   formatPct,
   formatRupiah,
   formatTimeWib,
+  jakartaDateOf,
 } from '@/lib/format';
 import { buildCards, buildGroups } from '@/lib/today';
 
 const NA = 'Belum tersedia';
 
-function SpotCell({
+function SpotItem({
   label,
   value,
   unit,
-  sub,
   gold,
 }: {
   label: string;
   value: string | null;
   unit?: string;
-  sub: string;
   gold?: boolean;
 }) {
   return (
-    <div className="bg-surface px-5 py-[18px]">
-      <div className="text-xs text-faint">{label}</div>
+    <span>
+      {label}{' '}
       {value === null ? (
-        <div className="mt-1.5 text-[19px] leading-[1.35] font-semibold text-muted">{NA}</div>
+        <b className="font-semibold text-muted">{NA}</b>
       ) : (
-        <div
-          className={`num mt-1.5 text-[25px] font-semibold tracking-[-0.01em] ${gold ? 'text-gold' : ''}`}
-        >
-          {value}
-          {unit ? <span className="text-sm font-medium text-muted"> {unit}</span> : null}
-        </div>
+        <>
+          <b className={`num font-semibold ${gold ? 'text-gold' : 'text-text'}`}>{value}</b>
+          {unit}
+        </>
       )}
-      <div className="mt-[5px] text-xs text-muted">{sub}</div>
-    </div>
+    </span>
   );
 }
 
-function SpotGrid({ spot }: { spot: LatestSpot | null }) {
+function SpotStrip({ spot }: { spot: LatestSpot | null }) {
   const s = spot?.snapshot;
   const prem = spot?.premium_antam;
   return (
     <div
       aria-label="Pembanding spot dunia"
-      className="grid min-w-0 flex-[1_1_460px] grid-cols-2 gap-px overflow-hidden rounded-card-sm border border-line bg-line max-sm:flex-[1_1_100%]"
+      className="flex flex-wrap gap-x-7 gap-y-2 rounded-xl border border-dashed border-line px-4 py-3 text-[13px] text-muted"
     >
-      <SpotCell
-        label="XAU/USD spot"
+      <SpotItem
+        label="Emas dunia"
         value={s ? `US$${formatNumber(s.xau_usd_oz, 2)}` : null}
-        sub={s ? `indikatif · ${formatTimeWib(s.fetched_at)}` : 'gold-api.com via xaus · indikatif'}
+        unit="/oz"
       />
-      <SpotCell
-        label="USD/IDR JISDOR"
-        value={s ? `Rp${formatNumber(s.usd_idr, 0)}` : null}
-        sub={s ? `Bank Indonesia · ${formatDate(s.usd_idr_date)}` : 'Bank Indonesia'}
-      />
-      <SpotCell
+      <SpotItem label="Kurs JISDOR" value={s ? `Rp${formatNumber(s.usd_idr, 0)}` : null} />
+      <SpotItem
         label="Spot dalam rupiah"
         value={spot ? formatRupiah(spot.idr_gram) : null}
-        unit="/gram"
-        sub="XAU/USD × kurs ÷ 31,1035"
+        unit="/g"
       />
-      <SpotCell
-        label="Premi Antam vs spot"
+      <SpotItem
+        label="Premi Antam di atas spot"
         value={prem ? formatPct(prem.pct, 1) : null}
         gold
-        sub={prem ? `vs penutupan spot ${formatDate(prem.spot_date, false)}` : 'vs penutupan spot'}
       />
     </div>
-  );
-}
-
-function Chip({ name, children }: { name: string; children: ReactNode }) {
-  return (
-    <span className="inline-flex items-center gap-2 rounded-full border border-line bg-surface px-[13px] py-2 text-[12.5px]">
-      <span className="font-semibold">{name}</span>
-      {children}
-    </span>
   );
 }
 
@@ -107,61 +89,65 @@ export default function HomePage() {
   const meta = readMeta();
   const cards = buildCards(latest);
   const groups = buildGroups(latest, meta.catalog);
-  const prices = latest.sources;
   const macro = meta.sources.filter(
-    (s: MetaSource) => s.kind === 'macro' && (s.id === 'xaus' || s.id === 'jisdor'),
+    (s) => s.kind === 'macro' && (s.id === 'xaus' || s.id === 'jisdor'),
   );
+
+  const freshItems: FreshnessItem[] = [
+    ...latest.sources.map((s) => ({
+      id: s.source,
+      name: SOURCE_LABELS[s.source],
+      when: whenOf(s.source, s.last_data_date, s.source_updated_at),
+      date: s.last_data_date,
+    })),
+    ...macro.map((s) => ({
+      id: s.id,
+      name: s.id === 'xaus' ? 'XAU/USD' : 'JISDOR',
+      when: s.last_data_date ? formatDate(s.last_data_date, false) : 'belum ada data',
+      date: s.last_data_date,
+    })),
+  ];
+  const stamps = [
+    ...latest.sources.map((s) => s.source_updated_at),
+    ...macro.map((s) => s.source_updated_at),
+  ].filter((x): x is string => !!x);
+  const latestAt = stamps.length > 0 ? stamps.reduce((a, b) => (a > b ? a : b)) : null;
+  const latestLabel = latestAt
+    ? `${formatDate(jakartaDateOf(new Date(latestAt)), false)}, ${formatTimeWib(latestAt)}`
+    : EMPTY;
 
   return (
     <>
-      <section className="wrap flex flex-wrap items-end justify-between gap-9 pt-[60px] pb-[30px] max-sm:pt-10">
-        <div className="min-w-0 flex-[1_1_520px]">
-          <p className="eyebrow m-0 mb-4 text-gold">
-            {latest.as_of ? `${formatDateLong(latest.as_of)} · ` : ''}harga per 1 gram
-          </p>
-          <h1 className="serif m-0 text-[72px] leading-none max-sm:text-[44px]">
-            Harga emas <em className="text-gold">hari ini</em>
-          </h1>
-          <p className="m-0 mt-[22px] max-w-[540px] text-base leading-[1.65] text-muted">
-            Harga jual dan buyback emas batangan Antam, UBS, dan Galeri24, ditambah Tabungan Emas
-            Pegadaian. Dikumpulkan otomatis setiap pagi, divalidasi, lalu disimpan sebagai data
-            terbuka.
-          </p>
-        </div>
-        <SpotGrid spot={latest.spot} />
-      </section>
+      <section className="border-b border-line bg-hero">
+        <div className="wrap flex flex-col gap-6 py-9">
+          <div className="flex flex-wrap items-end justify-between gap-x-8 gap-y-4">
+            <div className="min-w-0">
+              <p className="eyebrow m-0 mb-2.5 text-xs tracking-[0.14em] text-gold">
+                {latest.as_of ? formatDateLong(latest.as_of) : 'Harga per 1 gram'}
+              </p>
+              <h1 className="serif m-0 text-[46px] leading-[1.05] max-sm:text-[38px]">
+                Harga emas hari ini
+              </h1>
+              <p className="m-0 mt-2.5 max-w-[560px] text-[15px] leading-[1.55] text-muted">
+                Harga jual, buyback, dan selisihnya untuk keping 1 gram, dari situs resmi
+                masing-masing penerbit.
+              </p>
+            </div>
+            <Freshness items={freshItems} latestLabel={latestLabel} builtAt={meta.built_at} />
+          </div>
 
-      <section className="wrap pb-7">
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="mr-1.5 text-[12.5px] text-faint">Pembaruan terakhir</span>
-          {prices.map((s) => (
-            <Chip key={s.source} name={SOURCE_LABELS[s.source]}>
-              <span className="text-muted">
-                {whenOf(s.source, s.last_data_date, s.source_updated_at)}
-              </span>
-              <DataAge at={s.source_updated_at} date={s.last_data_date} builtAt={meta.built_at} />
-            </Chip>
-          ))}
-          {macro.map((s) => (
-            <Chip key={s.id} name={s.id === 'xaus' ? 'XAU/USD' : 'JISDOR'}>
-              {s.last_data_date ? (
-                <>
-                  <span className="text-muted">{formatDate(s.last_data_date, false)}</span>
-                  <DataAge
-                    at={s.source_updated_at}
-                    date={s.last_data_date}
-                    builtAt={meta.built_at}
-                  />
-                </>
-              ) : (
-                <span className="text-muted">belum ada data</span>
-              )}
-            </Chip>
-          ))}
+          <div className="grid grid-cols-[repeat(auto-fit,minmax(min(250px,100%),1fr))] gap-3.5">
+            {cards.map((c) => (
+              <PriceCard key={c.id} c={c} />
+            ))}
+          </div>
+
+          <SpotStrip spot={latest.spot} />
         </div>
       </section>
 
-      <TodayBoard cards={cards} groups={groups} builtAt={meta.built_at} />
+      <TodayBoard groups={groups} />
+      <HomeEducation />
     </>
   );
 }
