@@ -21,8 +21,11 @@ export type UpdateCalendar = z.infer<typeof UpdateCalendar>;
 export const FetchMethod = z.enum(['http', 'browser', 'api', 'file']);
 export type FetchMethod = z.infer<typeof FetchMethod>;
 
-/** Pasangan cron (primary + retry) tempat sumber dijalankan dalam workflow-nya (WORKFLOWS §2.2). */
-export const ScheduleWindow = z.enum(['day', 'evening']);
+/**
+ * Pasangan cron (primary + retry) tempat sumber dijalankan dalam workflow-nya (WORKFLOWS §2.2).
+ * `any` = ikut semua pasangan (D-42).
+ */
+export const ScheduleWindow = z.enum(['day', 'evening', 'any']);
 export type ScheduleWindow = z.infer<typeof ScheduleWindow>;
 
 export const SourceConfig = z.object({
@@ -34,6 +37,11 @@ export const SourceConfig = z.object({
   update_calendar: UpdateCalendar,
   schedule_window: ScheduleWindow.default('day'),
   stale_is_error_on_expected_day: z.boolean().default(false),
+  /**
+   * V-06 menerima tanggal data dari "sasaran − 1" sampai tanggal WIB saat run, bukan hanya
+   * sama dengan sasaran (D-42). Baris tetap bertanggal tanggal datanya sendiri.
+   */
+  accept_previous_day: z.boolean().default(false),
   parser_version: z.string().regex(/^\d+\.\d+\.\d+$/),
   enabled: z.boolean(),
   notes: z.string().optional(),

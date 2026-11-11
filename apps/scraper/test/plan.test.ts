@@ -16,13 +16,23 @@ import {
 import { ROOT } from './helpers';
 
 const config: ProjectConfig = await loadConfig(ROOT);
-/** Konfigurasi uji: UBS dan Pegadaian aktif, Logam Mulia nonaktif. */
+/**
+ * Konfigurasi uji: UBS dan Pegadaian aktif, Logam Mulia nonaktif. Pegadaian dipaksa berjendela
+ * `evening` agar perilaku jendela malam tetap teruji; jendela `any` asli diuji terpisah (D-42).
+ */
 const retail: ProjectConfig = {
   ...config,
   sources: config.sources.map((s) => ({
     ...s,
     enabled: s.id === 'ubslifestyle' || s.id === 'pegadaian',
+    ...(s.id === 'pegadaian' ? { schedule_window: 'evening' as const } : {}),
   })),
+};
+const anyWindow: ProjectConfig = {
+  ...retail,
+  sources: retail.sources.map((s) =>
+    s.id === 'pegadaian' ? { ...s, schedule_window: 'any' as const } : s,
+  ),
 };
 
 const MONDAY_1040 = new Date('2026-10-26T03:40:00Z');
@@ -94,6 +104,23 @@ describe('plan', () => {
   it('primary malam: hanya sumber berjendela evening (Pegadaian)', () => {
     const r = plan(input({ schedule: '5 12 * * *', now: MONDAY_1915 }));
     expect(r).toMatchObject({ slot: 'primary', sources: ['pegadaian'], has_work: true });
+  });
+
+  it('jendela any (D-42): Pegadaian ikut slot siang dan malam, tidak dilewati manual siang', () => {
+    expect(config.sources.find((s) => s.id === 'pegadaian')?.schedule_window).toBe('any');
+    const cfg = { config: anyWindow };
+    expect(plan(input(cfg)).sources).toEqual(['ubslifestyle', 'pegadaian']);
+    expect(plan(input({ ...cfg, schedule: '5 12 * * *', now: MONDAY_1915 })).sources).toEqual([
+      'pegadaian',
+    ]);
+    const manual = plan(input({ ...cfg, event: 'workflow_dispatch', schedule: '' }));
+    expect(manual.sources).toEqual(['ubslifestyle', 'pegadaian']);
+    // Slot siang membaca snapshot kemarin → last_data_date kemarin, retry siang tetap jalan.
+    const caughtUp = entry({ last_data_date: '2026-10-25' });
+    const retry = plan(
+      input({ ...cfg, schedule: '25 6 * * *', now: MONDAY_1340, status: { pegadaian: caughtUp } }),
+    );
+    expect(retry.sources).toEqual(['ubslifestyle', 'pegadaian']);
   });
 
   it('retry: lewati yang sudah sukses hari ini; jalankan yang gagal/stale', () => {

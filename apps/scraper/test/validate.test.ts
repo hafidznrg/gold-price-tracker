@@ -216,6 +216,36 @@ describe('V-06 tanggal data (stale)', () => {
     expect(r).toEqual({ outcome: 'stale', reason: 'grafik ≠ tabel' });
   });
 
+  it('accept_previous_day (D-42): sasaran − 1 s/d tanggal run lolos, di luar itu stale', () => {
+    const at = (dataDate: string, runDate?: string) =>
+      validate(
+        input(ubsDay(dataDate), {
+          parsed: { rows: ubsDay(dataDate), dataDate, sourceUpdatedAt: null, stale: null },
+          acceptPreviousDay: true,
+          runDate,
+        }),
+      ).outcome;
+    expect(at('2026-10-25')).toBe('ok'); // slot siang menambal snapshot kemarin
+    expect(at(TODAY)).toBe('ok');
+    expect(at('2026-10-27')).toBe('stale'); // belum lewat tengah malam: tanggal depan ditolak
+    expect(at('2026-10-27', '2026-10-27')).toBe('ok'); // run terlambat lewat tengah malam
+    const old = validate(
+      input(ubsDay('2026-10-24'), {
+        parsed: {
+          rows: ubsDay('2026-10-24'),
+          dataDate: '2026-10-24',
+          sourceUpdatedAt: null,
+          stale: null,
+        },
+        acceptPreviousDay: true,
+      }),
+    );
+    expect(old).toEqual({
+      outcome: 'stale',
+      reason: 'tanggal data 2026-10-24 di luar 2026-10-25 … 2026-10-26',
+    });
+  });
+
   it('kegagalan run-level lebih diutamakan daripada stale', () => {
     const rows = ubsDay('2026-10-24').slice(2);
     const r = validate(

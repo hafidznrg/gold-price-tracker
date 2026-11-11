@@ -172,6 +172,7 @@ Hasil riset P0-08 (25 Okt 2026, fixture di `apps/scraper/test/fixtures/pegadaian
 - **Risiko jadwal (untuk P1-08/P1-11):** PRD semula memperkirakan update ±07.30 WIB, tetapi `idHarga` menunjukkan harga 24 Okt dibuat 10.18–10.35 WIB — **tepat di sekitar slot primary 10.25 WIB** (cron GitHub juga sering terlambat 5–30 menit). Akibatnya slot primary bisa membaca campuran periode lama/baru antar vendor (ditangkap aturan "tglBerlaku sama") atau harga periode I yang lalu direvisi di slot retry. Bila pola ini konsisten selama observasi, geser slot primary ke ±11.05 WIB atau andalkan slot retry untuk Pegadaian.
 - **Harga Minggu & periode (P1-07, 26 Okt 2026):** respons Senin 09.43 WIB berisi `tglBerlaku` = Minggu 25 Okt, `keterangan` `JUAL EB 251026 PER I`, `idHarga` **Sabtu 18.08–18.31 WIB**, nilai sama dengan Sabtu. Jadi harga hari berikutnya (periode I) diterbitkan malam sebelumnya, termasuk untuk hari Minggu; temuan P0-08 "tidak diperbarui Minggu" hanya karena fixture diambil 08.50 WIB. Harga Senin belum ada pukul 09.43 (Minggu malam tidak menerbitkan periode I untuk Senin). `update_calendar` tetap `daily`; pola final di P1-11. Fixture: `prices-table-2026-10-26-monday-per-i.json`.
 - **Jadwal snapshot (26 Okt 2026, D-25):** `timestamp` per vendor pada tiga pengamatan (diambil Minggu 08.50, Senin 09.43, Senin 18.34 WIB) adalah 24, 25, dan 26 Okt pukul **18.32.05 WIB**. Snapshot hari D hanya memuat harga ber-`tglBerlaku` D; harga yang sudah dibuat untuk D+1 (mis. harga Senin dibuat Minggu 18.19 WIB) baru tampil di snapshot D+1. Sebelum ±18.32 WIB endpoint selalu berisi harga kemarin, sehingga Pegadaian dijalankan di **jendela malam** `scrape-retail` (19.05 WIB primary, 21.05 WIB retry). Ini mengoreksi dua butir di atas: periode II tidak terlihat siang hari, dan "harga Minggu terbit Sabtu malam" berarti *dibuat* Sabtu malam tetapi baru *tampil* Minggu 18.32 WIB.
+- **Jam snapshot teramati (25 Okt – 11 Nov 2026, D-42):** snapshot hari D terbit ±18.17–21.27 WIB hari D dan biasanya bertahan sampai snapshot berikutnya (±24 jam), kecuali 11 Nov: snapshot 11 Nov terbit **00.05 WIB**, sehingga snapshot 10 Nov hanya tampil ±5 jam. Pegadaian kini ikut keempat slot dengan `accept_previous_day` (tanggal data sasaran − 1 s/d tanggal run diterima).
 - **Fallback:** Playwright membaca tabel DOM ("Harga Emas Batangan") tetap disiapkan bila endpoint berubah/diblokir, tetapi bukan jalur utama.
 - **Validasi khusus:** setiap brand target punya ≥ 5 gramasi berharga (V-04); `responseCode = 2000000100`.
 
@@ -277,7 +278,7 @@ Ringkasan; YAML lengkap, kontrak antar job, logika slot, notifikasi, matriks keg
 
 | Workflow | Jadwal (WIB) | Isi |
 | --- | --- | --- |
-| `scrape-retail.yml` | Jendela siang 10.25 (primary), 13.25 (retry); jendela malam 19.05 (primary), 21.05 (retry) | Siang: UBS Lifestyle, Logam Mulia. Malam: Pegadaian (D-25) |
+| `scrape-retail.yml` | Jendela siang 10.25 (primary), 13.25 (retry); jendela malam 19.05 (primary), 21.05 (retry) | Siang: UBS Lifestyle, Logam Mulia. Malam: —. Keempat slot: Pegadaian (D-42, sebelumnya malam saja, D-25) |
 | `scrape-macro.yml` | 16.40 hari kerja | xaus, JISDOR (+ World Bank bulanan) |
 | `freshness.yml` | 22.15 | Deteksi sumber/workflow berhenti |
 | `backfill.yml`, `quarantine.yml`, `probe.yml` | Manual | Histori, tinjauan karantina, uji sumber |

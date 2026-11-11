@@ -154,6 +154,8 @@ export async function scrape(opts: ScrapeOptions): Promise<ScrapeRun> {
       catalog: config.catalog,
       existing: await readPrices(opts.root, PriceSource.parse(opts.source)),
       today,
+      acceptPreviousDay: sourceConfig.accept_previous_day,
+      runDate: jakartaDate(now),
     });
     if (result.outcome === 'failed') {
       failure = { code: result.error_code, message: result.error_message };

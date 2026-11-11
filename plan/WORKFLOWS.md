@@ -66,6 +66,7 @@ Bila artifact `out-{source}` tidak ada (job scrape mati sebelum upload), `merge`
 | Cron `25 6 * * *` (slot `retry`, jendela `day`) | Sumber jendela `day` yang hari ini belum `success`/`partial` atau masih `stale` pada hari yang diharapkan |
 | Cron `5 12 * * *` (slot `primary`, jendela `evening`) | Seperti primary, untuk sumber `schedule_window: evening` (Pegadaian, D-25) |
 | Cron `5 14 * * *` (slot `retry`, jendela `evening`) | Seperti retry, untuk sumber jendela `evening` |
+| Sumber `schedule_window: any` | Ikut keempat cron di atas (Pegadaian, D-42) |
 | Manual | Input `sources` (kosong = semua, kecuali sumber `evening` sebelum 18.45 WIB); `force: false` melewati sumber yang hari ini sudah sukses |
 
 Pemetaan cron → slot + jendela ada di `SCHEDULES` (`apps/scraper/src/pipeline/plan.ts`); tes memastikan isinya sama dengan `on.schedule` di YAML.

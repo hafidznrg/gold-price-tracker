@@ -136,7 +136,11 @@ export function plan(input: PlanInput): PlanResult {
 
   let candidates = inWorkflow.filter((s) => s.enabled);
   const window = slot === 'manual' ? undefined : scheduleOf(workflow, input.schedule)?.window;
-  if (window !== undefined) candidates = candidates.filter((s) => s.schedule_window === window);
+  if (window !== undefined) {
+    candidates = candidates.filter(
+      (s) => s.schedule_window === window || s.schedule_window === 'any',
+    );
+  }
   const requested = input.sources
     .split(',')
     .map((s) => s.trim())

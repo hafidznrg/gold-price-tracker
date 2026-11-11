@@ -14,6 +14,8 @@
 # `schedule_window` (default `day`): pasangan cron primary + retry tempat sumber dijalankan.
 #   day     — scrape-retail 10.25 & 13.25 WIB
 #   evening — scrape-retail 19.05 & 21.05 WIB
+#   any     — keempat cron di atas (D-42)
+# `accept_previous_day` (default false): V-06 menerima tanggal data sasaran − 1 s/d tanggal WIB run (D-42).
 # (scrape-macro punya satu cron, 16.40 WIB hari kerja, tanpa retry: semua sumbernya `day`.)
 
 sources:
@@ -34,8 +36,9 @@ sources:
     fetch_method: api
     workflow: scrape-retail
     update_calendar: daily # P1-07: harga Minggu ada; final di P1-11 (Q-6)
-    schedule_window: evening # snapshot harian ±18.32 WIB; sebelum itu tglBerlaku = kemarin (D-25)
+    schedule_window: any # snapshot biasanya terbit ±18.17–21.27 WIB, sekali 00.05 WIB (D-25, D-42)
     stale_is_error_on_expected_day: true
+    accept_previous_day: true # slot siang menambal snapshot kemarin (D-42)
     parser_version: 1.1.0
     enabled: true
     notes: JSON tanpa token; brand dari idVendor (D-20). Tabungan Emas dari /gold/prices (D-30). Fallback Playwright (DOM) belum dibuat (D-23).

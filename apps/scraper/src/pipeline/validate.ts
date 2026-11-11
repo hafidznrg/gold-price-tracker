@@ -42,8 +42,12 @@ export interface ValidateInput {
   catalog: readonly CatalogItem[];
   /** Semua baris sumber ini yang sudah ada di `data/prices/{source}/`. */
   existing: readonly PriceRow[];
-  /** Tanggal Jakarta saat run. */
+  /** Tanggal Jakarta sasaran run (D-27). */
   today: string;
+  /** D-42: terima tanggal data dalam [`today` − 1, max(`today`, `runDate`)]. */
+  acceptPreviousDay?: boolean;
+  /** Tanggal Jakarta saat run benar-benar berjalan (default `today`). */
+  runDate?: string;
 }
 
 export interface HeldBatch<R = Candidate> {
@@ -135,6 +139,13 @@ function checkMinRows(
 function checkFreshness(input: ValidateInput): string | null {
   const { parsed, today } = input;
   if (parsed.stale) return parsed.stale;
+  if (input.acceptPreviousDay && parsed.dataDate) {
+    const from = addDaysIso(today, -1);
+    const runDate = input.runDate ?? today;
+    const to = runDate > today ? runDate : today;
+    if (parsed.dataDate >= from && parsed.dataDate <= to) return null;
+    return `tanggal data ${parsed.dataDate} di luar ${from} … ${to}`;
+  }
   if (parsed.dataDate !== today)
     return `tanggal data ${parsed.dataDate ?? '?'} ≠ hari ini ${today}`;
   return null;

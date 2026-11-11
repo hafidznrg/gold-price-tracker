@@ -157,9 +157,17 @@ describe('scrape pegadaian', () => {
     });
   });
 
-  it('Minggu masih data Sabtu → stale di hari yang diharapkan (daily) → kode 3', async () => {
-    // Harga Minggu biasanya sudah terbit Sabtu malam (P1-07), jadi data Sabtu di hari Minggu = basi.
+  it('Minggu siang masih snapshot Sabtu → diterima sebagai tambalan kemarin (D-42)', async () => {
+    // Snapshot hari D terbit malam hari D, jadi slot siang D+1 masih membaca D.
     expect(await run(sunday, '2026-10-25T03:30:00Z')).toMatchObject({
+      status: 'success',
+      data_date: '2026-10-24',
+      exit_code: SCRAPE_EXIT.OK,
+    });
+  });
+
+  it('snapshot dua hari lalu → stale di hari yang diharapkan (daily) → kode 3', async () => {
+    expect(await run(sunday, '2026-10-26T03:30:00Z')).toMatchObject({
       status: 'stale',
       expected_day: true,
       exit_code: SCRAPE_EXIT.STALE,
