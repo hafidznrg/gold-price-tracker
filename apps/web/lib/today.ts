@@ -193,11 +193,14 @@ export function buildGroups(latest: LatestFile, catalog: MetaCatalogGroup[]): Gr
         ];
       });
     }
+    // Satu varian saja = tanpa pemilih; baris harus berkunci '' agar cocok dengan `variants: []`.
+    const multi = variants.length > 1;
+    const outRows = multi ? rows : { '': rows[keys[0] ?? ''] ?? [] };
     out.push({
       ...base,
-      variants: variants.length > 1 ? variants : [],
-      rows,
-      count: rows[keys[0] ?? '']?.length ?? 0,
+      variants: multi ? variants : [],
+      rows: outRows,
+      count: outRows[multi ? (keys[0] ?? '') : '']?.length ?? 0,
     });
   }
   return out.sort((a, b) => compareFileIds(a.id, b.id));
