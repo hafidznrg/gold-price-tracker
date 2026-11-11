@@ -2,7 +2,8 @@ import type { Metadata } from 'next';
 import { Freshness, type FreshnessItem } from '@/components/freshness';
 import { HomeEducation } from '@/components/home-education';
 import { PriceCard } from '@/components/price-card';
-import { TodayBoard } from '@/components/today-board';
+import { HomeMatrix } from '@/components/home-matrix';
+import { HomeTrend } from '@/components/home-trend';
 import { SOURCE_LABELS, type LatestSpot } from '@/lib/data';
 import { readLatest, readMeta } from '@/lib/data/load-fs';
 import {
@@ -15,7 +16,11 @@ import {
   formatTimeWib,
   jakartaDateOf,
 } from '@/lib/format';
-import { buildCards, buildGroups } from '@/lib/today';
+import { compareOptions, todayCells } from '@/lib/bandingkan';
+import { calendarFromMeta } from '@/lib/calendar';
+import { explorerOptions } from '@/lib/explorer';
+import { TREND_DEFS } from '@/lib/home-matrix';
+import { buildCards } from '@/lib/today';
 
 const NA = 'Belum tersedia';
 
@@ -88,7 +93,17 @@ export default function HomePage() {
   const latest = readLatest();
   const meta = readMeta();
   const cards = buildCards(latest);
-  const groups = buildGroups(latest, meta.catalog);
+  const cells = todayCells(latest);
+  const trendOptions = compareOptions(explorerOptions(meta)).filter((o) =>
+    TREND_DEFS.some(
+      (d) =>
+        d.source === o.source &&
+        d.brand === o.brand &&
+        d.product === o.product &&
+        (d.linear || o.w === 1),
+    ),
+  );
+  const asOf = meta.as_of ?? latest.as_of ?? new Date().toISOString().slice(0, 10);
   const macro = meta.sources.filter(
     (s) => s.kind === 'macro' && (s.id === 'xaus' || s.id === 'jisdor'),
   );
@@ -146,7 +161,8 @@ export default function HomePage() {
         </div>
       </section>
 
-      <TodayBoard groups={groups} />
+      <HomeMatrix cells={cells} />
+      <HomeTrend options={trendOptions} asOf={asOf} calendar={calendarFromMeta(meta)} />
       <HomeEducation />
     </>
   );

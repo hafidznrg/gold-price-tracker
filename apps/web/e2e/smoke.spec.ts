@@ -61,6 +61,45 @@ for (const p of PAGES) {
   });
 }
 
+test.describe('Beranda', () => {
+  test('matriks gramasi: ganti mode menandai sel terbaik dan memperbarui hint', async ({
+    page,
+  }) => {
+    const errors = collectErrors(page);
+    await page.goto('/');
+    await expect(page.getByRole('heading', { name: 'Bandingkan per gramasi' })).toBeVisible();
+    const table = page.getByRole('table', { name: 'Perbandingan harga per gramasi' });
+    await expect(table.getByTestId('matrix-row').first()).toBeVisible();
+    await expect(page.getByText('Harga jual termurah di tiap gramasi ditandai.')).toBeVisible();
+    await expect(table.getByTestId('matrix-best').first()).toHaveText('termurah');
+
+    await page.getByRole('radio', { name: 'Buyback', exact: true }).click();
+    await expect(page.getByText('Buyback tertinggi di tiap gramasi ditandai.')).toBeVisible();
+    await expect(table.getByTestId('matrix-best').first()).toHaveText('tertinggi');
+
+    await page.getByRole('radio', { name: 'Selisih', exact: true }).click();
+    await expect(table.getByTestId('matrix-best').first()).toHaveText('terkecil');
+    await expect(table).toContainText('%');
+
+    await page.getByRole('radio', { name: 'Per gram', exact: true }).click();
+    await expect(page.getByRole('radio', { name: 'Per gram', exact: true })).toBeChecked();
+    expect(errors).toEqual([]);
+  });
+
+  test('tren: periode dapat diganti dan statistik per brand tampil', async ({ page }) => {
+    const errors = collectErrors(page);
+    await page.goto('/');
+    await expect(page.getByRole('heading', { name: 'Tren harga jual 1 gram' })).toBeVisible();
+    await expect(page.getByTestId('trend-stat')).toHaveCount(4);
+    await expect(page.getByTestId('trend-stat').first()).toContainText('Tertinggi');
+    await page.getByRole('radio', { name: '90H', exact: true }).click();
+    await expect(page.getByRole('radio', { name: '90H', exact: true })).toBeChecked();
+    await expect(page.getByTestId('trend-stat').first()).toContainText('Rata-rata');
+    await page.waitForLoadState('load');
+    expect(errors).toEqual([]);
+  });
+});
+
 test.describe('Explorer', () => {
   const START = '/explorer?s=logammulia-antam-1-sell,pegadaian-pegadaian-0.01-buyback&r=3B';
 
