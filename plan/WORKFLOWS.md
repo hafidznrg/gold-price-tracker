@@ -10,11 +10,12 @@ Spesifikasi rinci setiap workflow, kontrak antar job, perilaku saat gagal, dan k
 | --- | --- | --- | --- | --- |
 | `ci.yml` | PR, push ke `main` (kecuali `data/**`) | Lint, typecheck, test, build web | Tidak | 0 |
 | `probe.yml` | Manual | Fetch + parse + validasi satu sumber tanpa menulis | Tidak | 0 |
-| `scrape-retail.yml` | Cron 10.25 & 13.25 WIB (jendela siang), 19.05 & 21.05 WIB (jendela malam), manual | Harga ritel | Ya | 1 |
+| `scrape-retail.yml` | Cron 10.25, 12.25, 13.25 & 15.25 WIB (jendela siang), 19.05, 21.05 & 22.35 WIB (jendela malam), manual | Harga ritel | Ya | 1 |
 | `quarantine.yml` | Manual | Setujui/tolak baris yang ditahan | Ya | 1 |
 | `backfill.yml` | Manual | Isi histori sekali jalan | Ya | 1–2 |
-| `scrape-macro.yml` | Cron 16.40 WIB hari kerja, manual | XAU/USD, USD/IDR, refresh bulanan World Bank | Ya | 2 |
+| `scrape-macro.yml` | Cron 16.40 WIB (+ retry 18.40 WIB) hari kerja, manual | XAU/USD, USD/IDR, refresh bulanan World Bank | Ya | 2 |
 | `retry-logammulia.yml` | Selesainya run terjadwal `scrape-retail`, manual | Picu ulang `scrape-retail` untuk `logammulia` bila gagal karena blokir/jaringan (D-40) | Tidak (lewat `scrape-retail`) | 1 |
+| `watchdog.yml` | Cron 16.50 WIB (ritel siang) & 23.20 WIB (semua sumber), manual | Telegram bila data hari itu belum masuk (D-44) | Tidak | 1 |
 | `freshness.yml` | Cron 22.15 WIB harian | Deteksi sumber/workflow yang berhenti | Tidak (hanya Issue) | 5 |
 
 Semua workflow yang menulis data memakai `concurrency: { group: data-write, cancel-in-progress: false }` di tingkat workflow, sehingga tidak pernah ada dua penulis bersamaan.
@@ -63,10 +64,10 @@ Bila artifact `out-{source}` tidak ada (job scrape mati sebelum upload), `merge`
 | Pemicu | Sumber yang dijalankan |
 | --- | --- |
 | Cron `25 3 * * *` (slot `primary`, jendela `day`) | Semua sumber `enabled` dengan `workflow: scrape-retail` dan `schedule_window: day` |
-| Cron `25 6 * * *` (slot `retry`, jendela `day`) | Sumber jendela `day` yang hari ini belum `success`/`partial` atau masih `stale` pada hari yang diharapkan |
+| Cron `25 5`, `25 6`, `25 8 * * *` (slot `retry`, jendela `day`, D-44) | Sumber jendela `day` yang hari ini belum `success`/`partial` atau masih `stale` pada hari yang diharapkan |
 | Cron `5 12 * * *` (slot `primary`, jendela `evening`) | Seperti primary, untuk sumber `schedule_window: evening` (Pegadaian, D-25) |
-| Cron `5 14 * * *` (slot `retry`, jendela `evening`) | Seperti retry, untuk sumber jendela `evening` |
-| Sumber `schedule_window: any` | Ikut keempat cron di atas (Pegadaian, D-42) |
+| Cron `5 14`, `35 15 * * *` (slot `retry`, jendela `evening`, D-44) | Seperti retry, untuk sumber jendela `evening` |
+| Sumber `schedule_window: any` | Ikut semua cron di atas (Pegadaian, D-42) |
 | Manual | Input `sources` (kosong = semua, kecuali sumber `evening` sebelum 18.45 WIB); `force: false` melewati sumber yang hari ini sudah sukses |
 
 Pemetaan cron → slot + jendela ada di `SCHEDULES` (`apps/scraper/src/pipeline/plan.ts`); tes memastikan isinya sama dengan `on.schedule` di YAML.
@@ -112,9 +113,12 @@ name: scrape-retail
 on:
   schedule:
     - cron: '25 3 * * *'   # 10.25 WIB — slot primary, jendela day
+    - cron: '25 5 * * *'   # 12.25 WIB — slot retry, jendela day (D-44)
     - cron: '25 6 * * *'   # 13.25 WIB — slot retry, jendela day
+    - cron: '25 8 * * *'   # 15.25 WIB — slot retry, jendela day (D-44)
     - cron: '5 12 * * *'   # 19.05 WIB — slot primary, jendela evening (Pegadaian)
     - cron: '5 14 * * *'   # 21.05 WIB — slot retry, jendela evening
+    - cron: '35 15 * * *'  # 22.35 WIB — slot retry, jendela evening (D-44)
   workflow_dispatch:
     inputs:
       sources:
@@ -274,6 +278,7 @@ Struktur sama dengan `scrape-retail.yml`; perbedaannya:
 on:
   schedule:
     - cron: '40 9 * * 1-5'   # 16.40 WIB hari kerja, setelah JISDOR terbit 15.15 WIB
+    - cron: '40 11 * * 1-5'  # 18.40 WIB — slot retry (D-44); lewati sumber yang sukses ≥ 12.00 WIB hari itu
   workflow_dispatch:
     inputs:
       sources: { description: Sumber dipisah koma, required: false, default: '' }

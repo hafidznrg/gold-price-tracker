@@ -1,0 +1,32 @@
+name: watchdog
+
+# D-44 — alarm "data hari ini belum masuk". Membaca data/meta/status.json dan mengirim Telegram
+# bila sumber yang diharapkan hari itu belum punya data, misalnya karena cron scrape-* terlambat
+# atau tidak muncul. Tidak menulis data. Run gagal (merah) bila alarm tidak bisa dikirim.
+
+on:
+  schedule:
+    # Harus sama dengan WATCHDOG_SCHEDULES di apps/scraper/src/pipeline/watchdog.ts.
+    - cron: '50 9 * * *' # 16.50 WIB — sumber ritel jendela day, setelah retry 15.25 WIB
+    - cron: '20 16 * * *' # 23.20 WIB — semua sumber, setelah retry 22.35 WIB
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      - run: >
+          pnpm --filter scraper start watchdog
+          --event "${{ github.event_name }}"
+          --schedule "${{ github.event.schedule }}"
+          --actions-url "${{ github.server_url }}/${{ github.repository }}/actions"
+          --root "$GITHUB_WORKSPACE"
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}

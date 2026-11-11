@@ -25,13 +25,19 @@ interface ScheduleSlot {
  */
 export const SCHEDULES: Partial<Record<Workflow, Record<string, ScheduleSlot>>> = {
   'scrape-retail': {
+    // Retry tambahan (D-44): cron GitHub bisa terlambat berjam-jam atau tidak muncul sama sekali
+    // (11 Nov 2026: nol run terjadwal 03.25–10.10 UTC). Retry tanpa kerja selesai ±20 detik.
     '25 3 * * *': { slot: 'primary', window: 'day' }, // 10.25 WIB
+    '25 5 * * *': { slot: 'retry', window: 'day' }, // 12.25 WIB
     '25 6 * * *': { slot: 'retry', window: 'day' }, // 13.25 WIB
+    '25 8 * * *': { slot: 'retry', window: 'day' }, // 15.25 WIB
     '5 12 * * *': { slot: 'primary', window: 'evening' }, // 19.05 WIB
     '5 14 * * *': { slot: 'retry', window: 'evening' }, // 21.05 WIB
+    '35 15 * * *': { slot: 'retry', window: 'evening' }, // 22.35 WIB
   },
   'scrape-macro': {
     '40 9 * * 1-5': { slot: 'primary', window: 'day' }, // 16.40 WIB hari kerja, setelah JISDOR 15.15
+    '40 11 * * 1-5': { slot: 'retry', window: 'day' }, // 18.40 WIB hari kerja (D-44)
   },
 };
 
@@ -85,6 +91,23 @@ export function doneToday(entry: SourceStatusEntry | undefined, today: string): 
     (entry.last_status === 'success' || entry.last_status === 'partial') &&
     entry.last_data_date === today
   );
+}
+
+/** Sukses makro sebelum jam ini (WIB) dianggap milik run kemarin yang terlambat lewat tengah malam. */
+const MACRO_DAY_FROM = '12:00';
+
+/**
+ * Run makro untuk tanggal WIB `today` sudah sukses/partial (D-44). `xaus` selalu mencatat
+ * penutupan hari bursa sebelumnya, jadi `last_data_date` tidak pernah sama dengan hari run dan
+ * `doneToday` saja akan membuat slot retry makro selalu mengulang. Yang dipakai jam sukses:
+ * cron makro paling awal 16.40 WIB, sehingga sukses sebelum 12.00 WIB pada `today` adalah run
+ * kemarin yang terlambat (10 Nov 2026: selesai 00.18 WIB tanggal 11).
+ */
+export function succeededOn(entry: SourceStatusEntry | undefined, today: string): boolean {
+  if (entry === undefined || entry.last_success_at === null) return false;
+  if (entry.last_status !== 'success' && entry.last_status !== 'partial') return false;
+  const at = jakartaIso(new Date(entry.last_success_at));
+  return at.slice(0, 10) === today && at.slice(11, 16) >= MACRO_DAY_FROM;
 }
 
 const DAY_MS = 24 * 3600_000;
@@ -179,7 +202,7 @@ export function plan(input: PlanInput): PlanResult {
       }
     }
     if (slot === 'retry') {
-      if (doneToday(entry, today)) {
+      if (doneToday(entry, today) || (s.kind === 'macro' && succeededOn(entry, today))) {
         skipped.push({ source: s.id, reason: 'sudah sukses hari ini' });
         return false;
       }

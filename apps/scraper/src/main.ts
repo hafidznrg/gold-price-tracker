@@ -30,6 +30,7 @@ import {
   resolveQuarantineIssue,
 } from './pipeline/quarantine';
 import { describeRun, scrape } from './pipeline/scrape';
+import { formatWatchdog, watchdog } from './pipeline/watchdog';
 import { readMacro } from './pipeline/store';
 import { DEFAULT_USER_AGENT } from './probe/http';
 import { BACKFILL_JOB_IDS, BACKFILL_TASKS, getBackfillJob } from './backfill';
@@ -181,6 +182,52 @@ const COMMANDS: Record<string, Command> = {
       for (const p of summary.changed_paths)
         console.log(`  ${summary.dry_run ? '(dry) ' : ''}${p}`);
       await setOutputs({ commit_message: summary.commit_message });
+      return EXIT.OK;
+    },
+  },
+  watchdog: {
+    summary: 'Alarm Telegram bila data hari ini belum masuk (D-44)',
+    task: 'D-44',
+    options: {
+      root,
+      event: { type: 'string' },
+      schedule: { type: 'string' },
+      'actions-url': { type: 'string' },
+    },
+    run: async (values) => {
+      const rootDir = requireRoot(values);
+      const [config, status] = await Promise.all([loadConfig(rootDir), loadStatus(rootDir)]);
+      const result = watchdog({
+        event: str(values.event),
+        schedule: str(values.schedule),
+        config,
+        status,
+        now: new Date(),
+      });
+      const text = formatWatchdog(result, str(values['actions-url']));
+      const report =
+        text ??
+        `watchdog ${result.date} (${result.scope}): semua sumber sudah masuk — ${result.checked.join(', ') || '(tidak ada yang diharapkan)'}`;
+      console.log(report);
+      if (process.env.GITHUB_STEP_SUMMARY) {
+        await appendFile(process.env.GITHUB_STEP_SUMMARY, ['```', report, '```', ''].join('\n'));
+      }
+      if (!text) return EXIT.OK;
+      const { TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID } = process.env;
+      if (!TELEGRAM_BOT_TOKEN || !TELEGRAM_CHAT_ID) {
+        // Tanpa Telegram, run merah adalah satu-satunya tanda (email GitHub).
+        console.log(
+          '::error::Data belum masuk dan TELEGRAM_BOT_TOKEN/TELEGRAM_CHAT_ID tidak tersedia',
+        );
+        return EXIT.FAILED;
+      }
+      try {
+        await telegramSender(TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID)(text);
+        console.log('Telegram terkirim');
+      } catch (err) {
+        console.log(`::error::Telegram: ${(err as Error).message}`);
+        return EXIT.FAILED;
+      }
       return EXIT.OK;
     },
   },

@@ -1,13 +1,14 @@
 name: scrape-macro
 
 # WORKFLOWS §3.3 — data makro: plan → scrape (matrix per sumber) → merge + commit → notify.
-# Struktur sama dengan scrape-retail.yml; tanpa matrix browser dan tanpa slot retry. Merge juga
+# Struktur sama dengan scrape-retail.yml; tanpa matrix browser; satu slot retry (D-44). Merge juga
 # menimpa data/macro/spot.json. Satu penulis data lewat concurrency data-write.
 
 on:
   schedule:
     # Harus sama dengan SCHEDULES di apps/scraper/src/pipeline/plan.ts.
     - cron: '40 9 * * 1-5' # 16.40 WIB hari kerja — setelah JISDOR terbit 15.15 WIB
+    - cron: '40 11 * * 1-5' # 18.40 WIB hari kerja — slot retry (D-44)
   workflow_dispatch:
     inputs:
       sources:

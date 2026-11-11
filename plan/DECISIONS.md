@@ -366,3 +366,12 @@ Log keputusan produk dan teknis (format ringkas ala ADR). Keputusan baru ditamba
 - Label nav: Explorer → "Riwayat harga", Spread → "Selisih jual-beli". Rute tidak berubah.
 - Tema default **terang**, latar terang dihangatkan (`--bg #F7F5F0`, token baru `--hero #EFECE4`). Pilihan tersimpan pengguna tetap dihormati.
 **Konsekuensi:** dikerjakan dua gelombang: (1) hero, kartu, status, spot, nav, tema, edukasi/FAQ; (2) matriks dan grafik tren. Sampai gelombang 2 selesai, tabel lama tetap tampil. Tidak ada perubahan data atau build.
+
+### D-44 — Retry cron tambahan dan alarm "data belum masuk"
+
+**Konteks:** 11 Nov 2026 tidak ada satu pun run terjadwal `scrape-retail`/`scrape-macro` antara 03.25 dan 10.10 UTC, padahal dua cron siang sudah lewat. Sehari sebelumnya slot 10.25 WIB baru mulai 18.24 WIB (terlambat ±8 jam). Beranda menampilkan harga 10 Nov sampai dipicu manual, dan tidak ada notifikasi karena `notify` hanya berjalan bila scrape berjalan. Chip "5 dari 5 sumber terkini" tetap hijau (ambang ≤ 2 hari).
+**Keputusan:**
+- `scrape-retail` mendapat retry tambahan: siang 12.25 & 15.25 WIB, malam 22.35 WIB. `scrape-macro` mendapat retry 18.40 WIB hari kerja. Retry tanpa kerja selesai ±20 detik karena `plan` melewati sumber yang sudah sukses.
+- Retry makro melewati sumber yang sukses pada tanggal itu pukul ≥ 12.00 WIB (`succeededOn`): `xaus` selalu bertanggal hari bursa sebelumnya, jadi `doneToday` saja akan selalu mengulang. Sukses sebelum 12.00 WIB dianggap run kemarin yang terlambat.
+- Workflow baru `watchdog.yml` (16.50 WIB: ritel jendela `day`; 23.20 WIB: semua sumber) membaca `status.json` dan mengirim Telegram bila sumber yang diharapkan hari itu belum masuk (ritel: `last_data_date` = hari itu; makro: `succeededOn`). Run merah bila Telegram tidak tersedia atau gagal, sehingga email GitHub menjadi cadangan.
+**Konsekuensi:** watchdog sendiri juga cron GitHub dan bisa ikut terlambat, tapi dua jadwal terpisah memperkecil peluang semuanya terlewat. Jika masih sering terjadi, pemicu eksternal (`workflow_dispatch` lewat API) dipertimbangkan. `freshness.yml` (Fase 5, Issue) tetap direncanakan; watchdog hanya menutup kebutuhan alarm harian lebih awal. Pegadaian yang snapshot-nya baru terbit lewat 23.20 WIB bisa memicu alarm palsu.

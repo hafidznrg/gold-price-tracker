@@ -12,11 +12,11 @@
 #   monthly          — sekali per bulan (World Bank Pink Sheet)
 #
 # `schedule_window` (default `day`): pasangan cron primary + retry tempat sumber dijalankan.
-#   day     — scrape-retail 10.25 & 13.25 WIB
-#   evening — scrape-retail 19.05 & 21.05 WIB
-#   any     — keempat cron di atas (D-42)
+#   day     — scrape-retail 10.25 (primary), 12.25, 13.25 & 15.25 WIB (retry, D-44)
+#   evening — scrape-retail 19.05 (primary), 21.05 & 22.35 WIB (retry, D-44)
+#   any     — semua cron di atas (D-42)
 # `accept_previous_day` (default false): V-06 menerima tanggal data sasaran − 1 s/d tanggal WIB run (D-42).
-# (scrape-macro punya satu cron, 16.40 WIB hari kerja, tanpa retry: semua sumbernya `day`.)
+# (scrape-macro: 16.40 WIB primary + 18.40 WIB retry, hari kerja; semua sumbernya `day`, D-44.)
 
 sources:
   - id: ubslifestyle
