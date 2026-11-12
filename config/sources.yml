@@ -12,11 +12,12 @@
 #   monthly          — sekali per bulan (World Bank Pink Sheet)
 #
 # `schedule_window` (default `day`): pasangan cron primary + retry tempat sumber dijalankan.
-#   day     — scrape-retail 10.25 (primary), 12.25, 13.25 & 15.25 WIB (retry, D-44)
-#   evening — scrape-retail 19.05 (primary), 21.05 & 22.35 WIB (retry, D-44)
-#   any     — semua cron di atas (D-42)
+#   day     — scrape-retail Cloudflare 09.05 (primary) & 12.05 WIB (retry); cadangan GitHub 04.15 &
+#             09.15 WIB (retry, tiba ±5–10 jam kemudian); dilewati sebelum 08.30 WIB (D-46)
+#   evening — scrape-retail Cloudflare 19.05 (primary) & 22.05 WIB (retry); cadangan GitHub 19.15 WIB
+#   any     — semua slot di atas (D-42)
 # `accept_previous_day` (default false): V-06 menerima tanggal data sasaran − 1 s/d tanggal WIB run (D-42).
-# (scrape-macro: 16.40 WIB primary + 18.40 WIB retry, hari kerja; semua sumbernya `day`, D-44.)
+# (scrape-macro: Cloudflare 16.40 WIB primary + cadangan GitHub 16.45 WIB retry, hari kerja; semua `day`, D-46.)
 
 sources:
   - id: ubslifestyle

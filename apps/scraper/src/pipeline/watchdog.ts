@@ -3,23 +3,26 @@ import type { ProjectConfig } from '../config';
 import { isExpectedDay } from './calendar';
 import { doneToday, succeededOn, targetDate } from './plan';
 
-// D-44 — alarm "data hari ini belum masuk". Cron GitHub bisa terlambat berjam-jam atau tidak
-// muncul sama sekali (11 Nov 2026), dan notify hanya berjalan bila scrape berjalan. Watchdog
+// D-44 — alarm "data hari ini belum masuk". Cron GitHub rutin terlambat berjam-jam (D-45),
+// dan notify hanya berjalan bila scrape berjalan. Watchdog
 // membaca data/meta/status.json lewat cron tersendiri dan melapor ke Telegram bila sumber yang
 // diharapkan hari itu belum punya data.
 
 export type WatchdogScope = 'day' | 'all';
 
 /**
- * Cron watchdog → cakupan. Harus sama dengan `on.schedule` di `.github/workflows/watchdog.yml`.
- * `day` setelah retry siang terakhir (15.25 WIB): hanya sumber ritel berjendela `day`.
- * `all` setelah retry malam terakhir (22.35 WIB): semua sumber aktif.
- * Pemicu Cloudflare (D-45) meniru cron ini lewat input `schedule`.
+ * Cron watchdog → cakupan (D-46). Dua yang pertama hanya dipicu Cloudflare (tepat waktu); yang
+ * terakhir ada di `on.schedule` `.github/workflows/watchdog.yml` sebagai cadangan bila Worker mati
+ * total. Karena terlambat ±7 jam, ia tiba esok pagi dan tetap memeriksa tanggal cron-nya (D-27).
  */
 export const WATCHDOG_SCHEDULES: Record<string, WatchdogScope> = {
-  '50 9 * * *': 'day', // 16.50 WIB
-  '50 16 * * *': 'all', // 23.50 WIB
+  '5 6 * * *': 'day', // Cloudflare 13.05 WIB, setelah retry siang 12.05
+  '5 16 * * *': 'all', // Cloudflare 23.05 WIB, setelah retry malam 22.05
+  '15 16 * * *': 'all', // GitHub 23.15 WIB → tiba ±06 WIB esok
 };
+
+/** Cron watchdog yang terdaftar di `on.schedule` GitHub. */
+export const GITHUB_WATCHDOG_SCHEDULES: readonly string[] = ['15 16 * * *'];
 
 export interface Overdue {
   source: string;

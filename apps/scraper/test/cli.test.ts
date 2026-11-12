@@ -48,7 +48,7 @@ describe('cli', () => {
   });
 
   it('plan mencetak slot dan sumber', async () => {
-    const args = ['--workflow', 'scrape-retail', '--event', 'schedule', '--schedule', '25 3 * * *'];
+    const args = ['--workflow', 'scrape-retail', '--event', 'schedule', '--schedule', '5 2 * * *'];
     expect(await main(['plan', '--root', ROOT, ...args])).toBe(EXIT.OK);
     expect(log.mock.calls.join('\n')).toContain('slot: primary');
   });
@@ -56,11 +56,11 @@ describe('cli', () => {
   it('--emulate: dispatch dari pemicu Cloudflare diperlakukan seperti cron itu (D-45)', async () => {
     const base = ['plan', '--root', ROOT, '--workflow', 'scrape-retail'];
     const dispatch = ['--event', 'workflow_dispatch', '--schedule', ''];
-    expect(await main([...base, ...dispatch, '--emulate', '25 6 * * *'])).toBe(EXIT.OK);
+    expect(await main([...base, ...dispatch, '--emulate', '5 5 * * *'])).toBe(EXIT.OK);
     expect(log.mock.calls.join('\n')).toContain('slot: retry');
     expect(await main([...base, ...dispatch, '--emulate', '0 0 * * *'])).toBe(EXIT.USAGE);
     expect(error.mock.calls.join('\n')).toContain('tidak ada di SCHEDULES scrape-retail');
-    expect(await main(['watchdog', '--root', ROOT, ...dispatch, '--emulate', '25 3 * * *'])).toBe(
+    expect(await main(['watchdog', '--root', ROOT, ...dispatch, '--emulate', '5 2 * * *'])).toBe(
       EXIT.USAGE,
     );
   });

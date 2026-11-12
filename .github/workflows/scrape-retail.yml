@@ -7,15 +7,12 @@ run-name: ${{ inputs.schedule && format('scrape-retail (cron {0})', inputs.sched
 
 on:
   schedule:
-    # Harus sama dengan SCHEDULES di apps/scraper/src/pipeline/plan.ts.
-    # Retry ganda karena cron GitHub bisa terlambat atau tidak muncul (D-44).
-    - cron: '25 3 * * *' # 10.25 WIB — slot primary, jendela day
-    - cron: '25 5 * * *' # 12.25 WIB — slot retry, jendela day
-    - cron: '25 6 * * *' # 13.25 WIB — slot retry, jendela day
-    - cron: '25 8 * * *' # 15.25 WIB — slot retry, jendela day
-    - cron: '5 12 * * *' # 19.05 WIB — slot primary, jendela evening (Pegadaian, D-25)
-    - cron: '5 14 * * *' # 21.05 WIB — slot retry, jendela evening
-    - cron: '35 15 * * *' # 22.35 WIB — slot retry, jendela evening
+    # Cadangan saja (D-46): slot utama 09.05/12.05/19.05/22.05 WIB dipicu Cloudflare (apps/trigger).
+    # Cron GitHub rutin terlambat ±4,5–10,5 jam, jadi semuanya slot retry yang melewati sumber yang
+    # sudah masuk. Harus sama dengan GITHUB_SCHEDULES di apps/scraper/src/pipeline/plan.ts.
+    - cron: '15 21 * * *' # 04.15 WIB — retry day, biasanya tiba ±09–14 WIB
+    - cron: '15 2 * * *' # 09.15 WIB — retry day, biasanya tiba ±14–19 WIB
+    - cron: '15 12 * * *' # 19.15 WIB — retry evening, biasanya tiba ±02 WIB esok
   workflow_dispatch:
     inputs:
       sources:

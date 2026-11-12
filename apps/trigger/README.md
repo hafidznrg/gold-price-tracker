@@ -1,16 +1,17 @@
-# trigger — pemicu Cloudflare Workers (D-45)
+# trigger — pemicu Cloudflare Workers (D-45, D-46)
 
-Cron GitHub Actions di repo ini rutin terlambat 4,5–10 jam. Worker ini memanggil
-`workflow_dispatch` tepat waktu (Cron Triggers, paket Free) dengan input `schedule` = cron GitHub
-yang ditiru, sehingga `plan`/`watchdog` memperlakukannya seperti run terjadwal. Cron GitHub tetap
-aktif sebagai cadangan.
+Cron GitHub Actions di repo ini rutin terlambat 4,5–10 jam. Worker ini memegang semua slot utama:
+ia memanggil `workflow_dispatch` tepat waktu (Cron Triggers, paket Free) dengan input `schedule` =
+kunci slot di `SCHEDULES`/`WATCHDOG_SCHEDULES`, sehingga `plan`/`watchdog` memperlakukannya seperti
+run terjadwal. Cron GitHub tinggal cadangan berslot retry (04.15, 09.15, 19.15, 16.45 hari kerja,
+dan watchdog 23.15 WIB).
 
-| Cron Worker (UTC)     | WIB                     | Workflow · cron yang ditiru                           |
-| --------------------- | ----------------------- | ----------------------------------------------------- |
-| `25 3,6 * * *`        | 10.25, 13.25            | `scrape-retail` · `25 3` primary, `25 6` retry        |
-| `5 12,14 * * *`       | 19.05, 21.05            | `scrape-retail` · `5 12` primary, `5 14` retry        |
-| `40 9,11 * * MON-FRI` | 16.40, 18.40 hari kerja | `scrape-macro` · `40 9` primary, `40 11` retry        |
-| `50 9,16 * * *`       | 16.50, 23.50            | `watchdog` · `50 9` ritel siang, `50 16` semua sumber |
+| Cron Worker (UTC)        | WIB                                | Dispatch                                                         |
+| ------------------------ | ---------------------------------- | ---------------------------------------------------------------- |
+| `5 2,5,6,12,15,16 * * *` | 09.05, 12.05, 13.05, 19.05, 22.05, 23.05 | `scrape-retail` primary/retry siang, `watchdog` siang, `scrape-retail` primary/retry malam, `watchdog` semua |
+| `40 9 * * MON-FRI`       | 16.40 hari kerja                   | `scrape-macro` primary                                           |
+
+Hari-minggu memakai nama hari: di Cloudflare `1` = Minggu, bukan Senin.
 
 ## Deploy (sekali)
 
@@ -20,13 +21,13 @@ aktif sebagai cadangan.
 2. **Login Cloudflare** (akun gratis), dari folder ini:
 
    ```bash
-   pnpm dlx wrangler login
+   corepack pnpm dlx wrangler login
    ```
 
 3. **Simpan secret** (ditanyakan interaktif, tidak tersimpan di repo):
 
    ```bash
-   pnpm dlx wrangler secret put GITHUB_TOKEN
+   corepack pnpm dlx wrangler secret put GITHUB_TOKEN
    ```
 
    Opsional, kabar Telegram bila dispatch gagal: `TELEGRAM_BOT_TOKEN` dan `TELEGRAM_CHAT_ID`
@@ -35,10 +36,10 @@ aktif sebagai cadangan.
 4. **Deploy:**
 
    ```bash
-   pnpm dlx wrangler deploy
+   corepack pnpm dlx wrangler deploy
    ```
 
-Cek: dashboard Cloudflare → Workers → `gold-price-trigger` → Settings → Triggers (4 cron) dan
-Logs. Di GitHub, run dari Worker berjudul `scrape-retail (cron 25 3 * * *)` dan seterusnya.
+Cek: dashboard Cloudflare → Workers → `gold-price-trigger` → Settings → Trigger events (2 cron) dan
+Logs. Di GitHub, run dari Worker berjudul `scrape-retail (cron 5 2 * * *)` dan seterusnya.
 
 Saat token kedaluwarsa, dispatch gagal (HTTP 401): buat token baru lalu ulangi langkah 3.

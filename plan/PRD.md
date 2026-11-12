@@ -84,7 +84,7 @@ Prioritas: **P0** = wajib untuk rilis publik (MVP) · **P1** = wajib untuk v1 le
 | FR-06 | Ambil USD/IDR JISDOR harian | P0 | 2 |
 | FR-07 | Backfill seri makro: World Bank bulanan (1996+), ECB bulanan/harian (1999+), JISDOR (2013+), xaus harian (5 tahun), kurs tahunan 1996–1998 | P0 | 2 |
 | FR-08 | Backfill histori UBS dari endpoint grafik bila tersedia | P2 | 1 |
-| FR-09 | Penjadwalan otomatis via GitHub Actions: harga ritel 10.25 WIB (primary) dan 13.25 WIB (retry, hanya sumber yang belum sukses); makro 16.40 WIB hari kerja; jalan manual (`workflow_dispatch`) | P0 | 1, 2 |
+| FR-09 | Penjadwalan otomatis: pemicu Cloudflare Workers menjalankan workflow GitHub Actions tepat waktu — harga ritel 09.05 WIB (primary) dan 12.05 WIB (retry, hanya sumber yang belum sukses), malam 19.05/22.05 WIB; makro 16.40 WIB hari kerja; cron GitHub sebagai retry cadangan (D-46); jalan manual (`workflow_dispatch`) | P0 | 1, 2 |
 | FR-10 | Gerbang validasi: pelanggaran tingkat run menggagalkan sumber; pelanggaran tingkat baris menahan baris ke karantina (TECH-SPEC §7) | P0 | 1 |
 | FR-11 | Simpan fragmen mentah (HTML/JSON) terkompresi, dilewati bila isinya identik dengan snapshot terakhir (sha256), untuk parse ulang | P0 | 1 |
 | FR-12 | Log setiap run (`data/meta/runs/{yyyy}.jsonl`) dan status terakhir per sumber (`data/meta/status.json`); konfigurasi sumber terpisah di `config/sources.yml` | P0 | 1 |

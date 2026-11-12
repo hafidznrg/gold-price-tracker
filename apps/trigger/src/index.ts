@@ -1,8 +1,8 @@
-// D-45 — pemicu eksternal di Cloudflare Workers (Cron Triggers, paket Free). Cron GitHub di repo
+// D-45/D-46 — pemicu utama di Cloudflare Workers (Cron Triggers, paket Free). Cron GitHub di repo
 // ini rutin terlambat 4,5–10 jam (8–11 Nov 2026), jadi Worker ini memanggil `workflow_dispatch`
-// tepat waktu dengan input `schedule` = cron GitHub yang ditiru. Workflow memperlakukan run itu
-// persis seperti run terjadwal cron tersebut (slot, jendela, tanggal sasaran). Cron GitHub tetap
-// aktif sebagai cadangan.
+// tepat waktu dengan input `schedule` = kunci di SCHEDULES / WATCHDOG_SCHEDULES. Workflow
+// memperlakukan run itu persis seperti run terjadwal cron tersebut (slot, jendela, tanggal
+// sasaran). Cron GitHub tinggal cadangan berslot retry.
 
 export interface Env {
   /** Fine-grained PAT, hanya repo ini, izin Actions: Read and write (`wrangler secret put`). */
@@ -18,34 +18,29 @@ export interface Env {
 export interface Dispatch {
   /** Nama file di `.github/workflows/`. */
   workflow: string;
-  /** Cron GitHub yang ditiru; harus terdaftar di SCHEDULES / WATCHDOG_SCHEDULES. */
+  /** Kunci slot; harus terdaftar di SCHEDULES / WATCHDOG_SCHEDULES (apps/scraper). */
   schedule: string;
 }
 
 const d = (workflow: string, schedule: string): Dispatch => ({ workflow, schedule });
 
 /**
- * Cron Worker (harus sama dengan `crons` di wrangler.toml) → jam UTC → dispatch. Empat cron,
- * di bawah batas 5 Cron Triggers per akun paket Free. Retry GitHub tambahan D-44 (12.25, 15.25,
- * 22.35 WIB) tidak ditiru: tetap jalan di GitHub sebagai cadangan.
+ * Cron Worker (harus sama dengan `crons` di wrangler.toml) → jam UTC → dispatch (D-46). Worker
+ * memegang semua slot utama; cron GitHub tinggal cadangan berslot retry. Satu Cron Trigger boleh
+ * memuat banyak jam selama menitnya sama, jadi cukup dua dari batas 5 per akun paket Free.
  */
 export const ROUTES: Record<string, Record<number, Dispatch>> = {
-  '25 3,6 * * *': {
-    3: d('scrape-retail.yml', '25 3 * * *'), // 10.25 WIB primary siang
-    6: d('scrape-retail.yml', '25 6 * * *'), // 13.25 WIB retry siang
-  },
-  '5 12,14 * * *': {
+  '5 2,5,6,12,15,16 * * *': {
+    2: d('scrape-retail.yml', '5 2 * * *'), // 09.05 WIB primary siang
+    5: d('scrape-retail.yml', '5 5 * * *'), // 12.05 WIB retry siang
+    6: d('watchdog.yml', '5 6 * * *'), // 13.05 WIB watchdog ritel siang
     12: d('scrape-retail.yml', '5 12 * * *'), // 19.05 WIB primary malam
-    14: d('scrape-retail.yml', '5 14 * * *'), // 21.05 WIB retry malam
+    15: d('scrape-retail.yml', '5 15 * * *'), // 22.05 WIB retry malam
+    16: d('watchdog.yml', '5 16 * * *'), // 23.05 WIB watchdog semua sumber
   },
   // Hari-minggu di Cloudflare: 1 = Minggu (GitHub: 1 = Senin). Nama hari menghindari salah tafsir.
-  '40 9,11 * * MON-FRI': {
+  '40 9 * * MON-FRI': {
     9: d('scrape-macro.yml', '40 9 * * 1-5'), // 16.40 WIB makro
-    11: d('scrape-macro.yml', '40 11 * * 1-5'), // 18.40 WIB retry makro
-  },
-  '50 9,16 * * *': {
-    9: d('watchdog.yml', '50 9 * * *'), // 16.50 WIB watchdog ritel siang
-    16: d('watchdog.yml', '50 16 * * *'), // 23.50 WIB watchdog semua sumber
   },
 };
 

@@ -2,6 +2,8 @@ import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it, vi } from 'vitest';
+import { SCHEDULES } from '../../scraper/src/pipeline/plan';
+import { WATCHDOG_SCHEDULES } from '../../scraper/src/pipeline/watchdog';
 import { dispatch, route, ROUTES, run, type Env } from '../src/index';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..');
@@ -23,12 +25,22 @@ describe('ROUTES', () => {
   /** Hari-minggu Cloudflare → padanannya di cron GitHub (0/7 = Minggu, 1 = Senin). */
   const GITHUB_DOW: Record<string, string> = { '*': '*', 'MON-FRI': '1-5' };
 
-  it('setiap jam di cron Worker terpetakan, dan cron tiruan terdaftar di workflow-nya', async () => {
+  /** Kunci slot yang dikenal `plan --emulate` / `watchdog --emulate` per file workflow. */
+  const registered = (workflow: string): string[] =>
+    Object.keys(
+      workflow === 'watchdog.yml'
+        ? WATCHDOG_SCHEDULES
+        : SCHEDULES[workflow.replace('.yml', '') as 'scrape-retail' | 'scrape-macro']!,
+    );
+
+  it('setiap jam terpetakan ke slot terdaftar yang bukan cron GitHub (D-46)', async () => {
     for (const [cron, byHour] of Object.entries(ROUTES)) {
       const [minute, hours] = cron.split(' ');
       expect(Object.keys(byHour).sort()).toEqual(hours!.split(',').sort());
       for (const target of Object.values(byHour)) {
-        expect(await ymlCrons(target.workflow)).toContain(target.schedule);
+        expect(registered(target.workflow)).toContain(target.schedule);
+        // Cron GitHub cadangan berslot retry; slot utama Worker tidak boleh tertimpa olehnya.
+        expect(await ymlCrons(target.workflow)).not.toContain(target.schedule);
         // Menit dan hari sama dengan cron yang ditiru: hanya jam yang dikelompokkan.
         expect(target.schedule.split(' ')[0]).toBe(minute);
         expect(target.schedule.split(' ')[4]).toBe(GITHUB_DOW[cron.split(' ')[4]!]);
@@ -41,20 +53,20 @@ describe('ROUTES', () => {
   });
 
   it('route memilih menurut jam UTC scheduledTime', () => {
-    expect(route('25 3,6 * * *', Date.parse('2026-11-12T03:25:00Z'))).toEqual({
+    const all = '5 2,5,6,12,15,16 * * *';
+    expect(route(all, Date.parse('2026-11-13T02:05:00Z'))).toEqual({
       workflow: 'scrape-retail.yml',
-      schedule: '25 3 * * *',
+      schedule: '5 2 * * *',
     });
-    expect(route('50 9,16 * * *', Date.parse('2026-11-12T16:50:00Z'))?.schedule).toBe(
-      '50 16 * * *',
-    );
-    expect(route('25 3,6 * * *', Date.parse('2026-11-12T04:25:00Z'))).toBeNull();
+    expect(route(all, Date.parse('2026-11-13T06:05:00Z'))?.workflow).toBe('watchdog.yml');
+    expect(route(all, Date.parse('2026-11-13T16:05:00Z'))?.schedule).toBe('5 16 * * *');
+    expect(route(all, Date.parse('2026-11-13T04:05:00Z'))).toBeNull();
     expect(route('* * * * *', Date.now())).toBeNull();
   });
 });
 
 describe('dispatch', () => {
-  const target = { workflow: 'scrape-retail.yml', schedule: '25 3 * * *' };
+  const target = { workflow: 'scrape-retail.yml', schedule: '5 2 * * *' };
 
   it('POST workflow_dispatch dengan input schedule', async () => {
     const fetchFn = vi.fn(async () => new Response(null, { status: 204 }));
@@ -68,7 +80,7 @@ describe('dispatch', () => {
     expect((init.headers as Record<string, string>).authorization).toBe('Bearer t0k');
     expect(JSON.parse(init.body as string)).toEqual({
       ref: 'main',
-      inputs: { schedule: '25 3 * * *' },
+      inputs: { schedule: '5 2 * * *' },
     });
   });
 
@@ -92,8 +104,8 @@ describe('dispatch', () => {
     const errors = vi.spyOn(console, 'error').mockImplementation(() => undefined);
     await expect(
       run(
-        '25 3,6 * * *',
-        Date.parse('2026-11-12T03:25:00Z'),
+        '5 2,5,6,12,15,16 * * *',
+        Date.parse('2026-11-13T02:05:00Z'),
         {
           ...env,
           TELEGRAM_BOT_TOKEN: 'b',

@@ -5,7 +5,12 @@ import { describe, expect, it } from 'vitest';
 import { parse as parseYaml } from 'yaml';
 import { loadConfig } from '../src/config';
 import { plan, SCHEDULES } from '../src/pipeline/plan';
-import { formatWatchdog, watchdog, WATCHDOG_SCHEDULES } from '../src/pipeline/watchdog';
+import {
+  formatWatchdog,
+  GITHUB_WATCHDOG_SCHEDULES,
+  watchdog,
+  WATCHDOG_SCHEDULES,
+} from '../src/pipeline/watchdog';
 import { ROOT } from './helpers';
 
 const config = await loadConfig(ROOT);
@@ -36,18 +41,32 @@ const crons = async (file: string) => {
   return yml.on.schedule.map((s) => s.cron).sort();
 };
 
-describe('jadwal (D-44)', () => {
-  it('cron workflow sama dengan SCHEDULES / WATCHDOG_SCHEDULES', async () => {
-    expect(await crons('scrape-macro.yml')).toEqual(Object.keys(SCHEDULES['scrape-macro']!).sort());
-    expect(await crons('watchdog.yml')).toEqual(Object.keys(WATCHDOG_SCHEDULES).sort());
+describe('jadwal (D-46)', () => {
+  it('cron watchdog.yml = GITHUB_WATCHDOG_SCHEDULES, terdaftar di WATCHDOG_SCHEDULES', async () => {
+    expect(await crons('watchdog.yml')).toEqual([...GITHUB_WATCHDOG_SCHEDULES].sort());
+    for (const c of GITHUB_WATCHDOG_SCHEDULES) expect(WATCHDOG_SCHEDULES[c]).toBe('all');
   });
 
-  it('retry siang 12.25 & 15.25 WIB dan malam 22.35 WIB', () => {
+  it('slot utama Cloudflare dan cadangan GitHub', () => {
     const retail = SCHEDULES['scrape-retail']!;
-    expect(retail['25 5 * * *']).toEqual({ slot: 'retry', window: 'day' });
-    expect(retail['25 8 * * *']).toEqual({ slot: 'retry', window: 'day' });
-    expect(retail['35 15 * * *']).toEqual({ slot: 'retry', window: 'evening' });
-    expect(SCHEDULES['scrape-macro']!['40 11 * * 1-5']).toEqual({ slot: 'retry', window: 'day' });
+    expect(retail['5 2 * * *']).toEqual({ slot: 'primary', window: 'day' });
+    expect(retail['5 5 * * *']).toEqual({ slot: 'retry', window: 'day' });
+    expect(retail['5 12 * * *']).toEqual({ slot: 'primary', window: 'evening' });
+    expect(retail['5 15 * * *']).toEqual({ slot: 'retry', window: 'evening' });
+    expect(retail['15 21 * * *']).toEqual({ slot: 'retry', window: 'day' });
+    expect(SCHEDULES['scrape-macro']!['45 9 * * 1-5']).toEqual({ slot: 'retry', window: 'day' });
+    expect(WATCHDOG_SCHEDULES).toMatchObject({ '5 6 * * *': 'day', '5 16 * * *': 'all' });
+  });
+
+  it('watchdog GitHub yang tiba esok pagi memeriksa tanggal kemarin', () => {
+    const r = watchdog({
+      config,
+      status: missed,
+      event: 'schedule',
+      schedule: '15 16 * * *',
+      now: new Date('2026-11-11T23:10:00Z'), // 12 Nov 06.10 WIB
+    });
+    expect(r).toMatchObject({ date: '2026-11-11', scope: 'all' });
   });
 
   it('retry makro melewati xaus yang sudah sukses hari ini walau tanggal datanya kemarin', () => {
@@ -59,7 +78,7 @@ describe('jadwal (D-44)', () => {
     const r = plan({
       workflow: 'scrape-macro',
       event: 'schedule',
-      schedule: '40 11 * * 1-5',
+      schedule: '45 9 * * 1-5',
       sources: '',
       force: false,
       monthlyGold: ['2026-10-01'],
@@ -80,7 +99,7 @@ describe('watchdog', () => {
     const r = watchdog({
       ...base,
       event: 'schedule',
-      schedule: '50 9 * * *',
+      schedule: '5 6 * * *',
       now: new Date('2026-11-11T10:05:00Z'),
     });
     expect(r).toMatchObject({ date: '2026-11-11', scope: 'day' });
@@ -99,7 +118,7 @@ describe('watchdog', () => {
       config,
       status,
       event: 'schedule',
-      schedule: '50 16 * * *',
+      schedule: '5 16 * * *',
       now: new Date('2026-11-11T16:55:00Z'),
     });
     expect(r.scope).toBe('all');
@@ -121,7 +140,7 @@ describe('watchdog', () => {
     const r = watchdog({
       ...base,
       event: 'schedule',
-      schedule: '50 16 * * *',
+      schedule: '5 16 * * *',
       now: new Date('2026-11-11T18:30:00Z'), // 12 Nov 01.30 WIB
     });
     expect(r.date).toBe('2026-11-11');
@@ -142,7 +161,7 @@ describe('watchdog', () => {
       config,
       status: { logammulia: entry({}), ubslifestyle: entry({}) },
       event: 'schedule',
-      schedule: '50 9 * * *',
+      schedule: '5 6 * * *',
       now: new Date('2026-11-11T10:05:00Z'),
     });
     expect(formatWatchdog(ok, 'https://x')).toBeNull();
@@ -150,7 +169,7 @@ describe('watchdog', () => {
     const late = watchdog({
       ...base,
       event: 'schedule',
-      schedule: '50 9 * * *',
+      schedule: '5 6 * * *',
       now: new Date('2026-11-11T10:05:00Z'),
     });
     const text = formatWatchdog(late, 'https://github.com/o/r/actions')!;

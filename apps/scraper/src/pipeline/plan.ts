@@ -20,25 +20,33 @@ interface ScheduleSlot {
 }
 
 /**
- * Cron per workflow → slot dan jendela. Cron yang tidak terdaftar = `primary` tanpa saringan
- * jendela. Harus sama dengan `on.schedule` di `.github/workflows/`.
+ * Cron per workflow → slot dan jendela (D-46). Cron yang tidak terdaftar = `primary` tanpa saringan
+ * jendela. Dua sumber kunci:
+ * - Cron tiruan pemicu Cloudflare (`apps/trigger`, tepat waktu): slot utama. Tidak ada di
+ *   `on.schedule` GitHub; tiba lewat `workflow_dispatch` dengan input `schedule` (`--emulate`).
+ * - Cron GitHub di `.github/workflows/` (rutin terlambat 4,5–10,5 jam, D-45): selalu `retry`,
+ *   sehingga sumber yang sudah masuk dilewati dan keterlambatannya menjadi cadangan.
  */
 export const SCHEDULES: Partial<Record<Workflow, Record<string, ScheduleSlot>>> = {
   'scrape-retail': {
-    // Retry tambahan (D-44): cron GitHub bisa terlambat berjam-jam atau tidak muncul sama sekali
-    // (11 Nov 2026: nol run terjadwal 03.25–10.10 UTC). Retry tanpa kerja selesai ±20 detik.
-    '25 3 * * *': { slot: 'primary', window: 'day' }, // 10.25 WIB
-    '25 5 * * *': { slot: 'retry', window: 'day' }, // 12.25 WIB
-    '25 6 * * *': { slot: 'retry', window: 'day' }, // 13.25 WIB
-    '25 8 * * *': { slot: 'retry', window: 'day' }, // 15.25 WIB
-    '5 12 * * *': { slot: 'primary', window: 'evening' }, // 19.05 WIB
-    '5 14 * * *': { slot: 'retry', window: 'evening' }, // 21.05 WIB
-    '35 15 * * *': { slot: 'retry', window: 'evening' }, // 22.35 WIB
+    '5 2 * * *': { slot: 'primary', window: 'day' }, // Cloudflare 09.05 WIB
+    '5 5 * * *': { slot: 'retry', window: 'day' }, // Cloudflare 12.05 WIB
+    '5 12 * * *': { slot: 'primary', window: 'evening' }, // Cloudflare 19.05 WIB
+    '5 15 * * *': { slot: 'retry', window: 'evening' }, // Cloudflare 22.05 WIB
+    '15 21 * * *': { slot: 'retry', window: 'day' }, // GitHub 04.15 WIB → tiba ±09–14 WIB
+    '15 2 * * *': { slot: 'retry', window: 'day' }, // GitHub 09.15 WIB → tiba ±14–19 WIB
+    '15 12 * * *': { slot: 'retry', window: 'evening' }, // GitHub 19.15 WIB → tiba ±02 WIB esok
   },
   'scrape-macro': {
-    '40 9 * * 1-5': { slot: 'primary', window: 'day' }, // 16.40 WIB hari kerja, setelah JISDOR 15.15
-    '40 11 * * 1-5': { slot: 'retry', window: 'day' }, // 18.40 WIB hari kerja (D-44)
+    '40 9 * * 1-5': { slot: 'primary', window: 'day' }, // Cloudflare 16.40 WIB, setelah JISDOR 15.15
+    '45 9 * * 1-5': { slot: 'retry', window: 'day' }, // GitHub 16.45 WIB → tiba ±00 WIB
   },
+};
+
+/** Cron yang memang terdaftar di `on.schedule` GitHub (sisanya hanya dipicu Cloudflare). */
+export const GITHUB_SCHEDULES: Partial<Record<Workflow, readonly string[]>> = {
+  'scrape-retail': ['15 21 * * *', '15 2 * * *', '15 12 * * *'],
+  'scrape-macro': ['45 9 * * 1-5'],
 };
 
 /** World Bank (bulanan) baru dipilih mulai tanggal ini: rilis Pink Sheet ±tanggal 2 (TECH-SPEC §5.6). */
@@ -49,6 +57,13 @@ export const WORLDBANK_FROM_DAY = 5;
  * Run manual tanpa daftar sumber melewati sumber `evening` sebelum jam ini.
  */
 export const EVENING_FROM = '18:45';
+
+/**
+ * Jam Jakarta (`HH:mm`) mulai jendela `day`: Logam Mulia terbit ±07.30–08.40 WIB. Cron GitHub
+ * 04.15 WIB yang kebetulan tiba tepat waktu (atau run manual tanpa daftar sumber) melewati
+ * sumber `day` sebelum jam ini, alih-alih mencatat `stale` (D-46).
+ */
+export const DAY_FROM = '08:30';
 
 export interface PlanInput {
   workflow: Workflow;
@@ -108,6 +123,13 @@ export function succeededOn(entry: SourceStatusEntry | undefined, today: string)
   if (entry.last_status !== 'success' && entry.last_status !== 'partial') return false;
   const at = jakartaIso(new Date(entry.last_success_at));
   return at.slice(0, 10) === today && at.slice(11, 16) >= MACRO_DAY_FROM;
+}
+
+/** Ada run sukses/partial yang selesai pada tanggal WIB `today`. */
+function successToday(entry: SourceStatusEntry | undefined, today: string): boolean {
+  if (entry === undefined || entry.last_success_at === null) return false;
+  if (entry.last_status !== 'success' && entry.last_status !== 'partial') return false;
+  return jakartaDate(new Date(entry.last_success_at)) === today;
 }
 
 const DAY_MS = 24 * 3600_000;
@@ -182,12 +204,20 @@ export function plan(input: PlanInput): PlanResult {
   }
 
   const skipped: PlanResult['skipped'] = [];
-  const beforeEvening = jakartaIso(input.now).slice(11, 16) < EVENING_FROM;
+  const nowWib = jakartaIso(input.now);
+  const beforeEvening = nowWib.slice(11, 16) < EVENING_FROM;
+  // Hanya untuk run yang tiba pada tanggal sasarannya sendiri; run kemarin yang terlambat lewat
+  // tengah malam tetap jalan (data hari itu sudah terbit).
+  const beforeDay = nowWib.slice(0, 10) === today && nowWib.slice(11, 16) < DAY_FROM;
   const selected = candidates.filter((s) => {
     const entry = status[s.id];
     const manualAll = slot === 'manual' && requested.length === 0;
     if (manualAll && s.schedule_window === 'evening' && beforeEvening) {
       skipped.push({ source: s.id, reason: `jendela malam mulai ${EVENING_FROM} WIB` });
+      return false;
+    }
+    if ((manualAll || slot !== 'manual') && s.schedule_window === 'day' && beforeDay) {
+      skipped.push({ source: s.id, reason: `jendela siang mulai ${DAY_FROM} WIB` });
       return false;
     }
     if (s.id === 'worldbank' && !(slot === 'manual' && requested.length > 0)) {
@@ -202,7 +232,14 @@ export function plan(input: PlanInput): PlanResult {
       }
     }
     if (slot === 'retry') {
-      if (doneToday(entry, today) || (s.kind === 'macro' && succeededOn(entry, today))) {
+      // Sumber `accept_previous_day` (Pegadaian) di siang hari hanya bisa mendapat snapshot
+      // kemarin; sekali sukses hari ini, retry siang berikutnya cuma menghasilkan commit `+0`.
+      const caughtUp = s.accept_previous_day && window === 'day' && successToday(entry, today);
+      if (
+        doneToday(entry, today) ||
+        caughtUp ||
+        (s.kind === 'macro' && succeededOn(entry, today))
+      ) {
         skipped.push({ source: s.id, reason: 'sudah sukses hari ini' });
         return false;
       }
