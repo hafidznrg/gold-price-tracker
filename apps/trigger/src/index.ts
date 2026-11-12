@@ -38,7 +38,8 @@ export const ROUTES: Record<string, Record<number, Dispatch>> = {
     12: d('scrape-retail.yml', '5 12 * * *'), // 19.05 WIB primary malam
     14: d('scrape-retail.yml', '5 14 * * *'), // 21.05 WIB retry malam
   },
-  '40 9,11 * * 1-5': {
+  // Hari-minggu di Cloudflare: 1 = Minggu (GitHub: 1 = Senin). Nama hari menghindari salah tafsir.
+  '40 9,11 * * MON-FRI': {
     9: d('scrape-macro.yml', '40 9 * * 1-5'), // 16.40 WIB makro
     11: d('scrape-macro.yml', '40 11 * * 1-5'), // 18.40 WIB retry makro
   },

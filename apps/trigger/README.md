@@ -5,12 +5,12 @@ Cron GitHub Actions di repo ini rutin terlambat 4,5–10 jam. Worker ini memangg
 yang ditiru, sehingga `plan`/`watchdog` memperlakukannya seperti run terjadwal. Cron GitHub tetap
 aktif sebagai cadangan.
 
-| Cron Worker (UTC) | WIB | Workflow · cron yang ditiru |
-| --- | --- | --- |
-| `25 3,6 * * *` | 10.25, 13.25 | `scrape-retail` · `25 3` primary, `25 6` retry |
-| `5 12,14 * * *` | 19.05, 21.05 | `scrape-retail` · `5 12` primary, `5 14` retry |
-| `40 9,11 * * 1-5` | 16.40, 18.40 hari kerja | `scrape-macro` · `40 9` primary, `40 11` retry |
-| `50 9,16 * * *` | 16.50, 23.50 | `watchdog` · `50 9` ritel siang, `50 16` semua sumber |
+| Cron Worker (UTC)     | WIB                     | Workflow · cron yang ditiru                           |
+| --------------------- | ----------------------- | ----------------------------------------------------- |
+| `25 3,6 * * *`        | 10.25, 13.25            | `scrape-retail` · `25 3` primary, `25 6` retry        |
+| `5 12,14 * * *`       | 19.05, 21.05            | `scrape-retail` · `5 12` primary, `5 14` retry        |
+| `40 9,11 * * MON-FRI` | 16.40, 18.40 hari kerja | `scrape-macro` · `40 9` primary, `40 11` retry        |
+| `50 9,16 * * *`       | 16.50, 23.50            | `watchdog` · `50 9` ritel siang, `50 16` semua sumber |
 
 ## Deploy (sekali)
 

@@ -7,7 +7,7 @@ workers_dev = false
 
 [triggers]
 # Harus sama dengan ROUTES di src/index.ts (UTC; WIB = UTC+7). Maks. 5 per akun di paket Free.
-crons = ["25 3,6 * * *", "5 12,14 * * *", "40 9,11 * * 1-5", "50 9,16 * * *"]
+crons = ["25 3,6 * * *", "5 12,14 * * *", "40 9,11 * * MON-FRI", "50 9,16 * * *"]
 
 [vars]
 GITHUB_REPO = "hafidznrg/gold-price-tracker"

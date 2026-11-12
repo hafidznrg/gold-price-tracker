@@ -20,6 +20,9 @@ describe('ROUTES', () => {
     expect(crons.length).toBeLessThanOrEqual(5);
   });
 
+  /** Hari-minggu Cloudflare → padanannya di cron GitHub (0/7 = Minggu, 1 = Senin). */
+  const GITHUB_DOW: Record<string, string> = { '*': '*', 'MON-FRI': '1-5' };
+
   it('setiap jam di cron Worker terpetakan, dan cron tiruan terdaftar di workflow-nya', async () => {
     for (const [cron, byHour] of Object.entries(ROUTES)) {
       const [minute, hours] = cron.split(' ');
@@ -28,9 +31,13 @@ describe('ROUTES', () => {
         expect(await ymlCrons(target.workflow)).toContain(target.schedule);
         // Menit dan hari sama dengan cron yang ditiru: hanya jam yang dikelompokkan.
         expect(target.schedule.split(' ')[0]).toBe(minute);
-        expect(target.schedule.split(' ')[4]).toBe(cron.split(' ')[4]);
+        expect(target.schedule.split(' ')[4]).toBe(GITHUB_DOW[cron.split(' ')[4]!]);
       }
     }
+  });
+
+  it('hari-minggu Worker memakai nama hari (Cloudflare: 1 = Minggu, bukan Senin)', () => {
+    for (const cron of Object.keys(ROUTES)) expect(cron.split(' ')[4]).toMatch(/^(\*|[A-Z-]+)$/);
   });
 
   it('route memilih menurut jam UTC scheduledTime', () => {

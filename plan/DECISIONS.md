@@ -384,5 +384,6 @@ Log keputusan produk dan teknis (format ringkas ala ADR). Keputusan baru ditamba
 - Workflow meneruskan input itu ke `--emulate`; `plan` dan `watchdog` memperlakukannya persis seperti run terjadwal cron tersebut (slot, jendela, tanggal sasaran). Hanya cron yang terdaftar di `SCHEDULES`/`WATCHDOG_SCHEDULES` yang diterima. RUN tetap mencatat `trigger: workflow_dispatch`, dan slotnya bukan `manual`, sehingga batas harian `retry-logammulia` tidak terpakai.
 - Judul run dari Worker `scrape-retail (cron …)`; `retry-logammulia` juga bereaksi pada judul ini.
 - Cron watchdog semua sumber digeser 23.20 → 23.50 WIB agar Worker cukup memakai satu cron (`50 9,16`).
+- Hari-minggu cron Cloudflare memakai nama hari (`MON-FRI`), karena di Cloudflare `1` = Minggu; `1-5` sempat terpasang sebagai Minggu–Kamis saat deploy pertama 12 Nov.
 - Cron GitHub tetap aktif sebagai cadangan. Bila Worker gagal dispatch, ia mengirim Telegram (opsional) dan cron GitHub tetap jalan walau terlambat.
 **Konsekuensi:** perlu fine-grained PAT (hanya repo ini, Actions read/write) sebagai secret Worker, yang harus diperbarui saat kedaluwarsa. Cron GitHub cadangan yang datang ±7 jam kemudian: slot retry dilewati karena sudah sukses, tetapi slot primary menjalankan ulang sumbernya (commit data `+0` dan build Vercel tambahan, sekitar 2–3 kali sehari).
