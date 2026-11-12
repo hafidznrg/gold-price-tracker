@@ -1,7 +1,7 @@
 'use client';
 
 import type { PriceSource } from '@gold/schema';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { BarChart, type BarItem } from '@/components/charts/bar-chart';
 import { SpreadBandChart } from '@/components/charts/spread-band-chart';
 import { TimeSeriesChart, type TimeSeries } from '@/components/charts/time-series-chart';
@@ -50,7 +50,7 @@ export interface SpreadBoardProps {
   calendar: DataCalendar;
 }
 
-const FIELD = 'h-11 w-full rounded-field border border-line bg-surface2 px-3 text-sm text-text';
+const FIELD = 'h-10 w-full rounded-field border border-line bg-surface2 px-3 text-sm text-text';
 const PANEL = 'min-w-0 rounded-card border border-line bg-surface p-6 max-sm:p-4';
 const BG: Record<ColorToken, string> = {
   antam: 'bg-antam',
@@ -73,17 +73,17 @@ function Kpi({
   gold?: boolean;
 }) {
   return (
-    <div className="min-w-0 rounded-[18px] border border-line bg-surface p-5">
-      <div className="text-xs text-faint">{label}</div>
+    <div className="min-w-0 bg-surface px-3 py-2">
+      <div className="truncate text-[11.5px] text-faint">{label}</div>
       <div
         className={cn(
-          'num mt-2 text-[30px] font-semibold tracking-[-0.02em]',
+          'num text-lg font-semibold leading-tight tracking-[-0.02em]',
           gold ? 'text-gold' : '',
         )}
       >
         {value}
       </div>
-      <div className="num mt-1.5 text-[12.5px] text-muted">{sub}</div>
+      <div className="num truncate text-[11.5px] text-muted">{sub}</div>
     </div>
   );
 }
@@ -105,6 +105,14 @@ export function SpreadBoard({
   const [buyId, setBuyId] = useState('lm-antam');
   const [range, setRange] = useState<RangeValue>('1T');
   const [barId, setBarId] = useState(bars[0]?.id ?? '');
+  const [chartH, setChartH] = useState(280);
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 639px)');
+    const apply = () => setChartH(mq.matches ? 240 : 280);
+    apply();
+    mq.addEventListener('change', apply);
+    return () => mq.removeEventListener('change', apply);
+  }, []);
 
   const sell = sellOptions.find((o) => o.id === sellId) as SpreadOption;
   const buy = buybackOptions.find((o) => o.id === buyId) as SpreadOption;
@@ -227,87 +235,95 @@ export function SpreadBoard({
 
   return (
     <>
-      <section className="wrap pb-[22px]">
-        <div className="flex flex-wrap items-end gap-[18px] rounded-card border border-line bg-surface p-6 max-sm:p-4">
-          <div className="flex min-w-0 flex-[1_1_260px] flex-col gap-1.5">
-            <label htmlFor="buyAt" className="text-xs text-muted">
-              Beli di (harga jual)
-            </label>
-            <select
-              id="buyAt"
-              className={FIELD}
-              value={sellId}
-              onChange={(e) => setSellId(e.target.value)}
-            >
-              {sellOptions.map((o) => (
-                <option key={o.id} value={o.id}>
-                  {o.label}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div aria-hidden="true" className="grid h-11 place-items-center text-gold max-md:hidden">
-            <svg
-              width="22"
-              height="22"
-              viewBox="0 0 24 24"
-              className="fill-none stroke-current stroke-[1.8]"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M4 12h15M14 6l6 6-6 6" />
-            </svg>
-          </div>
-          <div className="flex min-w-0 flex-[1_1_260px] flex-col gap-1.5">
-            <label htmlFor="sellTo" className="text-xs text-muted">
-              Jual ke (harga buyback)
-            </label>
-            <select
-              id="sellTo"
-              className={FIELD}
-              value={buyId}
-              onChange={(e) => setBuyId(e.target.value)}
-            >
-              {buybackOptions.map((o) => (
-                <option key={o.id} value={o.id}>
-                  {o.label}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-        <div className="mt-3 flex flex-wrap items-center gap-2">
-          <span className="mr-1 text-[12.5px] text-faint">Pasangan populer</span>
-          {POPULAR_PAIRS.map((p) => {
-            const on = p.sell === sellId && p.buyback === buyId;
-            return (
-              <button
-                key={p.label}
-                type="button"
-                aria-pressed={on}
-                onClick={() => {
-                  setSellId(p.sell);
-                  setBuyId(p.buyback);
-                }}
-                className={cn(
-                  'min-h-11 cursor-pointer rounded-full border px-3.5 text-[12.5px]',
-                  on
-                    ? 'border-goldline bg-goldsoft text-text'
-                    : 'border-line bg-transparent text-muted hover:text-text',
-                )}
+      <section className="wrap pb-[18px]">
+        <div className="flex flex-col gap-3 rounded-card border border-line bg-surface p-4">
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="flex min-w-0 flex-[1_1_300px] items-center gap-2.5">
+              <label
+                htmlFor="buyAt"
+                className="w-[82px] flex-none text-xs leading-tight text-muted"
               >
-                {p.label}
-              </button>
-            );
-          })}
+                Beli di (harga jual)
+              </label>
+              <select
+                id="buyAt"
+                className={FIELD}
+                value={sellId}
+                onChange={(e) => setSellId(e.target.value)}
+              >
+                {sellOptions.map((o) => (
+                  <option key={o.id} value={o.id}>
+                    {o.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div
+              aria-hidden="true"
+              className="grid h-10 place-items-center text-gold max-md:hidden"
+            >
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                className="fill-none stroke-current stroke-[1.8]"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M4 12h15M14 6l6 6-6 6" />
+              </svg>
+            </div>
+            <div className="flex min-w-0 flex-[1_1_300px] items-center gap-2.5">
+              <label
+                htmlFor="sellTo"
+                className="w-[82px] flex-none text-xs leading-tight text-muted"
+              >
+                Jual ke (harga buyback)
+              </label>
+              <select
+                id="sellTo"
+                className={FIELD}
+                value={buyId}
+                onChange={(e) => setBuyId(e.target.value)}
+              >
+                {buybackOptions.map((o) => (
+                  <option key={o.id} value={o.id}>
+                    {o.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+          <div className="flex min-w-0">
+            <div className="flex min-w-0 flex-1 items-center gap-2 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              <span className="mr-1 flex-none whitespace-nowrap text-[12.5px] text-faint">
+                Pasangan populer
+              </span>
+              {POPULAR_PAIRS.map((p) => {
+                const on = p.sell === sellId && p.buyback === buyId;
+                return (
+                  <button
+                    key={p.label}
+                    type="button"
+                    aria-pressed={on}
+                    onClick={() => {
+                      setSellId(p.sell);
+                      setBuyId(p.buyback);
+                    }}
+                    className={cn(
+                      'min-h-9 flex-none cursor-pointer whitespace-nowrap rounded-full border px-3.5 text-[12.5px]',
+                      on
+                        ? 'border-goldline bg-goldsoft text-text'
+                        : 'border-line bg-transparent text-muted hover:text-text',
+                    )}
+                  >
+                    {p.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
         </div>
-        <RangeControl
-          className="mt-4"
-          value={range}
-          onChange={setRange}
-          lastDate={lastDate}
-          minDate={allDays?.[0]?.date}
-        />
       </section>
 
       {problem ? (
@@ -319,62 +335,75 @@ export function SpreadBoard({
       ) : (
         <>
           <section className="wrap pb-[22px]">
-            <div className="grid grid-cols-[repeat(auto-fit,minmax(min(230px,100%),1fr))] gap-3.5">
-              <Kpi
-                gold
-                label="Spread hari ini"
-                value={stats ? formatPct(stats.last.pct, 2, false) : EMPTY}
-                sub={
-                  stats
-                    ? `${formatRupiah(stats.last.spread)} per gram · ${formatDate(stats.last.date)}`
-                    : 'Belum ada hari dengan jual dan buyback'
-                }
-              />
-              <Kpi
-                label={`Rata-rata ${typeof range === 'string' ? range : 'rentang'}`}
-                value={stats ? formatPct(stats.avgPct, 2, false) : EMPTY}
-                sub={stats ? `dari ${formatNumber(stats.count)} hari data` : EMPTY}
-              />
-              <Kpi
-                label={`Tersempit ${typeof range === 'string' ? range : 'rentang'}`}
-                value={stats ? formatPct(stats.min.pct, 2, false) : EMPTY}
-                sub={stats ? formatDate(stats.min.date) : EMPTY}
-              />
-              <Kpi
-                label="Titik impas"
-                value={stats?.breakEven != null ? formatPct(stats.breakEven, 2) : EMPTY}
-                sub="kenaikan buyback yang dibutuhkan"
-              />
-            </div>
-          </section>
-
-          <section className="wrap pb-[22px]">
-            <div className={PANEL}>
-              <h2 className="m-0 text-[19px] font-semibold">Harga jual vs buyback</h2>
-              <p className="num m-0 mt-1.5 mb-4 text-[13px] text-muted">
-                {pairLabel} · per gram
-                {days.length > 0
-                  ? ` · ${formatDate(days[0]!.date)} – ${formatDate(days.at(-1)!.date)}`
-                  : ''}
-              </p>
-              {error ? (
-                <Hint>Data gagal dimuat. Muat ulang halaman.</Hint>
-              ) : loading || !allDays ? (
-                <Hint>Memuat data…</Hint>
-              ) : days.length === 0 ? (
-                <Hint>
-                  Belum ada hari dengan harga jual dan buyback sekaligus untuk pasangan dan rentang
-                  ini.
-                </Hint>
-              ) : (
-                <SpreadBandChart
-                  sell={sellSeries}
-                  buyback={buySeries}
-                  gaps={gaps}
-                  ariaLabel={`Harga jual dan buyback ${pairLabel}`}
-                  height={330}
+            <div className="min-w-0 rounded-card border border-line bg-surface p-4">
+              <div className="mb-3 flex flex-wrap items-start justify-between gap-3">
+                <div className="min-w-0 flex-[1_1_320px]">
+                  <h2 className="m-0 text-[17px] font-semibold">Harga jual vs buyback</h2>
+                  <p className="num m-0 mt-0.5 text-[13px] text-muted">
+                    {pairLabel} · per gram
+                    {days.length > 0
+                      ? ` · ${formatDate(days[0]!.date)} – ${formatDate(days.at(-1)!.date)}`
+                      : ''}
+                  </p>
+                </div>
+                <RangeControl
+                  size="sm"
+                  className="min-w-0 lg:flex-none"
+                  value={range}
+                  onChange={setRange}
+                  lastDate={lastDate}
+                  minDate={allDays?.[0]?.date}
                 />
-              )}
+              </div>
+              <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_210px]">
+                <div className="grid grid-cols-2 gap-px self-start overflow-hidden rounded-[14px] border border-line bg-line lg:order-last lg:grid-cols-1">
+                  <Kpi
+                    gold
+                    label="Spread hari ini"
+                    value={stats ? formatPct(stats.last.pct, 2, false) : EMPTY}
+                    sub={
+                      stats
+                        ? `${formatRupiah(stats.last.spread)} per gram · ${formatDate(stats.last.date)}`
+                        : 'Belum ada hari dengan jual dan buyback'
+                    }
+                  />
+                  <Kpi
+                    label={`Rata-rata ${typeof range === 'string' ? range : 'rentang'}`}
+                    value={stats ? formatPct(stats.avgPct, 2, false) : EMPTY}
+                    sub={stats ? `dari ${formatNumber(stats.count)} hari data` : EMPTY}
+                  />
+                  <Kpi
+                    label={`Tersempit ${typeof range === 'string' ? range : 'rentang'}`}
+                    value={stats ? formatPct(stats.min.pct, 2, false) : EMPTY}
+                    sub={stats ? formatDate(stats.min.date) : EMPTY}
+                  />
+                  <Kpi
+                    label="Titik impas"
+                    value={stats?.breakEven != null ? formatPct(stats.breakEven, 2) : EMPTY}
+                    sub="kenaikan buyback yang dibutuhkan"
+                  />
+                </div>
+                <div className="min-w-0">
+                  {error ? (
+                    <Hint>Data gagal dimuat. Muat ulang halaman.</Hint>
+                  ) : loading || !allDays ? (
+                    <Hint>Memuat data…</Hint>
+                  ) : days.length === 0 ? (
+                    <Hint>
+                      Belum ada hari dengan harga jual dan buyback sekaligus untuk pasangan dan
+                      rentang ini.
+                    </Hint>
+                  ) : (
+                    <SpreadBandChart
+                      sell={sellSeries}
+                      buyback={buySeries}
+                      gaps={gaps}
+                      ariaLabel={`Harga jual dan buyback ${pairLabel}`}
+                      height={chartH}
+                    />
+                  )}
+                </div>
+              </div>
               <SourceStamp source={sell.source} date={stats?.last.date ?? asOf} className="mt-3">
                 {stampNote || null}
               </SourceStamp>

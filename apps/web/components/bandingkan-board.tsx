@@ -44,7 +44,7 @@ export interface BandingkanBoardProps {
   calendar: DataCalendar;
 }
 
-const PANEL = 'min-w-0 rounded-card border border-line bg-surface p-6 max-sm:p-4';
+const PANEL = 'min-w-0 rounded-card border border-line bg-surface p-4 sm:px-5';
 const COLS = 'grid grid-cols-[minmax(200px,1.6fr)_repeat(5,minmax(110px,1fr))] items-center px-6';
 
 const MODES: { value: 'gram' | 'idx'; label: string }[] = [
@@ -173,28 +173,34 @@ export function BandingkanBoard({ options, weights, today, asOf, calendar }: Ban
 
   return (
     <>
-      <section className="wrap flex flex-wrap items-center justify-between gap-3.5 pb-[22px]">
+      <section className="wrap flex flex-wrap items-center gap-x-4 gap-y-2.5 pb-3.5">
         <Segmented
+          size="sm"
           label="Gramasi"
           options={weights.map((x) => ({ value: weightKey(x), label: formatWeight(x) }))}
           value={weightKey(w)}
           onChange={(v) => setWeight(Number(v))}
         />
         <Segmented
+          size="sm"
           label="Mode nilai"
           options={MODES}
           value={mode === 'index' ? 'idx' : 'gram'}
           onChange={(v) => setMode(v === 'idx' ? 'index' : 'gram')}
         />
-      </section>
-      <section className="wrap pb-[22px]">
-        <RangeControl value={range} onChange={setRange} lastDate={asOf} minDate={minDate} />
+        <RangeControl
+          size="sm"
+          value={range}
+          onChange={setRange}
+          lastDate={asOf}
+          minDate={minDate}
+        />
       </section>
 
       <section className="wrap pb-[22px]">
         <div className={PANEL}>
           <h2 className="m-0 text-[19px] font-semibold">{chartTitle}</h2>
-          <p className="num m-0 mt-1.5 mb-4 text-[13px] text-muted">
+          <p className="num m-0 mt-1 mb-2.5 text-[13px] text-muted">
             {shownFrom ? `${formatDate(shownFrom)} – ${formatDate(to)}` : formatDate(to)} · garis
             putus-putus = harga di Pegadaian
           </p>
@@ -209,7 +215,7 @@ export function BandingkanBoard({ options, weights, today, asOf, calendar }: Ban
               series={series}
               valueFormat={mode === 'index' ? 'number' : 'rupiah'}
               gaps={gaps}
-              height={360}
+              height={320}
               ariaLabel={`Perbandingan harga jual ${wText} Antam, UBS, Galeri24, dan Tabungan Emas`}
             />
           )}

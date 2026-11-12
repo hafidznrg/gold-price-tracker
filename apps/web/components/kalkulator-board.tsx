@@ -51,10 +51,10 @@ export interface KalkulatorBoardProps {
   calendar: DataCalendar;
 }
 
-const FIELD = 'h-11 w-full rounded-field border border-line bg-surface2 px-3 text-sm text-text';
-const PANEL = 'min-w-0 rounded-card border border-line bg-surface p-6 max-sm:p-4';
+const FIELD = 'h-10 w-full rounded-field border border-line bg-surface2 px-3 text-sm text-text';
+const PANEL = 'min-w-0 rounded-card border border-line bg-surface p-5 max-sm:p-4';
 const STEP_BTN =
-  'size-11 flex-none cursor-pointer rounded-field border border-line bg-surface2 text-lg text-text disabled:cursor-not-allowed disabled:opacity-50';
+  'size-10 flex-none cursor-pointer rounded-field border border-line bg-surface2 text-lg text-text disabled:cursor-not-allowed disabled:opacity-50';
 
 const sourceLabel = (d: CompareDef) => `${d.sourceName} · ${d.brandName}`;
 const unitWord = (d: CompareDef) => (d.linear ? 'porsi' : 'keping');
@@ -245,42 +245,44 @@ export function KalkulatorBoard({ options, asOf, calendar }: KalkulatorBoardProp
           onSubmit={(e) => e.preventDefault()}
           className={cn(
             PANEL,
-            'flex flex-[1_1_340px] flex-col gap-4 rounded-[22px] p-6 max-sm:p-4',
+            'flex flex-[1_1_340px] flex-col gap-3 rounded-[22px] p-5 max-sm:p-4',
           )}
         >
           <h2 className="m-0 text-base font-semibold">Pembelian</h2>
-          <div className="flex flex-col gap-1.5">
-            <label htmlFor="kalk-date" className="text-xs text-muted">
-              Tanggal beli
-            </label>
-            <input
-              id="kalk-date"
-              type="date"
-              className={FIELD}
-              value={state.date}
-              max={asOf}
-              onChange={(e) => e.target.value && commit({ date: e.target.value })}
-            />
-          </div>
-          <div className="flex flex-col gap-1.5">
-            <label htmlFor="kalk-buy" className="text-xs text-muted">
-              Dibeli di
-            </label>
-            <select
-              id="kalk-buy"
-              className={FIELD}
-              value={buyDef.id}
-              onChange={(e) => commit({ buyId: e.target.value })}
-            >
-              {buys.map((d) => (
-                <option key={d.id} value={d.id}>
-                  {sourceLabel(d)}
-                </option>
-              ))}
-            </select>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div className="flex min-w-0 flex-col gap-1">
+              <label htmlFor="kalk-date" className="text-xs text-muted">
+                Tanggal beli
+              </label>
+              <input
+                id="kalk-date"
+                type="date"
+                className={FIELD}
+                value={state.date}
+                max={asOf}
+                onChange={(e) => e.target.value && commit({ date: e.target.value })}
+              />
+            </div>
+            <div className="flex min-w-0 flex-col gap-1">
+              <label htmlFor="kalk-buy" className="text-xs text-muted">
+                Dibeli di
+              </label>
+              <select
+                id="kalk-buy"
+                className={FIELD}
+                value={buyDef.id}
+                onChange={(e) => commit({ buyId: e.target.value })}
+              >
+                {buys.map((d) => (
+                  <option key={d.id} value={d.id}>
+                    {sourceLabel(d)}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
           <div className="grid grid-cols-2 gap-3">
-            <div className="flex min-w-0 flex-col gap-1.5">
+            <div className="flex min-w-0 flex-col gap-1">
               <label htmlFor="kalk-w" className="text-xs text-muted">
                 Gramasi
               </label>
@@ -297,7 +299,7 @@ export function KalkulatorBoard({ options, asOf, calendar }: KalkulatorBoardProp
                 ))}
               </select>
             </div>
-            <div className="flex min-w-0 flex-col gap-1.5">
+            <div className="flex min-w-0 flex-col gap-1">
               <label htmlFor="kalk-qty" className="text-xs text-muted">
                 Jumlah {unit}
               </label>
@@ -340,7 +342,7 @@ export function KalkulatorBoard({ options, asOf, calendar }: KalkulatorBoardProp
             </div>
           </div>
           <div
-            className="rounded-[12px] bg-surface2 px-3.5 py-3 text-[13px] leading-[1.55] text-muted"
+            className="rounded-[12px] bg-surface2 px-3.5 py-2.5 text-[13px] leading-[1.5] text-muted"
             aria-live="polite"
           >
             {!ready ? (
@@ -376,7 +378,7 @@ export function KalkulatorBoard({ options, asOf, calendar }: KalkulatorBoardProp
           </div>
           <div className="h-px bg-line" />
           <h2 className="m-0 text-base font-semibold">Penjualan kembali</h2>
-          <div className="flex flex-col gap-1.5">
+          <div className="flex flex-col gap-1">
             <label htmlFor="kalk-sell" className="text-xs text-muted">
               Dijual ke (buyback)
             </label>
@@ -412,7 +414,7 @@ export function KalkulatorBoard({ options, asOf, calendar }: KalkulatorBoardProp
         <div
           className={cn(
             PANEL,
-            'flex flex-[1.4_1_460px] flex-col gap-[22px] rounded-[22px] p-7 max-sm:p-4',
+            'flex flex-[1.4_1_460px] flex-col gap-3.5 rounded-[22px] p-5 max-sm:p-4',
           )}
         >
           {o && result ? (
@@ -421,7 +423,7 @@ export function KalkulatorBoard({ options, asOf, calendar }: KalkulatorBoardProp
                 <div className="eyebrow text-faint">{headline} jika dijual hari ini</div>
                 <div
                   className={cn(
-                    'num serif mt-3 text-[76px] leading-none break-words max-sm:text-[44px]',
+                    'num serif mt-2 text-[60px] leading-none break-words max-sm:text-[44px]',
                     tone,
                   )}
                   data-testid="kalk-profit"
@@ -437,7 +439,7 @@ export function KalkulatorBoard({ options, asOf, calendar }: KalkulatorBoardProp
                 </div>
               </div>
               <div className="grid grid-cols-[repeat(auto-fit,minmax(150px,1fr))] gap-px overflow-hidden rounded-[16px] border border-line bg-line">
-                <div className="bg-surface p-4">
+                <div className="bg-surface p-3.5">
                   <div className="text-xs text-faint">Modal</div>
                   <div className="num mt-1.5 text-[19px] font-semibold">
                     {formatRupiah(o.modal)}
@@ -446,7 +448,7 @@ export function KalkulatorBoard({ options, asOf, calendar }: KalkulatorBoardProp
                     {formatNumber(o.qty)} × {formatRupiah(o.buyPrice)}
                   </div>
                 </div>
-                <div className="bg-surface p-4">
+                <div className="bg-surface p-3.5">
                   <div className="text-xs text-faint">Nilai jual hari ini</div>
                   <div className="num mt-1.5 text-[19px] font-semibold">
                     {formatRupiah(o.value)}
@@ -455,7 +457,7 @@ export function KalkulatorBoard({ options, asOf, calendar }: KalkulatorBoardProp
                     {formatNumber(o.qty)} × {formatRupiah(o.sellPrice)}
                   </div>
                 </div>
-                <div className="bg-surface p-4">
+                <div className="bg-surface p-3.5">
                   <div className="text-xs text-faint">
                     {result.be.reached ? 'Titik impas tercapai' : 'Titik impas'}
                   </div>
@@ -504,7 +506,7 @@ export function KalkulatorBoard({ options, asOf, calendar }: KalkulatorBoardProp
           ) : (
             <div>
               <div className="eyebrow text-faint">Untung/rugi jika dijual hari ini</div>
-              <div className="num serif mt-3 text-[76px] leading-none text-faint max-sm:text-[44px]">
+              <div className="num serif mt-2 text-[60px] leading-none text-faint max-sm:text-[44px]">
                 {EMPTY}
               </div>
               <p className="m-0 mt-3 text-sm leading-relaxed text-muted" role="status">
@@ -523,7 +525,7 @@ export function KalkulatorBoard({ options, asOf, calendar }: KalkulatorBoardProp
       <section className="wrap pb-16">
         <div className={cn(PANEL, 'rounded-[22px]')}>
           <h2 className="m-0 text-[19px] font-semibold">Nilai jual sejak tanggal beli</h2>
-          <p className="num m-0 mt-1.5 mb-4 text-[13px] text-muted">
+          <p className="num m-0 mt-1.5 mb-3 text-[13px] text-muted">
             {buyLabel}
             {sellDef ? ` · dijual ke ${sourceLabel(sellDef)}` : ''}
             {chart?.first && chart.last

@@ -1,7 +1,7 @@
 'use client';
 
 import { parseAsString, useQueryStates } from 'nuqs';
-import { useCallback, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { TimeSeriesChart, type TimeSeries } from '@/components/charts/time-series-chart';
 import { PageIntro } from '@/components/page-intro';
 import { Segmented } from '@/components/segmented';
@@ -40,7 +40,7 @@ export interface KelipatanBoardProps {
   events: { date: string; label: string }[];
 }
 
-const PANEL = 'min-w-0 rounded-card border border-line bg-surface p-6 max-sm:p-4';
+const PANEL = 'min-w-0 rounded-card border border-line bg-surface p-4 sm:px-5';
 const COLS =
   'grid grid-cols-[72px_minmax(100px,.9fr)_minmax(150px,1.1fr)_minmax(100px,.9fr)_minmax(150px,1.1fr)_minmax(120px,1fr)_90px] items-center gap-x-3 px-6';
 
@@ -72,6 +72,16 @@ export function KelipatanBoard({ annual, until, spot, events }: KelipatanBoardPr
     [setQuery],
   );
   const setLm = useCallback((on: boolean) => void setQuery({ lm: on ? '1' : null }), [setQuery]);
+
+  // Tinggi kanvas: lebih rendah di ponsel supaya grafik muat di layar.
+  const [chartHeight, setChartHeight] = useState(330);
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 639px)');
+    const sync = () => setChartHeight(mq.matches ? 300 : 330);
+    sync();
+    mq.addEventListener('change', sync);
+    return () => mq.removeEventListener('change', sync);
+  }, []);
 
   const model = useMemo(
     () => buildModel(annual, until, spot, base, agg),
@@ -175,13 +185,13 @@ export function KelipatanBoard({ annual, until, spot, events }: KelipatanBoardPr
         }
       />
       {!noData ? (
-        <section className="wrap flex flex-wrap gap-2.5 pb-6" aria-label="Ringkasan kelipatan">
+        <section className="wrap flex flex-wrap gap-2 pb-2.5" aria-label="Ringkasan kelipatan">
           {CONCEPTS.map((c) => {
             const line = lines[c.id];
             return (
               <span
                 key={c.id}
-                className="num inline-flex items-center gap-2.5 rounded-[12px] border border-line bg-surface px-3.5 py-2.5 text-[13px]"
+                className="num inline-flex items-center gap-2.5 rounded-[10px] border border-line bg-surface px-3 py-1.5 text-[13px]"
               >
                 <span aria-hidden="true" className={cn('size-2.5 rounded-[3px]', c.cls)} />
                 <span className="text-muted">{c.name}</span>
@@ -193,24 +203,26 @@ export function KelipatanBoard({ annual, until, spot, events }: KelipatanBoardPr
         </section>
       ) : null}
 
-      <section className="wrap flex flex-wrap items-center justify-between gap-3.5 pb-5">
+      <section className="wrap flex flex-wrap items-center justify-between gap-x-4 gap-y-2.5 pb-3.5">
         <div className="flex flex-wrap items-center gap-2.5">
           <span className="text-[12.5px] text-muted">Tahun dasar</span>
           <Segmented
+            size="sm"
             label="Tahun dasar"
             options={BASE_YEARS.map((y) => ({ value: String(y), label: String(y) }))}
             value={String(base)}
             onChange={(v) => setBase(Number(v))}
           />
         </div>
-        <div className="flex flex-wrap items-center gap-3.5">
+        <div className="flex flex-wrap items-center gap-x-3.5 gap-y-2">
           <Segmented
+            size="sm"
             label="Agregasi tahunan"
             options={AGGREGATIONS}
             value={agg}
             onChange={setAgg}
           />
-          <label className="inline-flex min-h-11 cursor-pointer items-center gap-2.5 text-[13.5px]">
+          <label className="inline-flex min-h-9 cursor-pointer items-center gap-2.5 text-[13.5px]">
             <input
               type="checkbox"
               checked={showLm}
@@ -230,7 +242,7 @@ export function KelipatanBoard({ annual, until, spot, events }: KelipatanBoardPr
               ({agg === 'avg' ? 'rata-rata tahunan' : 'penutupan akhir tahun'})
             </span>
           </h2>
-          <p className="m-0 mt-1.5 mb-4 text-[13px] text-muted">
+          <p className="m-0 mt-1 mb-2.5 text-[13px] text-muted">
             Nilai tahun {base} = ×1 · sumbu Y berskala log, jarak yang sama berarti kenaikan persen
             yang sama
           </p>
@@ -249,7 +261,7 @@ export function KelipatanBoard({ annual, until, spot, events }: KelipatanBoardPr
               baseline={1}
               events={events}
               gridRight={64}
-              height={460}
+              height={chartHeight}
               ariaLabel={`Kelipatan harga emas dalam rupiah dan dolar serta kurs USD/IDR sejak ${base}, skala logaritmik`}
             />
           )}

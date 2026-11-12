@@ -26,7 +26,9 @@ export function PageIntro({
     <section
       className={cn(
         'wrap flex flex-wrap items-end justify-between',
-        hero ? 'gap-6 pt-12 pb-[26px] max-sm:pt-9' : 'gap-x-6 gap-y-3 pt-6 pb-5 max-sm:pt-5 max-sm:pb-4',
+        hero
+          ? 'gap-6 pt-12 pb-[26px] max-sm:pt-9'
+          : 'gap-x-6 gap-y-3 pt-6 pb-5 max-sm:pt-5 max-sm:pb-4',
         className,
       )}
     >
