@@ -21,6 +21,7 @@ export function Segmented<T extends string>({
   label,
   semantics = 'radio',
   size = 'md',
+  scroll = false,
   className,
 }: {
   options: readonly SegmentedOption<T>[];
@@ -31,6 +32,8 @@ export function Segmented<T extends string>({
   semantics?: 'radio' | 'tab';
   /** `sm` = toolbar padat (36 px di desktop, 40 px di layar sentuh sempit). */
   size?: 'md' | 'sm';
+  /** Di layar < 640 px: satu baris yang bisa digeser horizontal, bukan membungkus. */
+  scroll?: boolean;
   className?: string;
 }) {
   const refs = useRef<(HTMLButtonElement | null)[]>([]);
@@ -61,6 +64,8 @@ export function Segmented<T extends string>({
       className={cn(
         'inline-flex flex-wrap border border-line bg-surface',
         size === 'sm' ? 'gap-0.5 rounded-xl p-0.5' : 'gap-1 rounded-[14px] p-1',
+        scroll &&
+          'max-sm:max-w-full max-sm:flex-nowrap max-sm:overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden',
         className,
       )}
     >
@@ -80,7 +85,7 @@ export function Segmented<T extends string>({
             onClick={() => onChange(o.value)}
             onKeyDown={(e) => onKeyDown(e, i)}
             className={cn(
-              'cursor-pointer rounded-field border-0 font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50',
+              'shrink-0 cursor-pointer rounded-field border-0 font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50',
               size === 'sm'
                 ? 'min-h-9 min-w-10 px-2.5 text-[12.5px] max-sm:min-h-10'
                 : 'min-h-11 min-w-12 px-3.5 text-[13px]',

@@ -28,12 +28,14 @@ export function PageIntro({
         'wrap flex flex-wrap items-end justify-between',
         hero
           ? 'gap-6 pt-12 pb-[26px] max-sm:pt-9'
-          : 'gap-x-6 gap-y-3 pt-6 pb-5 max-sm:pt-5 max-sm:pb-4',
+          : 'gap-x-6 gap-y-3 pt-6 pb-5 max-sm:pt-4 max-sm:pb-3',
         className,
       )}
     >
       <div className="min-w-0 flex-[1_1_480px]">
-        <p className={cn('eyebrow m-0 text-gold', hero ? 'mb-3.5' : 'mb-1.5')}>{eyebrow}</p>
+        <p className={cn('eyebrow m-0 text-gold', hero ? 'mb-3.5' : 'mb-1.5 max-sm:hidden')}>
+          {eyebrow}
+        </p>
         <h1
           className={cn(
             'serif m-0 [&_em]:text-gold',
@@ -50,7 +52,7 @@ export function PageIntro({
               'm-0 text-muted',
               hero
                 ? 'mt-4 max-w-[620px] text-[15.5px] leading-[1.65]'
-                : 'mt-2 max-w-[760px] text-[14px] leading-[1.55]',
+                : 'mt-2 max-w-[760px] text-[14px] leading-[1.55] max-sm:hidden',
             )}
           >
             {lead}

@@ -41,23 +41,29 @@ export function RangeControl({
   }
 
   return (
-    <div className={cn('flex flex-wrap items-center justify-between gap-2', className)}>
+    <div
+      className={cn(
+        'flex max-w-full min-w-0 flex-wrap items-center justify-between gap-2',
+        className,
+      )}
+    >
       <Segmented
         label="Rentang waktu"
         options={RANGE_PRESETS.map((p) => ({ value: p, label: p }))}
         value={typeof value === 'string' ? value : null}
         onChange={onChange}
         size={size}
+        scroll
       />
-      <div className="flex flex-wrap items-center gap-2">
-        <label htmlFor="range-from" className="text-xs text-muted">
+      <div className="flex flex-wrap items-center gap-2 max-sm:w-full max-sm:min-w-0 max-sm:flex-nowrap">
+        <label htmlFor="range-from" className="text-xs text-muted max-sm:sr-only">
           Kustom
         </label>
         <input
           id="range-from"
           type="date"
           aria-label="Tanggal awal"
-          className={cn(FIELD, FIELD_SIZE[size])}
+          className={cn(FIELD, FIELD_SIZE[size], 'max-sm:w-auto max-sm:min-w-0 max-sm:flex-1')}
           value={fromValue}
           min={minDate}
           max={to}
@@ -68,7 +74,7 @@ export function RangeControl({
           id="range-to"
           type="date"
           aria-label="Tanggal akhir"
-          className={cn(FIELD, FIELD_SIZE[size])}
+          className={cn(FIELD, FIELD_SIZE[size], 'max-sm:w-auto max-sm:min-w-0 max-sm:flex-1')}
           value={to}
           min={fromValue || minDate}
           max={lastDate}

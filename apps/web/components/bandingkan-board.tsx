@@ -32,6 +32,7 @@ import {
 import { EMPTY, formatDate, formatPct, formatRupiah, formatWeight } from '@/lib/format';
 import { rangeToDates } from '@/lib/range';
 import { cn } from '@/lib/utils';
+import { useChartHeight } from '@/components/use-chart-height';
 
 export interface BandingkanBoardProps {
   /** Opsi katalog hanya untuk enam series yang dibandingkan. */
@@ -171,23 +172,29 @@ export function BandingkanBoard({ options, weights, today, asOf, calendar }: Ban
       ? `Indeks harga jual (=100 di awal rentang) · ${wText}`
       : `Harga jual per gram · ${wText} (keping fisik atau saldo tabungan)`;
 
+  const chartHeight = useChartHeight(320, 240);
   return (
     <>
       <section className="wrap flex flex-wrap items-center gap-x-4 gap-y-2.5 pb-3.5">
-        <Segmented
-          size="sm"
-          label="Gramasi"
-          options={weights.map((x) => ({ value: weightKey(x), label: formatWeight(x) }))}
-          value={weightKey(w)}
-          onChange={(v) => setWeight(Number(v))}
-        />
-        <Segmented
-          size="sm"
-          label="Mode nilai"
-          options={MODES}
-          value={mode === 'index' ? 'idx' : 'gram'}
-          onChange={(v) => setMode(v === 'idx' ? 'index' : 'gram')}
-        />
+        <div className="flex max-w-full min-w-0 items-center gap-2">
+          <Segmented
+            size="sm"
+            scroll
+            className="min-w-0"
+            label="Gramasi"
+            options={weights.map((x) => ({ value: weightKey(x), label: formatWeight(x) }))}
+            value={weightKey(w)}
+            onChange={(v) => setWeight(Number(v))}
+          />
+          <Segmented
+            size="sm"
+            label="Mode nilai"
+            options={MODES}
+            value={mode === 'index' ? 'idx' : 'gram'}
+            onChange={(v) => setMode(v === 'idx' ? 'index' : 'gram')}
+            className="flex-none"
+          />
+        </div>
         <RangeControl
           size="sm"
           value={range}
@@ -199,7 +206,7 @@ export function BandingkanBoard({ options, weights, today, asOf, calendar }: Ban
 
       <section className="wrap pb-[22px]">
         <div className={PANEL}>
-          <h2 className="m-0 text-[19px] font-semibold">{chartTitle}</h2>
+          <h2 className="m-0 text-[19px] font-semibold max-sm:text-[16px]">{chartTitle}</h2>
           <p className="num m-0 mt-1 mb-2.5 text-[13px] text-muted">
             {shownFrom ? `${formatDate(shownFrom)} – ${formatDate(to)}` : formatDate(to)} · garis
             putus-putus = harga di Pegadaian
@@ -215,7 +222,7 @@ export function BandingkanBoard({ options, weights, today, asOf, calendar }: Ban
               series={series}
               valueFormat={mode === 'index' ? 'number' : 'rupiah'}
               gaps={gaps}
-              height={320}
+              height={chartHeight}
               ariaLabel={`Perbandingan harga jual ${wText} Antam, UBS, Galeri24, dan Tabungan Emas`}
             />
           )}

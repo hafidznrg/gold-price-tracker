@@ -65,6 +65,7 @@ import {
 } from '@/lib/format';
 import { cn } from '@/lib/utils';
 import { expectedFor, labelGaps, type DataCalendar } from '@/lib/calendar';
+import { useChartHeight } from '@/components/use-chart-height';
 
 export interface ExplorerBoardProps {
   options: ExplorerOption[];
@@ -355,14 +356,7 @@ export function ExplorerBoard({ options, asOf, stamps, calendar }: ExplorerBoard
     }
   }
 
-  const [chartH, setChartH] = useState(380);
-  useEffect(() => {
-    const mq = window.matchMedia('(max-width: 639px)');
-    const apply = () => setChartH(mq.matches ? 300 : 380);
-    apply();
-    mq.addEventListener('change', apply);
-    return () => mq.removeEventListener('change', apply);
-  }, []);
+  const chartH = useChartHeight(380, 300);
 
   const stampSources = uniq(active.map((a) => a.opt.source));
   const hasLate = stats.some((x) => x.s?.startsLate);

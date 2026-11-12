@@ -406,5 +406,6 @@ Log keputusan produk dan teknis (format ringkas ala ADR). Keputusan baru ditamba
 - Header satu baris di ≥ 1280 px (brand 30 px, judul 19 px, nav 36 px, tombol tema 36 px, padding 10 px → 57 px); di bawahnya dua baris (brand + status, lalu nav bergulir). Chip status di HP hanya tanggal ("Data" tetap untuk pembaca layar). Subjudul "Antam · UBS · Galeri24" hanya di ≥ 1536 px.
 - `PageIntro` default `compact` (judul 36/28 px, lead 14 px, padding 24/20 px); ukuran mockup asli jadi `size="hero"` (404).
 - `Segmented` dan `RangeControl` mendapat `size="sm"` (36 px desktop, 40 px di layar sempit) untuk toolbar padat di atas grafik.
+- HP (< 640 px): lead dan eyebrow `PageIntro` disembunyikan (lead tetap di DOM); `Segmented scroll` dan pilihan rentang jadi satu baris geser; chip ringkasan Kelipatan bergeser horizontal; KPI Spread di bawah grafik; tinggi grafik lewat `useChartHeight(desktop, phone)`.
 - Target per halaman alat di 1366×768: kartu grafik/hasil utama mulai ≤ ±330 px dan sebisa mungkin utuh di layar pertama; di HP grafik mendahului panel pengaturan.
 **Konsekuensi:** menyimpang dari ukuran mockup `plan/mockup/*.dc.html` untuk header, pembuka halaman, dan toolbar; beranda tidak berubah. Target sentuh di layar sempit 40 px (masih di atas minimum WCAG 2.5.8 24 px, di bawah saran 44 px).

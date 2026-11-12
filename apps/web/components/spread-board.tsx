@@ -1,7 +1,7 @@
 'use client';
 
 import type { PriceSource } from '@gold/schema';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { BarChart, type BarItem } from '@/components/charts/bar-chart';
 import { SpreadBandChart } from '@/components/charts/spread-band-chart';
 import { TimeSeriesChart, type TimeSeries } from '@/components/charts/time-series-chart';
@@ -26,6 +26,7 @@ import {
 } from '@/lib/spread';
 import { cn } from '@/lib/utils';
 import { expectedFor, labelGaps, type DataCalendar } from '@/lib/calendar';
+import { useChartHeight } from '@/components/use-chart-height';
 
 export interface BarSource {
   id: string;
@@ -105,14 +106,7 @@ export function SpreadBoard({
   const [buyId, setBuyId] = useState('lm-antam');
   const [range, setRange] = useState<RangeValue>('1T');
   const [barId, setBarId] = useState(bars[0]?.id ?? '');
-  const [chartH, setChartH] = useState(280);
-  useEffect(() => {
-    const mq = window.matchMedia('(max-width: 639px)');
-    const apply = () => setChartH(mq.matches ? 240 : 280);
-    apply();
-    mq.addEventListener('change', apply);
-    return () => mq.removeEventListener('change', apply);
-  }, []);
+  const chartH = useChartHeight(280, 220);
 
   const sell = sellOptions.find((o) => o.id === sellId) as SpreadOption;
   const buy = buybackOptions.find((o) => o.id === buyId) as SpreadOption;
@@ -339,7 +333,7 @@ export function SpreadBoard({
               <div className="mb-3 flex flex-wrap items-start justify-between gap-3">
                 <div className="min-w-0 flex-[1_1_320px]">
                   <h2 className="m-0 text-[17px] font-semibold">Harga jual vs buyback</h2>
-                  <p className="num m-0 mt-0.5 text-[13px] text-muted">
+                  <p className="num m-0 mt-0.5 text-[13px] text-muted max-sm:truncate">
                     {pairLabel} · per gram
                     {days.length > 0
                       ? ` · ${formatDate(days[0]!.date)} – ${formatDate(days.at(-1)!.date)}`
@@ -356,7 +350,7 @@ export function SpreadBoard({
                 />
               </div>
               <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_210px]">
-                <div className="grid grid-cols-2 gap-px self-start overflow-hidden rounded-[14px] border border-line bg-line lg:order-last lg:grid-cols-1">
+                <div className="grid grid-cols-2 gap-px self-start overflow-hidden rounded-[14px] border border-line bg-line order-last lg:grid-cols-1">
                   <Kpi
                     gold
                     label="Spread hari ini"

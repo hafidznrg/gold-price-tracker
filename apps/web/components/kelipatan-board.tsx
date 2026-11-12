@@ -1,7 +1,7 @@
 'use client';
 
 import { parseAsString, useQueryStates } from 'nuqs';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo } from 'react';
 import { TimeSeriesChart, type TimeSeries } from '@/components/charts/time-series-chart';
 import { PageIntro } from '@/components/page-intro';
 import { Segmented } from '@/components/segmented';
@@ -31,6 +31,7 @@ import {
   formatRupiah,
 } from '@/lib/format';
 import { cn } from '@/lib/utils';
+import { useChartHeight } from '@/components/use-chart-height';
 
 export interface KelipatanBoardProps {
   annual: AnnualRow[];
@@ -73,15 +74,7 @@ export function KelipatanBoard({ annual, until, spot, events }: KelipatanBoardPr
   );
   const setLm = useCallback((on: boolean) => void setQuery({ lm: on ? '1' : null }), [setQuery]);
 
-  // Tinggi kanvas: lebih rendah di ponsel supaya grafik muat di layar.
-  const [chartHeight, setChartHeight] = useState(330);
-  useEffect(() => {
-    const mq = window.matchMedia('(max-width: 639px)');
-    const sync = () => setChartHeight(mq.matches ? 300 : 330);
-    sync();
-    mq.addEventListener('change', sync);
-    return () => mq.removeEventListener('change', sync);
-  }, []);
+  const chartHeight = useChartHeight(330, 250);
 
   const model = useMemo(
     () => buildModel(annual, until, spot, base, agg),
@@ -185,13 +178,16 @@ export function KelipatanBoard({ annual, until, spot, events }: KelipatanBoardPr
         }
       />
       {!noData ? (
-        <section className="wrap flex flex-wrap gap-2 pb-2.5" aria-label="Ringkasan kelipatan">
+        <section
+          className="wrap flex flex-wrap gap-2 pb-2.5 max-sm:flex-nowrap max-sm:overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          aria-label="Ringkasan kelipatan"
+        >
           {CONCEPTS.map((c) => {
             const line = lines[c.id];
             return (
               <span
                 key={c.id}
-                className="num inline-flex items-center gap-2.5 rounded-[10px] border border-line bg-surface px-3 py-1.5 text-[13px]"
+                className="num inline-flex shrink-0 items-center gap-2.5 whitespace-nowrap rounded-[10px] border border-line bg-surface px-3 py-1.5 text-[13px]"
               >
                 <span aria-hidden="true" className={cn('size-2.5 rounded-[3px]', c.cls)} />
                 <span className="text-muted">{c.name}</span>
@@ -204,10 +200,11 @@ export function KelipatanBoard({ annual, until, spot, events }: KelipatanBoardPr
       ) : null}
 
       <section className="wrap flex flex-wrap items-center justify-between gap-x-4 gap-y-2.5 pb-3.5">
-        <div className="flex flex-wrap items-center gap-2.5">
-          <span className="text-[12.5px] text-muted">Tahun dasar</span>
+        <div className="flex max-w-full min-w-0 flex-wrap items-center gap-2.5">
+          <span className="text-[12.5px] text-muted max-sm:hidden">Tahun dasar</span>
           <Segmented
             size="sm"
+            scroll
             label="Tahun dasar"
             options={BASE_YEARS.map((y) => ({ value: String(y), label: String(y) }))}
             value={String(base)}
@@ -236,7 +233,7 @@ export function KelipatanBoard({ annual, until, spot, events }: KelipatanBoardPr
 
       <section className="wrap pb-[22px]">
         <div className={PANEL}>
-          <h2 className="m-0 text-[19px] font-semibold">
+          <h2 className="m-0 text-[19px] font-semibold max-sm:text-[16px]">
             Kelipatan harga emas dan kurs sejak {base}{' '}
             <span className="font-normal text-muted">
               ({agg === 'avg' ? 'rata-rata tahunan' : 'penutupan akhir tahun'})
