@@ -2,8 +2,9 @@ import type { ReactNode } from 'react';
 import { cn } from '@/lib/utils';
 
 /**
- * Pembuka halaman (mockup Explorer/Spread/Data): eyebrow emas, judul serif 56 px, lead muted.
- * Gunakan <em> di `title` untuk aksen emas miring.
+ * Pembuka halaman: eyebrow emas, judul serif, lead muted. Gunakan <em> di `title` untuk aksen
+ * emas miring. Default `compact` (D-47) agar grafik/alat utama halaman langsung terlihat;
+ * `hero` = ukuran mockup asli (judul 56 px), dipakai halaman non-alat seperti 404.
  */
 export function PageIntro({
   eyebrow,
@@ -11,27 +12,47 @@ export function PageIntro({
   lead,
   aside,
   className,
+  size = 'compact',
 }: {
   eyebrow: ReactNode;
   title: ReactNode;
   lead?: ReactNode;
   aside?: ReactNode;
   className?: string;
+  size?: 'compact' | 'hero';
 }) {
+  const hero = size === 'hero';
   return (
     <section
       className={cn(
-        'wrap flex flex-wrap items-end justify-between gap-6 pt-12 pb-[26px] max-sm:pt-9',
+        'wrap flex flex-wrap items-end justify-between',
+        hero ? 'gap-6 pt-12 pb-[26px] max-sm:pt-9' : 'gap-x-6 gap-y-3 pt-6 pb-5 max-sm:pt-5 max-sm:pb-4',
         className,
       )}
     >
-      <div className="min-w-0 flex-[1_1_560px]">
-        <p className="eyebrow m-0 mb-3.5 text-gold">{eyebrow}</p>
-        <h1 className="serif m-0 text-[56px] leading-[1.04] max-sm:text-[40px] [&_em]:text-gold">
+      <div className="min-w-0 flex-[1_1_480px]">
+        <p className={cn('eyebrow m-0 text-gold', hero ? 'mb-3.5' : 'mb-1.5')}>{eyebrow}</p>
+        <h1
+          className={cn(
+            'serif m-0 [&_em]:text-gold',
+            hero
+              ? 'text-[56px] leading-[1.04] max-sm:text-[40px]'
+              : 'text-[36px] leading-[1.1] max-sm:text-[28px]',
+          )}
+        >
           {title}
         </h1>
         {lead ? (
-          <p className="m-0 mt-4 max-w-[620px] text-[15.5px] leading-[1.65] text-muted">{lead}</p>
+          <p
+            className={cn(
+              'm-0 text-muted',
+              hero
+                ? 'mt-4 max-w-[620px] text-[15.5px] leading-[1.65]'
+                : 'mt-2 max-w-[760px] text-[14px] leading-[1.55]',
+            )}
+          >
+            {lead}
+          </p>
         ) : null}
       </div>
       {aside}

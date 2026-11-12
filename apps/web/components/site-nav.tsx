@@ -24,7 +24,7 @@ export function SiteNav({ className }: { className?: string }) {
             href={item.href}
             aria-current={active ? 'page' : undefined}
             className={cn(
-              'inline-flex min-h-11 shrink-0 items-center rounded-full px-[15px] text-sm whitespace-nowrap no-underline',
+              'inline-flex min-h-10 shrink-0 items-center rounded-full px-3 text-sm whitespace-nowrap no-underline xl:min-h-9 xl:px-3.5',
               active
                 ? 'bg-goldsoft font-semibold text-gold hover:text-gold'
                 : 'text-muted hover:text-text',

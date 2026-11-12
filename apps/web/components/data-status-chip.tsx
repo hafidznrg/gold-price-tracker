@@ -17,17 +17,17 @@ export function DataStatusChip() {
   const date = meta.as_of;
   if (!date) return null;
   const maxAge = Math.max(0, ...prices.map((s) => s.data_age_days ?? 0));
-  const text = latestAt
-    ? `${formatDate(jakartaDateOf(new Date(latestAt)))} · ${formatTimeWib(latestAt)}`
-    : formatDate(date);
+  const day = latestAt ? formatDate(jakartaDateOf(new Date(latestAt))) : formatDate(date);
+  const time = latestAt ? formatTimeWib(latestAt) : null;
 
   return (
-    <span className="inline-flex items-center gap-2 rounded-full border border-line px-[13px] py-[9px] text-[12.5px] whitespace-nowrap text-muted">
+    <span className="inline-flex items-center gap-2 rounded-full border border-line px-3 py-[7px] text-[12px] max-sm:px-2.5 whitespace-nowrap text-muted">
       <span
         aria-hidden="true"
         className={cn('size-[7px] rounded-full', maxAge <= 2 ? 'bg-up' : 'bg-faint')}
       />
-      Data {text}
+      <span className="max-sm:sr-only">Data</span> {day}
+      {time ? <span className="max-sm:hidden"> · {time}</span> : null}
     </span>
   );
 }

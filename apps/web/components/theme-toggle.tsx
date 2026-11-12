@@ -10,7 +10,7 @@ export function ThemeToggle() {
       onClick={() => applyTheme(readTheme() === 'dark' ? 'light' : 'dark')}
       aria-label="Ganti tema terang atau gelap"
       title="Ganti tema"
-      className="grid size-11 shrink-0 cursor-pointer place-items-center rounded-control border border-line bg-surface text-text"
+      className="grid size-10 shrink-0 cursor-pointer xl:size-9 place-items-center rounded-control border border-line bg-surface text-text"
     >
       <svg
         width="18"

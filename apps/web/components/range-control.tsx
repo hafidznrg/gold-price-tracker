@@ -6,7 +6,8 @@ import { cn } from '@/lib/utils';
 
 export type { RangePreset, RangeValue } from '@/lib/range';
 
-const FIELD = 'h-11 w-[150px] rounded-field border border-line bg-surface2 px-3 text-sm text-text';
+const FIELD = 'rounded-field border border-line bg-surface2 px-3 text-sm text-text';
+const FIELD_SIZE = { md: 'h-11 w-[150px]', sm: 'h-9 w-[138px] max-sm:h-10' } as const;
 
 /**
  * Pemilih rentang (mockup Explorer): 7H · 1B · 3B · 6B · YTD · 1T · Semua + Kustom (dua input
@@ -19,12 +20,15 @@ export function RangeControl({
   onChange,
   lastDate,
   minDate,
+  size = 'md',
   className,
 }: {
   value: RangeValue;
   onChange: (value: RangeValue) => void;
   lastDate: string;
   minDate?: string;
+  /** `sm` = toolbar padat; diteruskan ke Segmented dan input tanggal. */
+  size?: 'md' | 'sm';
   className?: string;
 }) {
   const { from, to } = rangeToDates(value, lastDate);
@@ -37,12 +41,13 @@ export function RangeControl({
   }
 
   return (
-    <div className={cn('flex flex-wrap items-center justify-between gap-2.5', className)}>
+    <div className={cn('flex flex-wrap items-center justify-between gap-2', className)}>
       <Segmented
         label="Rentang waktu"
         options={RANGE_PRESETS.map((p) => ({ value: p, label: p }))}
         value={typeof value === 'string' ? value : null}
         onChange={onChange}
+        size={size}
       />
       <div className="flex flex-wrap items-center gap-2">
         <label htmlFor="range-from" className="text-xs text-muted">
@@ -52,7 +57,7 @@ export function RangeControl({
           id="range-from"
           type="date"
           aria-label="Tanggal awal"
-          className={FIELD}
+          className={cn(FIELD, FIELD_SIZE[size])}
           value={fromValue}
           min={minDate}
           max={to}
@@ -63,7 +68,7 @@ export function RangeControl({
           id="range-to"
           type="date"
           aria-label="Tanggal akhir"
-          className={FIELD}
+          className={cn(FIELD, FIELD_SIZE[size])}
           value={to}
           min={fromValue || minDate}
           max={lastDate}

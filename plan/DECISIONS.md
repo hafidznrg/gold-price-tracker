@@ -399,3 +399,12 @@ Log keputusan produk dan teknis (format ringkas ala ADR). Keputusan baru ditamba
 - Tidak ada cron dini hari di Cloudflare: belum ada sumber yang terbit sebelum ±07.30 WIB; snapshot Pegadaian yang sesekali terbit 00.05 WIB ditambal slot siang (D-42).
 - `watchdog.yml` mendapat `run-name` `watchdog (cron …)` seperti dua workflow lain.
 **Konsekuensi:** total cron 15 → 7. Retry malam terakhir maju 22.35 → 22.05 dan watchdog semua sumber 23.50 → 23.05 WIB; Pegadaian yang terbit setelah 22.05 bisa memicu alarm palsu sesekali. Slot 18.40 (retry makro) dan 15.25 (retry siang ketiga) tidak ada lagi di jalur tepat waktu; kegagalannya ditangkap watchdog dan cron cadangan. Keterlambatan cron GitHub dini hari belum terukur (data D-45 dari cron siang/malam); bila 04.15 sering tiba sebelum 08.30, cron itu tidak berguna dan bisa digeser. Perlu `wrangler deploy` ulang setelah perubahan ini. `plan/WORKFLOWS.md`, yang terhapus tak sengaja pada commit D-45, dipulihkan bersama perubahan ini.
+
+### D-47 — Tata letak padat: isi utama tiap halaman alat terlihat tanpa scroll
+**Konteks:** audit UI 12 Nov di 1366×768: header 139 px (chip status dan tombol tema turun ke baris kedua; 191 px di HP), pembuka halaman 231–257 px (judul 56 px). Akibatnya grafik utama mulai di y=539 (Explorer), 664 (Kelipatan), 677 (Bandingkan), bahkan 843 di Spread (di bawah lipatan); di HP panel "Series aktif" Explorer (±1.400 px) mendahului grafik.
+**Keputusan:**
+- Header satu baris di ≥ 1280 px (brand 30 px, judul 19 px, nav 36 px, tombol tema 36 px, padding 10 px → 57 px); di bawahnya dua baris (brand + status, lalu nav bergulir). Chip status di HP hanya tanggal ("Data" tetap untuk pembaca layar). Subjudul "Antam · UBS · Galeri24" hanya di ≥ 1536 px.
+- `PageIntro` default `compact` (judul 36/28 px, lead 14 px, padding 24/20 px); ukuran mockup asli jadi `size="hero"` (404).
+- `Segmented` dan `RangeControl` mendapat `size="sm"` (36 px desktop, 40 px di layar sempit) untuk toolbar padat di atas grafik.
+- Target per halaman alat di 1366×768: kartu grafik/hasil utama mulai ≤ ±330 px dan sebisa mungkin utuh di layar pertama; di HP grafik mendahului panel pengaturan.
+**Konsekuensi:** menyimpang dari ukuran mockup `plan/mockup/*.dc.html` untuk header, pembuka halaman, dan toolbar; beranda tidak berubah. Target sentuh di layar sempit 40 px (masih di atas minimum WCAG 2.5.8 24 px, di bawah saran 44 px).

@@ -9,6 +9,7 @@ export default function NotFound() {
   return (
     <>
       <PageIntro
+        size="hero"
         eyebrow="404"
         title={
           <>
