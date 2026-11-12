@@ -21,7 +21,7 @@ import {
   telegramSender,
 } from './pipeline/notify';
 import { backfill, describeBackfill } from './pipeline/backfill';
-import { plan, PlanError } from './pipeline/plan';
+import { plan, PlanError, SCHEDULES } from './pipeline/plan';
 import {
   decideQuarantine,
   parseQuarantinePath,
@@ -30,7 +30,7 @@ import {
   resolveQuarantineIssue,
 } from './pipeline/quarantine';
 import { describeRun, scrape } from './pipeline/scrape';
-import { formatWatchdog, watchdog } from './pipeline/watchdog';
+import { formatWatchdog, watchdog, WATCHDOG_SCHEDULES } from './pipeline/watchdog';
 import { readMacro } from './pipeline/store';
 import { DEFAULT_USER_AGENT } from './probe/http';
 import { BACKFILL_JOB_IDS, BACKFILL_TASKS, getBackfillJob } from './backfill';
@@ -67,10 +67,17 @@ const COMMANDS: Record<string, Command> = {
       schedule: { type: 'string' },
       sources: { type: 'string' },
       force: { type: 'string' },
+      /** Cron terdaftar yang ditiru oleh run dispatch (pemicu Cloudflare, D-45). */
+      emulate: { type: 'string' },
     },
     run: async (values) => {
       const rootDir = requireRoot(values);
       const workflow = parseEnum(Workflow, values.workflow, '--workflow');
+      const { event, schedule } = emulated(
+        values,
+        Object.keys(SCHEDULES[workflow] ?? {}),
+        `SCHEDULES ${workflow}`,
+      );
       const [config, status] = await Promise.all([loadConfig(rootDir), loadStatus(rootDir)]);
       const monthlyGold =
         workflow === 'scrape-macro'
@@ -82,8 +89,8 @@ const COMMANDS: Record<string, Command> = {
       try {
         result = plan({
           workflow,
-          event: str(values.event),
-          schedule: str(values.schedule),
+          event,
+          schedule,
           sources: str(values.sources),
           force: str(values.force) === 'true',
           monthlyGold,
@@ -193,13 +200,19 @@ const COMMANDS: Record<string, Command> = {
       event: { type: 'string' },
       schedule: { type: 'string' },
       'actions-url': { type: 'string' },
+      emulate: { type: 'string' },
     },
     run: async (values) => {
       const rootDir = requireRoot(values);
       const [config, status] = await Promise.all([loadConfig(rootDir), loadStatus(rootDir)]);
+      const { event, schedule } = emulated(
+        values,
+        Object.keys(WATCHDOG_SCHEDULES),
+        'WATCHDOG_SCHEDULES',
+      );
       const result = watchdog({
-        event: str(values.event),
-        schedule: str(values.schedule),
+        event,
+        schedule,
         config,
         status,
         now: new Date(),
@@ -460,6 +473,23 @@ function requireRoot(values: Record<string, unknown>): string {
 }
 
 const str = (v: unknown): string => (typeof v === 'string' ? v : '');
+
+/**
+ * `--event`/`--schedule`, atau cron tiruan dari `--emulate` (D-45): run dispatch dari pemicu
+ * Cloudflare diperlakukan persis seperti run terjadwal cron itu. Hanya cron terdaftar yang diterima.
+ */
+function emulated(
+  values: Record<string, unknown>,
+  registered: readonly string[],
+  table: string,
+): { event: string; schedule: string } {
+  const emulate = str(values.emulate).trim();
+  if (emulate === '') return { event: str(values.event), schedule: str(values.schedule) };
+  if (!registered.includes(emulate)) {
+    throw new UsageError(`--emulate "${emulate}" tidak ada di ${table}: ${registered.join(' · ')}`);
+  }
+  return { event: 'schedule', schedule: emulate };
+}
 
 /**
  * `--date` dari `plan` (D-27): kosong = tanggal sekarang. Hanya hari ini atau kemarin (WIB)

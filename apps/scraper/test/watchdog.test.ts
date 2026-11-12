@@ -99,8 +99,8 @@ describe('watchdog', () => {
       config,
       status,
       event: 'schedule',
-      schedule: '20 16 * * *',
-      now: new Date('2026-11-11T16:25:00Z'),
+      schedule: '50 16 * * *',
+      now: new Date('2026-11-11T16:55:00Z'),
     });
     expect(r.scope).toBe('all');
     expect(r.overdue.map((o) => o.source).sort()).toEqual(['jisdor', 'pegadaian']);
@@ -111,7 +111,7 @@ describe('watchdog', () => {
       ...base,
       event: 'workflow_dispatch',
       schedule: '',
-      now: new Date('2026-11-11T16:25:00Z'),
+      now: new Date('2026-11-11T16:55:00Z'),
     });
     // jisdor & xaus sukses 11 Nov 00.18 WIB (run 10 Nov yang terlambat).
     expect(r.overdue.map((o) => o.source)).toEqual(expect.arrayContaining(['jisdor', 'xaus']));
@@ -121,7 +121,7 @@ describe('watchdog', () => {
     const r = watchdog({
       ...base,
       event: 'schedule',
-      schedule: '20 16 * * *',
+      schedule: '50 16 * * *',
       now: new Date('2026-11-11T18:30:00Z'), // 12 Nov 01.30 WIB
     });
     expect(r.date).toBe('2026-11-11');

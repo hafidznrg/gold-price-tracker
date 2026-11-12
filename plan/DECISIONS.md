@@ -369,9 +369,20 @@ Log keputusan produk dan teknis (format ringkas ala ADR). Keputusan baru ditamba
 
 ### D-44 — Retry cron tambahan dan alarm "data belum masuk"
 
-**Konteks:** 11 Nov 2026 tidak ada satu pun run terjadwal `scrape-retail`/`scrape-macro` antara 03.25 dan 10.10 UTC, padahal dua cron siang sudah lewat. Sehari sebelumnya slot 10.25 WIB baru mulai 18.24 WIB (terlambat ±8 jam). Beranda menampilkan harga 10 Nov sampai dipicu manual, dan tidak ada notifikasi karena `notify` hanya berjalan bila scrape berjalan. Chip "5 dari 5 sumber terkini" tetap hijau (ambang ≤ 2 hari).
+**Konteks:** 11 Nov 2026 sampai 10.10 UTC belum ada satu pun run terjadwal `scrape-retail`/`scrape-macro`, padahal dua cron siang sudah lewat. (Koreksi 12 Nov: slot 10.25 WIB ternyata tetap berjalan pada 11.12 UTC, terlambat 7 jam 47 menit, bukan hilang; lihat D-45.) Beranda menampilkan harga 10 Nov sampai dipicu manual, dan tidak ada notifikasi karena `notify` hanya berjalan bila scrape berjalan. Chip "5 dari 5 sumber terkini" tetap hijau (ambang ≤ 2 hari).
 **Keputusan:**
 - `scrape-retail` mendapat retry tambahan: siang 12.25 & 15.25 WIB, malam 22.35 WIB. `scrape-macro` mendapat retry 18.40 WIB hari kerja. Retry tanpa kerja selesai ±20 detik karena `plan` melewati sumber yang sudah sukses.
 - Retry makro melewati sumber yang sukses pada tanggal itu pukul ≥ 12.00 WIB (`succeededOn`): `xaus` selalu bertanggal hari bursa sebelumnya, jadi `doneToday` saja akan selalu mengulang. Sukses sebelum 12.00 WIB dianggap run kemarin yang terlambat.
-- Workflow baru `watchdog.yml` (16.50 WIB: ritel jendela `day`; 23.20 WIB: semua sumber) membaca `status.json` dan mengirim Telegram bila sumber yang diharapkan hari itu belum masuk (ritel: `last_data_date` = hari itu; makro: `succeededOn`). Run merah bila Telegram tidak tersedia atau gagal, sehingga email GitHub menjadi cadangan.
+- Workflow baru `watchdog.yml` (16.50 WIB: ritel jendela `day`; 23.20 WIB, diubah D-45 menjadi 23.50 WIB: semua sumber) membaca `status.json` dan mengirim Telegram bila sumber yang diharapkan hari itu belum masuk (ritel: `last_data_date` = hari itu; makro: `succeededOn`). Run merah bila Telegram tidak tersedia atau gagal, sehingga email GitHub menjadi cadangan.
 **Konsekuensi:** watchdog sendiri juga cron GitHub dan bisa ikut terlambat, tapi dua jadwal terpisah memperkecil peluang semuanya terlewat. Jika masih sering terjadi, pemicu eksternal (`workflow_dispatch` lewat API) dipertimbangkan. `freshness.yml` (Fase 5, Issue) tetap direncanakan; watchdog hanya menutup kebutuhan alarm harian lebih awal. Pegadaian yang snapshot-nya baru terbit lewat 23.20 WIB bisa memicu alarm palsu.
+
+### D-45 — Pemicu eksternal Cloudflare Workers (melengkapi D-44)
+
+**Konteks:** riwayat 8–11 Nov 2026 menunjukkan tidak ada cron yang hilang, tetapi semua run terjadwal terlambat 4 jam 37 menit – 10 jam 24 menit (median 7 jam 37 menit). Primary siang 10.25 WIB selalu baru mulai 17.34–18.48 WIB, sehingga beranda menampilkan harga kemarin sampai sore. Retry D-44 ikut tergeser dan berdempetan dini hari; watchdog 23.20 WIB baru jalan 05.43 WIB.
+**Keputusan:**
+- Worker `apps/trigger` di Cloudflare Workers (paket Free, 4 dari 5 Cron Triggers per akun) memanggil `workflow_dispatch` tepat waktu dengan input `schedule` = cron GitHub yang ditiru: `scrape-retail` 10.25/13.25/19.05/21.05 WIB, `scrape-macro` 16.40/18.40 WIB hari kerja, `watchdog` 16.50/23.50 WIB.
+- Workflow meneruskan input itu ke `--emulate`; `plan` dan `watchdog` memperlakukannya persis seperti run terjadwal cron tersebut (slot, jendela, tanggal sasaran). Hanya cron yang terdaftar di `SCHEDULES`/`WATCHDOG_SCHEDULES` yang diterima. RUN tetap mencatat `trigger: workflow_dispatch`, dan slotnya bukan `manual`, sehingga batas harian `retry-logammulia` tidak terpakai.
+- Judul run dari Worker `scrape-retail (cron …)`; `retry-logammulia` juga bereaksi pada judul ini.
+- Cron watchdog semua sumber digeser 23.20 → 23.50 WIB agar Worker cukup memakai satu cron (`50 9,16`).
+- Cron GitHub tetap aktif sebagai cadangan. Bila Worker gagal dispatch, ia mengirim Telegram (opsional) dan cron GitHub tetap jalan walau terlambat.
+**Konsekuensi:** perlu fine-grained PAT (hanya repo ini, Actions read/write) sebagai secret Worker, yang harus diperbarui saat kedaluwarsa. Cron GitHub cadangan yang datang ±7 jam kemudian: slot retry dilewati karena sudah sukses, tetapi slot primary menjalankan ulang sumbernya (commit data `+0` dan build Vercel tambahan, sekitar 2–3 kali sehari).

@@ -8,8 +8,13 @@ on:
   schedule:
     # Harus sama dengan WATCHDOG_SCHEDULES di apps/scraper/src/pipeline/watchdog.ts.
     - cron: '50 9 * * *' # 16.50 WIB — sumber ritel jendela day, setelah retry 15.25 WIB
-    - cron: '20 16 * * *' # 23.20 WIB — semua sumber, setelah retry 22.35 WIB
+    - cron: '50 16 * * *' # 23.50 WIB — semua sumber, setelah retry 22.35 WIB
   workflow_dispatch:
+    inputs:
+      schedule:
+        description: Cron yang ditiru (diisi pemicu Cloudflare, D-45); kosong = periksa semua sumber hari ini
+        required: false
+        default: ''
 
 permissions:
   contents: read
@@ -25,8 +30,10 @@ jobs:
           pnpm --filter scraper start watchdog
           --event "${{ github.event_name }}"
           --schedule "${{ github.event.schedule }}"
+          --emulate "$EMULATE"
           --actions-url "${{ github.server_url }}/${{ github.repository }}/actions"
           --root "$GITHUB_WORKSPACE"
         env:
+          EMULATE: ${{ inputs.schedule }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}

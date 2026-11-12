@@ -53,6 +53,18 @@ describe('cli', () => {
     expect(log.mock.calls.join('\n')).toContain('slot: primary');
   });
 
+  it('--emulate: dispatch dari pemicu Cloudflare diperlakukan seperti cron itu (D-45)', async () => {
+    const base = ['plan', '--root', ROOT, '--workflow', 'scrape-retail'];
+    const dispatch = ['--event', 'workflow_dispatch', '--schedule', ''];
+    expect(await main([...base, ...dispatch, '--emulate', '25 6 * * *'])).toBe(EXIT.OK);
+    expect(log.mock.calls.join('\n')).toContain('slot: retry');
+    expect(await main([...base, ...dispatch, '--emulate', '0 0 * * *'])).toBe(EXIT.USAGE);
+    expect(error.mock.calls.join('\n')).toContain('tidak ada di SCHEDULES scrape-retail');
+    expect(await main(['watchdog', '--root', ROOT, ...dispatch, '--emulate', '25 3 * * *'])).toBe(
+      EXIT.USAGE,
+    );
+  });
+
   // Probe sungguhan memanggil jaringan; di sini hanya validasi argumen.
   it('probe memvalidasi --source dan --out', async () => {
     expect(await main(['probe', '--root', ROOT, '--source', 'tokopedia'])).toBe(EXIT.USAGE);

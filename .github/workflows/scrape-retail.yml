@@ -1,4 +1,6 @@
 name: scrape-retail
+# Judul run dari pemicu eksternal memuat cron yang ditiru; retry-logammulia memakainya (D-45).
+run-name: ${{ inputs.schedule && format('scrape-retail (cron {0})', inputs.schedule) || 'scrape-retail' }}
 
 # WORKFLOWS §3.2 — harga ritel: plan → scrape (matrix per sumber) → merge + commit → notify.
 # Kontrak artifact §2.1, kode keluar scraper §2.3. Satu penulis data lewat concurrency data-write.
@@ -24,6 +26,10 @@ on:
         description: Jalankan walau hari ini sudah sukses
         type: boolean
         default: false
+      schedule:
+        description: Cron GitHub yang ditiru (diisi pemicu Cloudflare, D-45); kosong = run manual biasa
+        required: false
+        default: ''
 
 permissions:
   contents: write
@@ -54,7 +60,10 @@ jobs:
           --schedule "${{ github.event.schedule }}"
           --sources "${{ inputs.sources }}"
           --force "${{ inputs.force }}"
+          --emulate "$EMULATE"
           --root "$GITHUB_WORKSPACE"
+        env:
+          EMULATE: ${{ inputs.schedule }}
 
   scrape:
     needs: plan

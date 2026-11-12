@@ -1,0 +1,17 @@
+# D-45 — pemicu tepat waktu untuk workflow GitHub Actions. Deploy: lihat apps/trigger/README.md.
+name = "gold-price-trigger"
+main = "src/index.ts"
+compatibility_date = "2025-10-01"
+# Tanpa URL publik: Worker ini hanya punya handler `scheduled`.
+workers_dev = false
+
+[triggers]
+# Harus sama dengan ROUTES di src/index.ts (UTC; WIB = UTC+7). Maks. 5 per akun di paket Free.
+crons = ["25 3,6 * * *", "5 12,14 * * *", "40 9,11 * * 1-5", "50 9,16 * * *"]
+
+[vars]
+GITHUB_REPO = "hafidznrg/gold-price-tracker"
+GITHUB_REF = "main"
+
+[observability]
+enabled = true

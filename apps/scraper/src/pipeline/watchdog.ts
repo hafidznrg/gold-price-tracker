@@ -14,10 +14,11 @@ export type WatchdogScope = 'day' | 'all';
  * Cron watchdog → cakupan. Harus sama dengan `on.schedule` di `.github/workflows/watchdog.yml`.
  * `day` setelah retry siang terakhir (15.25 WIB): hanya sumber ritel berjendela `day`.
  * `all` setelah retry malam terakhir (22.35 WIB): semua sumber aktif.
+ * Pemicu Cloudflare (D-45) meniru cron ini lewat input `schedule`.
  */
 export const WATCHDOG_SCHEDULES: Record<string, WatchdogScope> = {
   '50 9 * * *': 'day', // 16.50 WIB
-  '20 16 * * *': 'all', // 23.20 WIB
+  '50 16 * * *': 'all', // 23.50 WIB
 };
 
 export interface Overdue {

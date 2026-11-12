@@ -27,8 +27,12 @@ concurrency:
 
 jobs:
   retry:
-    # Hanya bereaksi pada run terjadwal; run hasil dispatch (termasuk milik workflow ini) diabaikan.
-    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.event == 'schedule'
+    # Hanya bereaksi pada run terjadwal, termasuk yang dipicu Cloudflare dengan cron tiruan (D-45);
+    # run dispatch lain (termasuk milik workflow ini) diabaikan.
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      github.event.workflow_run.event == 'schedule' ||
+      startsWith(github.event.workflow_run.display_title, 'scrape-retail (cron ')
     runs-on: ubuntu-latest
     timeout-minutes: 240
     env:

@@ -1,4 +1,6 @@
 name: scrape-macro
+# Judul run dari pemicu eksternal memuat cron yang ditiru; retry-logammulia memakainya (D-45).
+run-name: ${{ inputs.schedule && format('scrape-macro (cron {0})', inputs.schedule) || 'scrape-macro' }}
 
 # WORKFLOWS §3.3 — data makro: plan → scrape (matrix per sumber) → merge + commit → notify.
 # Struktur sama dengan scrape-retail.yml; tanpa matrix browser; satu slot retry (D-44). Merge juga
@@ -19,6 +21,10 @@ on:
         description: Jalankan walau hari ini sudah sukses
         type: boolean
         default: false
+      schedule:
+        description: Cron GitHub yang ditiru (diisi pemicu Cloudflare, D-45); kosong = run manual biasa
+        required: false
+        default: ''
 
 permissions:
   contents: write
@@ -49,7 +55,10 @@ jobs:
           --schedule "${{ github.event.schedule }}"
           --sources "${{ inputs.sources }}"
           --force "${{ inputs.force }}"
+          --emulate "$EMULATE"
           --root "$GITHUB_WORKSPACE"
+        env:
+          EMULATE: ${{ inputs.schedule }}
 
   scrape:
     needs: plan

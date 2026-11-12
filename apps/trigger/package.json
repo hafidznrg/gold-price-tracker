@@ -1,0 +1,10 @@
+{
+  "name": "trigger",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc -p tsconfig.json",
+    "deploy": "pnpm dlx wrangler deploy"
+  }
+}
