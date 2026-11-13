@@ -14,6 +14,13 @@ export const CHART_URL = 'https://ubslifestyle.com/wp-admin/admin-ajax.php';
 export const CHART_PATH = 'ajax/chart_interval/GOLD/7';
 
 /**
+ * URL halaman dengan query unik agar melewati cache FastCGI situs (D-49). Tanpa query, halaman
+ * bisa disajikan dari cache (`x-fastcgi-cache: HIT`) berjam-jam setelah grafik memuat harga baru,
+ * sehingga tabel ≠ grafik dan run `stale` (13 Nov 2026). Dengan query: `x-fastcgi-cache: BYPASS`.
+ */
+export const pageUrl = (now: Date = new Date()): string => `${PAGE_URL}?nc=${now.getTime()}`;
+
+/**
  * Isi raw snapshot: hanya fragmen yang dipakai parser (semua `<table>` halaman + respons grafik
  * apa adanya). Bila halaman tidak memuat tabel, seluruh halaman disimpan untuk diagnosis.
  */
@@ -117,7 +124,7 @@ export const ubslifestyle: SourceScraper<PriceRow> = {
   parserVersion: 'ubslifestyle@1.0.0',
   async fetchRaw(ctx) {
     const fetchedAt = utcIso();
-    const page = await fetchOk(ctx, PAGE_URL);
+    const page = await fetchOk(ctx, pageUrl());
     await sleep(ctx.pauseMs ?? 5_000);
     const chart = await fetchOk(ctx, CHART_URL, {
       method: 'POST',

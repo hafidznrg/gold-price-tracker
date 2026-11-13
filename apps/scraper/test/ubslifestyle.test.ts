@@ -9,6 +9,8 @@ import { tables } from '../src/html';
 import {
   lastChartPoint,
   parse,
+  PAGE_URL,
+  pageUrl,
   parseTables,
   ubslifestyle,
   type UbsRaw,
@@ -107,6 +109,12 @@ describe('parse', () => {
 });
 
 describe('modul', () => {
+  it('URL halaman memakai query unik agar melewati cache FastCGI (D-49)', () => {
+    const now = new Date('2026-11-13T05:06:15Z');
+    expect(pageUrl(now)).toBe(`${PAGE_URL}?nc=${now.getTime()}`);
+    expect(pageUrl(new Date(now.getTime() + 1))).not.toBe(pageUrl(now));
+  });
+
   it('parserVersion = id@parser_version di config/sources.yml', async () => {
     const config = await loadConfig(ROOT);
     const source = config.sources.find((s) => s.id === 'ubslifestyle')!;

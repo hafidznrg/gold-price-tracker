@@ -417,3 +417,9 @@ Log keputusan produk dan teknis (format ringkas ala ADR). Keputusan baru ditamba
 - Judul panel 20 px (18 px di HP); judul seksi serif 32 px (26 px di HP, di bawah judul halaman); lead beranda 14 px di HP.
 - `SourceStamp` default terlipat di balik tombol "Sumber" (`InfoDisclosure`, `<details>` tanpa JS, dibuka dengan klik/ketuk). Beberapa sumber di satu panel digabung dalam satu lipatan (`bare`); catatan kaki tabel beranda ("Catatan") dan Bandingkan ("Sumber & catatan") ikut terlipat.
 **Konsekuensi:** FR-26 tetap terpenuhi (atribusi ada di setiap tampilan harga, satu ketukan, dan tetap di DOM), tetapi tidak lagi terlihat tanpa interaksi. Disclaimer "bukan rekomendasi investasi" dan catatan indikatif spot tetap terlihat.
+
+### D-49 — Halaman UBS diambil melewati cache FastCGI (melengkapi D-19)
+
+**Konteks:** 13 Nov 2026 ketiga run UBS `stale`. Run 08.49 dan 09.06 WIB membaca data 12 Nov (UBS belum terbit, wajar). Run retry 12.05 WIB membaca grafik yang sudah memuat 13 Nov (Rp2.276.000), tetapi tabel halaman masih identik dengan snapshot 08.49 WIB (buyback 1 g Rp2.290.000 = harga 12 Nov), karena halaman disajikan dari cache FastCGI (`x-fastcgi-cache: HIT`). Uji 15.15 WIB: URL dengan query unik dijawab `x-fastcgi-cache: BYPASS`. Harga UBS juga bisa berubah lebih dari sekali sehari (grafik 13 Nov: 2.276.000 pukul 12.06, 2.269.000 pukul 15.15 WIB).
+**Keputusan:** `fetchRaw` meminta `PAGE_URL?nc={epoch ms}` (`pageUrl()`). Endpoint grafik (POST admin-ajax) tidak di-cache dan tidak diubah. Parser dan `parser_version` tetap.
+**Konsekuensi:** satu permintaan per run tetap menembus cache ke PHP situs (paling banyak beberapa kali sehari). Run yang jatuh tepat saat situs sedang memperbarui harga masih bisa `stale` dan ditambal slot berikutnya. Data UBS 12 Nov hanya tersedia sebagai buyback 1 g backfill (tidak ada run 12 Nov sebelum Worker aktif, D-46).
