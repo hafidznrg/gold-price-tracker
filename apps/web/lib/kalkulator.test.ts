@@ -18,7 +18,10 @@ import {
   piecePoints,
   priceOn,
   sellAvailable,
+  nearestPairableWeight,
+  pairableWeights,
   sellCandidates,
+  sellChoices,
   sellOption,
   weightsFor,
   yearAgo,
@@ -293,6 +296,14 @@ describe('pilihan sumber dari katalog', () => {
     expect(sellAvailable(def('pg-antam'), 1, OPTIONS)).toBe(false);
     expect(sellAvailable(def('tab'), 5, OPTIONS)).toBe(true);
     expect(sellAvailable(def('pg-g24'), 1, OPTIONS)).toBe(false);
+  });
+  it('pilihan jual ke hanya yang punya buyback; gramasi berpasangan terdekat', () => {
+    expect(sellChoices(def('pg-antam'), 5, OPTIONS).map((d) => d.id)).toEqual(['lm-antam']);
+    expect(sellChoices(def('pg-g24'), 1, OPTIONS)).toEqual([]);
+    expect(pairableWeights(def('lm-antam'), OPTIONS)).toEqual([1, 5]);
+    expect(pairableWeights(def('pg-g24'), OPTIONS)).toEqual([]);
+    expect(nearestPairableWeight(def('pg-g24'), 1, OPTIONS)).toBeNull();
+    expect(nearestPairableWeight(def('ubsl-ubs'), 5, OPTIONS)).toBe(1);
   });
 
   it('D-39: Antam LM berat lain memakai series buyback 1 g × berat; sumber lain tetap ketat', () => {

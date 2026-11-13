@@ -23,9 +23,10 @@ import {
   normalizeState,
   outcome,
   piecePoints,
-  sellAvailable,
   sellOption,
-  sellCandidates,
+  nearestPairableWeight,
+  pairableWeights,
+  sellChoices,
   weightsFor,
   CALCULATOR_TOLERANCE_DAYS,
   type BuyQuote,
@@ -51,7 +52,8 @@ export interface KalkulatorBoardProps {
   calendar: DataCalendar;
 }
 
-const FIELD = 'h-10 w-full rounded-field border border-line bg-surface2 px-3 text-sm text-text';
+const FIELD =
+  'h-10 w-full rounded-field border border-line bg-surface2 px-3 text-sm text-text disabled:cursor-not-allowed disabled:text-muted';
 const PANEL = 'min-w-0 rounded-card border border-line bg-surface p-5 max-sm:p-4';
 const STEP_BTN =
   'size-10 flex-none cursor-pointer rounded-field border border-line bg-surface2 text-lg text-text disabled:cursor-not-allowed disabled:opacity-50';
@@ -100,13 +102,12 @@ export function KalkulatorBoard({ options, asOf, calendar }: KalkulatorBoardProp
   const buys = useMemo(() => buyDefs(options), [options]);
   const buyDef = defById(state.buyId) ?? COMPARE_DEFS[0]!;
   const weights = useMemo(() => weightsFor(buyDef, options), [buyDef, options]);
-  const candidates = useMemo(
-    () =>
-      sellCandidates(buyDef).map((d) => ({
-        d,
-        ok: sellAvailable(d, state.w, options),
-      })),
-    [buyDef, state.w, options],
+  // "Dijual ke" hanya berisi tempat yang benar-benar punya buyback untuk berat ini.
+  const choices = useMemo(() => sellChoices(buyDef, state.w, options), [buyDef, state.w, options]);
+  const pairable = useMemo(() => pairableWeights(buyDef, options), [buyDef, options]);
+  const nearestW = useMemo(
+    () => (pairable.includes(state.w) ? null : nearestPairableWeight(buyDef, state.w, options)),
+    [pairable, buyDef, state.w, options],
   );
   const sellDef = defById(state.sellId);
 
@@ -118,13 +119,13 @@ export function KalkulatorBoard({ options, asOf, calendar }: KalkulatorBoardProp
     () => [
       ...new Set([
         ...(buyOpt ? [buyOpt.file] : []),
-        ...candidates.flatMap((c) => {
-          const o = c.ok ? sellOption(c.d, state.w, options) : null;
+        ...choices.flatMap((d) => {
+          const o = sellOption(d, state.w, options);
           return o ? [o.option.file] : [];
         }),
       ]),
     ],
-    [buyOpt, candidates, state.w, options],
+    [buyOpt, choices, state.w, options],
   );
   const { files, loading, error } = useSeriesFiles(needed);
 
@@ -229,7 +230,9 @@ export function KalkulatorBoard({ options, asOf, calendar }: KalkulatorBoardProp
   if (error) status = 'Data gagal dimuat. Muat ulang halaman.';
   else if (loading) status = 'Memuat data…';
   else if (!sellDef) {
-    status = `Tidak ada sumber buyback untuk ${buyLabel}: sumber tidak menampilkan harga beli kembali. Pilih gramasi atau tempat beli lain.`;
+    status = nearestW
+      ? `Belum ada data buyback untuk ${buyLabel}, jadi untung/rugi tidak bisa dihitung. Pilih gramasi lain, misalnya ${formatWeight(nearestW)}.`
+      : `Belum ada data buyback untuk emas ${buyDef.brandName}, jadi untung/rugi tidak bisa dihitung. Pilih tempat beli lain.`;
   } else if (quote && !quote.ok) status = missingText(quote, buyLabel, state.date);
   else if (quote?.ok && !sellNow)
     status = `Belum ada data buyback ${sourceLabel(sellDef)} ${wText}.`;
@@ -276,6 +279,7 @@ export function KalkulatorBoard({ options, asOf, calendar }: KalkulatorBoardProp
                 {buys.map((d) => (
                   <option key={d.id} value={d.id}>
                     {sourceLabel(d)}
+                    {pairableWeights(d, options).length === 0 ? ' · tanpa buyback' : ''}
                   </option>
                 ))}
               </select>
@@ -295,6 +299,7 @@ export function KalkulatorBoard({ options, asOf, calendar }: KalkulatorBoardProp
                 {weights.map((w) => (
                   <option key={w} value={String(w)}>
                     {formatWeight(w)}
+                    {pairable.length > 0 && !pairable.includes(w) ? ' · tanpa buyback' : ''}
                   </option>
                 ))}
               </select>
@@ -386,28 +391,40 @@ export function KalkulatorBoard({ options, asOf, calendar }: KalkulatorBoardProp
               id="kalk-sell"
               className={FIELD}
               value={sellDef?.id ?? ''}
+              disabled={!sellDef}
+              aria-describedby={sellDef ? undefined : 'kalk-sell-note'}
               onChange={(e) => commit({ sellId: e.target.value })}
             >
-              {sellDef ? null : <option value="">Tidak ada buyback untuk pilihan ini</option>}
-              {candidates.map(({ d, ok }) => {
-                const last = ok
-                  ? (() => {
-                      const p = piecesOf(d, 'buyback');
-                      return p ? latestPoint(p) : null;
-                    })()
-                  : null;
+              {sellDef ? null : <option value="">Belum ada data buyback</option>}
+              {choices.map((d) => {
+                const p = piecesOf(d, 'buyback');
+                const last = p ? latestPoint(p) : null;
                 return (
-                  <option key={d.id} value={d.id} disabled={!ok}>
-                    {sourceLabel(d)} ·{' '}
-                    {!ok
-                      ? 'buyback tidak tersedia'
-                      : last
-                        ? `${formatRupiah(last.value)}${d.linear ? `/${wText}` : ''}`
-                        : 'buyback tersedia'}
+                  <option key={d.id} value={d.id}>
+                    {sourceLabel(d)}
+                    {last ? ` · ${formatRupiah(last.value)}${d.linear ? `/${wText}` : ''}` : ''}
                   </option>
                 );
               })}
             </select>
+            {sellDef ? null : (
+              <p id="kalk-sell-note" className="m-0 mt-1 text-xs leading-relaxed text-muted">
+                {nearestW ? (
+                  <>
+                    Buyback {buyDef.brandName} tidak tersedia untuk {wText}.{' '}
+                    <button
+                      type="button"
+                      onClick={() => commit({ w: nearestW })}
+                      className="cursor-pointer border-0 bg-transparent p-0 text-xs text-gold underline"
+                    >
+                      Pakai {formatWeight(nearestW)}
+                    </button>
+                  </>
+                ) : (
+                  `Belum ada sumber buyback untuk emas ${buyDef.brandName}. Harga beli tetap ditampilkan di atas.`
+                )}
+              </p>
+            )}
           </div>
         </form>
 

@@ -24,6 +24,8 @@ import {
   type TodayPair,
   type WeightBarRow,
   POPULAR_PAIRS,
+  buybackChoices,
+  resolveBuyback,
 } from '@/lib/spread';
 import { cn } from '@/lib/utils';
 import { expectedFor, labelGaps, type DataCalendar } from '@/lib/calendar';
@@ -52,7 +54,8 @@ export interface SpreadBoardProps {
   calendar: DataCalendar;
 }
 
-const FIELD = 'h-10 w-full rounded-field border border-line bg-surface2 px-3 text-sm text-text';
+const FIELD =
+  'h-10 w-full rounded-field border border-line bg-surface2 px-3 text-sm text-text disabled:cursor-not-allowed disabled:text-muted';
 const PANEL = 'min-w-0 rounded-card border border-line bg-surface p-6 max-sm:p-4';
 const BG: Record<ColorToken, string> = {
   antam: 'bg-antam',
@@ -111,8 +114,12 @@ export function SpreadBoard({
   const chartH = useChartHeight(280, 220);
 
   const sell = sellOptions.find((o) => o.id === sellId) as SpreadOption;
-  const buy = buybackOptions.find((o) => o.id === buyId) as SpreadOption;
-  const problem = pairProblem(sell, buy);
+  // "Jual ke" hanya berisi pasangan sah; pilihan lama yang tidak sah pindah ke pasangan sah pertama.
+  const buyChoices = buybackChoices(sell, buybackOptions);
+  const pairBuy = resolveBuyback(sell, buybackOptions, buyId);
+  const problem = pairProblem(sell, pairBuy);
+  // Tanpa pasangan: `buy` hanya pengisi; semua turunan dijaga `problem`.
+  const buy = pairBuy ?? sell;
   const tabOpt = sellOptions.find((o) => o.id === 'tab') as SpreadOption;
   const lmOpt = sellOptions.find((o) => o.id === 'lm-antam') as SpreadOption;
 
@@ -250,6 +257,7 @@ export function SpreadBoard({
                 {sellOptions.map((o) => (
                   <option key={o.id} value={o.id}>
                     {o.label}
+                    {buybackChoices(o, buybackOptions).length === 0 ? ' · tanpa buyback' : ''}
                   </option>
                 ))}
               </select>
@@ -279,10 +287,12 @@ export function SpreadBoard({
               <select
                 id="sellTo"
                 className={FIELD}
-                value={buyId}
+                value={pairBuy?.id ?? ''}
+                disabled={!pairBuy}
                 onChange={(e) => setBuyId(e.target.value)}
               >
-                {buybackOptions.map((o) => (
+                {pairBuy ? null : <option value="">Belum ada data buyback</option>}
+                {buyChoices.map((o) => (
                   <option key={o.id} value={o.id}>
                     {o.label}
                   </option>
@@ -296,7 +306,7 @@ export function SpreadBoard({
                 Pasangan populer
               </span>
               {POPULAR_PAIRS.map((p) => {
-                const on = p.sell === sellId && p.buyback === buyId;
+                const on = p.sell === sellId && p.buyback === pairBuy?.id;
                 return (
                   <button
                     key={p.label}

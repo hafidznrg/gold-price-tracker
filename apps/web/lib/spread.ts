@@ -242,8 +242,32 @@ export function compatible(sell: SpreadOption, buyback: SpreadOption): boolean {
   return sell.brand === buyback.brand && sell.product === buyback.product;
 }
 
-/** Penjelasan bila pasangan tidak bisa dihitung. */
-export function pairProblem(sell: SpreadOption, buyback: SpreadOption): string | null {
+/** Pilihan "jual ke" yang sah untuk satu tempat beli (urutan `buybacks` dipertahankan). */
+export function buybackChoices(
+  sell: SpreadOption,
+  buybacks: readonly SpreadOption[],
+): SpreadOption[] {
+  return buybacks.filter((b) => compatible(sell, b));
+}
+
+/**
+ * Pasangan buyback efektif: pilihan pengguna bila sah, selain itu pasangan sah pertama; null bila
+ * tempat beli ini tidak punya pasangan buyback sama sekali.
+ */
+export function resolveBuyback(
+  sell: SpreadOption,
+  buybacks: readonly SpreadOption[],
+  preferredId: string | null,
+): SpreadOption | null {
+  const ok = buybackChoices(sell, buybacks);
+  return ok.find((b) => b.id === preferredId) ?? ok[0] ?? null;
+}
+
+/** Penjelasan bila pasangan tidak bisa dihitung; `buyback` null = tidak ada pasangan sama sekali. */
+export function pairProblem(sell: SpreadOption, buyback: SpreadOption | null): string | null {
+  if (!buyback) {
+    return `Belum ada data buyback untuk emas ${BRAND_LABELS[sell.brand]} ${sell.product === 'gold_savings' ? 'tabungan' : 'batangan'}, jadi spread-nya tidak bisa dihitung. Pilih tempat beli lain atau salah satu pasangan populer di atas.`;
+  }
   if (compatible(sell, buyback)) return null;
   return `Emas ${BRAND_LABELS[sell.brand]} yang dibeli di sini tidak bisa dijual kembali ke ${buyback.short}: buyback hanya berlaku untuk brand dan produk yang sama.`;
 }

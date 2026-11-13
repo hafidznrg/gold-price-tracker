@@ -2,11 +2,14 @@ import { describe, expect, it } from 'vitest';
 import type { SeriesRowTuple } from './data';
 import {
   breakEvenPct,
+  buybackChoices,
   buybackPoints,
   compatible,
   findGaps,
   joinDays,
   pairDays,
+  pairProblem,
+  resolveBuyback,
   sellPoints,
   sliceDays,
   spreadPct,
@@ -114,6 +117,21 @@ describe('compatible', () => {
   it('brand dan produk harus sama', () => {
     expect(compatible(o({}), o({}))).toBe(true);
     expect(compatible(o({}), o({ brand: 'ubs' }))).toBe(false);
+  });
+  const lm = o({ id: 'lm' });
+  const ubs = o({ id: 'ubs', brand: 'ubs' });
+  const tab = o({ id: 'tab', brand: 'pegadaian', product: 'gold_savings' });
+  const buys = [lm, ubs, tab];
+  it('pilihan jual ke hanya pasangan sah', () => {
+    expect(buybackChoices(o({ id: 'pg-antam' }), buys).map((b) => b.id)).toEqual(['lm']);
+    expect(buybackChoices(o({ brand: 'galeri24' }), buys)).toEqual([]);
+  });
+  it('pilihan tidak sah diganti pasangan sah pertama; tanpa pasangan = null', () => {
+    expect(resolveBuyback(o({ brand: 'ubs' }), buys, 'lm')?.id).toBe('ubs');
+    expect(resolveBuyback(o({ brand: 'ubs' }), buys, 'ubs')?.id).toBe('ubs');
+    expect(resolveBuyback(o({ brand: 'galeri24' }), buys, 'lm')).toBeNull();
+    expect(pairProblem(o({ brand: 'galeri24' }), null)).toMatch(/Belum ada data buyback/);
+    expect(pairProblem(lm, lm)).toBeNull();
   });
 });
 

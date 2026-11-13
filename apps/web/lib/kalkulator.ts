@@ -116,6 +116,32 @@ export function sellAvailable(d: CompareDef, w: number, options: readonly Explor
   return sellOption(d, w, options) !== null;
 }
 
+/** Tempat jual kembali yang sah untuk beli di `buy` berat `w` (hanya yang punya buyback). */
+export function sellChoices(
+  buy: CompareDef,
+  w: number,
+  options: readonly ExplorerOption[],
+): CompareDef[] {
+  return sellCandidates(buy).filter((d) => sellAvailable(d, w, options));
+}
+
+/** Gramasi beli di `buy` yang punya pasangan buyback. */
+export function pairableWeights(buy: CompareDef, options: readonly ExplorerOption[]): number[] {
+  return weightsFor(buy, options).filter((w) => sellChoices(buy, w, options).length > 0);
+}
+
+/** Gramasi berpasangan terdekat dengan `w` (selisih rasio berat terkecil); null bila tidak ada. */
+export function nearestPairableWeight(
+  buy: CompareDef,
+  w: number,
+  options: readonly ExplorerOption[],
+): number | null {
+  const ws = pairableWeights(buy, options);
+  if (ws.length === 0) return null;
+  const dist = (x: number) => Math.abs(Math.log(x / w));
+  return ws.reduce((best, x) => (dist(x) < dist(best) ? x : best));
+}
+
 // ---------------------------------------------------------------------------
 // Keadaan di URL: ?d=2025-11-07&b=lm-antam&w=1&q=1&s=lm-antam   (bawaan tidak ditulis)
 
@@ -184,7 +210,7 @@ export function normalizeState(
       : weights.includes(DEFAULT_WEIGHT)
         ? DEFAULT_WEIGHT
         : weights[0]!;
-  const sells = sellCandidates(buy).filter((d) => sellAvailable(d, w, ctx.options));
+  const sells = sellChoices(buy, w, ctx.options);
   const sell = sells.find((d) => d.id === raw.sellId) ?? sells[0] ?? null;
   return {
     date: date > ctx.asOf ? ctx.asOf : date,
