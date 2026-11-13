@@ -492,3 +492,12 @@ Log keputusan produk dan teknis (format ringkas ala ADR). Keputusan baru ditamba
 - Daftar buyback hanya berisi pasangan sah: brand dan produk sama, dan ada buyback untuk berat itu (`buybackChoices`/`resolveBuyback` di `lib/spread.ts`, `sellChoices` di `lib/kalkulator.ts`). Tidak ada opsi nonaktif. Ganti tempat beli = buyback otomatis pindah ke pasangan sah pertama.
 - Pilihan beli atau gramasi tanpa pasangan tetap bisa dipilih (harga belinya tetap berguna) tetapi diberi akhiran "· tanpa buyback" di dropdown. Bila dipilih, dropdown buyback dinonaktifkan dengan isi "Belum ada data buyback", dan penjelasannya ditampilkan: Spread menyarankan tempat beli lain atau pasangan populer; Kalkulator menawarkan tombol "Pakai <gramasi berpasangan terdekat>" (`nearestPairableWeight`), atau menjelaskan bahwa hanya harga beli yang tersedia bila brand itu tidak punya buyback sama sekali.
 **Konsekuensi:** tautan lama dengan pasangan yang tidak sah tetap terbuka dengan pasangan sah terdekat. Bila kelak data buyback Galeri24 dikumpulkan, label dan keadaan nonaktif hilang dengan sendirinya karena dihitung dari katalog.
+
+### D-57 — Favicon versi terang; footer ditata ulang
+
+**Konteks:** favicon memakai ikon navy (D-51) yang terlihat gelap di tab peramban bertema terang. Footer berisi tiga kolom teks rapat: sumber data dan catatan berupa kalimat panjang yang dipisah titik tengah, tanpa tautan halaman, dan di tablet/HP kolomnya jatuh tidak beraturan.
+**Keputusan:**
+- `app/icon.svg` = mark light mode (batang `#A67C1E`/`#7A5A14`, celah dan latar `#F7F5F0`) dalam kotak membulat berbingkai tipis `#E1DFD8` agar tetap terlihat di tab terang maupun gelap. `apple-icon.png`, ikon PWA 512 px, dan OG image tetap navy.
+- Footer berlatar `surface` dengan empat bagian: merek (logo + wordmark yang menaut ke beranda, tagline serif italic, deskripsi, tombol repositori GitHub), "Jelajahi" (tautan `NAV_ITEMS`, `nav` berlabel "Halaman"), "Sumber data" dalam dua kelompok berdaftar (harga emas Indonesia; pembanding dunia dan kurs), dan "Catatan" dalam kotak `surface2` per poin dengan "Bukan rekomendasi investasi." ditebalkan. Baris bawah terpisah garis: © tahun, lisensi, stempel build dan skema.
+- Desktop (≥ 1024 px) empat kolom; tablet dan HP lebar (≥ 640 px) 2×2 dengan tautan Jelajahi dua kolom; HP bertumpuk, tautan Jelajahi dua kolom.
+**Konsekuensi:** favicon berbeda dengan ikon PWA/Apple (navy). Footer sedikit lebih tinggi di HP karena tautan halaman ditambahkan.
