@@ -403,3 +403,4 @@ date,source,brand,product,variant,weight_g,location,sell_price,buyback_price,sou
 2026-11-11,ubslifestyle,ubs,gold_bar,2026,25,,60264500,57687000,,2026-11-11T10:45:13Z,43006054929-1,scrape
 2026-11-11,ubslifestyle,ubs,gold_bar,2026,50,,120105000,115374000,,2026-11-11T10:45:13Z,43006054929-1,scrape
 2026-11-11,ubslifestyle,ubs,gold_bar,2026,100,,240045200,230748000,,2026-11-11T10:45:13Z,43006054929-1,scrape
+2026-11-12,ubslifestyle,ubs,gold_bar,,1,,,2290000,,2026-11-13T00:49:53Z,43340135181-1,backfill
