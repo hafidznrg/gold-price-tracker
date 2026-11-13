@@ -8,28 +8,28 @@
     "updated_at": "2026-11-12T09:42:01Z"
   },
   "logammulia": {
-    "last_run_id": "43009979802-1",
+    "last_run_id": "43347656497-1",
     "last_status": "success",
-    "last_success_at": "2026-11-11T11:13:19Z",
-    "last_data_date": "2026-11-11",
+    "last_success_at": "2026-11-13T01:50:13Z",
+    "last_data_date": "2026-11-13",
     "consecutive_failures": 0,
-    "updated_at": "2026-11-11T11:13:39Z"
+    "updated_at": "2026-11-13T01:50:43Z"
   },
   "pegadaian": {
-    "last_run_id": "43214784622-1",
+    "last_run_id": "43347656497-1",
     "last_status": "success",
-    "last_success_at": "2026-11-12T12:06:15Z",
-    "last_data_date": "2026-11-12",
+    "last_success_at": "2026-11-13T01:49:37Z",
+    "last_data_date": "2026-11-13",
     "consecutive_failures": 0,
-    "updated_at": "2026-11-12T12:06:35Z"
+    "updated_at": "2026-11-13T01:50:43Z"
   },
   "ubslifestyle": {
-    "last_run_id": "43009979802-1",
-    "last_status": "success",
+    "last_run_id": "43347656497-1",
+    "last_status": "stale",
     "last_success_at": "2026-11-11T11:12:55Z",
     "last_data_date": "2026-11-11",
     "consecutive_failures": 0,
-    "updated_at": "2026-11-11T11:13:39Z"
+    "updated_at": "2026-11-13T01:50:43Z"
   },
   "xaus": {
     "last_run_id": "43193620225-1",
