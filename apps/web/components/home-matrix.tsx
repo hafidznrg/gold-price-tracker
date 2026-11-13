@@ -95,7 +95,7 @@ export function HomeMatrix({ cells }: { cells: TodayCells }) {
                     key={MATRIX_COLS[i]?.id}
                     role="cell"
                     className={cn(
-                      'num mr-2 flex items-center gap-2 rounded-[9px] px-2.5 py-[9px] text-sm',
+                      'num mr-2 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 rounded-[9px] px-2.5 py-[9px] text-sm',
                       x.value === null ? 'text-faint' : 'text-text',
                       x.best ? 'bg-up/10 font-semibold' : 'font-normal',
                     )}
@@ -108,7 +108,7 @@ export function HomeMatrix({ cells }: { cells: TodayCells }) {
                     {x.best ? (
                       <span
                         data-testid="matrix-best"
-                        className="rounded-full border border-up px-[7px] py-px text-2xs font-semibold text-up"
+                        className="rounded-full border border-up px-[7px] py-px text-2xs font-semibold whitespace-nowrap text-up"
                       >
                         {BEST_LABEL[mode]}
                       </span>

@@ -501,3 +501,12 @@ Log keputusan produk dan teknis (format ringkas ala ADR). Keputusan baru ditamba
 - Footer berlatar `surface` dengan empat bagian: merek (logo + wordmark yang menaut ke beranda, tagline serif italic, deskripsi, tombol repositori GitHub), "Jelajahi" (tautan `NAV_ITEMS`, `nav` berlabel "Halaman"), "Sumber data" dalam dua kelompok berdaftar (harga emas Indonesia; pembanding dunia dan kurs), dan "Catatan" dalam kotak `surface2` per poin dengan "Bukan rekomendasi investasi." ditebalkan. Baris bawah terpisah garis: © tahun, lisensi, stempel build dan skema.
 - Desktop (≥ 1024 px) empat kolom; tablet dan HP lebar (≥ 640 px) 2×2 dengan tautan Jelajahi dua kolom; HP bertumpuk, tautan Jelajahi dua kolom.
 **Konsekuensi:** favicon berbeda dengan ikon PWA/Apple (navy). Footer sedikit lebih tinggi di HP karena tautan halaman ditambahkan.
+
+### D-58 — Badge "termurah" turun baris di HP; titik status berdenyut; catatan kartu jadi popover
+
+**Konteks:** di HP, harga dan badge "termurah" di matriks Bandingkan per gramasi dipaksa satu baris sehingga badge meluber ke kolom sebelah. Panel ⓘ di kartu harga hero membuka di dalam kartu dan menambah tingginya, sehingga kartu lain di baris yang sama tampak kosong.
+**Keputusan:**
+- Sel matriks `flex-wrap`: di kolom sempit badge turun ke bawah harga, tetap di dalam latar sorotan; di desktop tetap satu baris.
+- Titik di tombol "Diperbarui …" diberi halo berdenyut (`motion-safe:animate-ping`) hanya bila semua sumber terkini; titik abu-abu tetap diam.
+- Catatan ⓘ kartu harga menjadi popover melayang di bawah ikon (menutup saat klik di luar atau Escape); tinggi kartu tidak berubah.
+**Konsekuensi:** baris matriks berisi badge sedikit lebih tinggi di HP. Pengguna dengan "kurangi gerakan" tidak melihat denyut.

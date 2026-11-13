@@ -49,13 +49,17 @@ export function Freshness({
         onClick={() => setOpen((o) => !o)}
         className="inline-flex min-h-11 cursor-pointer items-center gap-2.5 self-start rounded-full border border-line bg-surface px-4 text-left text-sm text-text"
       >
-        <span
-          aria-hidden="true"
-          className={cn(
-            'size-2 flex-none rounded-full',
-            freshCount === items.length ? 'bg-up' : 'bg-faint',
-          )}
-        />
+        <span aria-hidden="true" className="relative flex size-2 flex-none">
+          {freshCount === items.length ? (
+            <span className="absolute inset-0 rounded-full bg-up opacity-60 motion-safe:animate-ping" />
+          ) : null}
+          <span
+            className={cn(
+              'relative size-2 rounded-full',
+              freshCount === items.length ? 'bg-up' : 'bg-faint',
+            )}
+          />
+        </span>
         <span>
           <b className="font-semibold">Diperbarui {latestLabel}</b>{' '}
           <span className="text-muted">
