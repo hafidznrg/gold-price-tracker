@@ -20,6 +20,7 @@ import {
   type ChartEvent,
   type ChartGap,
   type ChartRange,
+  type GapStyle,
   percentToTime,
   type TimeSeries,
   visibleSpanDays,
@@ -31,6 +32,7 @@ export type {
   ChartEvent,
   ChartGap,
   ChartRange,
+  GapStyle,
   SeriesPoint,
   TimeSeries,
 } from './time-series-option';
@@ -45,6 +47,8 @@ export interface TimeSeriesChartProps {
   showZoom?: boolean;
   /** Rentang tanpa data → area berarsir + label. */
   gaps?: ChartGap[];
+  /** Gaya penanda celah: `annotated` (default, Explorer) atau `subtle` (arsir netral tanpa label). */
+  gapStyle?: GapStyle;
   /** Band terisi antara dua seri (lihat <SpreadBandChart>). */
   band?: ChartBand;
   /** Sumbu Y logaritmik (Kelipatan). Band diabaikan pada skala log. */
@@ -111,6 +115,7 @@ export function TimeSeriesChart({
   height = 380,
   showZoom = false,
   gaps,
+  gapStyle = 'annotated',
   band,
   yLog = false,
   events,
@@ -257,7 +262,8 @@ export function TimeSeriesChart({
       showZoom,
       compact,
       zoom: zoomRef.current,
-      hatch: makeHatch(tokens.goldsoft),
+      hatch: makeHatch(gapStyle === 'subtle' ? tokens.line : tokens.goldsoft),
+      gapStyle,
     });
     extentRef.current = extent;
     bucketRef.current = spanBucket(visibleSpanDays(extent, zoomRef.current));
@@ -267,6 +273,7 @@ export function TimeSeriesChart({
     series,
     valueFormat,
     gaps,
+    gapStyle,
     band,
     yLog,
     events,

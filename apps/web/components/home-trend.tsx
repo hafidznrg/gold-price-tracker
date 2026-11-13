@@ -6,7 +6,7 @@ import { TimeSeriesChart, type TimeSeries } from '@/components/charts/time-serie
 import { Segmented } from '@/components/segmented';
 import { useSeriesFiles } from '@/components/use-series-files';
 import { compareLine, findOption } from '@/lib/bandingkan';
-import { expectedFor, labelGaps, type DataCalendar } from '@/lib/calendar';
+import { expectedFor, type DataCalendar } from '@/lib/calendar';
 import { COLOR_CLASSES } from '@/lib/data';
 import { mergeGaps, type ExplorerOption } from '@/lib/explorer';
 import { EMPTY, formatPct, formatRupiah } from '@/lib/format';
@@ -66,10 +66,9 @@ export function HomeTrend({ options, asOf, calendar }: HomeTrendProps) {
       ),
     [lines],
   );
-  const gaps = useMemo(
-    () => labelGaps(mergeGaps((lines ?? []).map((l) => l.line?.gaps ?? []))),
-    [lines],
-  );
+  // Beranda menyorot kondisi terkini: celah tetap digambar jujur, tapi sebagai arsir netral tanpa
+  // label (gapStyle="subtle"); penjelasannya cukup di keterangan bawah grafik dan tooltip "—".
+  const gaps = useMemo(() => mergeGaps((lines ?? []).map((l) => l.line?.gaps ?? [])), [lines]);
 
   return (
     <section className="wrap py-6">
@@ -98,14 +97,22 @@ export function HomeTrend({ options, asOf, calendar }: HomeTrendProps) {
             Tidak ada data pada periode ini.
           </p>
         ) : (
-          <TimeSeriesChart
-            series={series}
-            valueFormat="rupiah"
-            gaps={gaps}
-            height={280}
-            legend={false}
-            ariaLabel={`Grafik harga jual 1 gram, ${days} hari terakhir, untuk Antam, UBS, Galeri24, dan Tabungan Emas`}
-          />
+          <div className="flex flex-col gap-1.5">
+            <TimeSeriesChart
+              series={series}
+              valueFormat="rupiah"
+              gaps={gaps}
+              gapStyle="subtle"
+              height={280}
+              legend={false}
+              ariaLabel={`Grafik harga jual 1 gram, ${days} hari terakhir, untuk Antam, UBS, Galeri24, dan Tabungan Emas`}
+            />
+            {gaps.length > 0 && (
+              <p data-testid="trend-gap-note" className="m-0 text-xs text-faint">
+                Area berarsir = hari tanpa data dari sumber.
+              </p>
+            )}
+          </div>
         )}
 
         <div className="grid grid-cols-[repeat(auto-fit,minmax(min(220px,100%),1fr))] gap-3">

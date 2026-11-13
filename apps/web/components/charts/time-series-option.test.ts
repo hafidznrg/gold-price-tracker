@@ -127,6 +127,19 @@ describe('buildGapMarkArea', () => {
     expect(a.label.align).toBe('left');
     expect(buildGapMarkArea([], ext, FALLBACK_TOKENS)).toBeUndefined();
   });
+  it('gaya subtle: arsir tanpa garis tepi dan tanpa label', () => {
+    const ma = buildGapMarkArea(
+      [{ from: '2026-10-24', to: '2026-10-25', label: 'Tidak ada data' }],
+      ext,
+      FALLBACK_TOKENS,
+      'H',
+      'subtle',
+    );
+    expect(ma!.itemStyle).toMatchObject({ color: 'H', borderWidth: 0 });
+    type Edge = { label: { show: boolean } };
+    const [[a]] = ma!.data as [Edge, Edge][] as [[Edge, Edge]];
+    expect(a.label.show).toBe(false);
+  });
 });
 
 describe('tooltipRows', () => {

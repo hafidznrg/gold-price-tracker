@@ -85,6 +85,9 @@ export interface ChartGap {
   label?: string;
 }
 
+/** `annotated` = arsir emas + tepi putus-putus + label (Explorer); `subtle` = arsir netral saja. */
+export type GapStyle = 'annotated' | 'subtle';
+
 /** Band terisi di antara dua seri (Spread: jual di atas, buyback di bawah). */
 export interface ChartBand {
   upper: string;
@@ -116,6 +119,8 @@ export interface BuildInput {
   zoom?: { start: number; end: number } | null;
   /** Isi arsir celah: pola kanvas dari komponen, atau warna (uji / cadangan). */
   hatch?: string | ImagePatternObject;
+  /** Gaya penanda celah; default `annotated`. */
+  gapStyle?: GapStyle;
   /** Lebar kolom label sumbu Y (px). */
   yAxisWidth?: number;
   /** Anotasi peristiwa (hanya yang jatuh di rentang data). Dipasang pada seri pertama. */
@@ -206,47 +211,55 @@ export function alignBand(upper: Datum[], lower: Datum[]): { base: Datum[]; diff
 }
 
 /**
- * markArea untuk celah: arsir + garis tepi putus-putus --goldline + label pil --gold.
- * Label di kiri celah bila celah di paruh kanan grafik (seperti mockup), selain itu di kanan.
+ * markArea untuk celah.
+ * - `annotated` (mockup Explorer): arsir + garis tepi putus-putus --goldline + label pil --gold.
+ *   Label di kiri celah bila celah di paruh kanan grafik, selain itu di kanan.
+ * - `subtle` (beranda): arsir netral tipis tanpa garis tepi dan tanpa label, agar celah tidak
+ *   menyaingi garis harga; tooltip tetap menampilkan "—" untuk hari tanpa data.
  */
 export function buildGapMarkArea(
   gaps: ChartGap[],
   extent: [number, number] | null,
   tokens: ChartTokens,
   hatch: string | ImagePatternObject = tokens.goldsoft,
+  style: GapStyle = 'annotated',
 ): MarkAreaComponentOption | undefined {
   const items = gaps
     .map((g) => ({ g, from: isoToTime(g.from), to: isoToTime(g.to) }))
     .filter((x) => !Number.isNaN(x.from) && !Number.isNaN(x.to) && x.to >= x.from);
   if (!items.length) return undefined;
+  const subtle = style === 'subtle';
   const mid = extent ? (extent[0] + extent[1]) / 2 : 0;
   return {
     silent: true,
-    itemStyle: { color: hatch, borderColor: tokens.goldline, borderWidth: 1, borderType: 'dashed' },
+    itemStyle: subtle
+      ? { color: hatch, borderWidth: 0, opacity: 0.55 }
+      : { color: hatch, borderColor: tokens.goldline, borderWidth: 1, borderType: 'dashed' },
     emphasis: { disabled: true },
     data: items.map(({ g, from, to }) => {
       const leftSide = (from + to) / 2 >= mid;
       return [
         {
           xAxis: from - HALF_DAY,
-          label: g.label
-            ? {
-                show: true,
-                formatter: g.label,
-                position: leftSide ? [0, 8] : ['100%', 8],
-                align: leftSide ? 'right' : 'left',
-                verticalAlign: 'top',
-                offset: [leftSide ? -10 : 10, 0],
-                color: tokens.gold,
-                fontSize: 11.5,
-                fontFamily: tokens.fontFamily,
-                backgroundColor: tokens.surface,
-                borderColor: tokens.goldline,
-                borderWidth: 1,
-                borderRadius: 8,
-                padding: [4, 8],
-              }
-            : { show: false },
+          label:
+            g.label && !subtle
+              ? {
+                  show: true,
+                  formatter: g.label,
+                  position: leftSide ? [0, 8] : ['100%', 8],
+                  align: leftSide ? 'right' : 'left',
+                  verticalAlign: 'top',
+                  offset: [leftSide ? -10 : 10, 0],
+                  color: tokens.gold,
+                  fontSize: 11.5,
+                  fontFamily: tokens.fontFamily,
+                  backgroundColor: tokens.surface,
+                  borderColor: tokens.goldline,
+                  borderWidth: 1,
+                  borderRadius: 8,
+                  padding: [4, 8],
+                }
+              : { show: false },
         },
         { xAxis: to + HALF_DAY },
       ];
@@ -408,7 +421,7 @@ export function buildTimeSeriesOption(input: BuildInput): {
   };
 
   const totalPoints = resolved.reduce((n, s) => n + s.data.length, 0);
-  const markArea = buildGapMarkArea(gaps, extent, t, input.hatch);
+  const markArea = buildGapMarkArea(gaps, extent, t, input.hatch, input.gapStyle);
   const markLine = buildEventMarkLine(input.events ?? [], input.baseline, extent, t);
 
   const lines: LineSeriesOption[] = resolved.map((s, i) => {
