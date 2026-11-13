@@ -432,3 +432,13 @@ Log keputusan produk dan teknis (format ringkas ala ADR). Keputusan baru ditamba
 - Token baru dan kelas Tailwind-nya: `gold-strong` (teks emas di atas `goldsoft`, dipakai menu aktif), `gold-glint` (penanda titik grafik), `spot` (seri pembanding non-brand), `navy` (warna merek tetap).
 - `FALLBACK_TOKENS` grafik dan `themeColor` viewport mengikuti nilai baru (terang `#F7F5F0`, Navy `#0F1A2B`).
 **Konsekuensi:** tampilan mode gelap berubah warna; tata letak, data, dan build tidak berubah. Seri non-brand (Kelipatan, premi, spread) masih memakai `gold`/`ubs`/`g24` sampai gelombang 3. Nama situs dan OG image (`#F4F4F1`) baru diubah di gelombang 2.
+
+### D-51 — Nama "Momen Emas", logo Batang Berpanah, favicon dan OG navy
+
+**Konteks:** gelombang 2 penerapan design system (D-50). Nama tampilan "Harga Emas Historis" (Q-5) deskriptif tetapi tidak berkarakter; design system menetapkan nama, tagline, logo, ikon, dan gambar pratinjau tautan.
+**Keputusan:**
+- Nama **Momen Emas**, tagline *Temukan momen terbaik membeli emas* (`SITE_NAME`, `SITE_TAGLINE` di `site-header.tsx`). `<title>` beranda "Momen Emas · Temukan momen terbaik membeli emas"; halaman lain "Explorer · Momen Emas" (pemisah `·`, sebelumnya `—`). Meta description mengikuti design system.
+- Logo dirender inline oleh `BrandMark` (geometri `public/brand/momen-emas-mark-*.svg`) dengan token `--logo-bar-top/-base`, `--logo-arrow-start/-end`: flat di tema terang, gradasi di Navy; celah = `--bg`. Wordmark teks HTML: "Momen" serif + "Emas" serif italic `gold`. Header: logo 26 px (22 px di HP) + wordmark 20/18 px, sehingga tinggi header D-47 tetap.
+- Favicon `app/icon.svg` = ikon flat navy; `app/apple-icon.png` dan ikon PWA 512 px; `app/manifest.ts` (`theme_color`/`background_color` `#F7F5F0`). OG image statis `app/opengraph-image.png` (1200×630, navy) menggantikan `opengraph-image.tsx`. Aset lockup di `public/brand/` untuk materi di luar situs.
+- Beranda: tagline serif italic 22 px di bawah judul; "Bukan rekomendasi investasi." di akhir lead.
+**Konsekuensi:** judul yang sudah terindeks mesin pencari berubah. Nama repo dan domain tetap. Ikon PWA 192 px belum ada (pakai SVG `any` + 512 px). Galeri24 tetap ditulis tanpa spasi seperti di seluruh situs (design system menulis "Galeri 24").

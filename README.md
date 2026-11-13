@@ -1,4 +1,6 @@
-# Gold Price Tracker
+# Momen Emas
+
+*Temukan momen terbaik membeli emas* · [gold.hafidznrg.my.id](https://gold.hafidznrg.my.id)
 
 Platform untuk melihat pergerakan historis harga emas batangan di Indonesia: **harga jual toko**, **harga buyback**, dan **spread** untuk Antam, UBS, dan Galeri24, dibandingkan dengan harga emas dunia (XAU/USD) dan kurs USD/IDR.
 

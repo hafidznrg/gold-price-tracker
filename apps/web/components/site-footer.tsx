@@ -1,5 +1,5 @@
 import { SCHEMA_VERSION } from '@gold/schema';
-import { SITE_NAME } from '@/components/site-header';
+import { BrandMark, Wordmark } from '@/components/brand-mark';
 import { formatJakartaStamp } from '@/lib/format';
 
 export const REPO_URL = 'https://github.com/hafidznrg/gold-price-tracker';
@@ -10,7 +10,10 @@ export function SiteFooter({ builtAt = new Date() }: { builtAt?: Date }) {
     <footer className="mt-6 border-t border-line">
       <div className="wrap grid grid-cols-[repeat(auto-fit,minmax(240px,1fr))] gap-x-10 gap-y-8 pt-11 pb-10">
         <div className="flex flex-col gap-3">
-          <span className="serif text-[22px]">{SITE_NAME}</span>
+          <span className="flex items-center gap-2.5">
+            <BrandMark id="me-logo-f" height={24} />
+            <Wordmark className="text-[22px]" />
+          </span>
           <p className="m-0 text-sm leading-[1.65] text-muted">
             Proyek non-komersial. Data dikumpulkan otomatis setiap hari oleh GitHub Actions,
             divalidasi, dan disimpan sebagai CSV di repositori publik.

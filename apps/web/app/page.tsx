@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Freshness, type FreshnessItem } from '@/components/freshness';
 import { HomeEducation } from '@/components/home-education';
 import { PriceCard } from '@/components/price-card';
+import { SITE_NAME, SITE_TAGLINE } from '@/components/site-header';
 import { HomeMatrix } from '@/components/home-matrix';
 import { HomeTrend } from '@/components/home-trend';
 import { SOURCE_LABELS, type LatestSpot } from '@/lib/data';
@@ -86,7 +87,7 @@ function whenOf(source: string, date: string | null, at: string | null): string 
 }
 
 export const metadata: Metadata = {
-  title: { absolute: 'Gold Price Tracker — harga emas hari ini' },
+  title: { absolute: `${SITE_NAME} · ${SITE_TAGLINE}` },
 };
 
 export default function HomePage() {
@@ -143,9 +144,12 @@ export default function HomePage() {
               <h1 className="serif m-0 text-[46px] leading-[1.05] max-sm:text-[38px]">
                 Harga emas hari ini
               </h1>
+              <p className="serif m-0 mt-1.5 text-[22px] leading-[1.3] text-muted italic">
+                {SITE_TAGLINE}
+              </p>
               <p className="m-0 mt-2.5 max-w-[560px] text-base leading-[1.55] text-muted max-sm:text-sm">
                 Harga jual, buyback, dan selisihnya untuk keping 1 gram, dari situs resmi
-                masing-masing penerbit.
+                masing-masing penerbit. Bukan rekomendasi investasi.
               </p>
             </div>
             <Freshness items={freshItems} latestLabel={latestLabel} builtAt={meta.built_at} />

@@ -1,10 +1,11 @@
 import Link from 'next/link';
 import type { ReactNode } from 'react';
-import { BrandMark } from '@/components/brand-mark';
+import { BrandMark, Wordmark } from '@/components/brand-mark';
 import { SiteNav } from '@/components/site-nav';
 import { ThemeToggle } from '@/components/theme-toggle';
 
-export const SITE_NAME = 'Harga Emas Historis';
+export const SITE_NAME = 'Momen Emas';
+export const SITE_TAGLINE = 'Temukan momen terbaik membeli emas';
 
 /**
  * Header situs, dipadatkan (D-47): satu baris di ≥ 1280 px (brand · nav · status), dua baris di
@@ -18,11 +19,13 @@ export function SiteHeader({ status }: { status?: ReactNode }) {
           href="/"
           className="flex min-w-0 items-center gap-2.5 text-text no-underline hover:text-text"
         >
-          <BrandMark size={30} />
+          <BrandMark
+            id="me-logo-h"
+            height={26}
+            className="shrink-0 max-sm:h-[22px] max-sm:w-auto"
+          />
           <span className="flex min-w-0 flex-col leading-[1.1]">
-            <span className="serif text-[19px] whitespace-nowrap max-sm:text-[17px]">
-              {SITE_NAME}
-            </span>
+            <Wordmark className="text-xl max-sm:text-lg" />
             <span className="hidden text-[9.5px] tracking-[.16em] text-faint uppercase 2xl:block">
               Antam · UBS · Galeri24
             </span>

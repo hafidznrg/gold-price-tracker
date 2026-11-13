@@ -4,7 +4,7 @@ import { SITE_URL } from '@/lib/site';
 import type { ReactNode } from 'react';
 import { DataStatusChip } from '@/components/data-status-chip';
 import { SiteFooter } from '@/components/site-footer';
-import { SITE_NAME, SiteHeader } from '@/components/site-header';
+import { SITE_NAME, SITE_TAGLINE, SiteHeader } from '@/components/site-header';
 import { DEFAULT_THEME, themeInitScript } from '@/lib/theme';
 import './globals.css';
 
@@ -24,20 +24,21 @@ const instrumentSerif = Instrument_Serif({
 });
 
 const DESCRIPTION =
-  'Harga jual dan buyback emas batangan Antam, UBS, dan Galeri24 serta Tabungan Emas Pegadaian, dikumpulkan otomatis setiap hari sebagai data terbuka.';
+  'Riwayat dan perbandingan harga emas Antam, UBS, Galeri24, dan Pegadaian beserta spot dunia. Data harian, terbuka, dan bisa diunduh.';
+const HOME_TITLE = `${SITE_NAME} · ${SITE_TAGLINE}`;
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
-  title: { default: SITE_NAME, template: `%s — ${SITE_NAME}` },
+  title: { default: HOME_TITLE, template: `%s · ${SITE_NAME}` },
   description: DESCRIPTION,
   openGraph: {
     type: 'website',
     siteName: SITE_NAME,
     locale: 'id_ID',
-    title: SITE_NAME,
+    title: HOME_TITLE,
     description: DESCRIPTION,
   },
-  twitter: { card: 'summary_large_image', title: SITE_NAME, description: DESCRIPTION },
+  twitter: { card: 'summary_large_image', title: HOME_TITLE, description: DESCRIPTION },
 };
 
 export const viewport: Viewport = {
