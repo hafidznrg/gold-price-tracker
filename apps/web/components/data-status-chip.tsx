@@ -1,6 +1,6 @@
 import { formatDate, formatTimeWib, jakartaDateOf } from '@/lib/format';
 import { readMeta } from '@/lib/data/load-fs';
-import { cn } from '@/lib/utils';
+import { LiveDot } from '@/components/live-dot';
 
 /**
  * Chip di header (mockup: "● Data 30 Okt 2026 · 21.10 WIB"): tanggal dan jam keberhasilan scrape
@@ -22,10 +22,7 @@ export function DataStatusChip() {
 
   return (
     <span className="inline-flex items-center gap-2 rounded-full border border-line px-3 py-[7px] text-xs max-sm:px-2.5 whitespace-nowrap text-muted">
-      <span
-        aria-hidden="true"
-        className={cn('size-[7px] rounded-full', maxAge <= 2 ? 'bg-up' : 'bg-faint')}
-      />
+      <LiveDot live={maxAge <= 2} className="size-[7px]" />
       <span className="max-sm:sr-only">Data</span> {day}
       {time ? <span className="max-sm:hidden"> · {time}</span> : null}
     </span>

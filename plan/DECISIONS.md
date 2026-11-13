@@ -510,3 +510,9 @@ Log keputusan produk dan teknis (format ringkas ala ADR). Keputusan baru ditamba
 - Titik di tombol "Diperbarui …" diberi halo berdenyut (`motion-safe:animate-ping`) hanya bila semua sumber terkini; titik abu-abu tetap diam.
 - Catatan ⓘ kartu harga menjadi popover melayang di bawah ikon (menutup saat klik di luar atau Escape); tinggi kartu tidak berubah.
 **Konsekuensi:** baris matriks berisi badge sedikit lebih tinggi di HP. Pengguna dengan "kurangi gerakan" tidak melihat denyut.
+
+### D-59 — Titik status berdenyut di semua mode, termasuk navbar
+
+**Konteks:** denyut D-58 memakai `motion-safe:` sehingga hilang di perangkat yang meminta kurangi gerakan (mis. Windows dengan *Animation effects* mati), dan titik di chip navbar tidak berdenyut.
+**Keputusan:** komponen `LiveDot` (`components/live-dot.tsx`) dipakai di chip navbar (`DataStatusChip`) dan tombol "Diperbarui" (`Freshness`). Halo `animate-ping` muncul bila data terkini, tanpa syarat `prefers-reduced-motion`; titik abu-abu tetap diam.
+**Konsekuensi:** pengguna dengan pengaturan kurangi gerakan tetap melihat denyut kecil ini.
