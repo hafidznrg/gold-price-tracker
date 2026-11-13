@@ -1,7 +1,6 @@
 'use client';
 
 import type { Brand, PriceSource } from '@gold/schema';
-import Link from 'next/link';
 import { debounce, parseAsString, useQueryStates } from 'nuqs';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { TimeSeriesChart, type TimeSeries } from '@/components/charts/time-series-chart';
@@ -81,7 +80,6 @@ export interface ExplorerBoardProps {
 }
 
 const FIELD = 'h-11 w-full rounded-field border border-line bg-surface2 px-3 text-sm text-text';
-const CARD = 'min-w-0 rounded-[18px] border border-line bg-surface p-5';
 const PANEL_SM = 'min-w-0 rounded-card border border-line bg-surface p-4';
 const PRICE_LABEL: Record<PriceField, string> = { sell: 'Jual', buyback: 'Buyback' };
 const DIR_CLASS = { up: 'text-up', down: 'text-down', flat: 'text-muted' } as const;
@@ -90,7 +88,7 @@ const SECTION =
   'min-w-0 rounded-[18px] border border-line bg-surface p-5 max-sm:rounded-none max-sm:border-0 max-sm:border-t max-sm:bg-transparent max-sm:px-0 max-sm:py-4';
 const FIELD_LABEL = 'flex min-w-0 flex-col gap-1.5 text-xs font-medium text-muted';
 const GROUP_LABEL = 'text-xs font-medium text-muted';
-const GRID = 'grid grid-cols-[minmax(220px,2fr)_repeat(5,minmax(100px,1fr))] px-5';
+const GRID = 'grid grid-cols-[minmax(220px,2fr)_repeat(4,minmax(100px,1fr))] px-5';
 
 function seriesLabel(o: ExplorerOption, price: PriceField): string {
   return [
@@ -380,9 +378,6 @@ export function ExplorerBoard({ options, asOf, stamps, calendar }: ExplorerBoard
         ? `${SOURCE_LABELS[opt.source]} tidak menampilkan buyback untuk gramasi ini.`
         : null;
 
-  // --- Tautan -------------------------------------------------------------
-  const [base, setBase] = useState('');
-  const [copied, setCopied] = useState<'ok' | 'fail' | null>(null);
   // HP (< 640 px): panel pengaturan jadi lembar dari bawah (bottom sheet, D-54).
   const [sheetOpen, setSheetOpen] = useState(false);
   useEffect(() => {
@@ -393,28 +388,6 @@ export function ExplorerBoard({ options, asOf, stamps, calendar }: ExplorerBoard
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
   }, [sheetOpen]);
-  useEffect(() => setBase(window.location.origin + window.location.pathname), []);
-  const shareUrl =
-    `${base}?s=${encodePicks(active.map((a) => a.pick))}&r=${encodeRange(range)}` +
-    [
-      ['m', encodeMode(view.mode)],
-      ['agg', encodeAgg(view.agg)],
-      ['band', encodeFlag(view.band)],
-      ['ffill', encodeFlagOn(view.ffill)],
-    ]
-      .filter(([, v]) => v !== null)
-      .map(([k, v]) => `&${k}=${v}`)
-      .join('');
-  async function copy() {
-    try {
-      await navigator.clipboard.writeText(shareUrl);
-      setCopied('ok');
-    } catch {
-      setCopied('fail');
-      (document.getElementById('share') as HTMLInputElement | null)?.select();
-    }
-  }
-
   const chartH = useChartHeight(400, 240);
 
   const stampSources = uniq(active.map((a) => a.opt.source));
@@ -432,25 +405,46 @@ export function ExplorerBoard({ options, asOf, stamps, calendar }: ExplorerBoard
                   {chartTitle(view.mode, view.agg)}
                 </h2>
                 <InfoPopover ariaLabel="Keterangan grafik" className="max-sm:static">
-                  <p className="m-0">
-                    Gulir untuk zoom, seret untuk geser.
-                    {view.ffill
-                      ? ' Hari terbit tanpa data dari sumber diisi nilai hari sebelumnya (ditandai "isi dari ..." di tooltip, bukan data baru); matikan Isi celah untuk melihat celahnya.'
-                      : ' Area berarsir = hari terbit tanpa data dari sumber (garis diputus).'}{' '}
-                    Akhir pekan dan hari libur ketika sumber memang tidak terbit tidak dihitung
-                    sebagai celah. Emas fisik: harga per keping; Tabungan Emas: harga per gram.
-                    {hasLate
-                      ? ' Series yang lebih pendek mulai dari tanggal datanya yang pertama.'
-                      : ''}
-                    {view.mode === 'gram' ? ' Mode per gram: harga keping dibagi beratnya.' : ''}
-                    {view.mode === 'index' || view.mode === 'pct'
-                      ? ' Indeks dan % ubah dihitung per series dari titik pertamanya yang terlihat di rentang; mengubah rentang menghitung ulang dasar.'
-                      : ''}
-                    {view.agg !== 'd'
-                      ? ` Titik ${AGG_NOUN[view.agg]} = harga penutupan periode (hari data terakhir).`
-                      : ''}
-                    {bandOn ? ' Pita = harga terendah sampai tertinggi dalam periode.' : ''}
-                  </p>
+                  <ul className="m-0 flex list-disc flex-col gap-1 pl-4">
+                    <li>Gulir untuk memperbesar, seret untuk menggeser.</li>
+                    {view.ffill ? (
+                      <li>
+                        Hari yang seharusnya ada harga tapi datanya kosong diisi harga terakhir
+                        sebelumnya (tertulis &ldquo;isi dari …&rdquo; di tooltip). Matikan Isi celah
+                        untuk melihat hari yang kosong.
+                      </li>
+                    ) : (
+                      <li>
+                        Area berarsir: hari yang seharusnya ada harga tapi datanya kosong. Garis
+                        terputus di sana.
+                      </li>
+                    )}
+                    <li>
+                      Akhir pekan dan hari libur saat sumber tidak terbit tidak dianggap kosong.
+                    </li>
+                    <li>Emas fisik: harga per keping. Tabungan Emas: harga per gram.</li>
+                    {hasLate ? (
+                      <li>
+                        Garis yang lebih pendek berarti datanya baru tersedia sejak titik awalnya.
+                      </li>
+                    ) : null}
+                    {view.mode === 'gram' ? <li>Per gram: harga keping dibagi beratnya.</li> : null}
+                    {view.mode === 'index' || view.mode === 'pct' ? (
+                      <li>
+                        Indeks dan % ubah diukur dari titik pertama yang terlihat. Mengganti rentang
+                        ikut mengganti titik awalnya.
+                      </li>
+                    ) : null}
+                    {view.agg !== 'd' ? (
+                      <li>
+                        Satu titik = harga hari terakhir yang ada datanya di tiap{' '}
+                        {view.agg === 'w' ? 'minggu' : 'bulan'}.
+                      </li>
+                    ) : null}
+                    {bandOn ? (
+                      <li>Pita: rentang harga terendah sampai tertinggi di tiap periode.</li>
+                    ) : null}
+                  </ul>
                 </InfoPopover>
               </div>
               <p className="num m-0 mt-0.5 text-sm text-muted">
@@ -551,43 +545,10 @@ export function ExplorerBoard({ options, asOf, stamps, calendar }: ExplorerBoard
           </InfoPopover>
         </div>
 
-        <div className={cn(CARD, 'flex flex-wrap items-center gap-3 px-5 py-[18px]')}>
-          <label htmlFor="share" className="flex-none text-sm font-semibold">
-            Tautan konfigurasi
-          </label>
-          <input
-            id="share"
-            readOnly
-            value={base ? shareUrl : ''}
-            onFocus={(e) => e.currentTarget.select()}
-            className={cn(FIELD, 'num min-w-0 flex-[1_1_320px] text-xs text-muted')}
-          />
-          <button
-            type="button"
-            onClick={copy}
-            className="min-h-11 cursor-pointer rounded-xl border-0 bg-btn px-[18px] text-sm font-semibold text-btntext"
-          >
-            Salin tautan
-          </button>
-          <Link
-            href="/data"
-            className="inline-flex min-h-11 items-center rounded-xl border border-line px-4 text-sm font-semibold text-text no-underline hover:text-gold"
-          >
-            Unduh CSV di halaman Data
-          </Link>
-          <p role="status" className="m-0 basis-full text-xs text-muted empty:hidden">
-            {copied === 'ok'
-              ? 'Tautan disalin.'
-              : copied === 'fail'
-                ? 'Tidak bisa menyalin otomatis. Tautan sudah dipilih, tekan Ctrl+C.'
-                : ''}
-          </p>
-        </div>
-
         <div className="overflow-hidden rounded-[18px] border border-line bg-surface">
           <h2 className="m-0 px-5 py-[18px] text-base font-semibold">Ringkasan rentang</h2>
           <div className="overflow-x-auto">
-            <div role="table" aria-label="Ringkasan rentang" className="min-w-[720px]">
+            <div role="table" aria-label="Ringkasan rentang" className="min-w-[620px]">
               <div
                 role="row"
                 className={cn(
@@ -600,7 +561,6 @@ export function ExplorerBoard({ options, asOf, stamps, calendar }: ExplorerBoard
                 <span role="columnheader">Akhir</span>
                 <span role="columnheader">Terendah</span>
                 <span role="columnheader">Tertinggi</span>
-                <span role="columnheader">Hari tanpa data</span>
               </div>
               {stats.length === 0 ? (
                 <p className="m-0 border-t border-line px-5 py-4 text-sm text-muted">
@@ -642,9 +602,6 @@ export function ExplorerBoard({ options, asOf, stamps, calendar }: ExplorerBoard
                     {s ? (
                       <span className="block text-xs text-muted">{formatDate(s.max.date)}</span>
                     ) : null}
-                  </span>
-                  <span role="cell" className="num text-muted">
-                    {s ? formatNumber(s.missingDays) : EMPTY}
                   </span>
                 </div>
               ))}
