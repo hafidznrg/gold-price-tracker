@@ -416,6 +416,7 @@ Log keputusan produk dan teknis (format ringkas ala ADR). Keputusan baru ditamba
 - Skala teks di `globals.css` (`@theme`): `2xs` 11 px (label kapital), `xs` 12 px (keterangan/meta), `sm` 14 px (teks pendukung, tabel, tombol), `base` 16 px (isi/lead), `lg` 18 px / `xl` 20 px (judul panel, angka sekunder), serif 26–60 px (judul seksi, angka utama). Ukuran arbitrer `text-[N px]` di bawah 16 px tidak dipakai lagi.
 - Judul panel 20 px (18 px di HP); judul seksi serif 32 px (26 px di HP, di bawah judul halaman); lead beranda 14 px di HP.
 - `SourceStamp` default terlipat di balik tombol "Sumber" (`InfoDisclosure`, `<details>` tanpa JS, dibuka dengan klik/ketuk). Beberapa sumber di satu panel digabung dalam satu lipatan (`bare`); catatan kaki tabel beranda ("Catatan") dan Bandingkan ("Sumber & catatan") ikut terlipat.
+  - *13 Nov 2026:* lipatan `InfoDisclosure` diganti popover `InfoPopover` (tombol ⓘ, panel muncul di tempat ikon tanpa menggeser tata letak; tutup dengan klik di luar/Escape) di semua halaman, dan `InfoDisclosure` dihapus. Keterangan grafik Explorer juga pindah ke ⓘ di samping judul. Isi popover selalu dirender (disembunyikan dengan `hidden`), jadi tetap di DOM.
 **Konsekuensi:** FR-26 tetap terpenuhi (atribusi ada di setiap tampilan harga, satu ketukan, dan tetap di DOM), tetapi tidak lagi terlihat tanpa interaksi. Disclaimer "bukan rekomendasi investasi" dan catatan indikatif spot tetap terlihat.
 
 ### D-49 — Halaman UBS diambil melewati cache FastCGI (melengkapi D-19)

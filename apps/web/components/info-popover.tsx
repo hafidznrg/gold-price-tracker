@@ -6,6 +6,7 @@ import { cn } from '@/lib/utils';
 /**
  * Tombol ⓘ yang membuka popover di tempatnya (seperti catatan kartu harga). Tidak menggeser tata
  * letak; menutup saat klik di luar atau Escape. `label` opsional ditampilkan di samping ikon.
+ * Pengganti `InfoDisclosure` (dropdown `<details>`) sejak 13 Nov 2026.
  */
 export function InfoPopover({
   label,
@@ -67,19 +68,19 @@ export function InfoPopover({
         </svg>
         {label ? <span>{label}</span> : null}
       </button>
-      {open ? (
-        <div
-          id={panelId}
-          role="note"
-          className={cn(
-            'absolute z-30 flex w-[min(360px,calc(100vw-48px))] flex-col gap-1 rounded-field border border-line bg-surface px-3.5 py-3 text-left text-xs leading-normal font-normal text-muted shadow-lg',
-            side === 'bottom' ? 'top-full mt-1.5' : 'bottom-full mb-1.5',
-            align === 'left' ? 'left-0' : 'right-0',
-          )}
-        >
-          {children}
-        </div>
-      ) : null}
+      {/* Selalu dirender (disembunyikan saat tertutup) agar atribusi tetap di DOM (FR-26, D-48). */}
+      <div
+        id={panelId}
+        role="note"
+        hidden={!open}
+        className={cn(
+          'absolute z-30 flex w-[min(360px,calc(100vw-48px))] flex-col gap-1 rounded-field border border-line bg-surface px-3.5 py-3 text-left text-xs leading-normal font-normal text-muted shadow-lg [&[hidden]]:hidden',
+          side === 'bottom' ? 'top-full mt-1.5' : 'bottom-full mb-1.5',
+          align === 'left' ? 'left-0' : 'right-0',
+        )}
+      >
+        {children}
+      </div>
     </div>
   );
 }

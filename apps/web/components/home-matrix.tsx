@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useMemo, useState, type ReactNode } from 'react';
-import { InfoDisclosure } from '@/components/info-disclosure';
+import { InfoPopover } from '@/components/info-popover';
 import { Segmented } from '@/components/segmented';
 import type { TodayCells } from '@/lib/bandingkan';
 import { COLOR_CLASSES } from '@/lib/data';
@@ -159,12 +159,12 @@ export function HomeMatrix({ cells }: { cells: TodayCells }) {
           </div>
         ) : null}
         <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2.5 border-t border-line px-6 py-3.5 text-sm max-sm:px-4">
-          <InfoDisclosure label="Catatan" className="min-w-0 flex-[1_1_320px]">
+          <InfoPopover label="Catatan" ariaLabel="Catatan tabel" side="top">
             <p className="m-0 text-xs text-muted">
               {EMPTY} = tidak ditampilkan sumber. Buyback Antam hanya untuk 1 g; Pegadaian tidak
               menampilkan buyback batangan (D-07).
             </p>
-          </InfoDisclosure>
+          </InfoPopover>
           <Link
             href="/bandingkan"
             className="text-sm font-semibold whitespace-nowrap text-gold no-underline hover:text-text"
