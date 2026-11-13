@@ -95,7 +95,7 @@ describe('tooltip', () => {
     );
     expect(html).toContain('&lt;b&gt;A&lt;/b&gt;');
     expect(html).toContain(FALLBACK_TOKENS.muted);
-    expect(html).toContain('background:#f00');
+    expect(html).toContain('stroke="#f00"');
     expect(escapeHtml(`"'&`)).toBe('&quot;&#39;&amp;');
   });
 });

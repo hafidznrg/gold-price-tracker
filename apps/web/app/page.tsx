@@ -37,16 +37,18 @@ function SpotItem({
   gold?: boolean;
 }) {
   return (
-    <span>
-      {label}{' '}
-      {value === null ? (
-        <b className="font-semibold text-muted">{NA}</b>
-      ) : (
-        <>
-          <b className={`num font-semibold ${gold ? 'text-gold' : 'text-text'}`}>{value}</b>
-          {unit}
-        </>
-      )}
+    <span className="flex items-baseline justify-between gap-3 sm:block">
+      <span>{label}</span>{' '}
+      <span>
+        {value === null ? (
+          <b className="font-semibold text-muted">{NA}</b>
+        ) : (
+          <>
+            <b className={`num font-semibold ${gold ? 'text-gold' : 'text-text'}`}>{value}</b>
+            {unit}
+          </>
+        )}
+      </span>
     </span>
   );
 }
@@ -55,9 +57,10 @@ function SpotStrip({ spot }: { spot: LatestSpot | null }) {
   const s = spot?.snapshot;
   const prem = spot?.premium_antam;
   return (
+    // HP: daftar bertumpuk satu baris per angka; tablet 2 per baris; desktop 4 dalam satu baris (D-54).
     <div
       aria-label="Pembanding spot dunia"
-      className="flex flex-wrap gap-x-7 gap-y-2 rounded-xl border border-dashed border-line px-4 py-3 text-sm text-muted"
+      className="grid grid-cols-1 gap-x-7 gap-y-2 rounded-xl border border-dashed border-line px-4 py-3 text-sm text-muted sm:grid-cols-2 lg:flex lg:flex-wrap"
     >
       <SpotItem
         label="Emas dunia"

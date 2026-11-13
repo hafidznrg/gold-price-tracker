@@ -335,6 +335,16 @@ export function ExplorerBoard({ options, asOf, stamps, calendar }: ExplorerBoard
   // --- Tautan -------------------------------------------------------------
   const [base, setBase] = useState('');
   const [copied, setCopied] = useState<'ok' | 'fail' | null>(null);
+  // HP (< 640 px): panel pengaturan jadi lembar dari bawah (bottom sheet, D-54).
+  const [sheetOpen, setSheetOpen] = useState(false);
+  useEffect(() => {
+    if (!sheetOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setSheetOpen(false);
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [sheetOpen]);
   useEffect(() => setBase(window.location.origin + window.location.pathname), []);
   const shareUrl =
     `${base}?s=${encodePicks(active.map((a) => a.pick))}&r=${encodeRange(range)}` +
@@ -357,7 +367,7 @@ export function ExplorerBoard({ options, asOf, stamps, calendar }: ExplorerBoard
     }
   }
 
-  const chartH = useChartHeight(380, 300);
+  const chartH = useChartHeight(400, 240);
 
   const stampSources = uniq(active.map((a) => a.opt.source));
   const hasLate = stats.some((x) => x.s?.startsLate);
@@ -376,6 +386,15 @@ export function ExplorerBoard({ options, asOf, stamps, calendar }: ExplorerBoard
                 {formatDate(eff.to)} · {formatNumber(active.length)} series
               </p>
             </div>
+            <button
+              type="button"
+              onClick={() => setSheetOpen(true)}
+              aria-expanded={sheetOpen}
+              aria-controls="explorer-settings"
+              className="inline-flex min-h-10 cursor-pointer items-center gap-2 rounded-control border border-goldline bg-goldsoft px-3.5 text-sm font-semibold text-gold-strong sm:hidden"
+            >
+              Atur series ({active.length})
+            </button>
             <RangeControl
               size="sm"
               value={range}
@@ -579,10 +598,32 @@ export function ExplorerBoard({ options, asOf, stamps, calendar }: ExplorerBoard
         </div>
       </div>
 
+      {sheetOpen ? (
+        <div
+          aria-hidden="true"
+          onClick={() => setSheetOpen(false)}
+          className="fixed inset-0 z-50 bg-black/40 sm:hidden"
+        />
+      ) : null}
       <aside
+        id="explorer-settings"
         aria-label="Pengaturan grafik"
-        className="flex min-w-0 flex-col gap-3 lg:w-[300px] lg:flex-none"
+        className={cn(
+          'flex min-w-0 flex-col gap-3 lg:w-[300px] lg:flex-none',
+          'max-sm:fixed max-sm:inset-x-0 max-sm:bottom-0 max-sm:z-50 max-sm:max-h-[85dvh] max-sm:overflow-y-auto max-sm:overscroll-contain max-sm:rounded-t-card max-sm:border-t max-sm:border-line max-sm:bg-bg max-sm:px-[18px] max-sm:pt-3 max-sm:pb-[calc(16px+env(safe-area-inset-bottom))]',
+          !sheetOpen && 'max-sm:hidden',
+        )}
       >
+        <div className="sticky top-0 z-10 -mx-[18px] -mt-3 flex items-center justify-between bg-bg px-[18px] py-3 sm:hidden">
+          <span className="text-base font-semibold">Pengaturan grafik</span>
+          <button
+            type="button"
+            onClick={() => setSheetOpen(false)}
+            className="min-h-10 cursor-pointer rounded-control bg-btn px-4 text-sm font-semibold text-btntext"
+          >
+            Selesai
+          </button>
+        </div>
         <div className={cn(CARD, 'flex flex-col gap-2')}>
           <div className="flex items-center justify-between">
             <h2 className="m-0 text-base font-semibold">Series aktif</h2>

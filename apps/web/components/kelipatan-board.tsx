@@ -80,7 +80,7 @@ export function KelipatanBoard({ annual, until, spot, events }: KelipatanBoardPr
   );
   const setLm = useCallback((on: boolean) => void setQuery({ lm: on ? '1' : null }), [setQuery]);
 
-  const chartHeight = useChartHeight(330, 250);
+  const chartHeight = useChartHeight(330, 240);
 
   const model = useMemo(
     () => buildModel(annual, until, spot, base, agg),

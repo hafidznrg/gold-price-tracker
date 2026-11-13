@@ -28,6 +28,8 @@ const UNITS: { value: MatrixUnit; label: string }[] = [
 ];
 
 const GRID = 'grid grid-cols-[110px_repeat(4,minmax(0,1fr))] items-center px-6';
+/** Kolom gramasi menempel di kiri saat tabel digeser di HP (D-54); latar menutup padding baris. */
+const STICKY = 'sticky left-0 z-[1] -ml-6 self-stretch flex items-center bg-surface pl-6';
 
 export function HomeMatrix({ cells }: { cells: TodayCells }) {
   const [mode, setMode] = useState<MatrixMode>('jual');
@@ -58,7 +60,7 @@ export function HomeMatrix({ cells }: { cells: TodayCells }) {
               role="row"
               className={cn(GRID, 'border-t border-line py-2.5 text-xs font-semibold text-faint')}
             >
-              <span role="columnheader" className="tracking-[0.08em] uppercase">
+              <span role="columnheader" className={cn(STICKY, 'tracking-[0.08em] uppercase')}>
                 Gramasi
               </span>
               {MATRIX_COLS.map((d) => (
@@ -85,7 +87,7 @@ export function HomeMatrix({ cells }: { cells: TodayCells }) {
                 data-testid="matrix-row"
                 className={cn(GRID, 'border-t border-line py-1')}
               >
-                <span role="rowheader" className="text-sm font-semibold">
+                <span role="rowheader" className={cn(STICKY, 'text-sm font-semibold')}>
                   {formatWeight(r.w)}
                 </span>
                 {r.cells.map((x, i) => (

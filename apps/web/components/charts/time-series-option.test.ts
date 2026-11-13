@@ -230,6 +230,15 @@ describe('buildTimeSeriesOption', () => {
     expect(dz[1]!.endValue).toBe(T('2026-10-24'));
     expect(dz[1]!.fillerColor).toBe(FALLBACK_TOKENS.goldsoft);
   });
+  it('compact (HP) menyembunyikan navigator slider, zoom di dalam grafik tetap', () => {
+    const { option } = buildTimeSeriesOption({
+      ...base,
+      series: [sell],
+      showZoom: true,
+      compact: true,
+    });
+    expect((option.dataZoom as { type: string }[]).map((d) => d.type)).toEqual(['inside']);
+  });
   it('compact mengurangi jumlah label', () => {
     const { option } = buildTimeSeriesOption({ ...base, series: [sell], compact: true });
     expect((option.xAxis as { splitNumber: number }).splitNumber).toBe(3);

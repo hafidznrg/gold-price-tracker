@@ -359,6 +359,7 @@ export function tooltipRows(
   series: {
     label: string;
     color: string;
+    dashed?: boolean;
     data: Datum[];
     /** Rentang min–maks (waktu → [min, maks]) dan catatan (waktu → teks), ditambahkan ke nilai. */
     envelope?: Map<number, [number, number]>;
@@ -379,7 +380,7 @@ export function tooltipRows(
       fmt(v) +
       (env ? ` · min–maks ${fmt(env[0])} – ${fmt(env[1])}` : '') +
       (note ? ` · ${note}` : '');
-    rows.push({ label: s.label, color: s.color, value, muted: v === null });
+    rows.push({ label: s.label, color: s.color, dashed: s.dashed, value, muted: v === null });
   }
   return rows;
 }
@@ -411,12 +412,15 @@ export function buildTimeSeriesOption(input: BuildInput): {
   const span = visibleSpanDays(extent, zoom);
 
   const sliderH = compact ? SLIDER_HEIGHT_COMPACT : SLIDER_HEIGHT;
+  // Navigator (slider) disembunyikan di grafik sempit/HP (D-54); rentang lewat chip, zoom tetap
+  // lewat cubit/geser di dalam grafik.
+  const showSlider = showZoom && !compact;
   const yw = input.yAxisWidth ?? (compact ? 58 : 72);
   const grid: GridComponentOption = {
     left: yw,
     right: input.gridRight ?? (compact ? 10 : 14),
     top: 14,
-    bottom: showZoom ? sliderH + 46 : 30,
+    bottom: showSlider ? sliderH + 46 : 30,
     outerBoundsMode: 'none',
   };
 
@@ -575,6 +579,7 @@ export function buildTimeSeriesOption(input: BuildInput): {
   const tooltipSeries = resolved.map((s) => ({
     label: s.label,
     color: s.rgb,
+    dashed: s.dashed,
     data: s.tooltipAfter ? s.data.filter((d) => d[0] > isoToTime(s.tooltipAfter!)) : s.data,
     envelope: envelopeMaps.get(s.id),
     notes: s.notes
@@ -598,41 +603,41 @@ export function buildTimeSeriesOption(input: BuildInput): {
           moveOnMouseMove: true,
           minValueSpan: 3 * DAY_MS,
         },
-        {
-          type: 'slider',
-          xAxisIndex: 0,
-          startValue: zoom?.start,
-          endValue: zoom?.end,
-          left: yw,
-          right: grid.right as number,
-          bottom: 6,
-          height: sliderH,
-          minValueSpan: 3 * DAY_MS,
-          backgroundColor: t.surface2,
-          borderColor: 'transparent',
-          borderRadius: 10,
-          fillerColor: t.goldsoft,
-          dataBackground: {
-            lineStyle: { color: t.faint, width: 1.2, opacity: 0.9 },
-            areaStyle: { opacity: 0 },
-          },
-          selectedDataBackground: {
-            lineStyle: { color: t.faint, width: 1.2, opacity: 0.9 },
-            areaStyle: { opacity: 0 },
-          },
-          handleIcon:
-            'path://M4 0h0a4 4 0 0 1 4 4v16a4 4 0 0 1-4 4h0a4 4 0 0 1-4-4V4a4 4 0 0 1 4-4z',
-          handleSize: '56%',
-          handleStyle: { color: t.gold, borderColor: t.gold, borderWidth: 0 },
-          emphasis: { handleStyle: { color: t.gold, borderColor: t.gold } },
-          moveHandleSize: 0,
-          brushSelect: false,
-          showDetail: !compact,
-          textStyle: { color: t.faint, fontSize: 11, fontFamily: t.fontFamily },
-          labelFormatter: (v: number) => formatDateShort(v),
-        },
       ]
     : [];
+  if (showSlider)
+    dataZoom.push({
+      type: 'slider',
+      xAxisIndex: 0,
+      startValue: zoom?.start,
+      endValue: zoom?.end,
+      left: yw,
+      right: grid.right as number,
+      bottom: 6,
+      height: sliderH,
+      minValueSpan: 3 * DAY_MS,
+      backgroundColor: t.surface2,
+      borderColor: 'transparent',
+      borderRadius: 10,
+      fillerColor: t.goldsoft,
+      dataBackground: {
+        lineStyle: { color: t.faint, width: 1.2, opacity: 0.9 },
+        areaStyle: { opacity: 0 },
+      },
+      selectedDataBackground: {
+        lineStyle: { color: t.faint, width: 1.2, opacity: 0.9 },
+        areaStyle: { opacity: 0 },
+      },
+      handleIcon: 'path://M4 0h0a4 4 0 0 1 4 4v16a4 4 0 0 1-4 4h0a4 4 0 0 1-4-4V4a4 4 0 0 1 4-4z',
+      handleSize: '56%',
+      handleStyle: { color: t.gold, borderColor: t.gold, borderWidth: 0 },
+      emphasis: { handleStyle: { color: t.gold, borderColor: t.gold } },
+      moveHandleSize: 0,
+      brushSelect: false,
+      showDetail: !compact,
+      textStyle: { color: t.faint, fontSize: 11, fontFamily: t.fontFamily },
+      labelFormatter: (v: number) => formatDateShort(v),
+    });
 
   const option: ChartOption = {
     useUTC: true,

@@ -268,16 +268,16 @@ export function axisLabelStyle(t: ChartTokens) {
   return { color: t.faint, fontSize: AXIS_FONT_SIZE, fontFamily: t.fontFamily };
 }
 
-/** Kotak tooltip: sel --surface2, garis --line, radius 14, bayangan lembut, angka tabular. */
+/** Kotak tooltip (design system, D-54): latar --surface, garis --line, radius 12, angka tabular. */
 export function tooltipBoxStyle(t: ChartTokens) {
   return {
-    backgroundColor: t.surface2,
+    backgroundColor: t.surface,
     borderColor: t.line,
     borderWidth: 1,
     padding: [12, 14] as [number, number],
     textStyle: { color: t.text, fontFamily: t.fontFamily, fontSize: 12.5 },
     extraCssText:
-      'border-radius:14px;box-shadow:0 12px 32px rgba(0,0,0,.25);font-variant-numeric:tabular-nums;min-width:220px;max-width:min(320px,85vw);',
+      'border-radius:12px;box-shadow:0 12px 32px rgba(0,0,0,.18);font-variant-numeric:tabular-nums;min-width:220px;max-width:min(320px,85vw);',
   };
 }
 
@@ -292,6 +292,14 @@ export interface TooltipRow {
   color: string;
   value: string;
   muted?: boolean;
+  /** Contoh garis putus-putus (pola 5–4) seperti seri di grafik. */
+  dashed?: boolean;
+}
+
+/** Contoh garis 18×8 px (solid/putus-putus) untuk tooltip dan legenda HTML. */
+function lineSample(color: string, dashed?: boolean): string {
+  const dash = dashed ? ' stroke-dasharray="5 4"' : '';
+  return `<svg width="18" height="8" style="flex:none" aria-hidden="true"><line x1="1" y1="4" x2="17" y2="4" stroke="${color}" stroke-width="2.2" stroke-linecap="round"${dash}/></svg>`;
 }
 
 /** Isi HTML tooltip seperti mockup: tanggal (muted) lalu baris warna · nama · nilai tebal. */
@@ -301,7 +309,7 @@ export function tooltipHtml(title: string, rows: TooltipRow[], t: ChartTokens): 
     .map(
       (r) =>
         `<div style="display:flex;justify-content:space-between;align-items:center;gap:14px;font-size:12.5px;padding:3px 0">` +
-        `<span style="display:flex;align-items:center;gap:7px;min-width:0"><span style="flex:none;width:8px;height:8px;border-radius:2px;background:${r.color}"></span>` +
+        `<span style="display:flex;align-items:center;gap:7px;min-width:0">${lineSample(r.color, r.dashed)}` +
         `<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(r.label)}</span></span>` +
         `<span style="font-weight:600;color:${r.muted ? t.faint : t.text};white-space:nowrap">${escapeHtml(r.value)}</span></div>`,
     )

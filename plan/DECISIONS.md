@@ -462,3 +462,14 @@ Log keputusan produk dan teknis (format ringkas ala ADR). Keputusan baru ditamba
 - Header HP satu baris: logo + wordmark dan chip tanggal data; nav pil dan tombol tema disembunyikan (55 px, sebelumnya ±105 px). `body` diberi `padding-bottom` setinggi menu.
 - ≥ 640 px tidak berubah: nav pil di header (bergulir di tablet), tombol tema di header.
 **Konsekuensi:** satu `nav` "Navigasi utama" yang terlihat di tiap ukuran (yang lain `display: none`). Label tab 11 px dengan `tracking-tight` agar "Bandingkan" muat di 360 px. Bagian Responsif design system yang lain (bottom sheet filter, navigator grafik disembunyikan, tinggi grafik 240/320/400) belum dikerjakan; tinggi grafik HP masih mengikuti `useChartHeight` D-47.
+
+### D-54 — Sisa ketentuan Responsif design system: tinggi grafik, navigator, bottom sheet, tooltip
+
+**Konteks:** gelombang 5 penerapan design system (D-50, D-53).
+**Keputusan:**
+- `useChartHeight(desktop, phone, tablet = min(desktop, 320))` kini tiga tingkat: < 640, 640–1023, ≥ 1024 px. Grafik utama Explorer 400 / 320 / 240 px (sebelumnya 380 / 300); Kelipatan HP 240 px. Bandingkan dan Spread tetap (sudah ≤ ukuran design system).
+- Navigator rentang (slider ECharts) tidak dipasang bila grafik `compact` (< 520 px, praktis HP); rentang lewat chip 7H–Semua, zoom cubit/geser di dalam grafik tetap.
+- Explorer di HP: panel "Pengaturan grafik" jadi lembar dari bawah (85dvh, z di atas menu bawah) yang dibuka tombol "Atur series (n)" di kartu grafik; ditutup "Selesai", ketuk latar, atau Escape. Tablet dan desktop tidak berubah.
+- Tooltip grafik: latar `surface`, radius 12 px, contoh garis per seri (solid/putus-putus 5–4) menggantikan kotak warna.
+- Beranda: pembanding spot dunia bertumpuk satu baris per angka di HP (label kiri, angka kanan), 2 per baris di tablet, satu baris di desktop. Kolom gramasi matriks menempel di kiri saat tabel digeser.
+**Konsekuensi:** di tablet panel Explorer tetap di bawah grafik (design system: di atas grafik), karena panel ±1.400 px akan mendorong grafik ke bawah lipatan (bertentangan dengan D-47). Legenda di atas grafik desktop dan di bawah di HP belum diseragamkan; tiap halaman memakai posisi legenda yang sudah ada.

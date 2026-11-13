@@ -2,21 +2,32 @@
 
 import { useEffect, useState } from 'react';
 
-const NARROW = '(max-width: 639px)';
+const PHONE = '(max-width: 639px)';
+const TABLET = '(min-width: 640px) and (max-width: 1023px)';
 
 /**
- * Tinggi kanvas grafik responsif (D-47): `desktop` di ≥ 640 px, `phone` di bawahnya, agar grafik
- * utama muat di layar pertama. Render awal memakai `desktop` (SSR/ekspor statis), lalu disesuaikan
- * setelah hidrasi dan saat lebar layar berubah.
+ * Tinggi kanvas grafik responsif (D-47, D-54): `phone` di < 640 px, `tablet` di 640–1023 px
+ * (bawaan min(desktop, 320)), `desktop` di ≥ 1024 px. Grafik utama design system: 240 / 320 / 400.
+ * Render awal memakai `desktop` (SSR/ekspor statis), lalu disesuaikan setelah hidrasi dan saat
+ * lebar layar berubah.
  */
-export function useChartHeight(desktop: number, phone: number): number {
+export function useChartHeight(
+  desktop: number,
+  phone: number,
+  tablet: number = Math.min(desktop, 320),
+): number {
   const [height, setHeight] = useState(desktop);
   useEffect(() => {
-    const mq = window.matchMedia(NARROW);
-    const apply = () => setHeight(mq.matches ? phone : desktop);
+    const p = window.matchMedia(PHONE);
+    const t = window.matchMedia(TABLET);
+    const apply = () => setHeight(p.matches ? phone : t.matches ? tablet : desktop);
     apply();
-    mq.addEventListener('change', apply);
-    return () => mq.removeEventListener('change', apply);
-  }, [desktop, phone]);
+    p.addEventListener('change', apply);
+    t.addEventListener('change', apply);
+    return () => {
+      p.removeEventListener('change', apply);
+      t.removeEventListener('change', apply);
+    };
+  }, [desktop, phone, tablet]);
   return height;
 }
