@@ -341,12 +341,12 @@ test('menu bawah HP: empat tab utama, "Lainnya" membuka sisa halaman dan tombol 
   await expect(nav).toHaveCount(1);
   await expect(nav.getByRole('link')).toHaveCount(4);
   await expect(nav.locator('a[aria-current="page"]')).toHaveAttribute('href', '/');
-  await expect(page.getByRole('button', { name: 'Ganti tema terang atau Navy' })).toBeHidden();
+  await expect(page.getByRole('switch', { name: 'Mode gelap' })).toBeHidden();
 
   const more = nav.getByRole('button', { name: 'Lainnya' });
   await more.click();
   await expect(more).toHaveAttribute('aria-expanded', 'true');
-  await expect(nav.getByRole('button', { name: /Ganti tema/ })).toBeVisible();
+  await expect(nav.getByRole('switch', { name: 'Mode gelap' })).toBeVisible();
   await nav.locator('a[href="/kalkulator"]').click();
   await expect(page.getByRole('heading', { level: 1 })).toHaveText(PAGES[4].heading);
   await expect(more).toHaveAttribute('aria-expanded', 'false');
