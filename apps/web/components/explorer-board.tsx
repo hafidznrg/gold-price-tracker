@@ -26,6 +26,7 @@ import {
   DEFAULT_PICKS,
   decodeAgg,
   decodeFlag,
+  decodeFlagOn,
   decodeMode,
   DEFAULT_RANGE,
   decodePicks,
@@ -33,6 +34,7 @@ import {
   effectiveRange,
   encodeAgg,
   encodeFlag,
+  encodeFlagOn,
   encodeMode,
   encodePick,
   encodePicks,
@@ -83,6 +85,11 @@ const CARD = 'min-w-0 rounded-[18px] border border-line bg-surface p-5';
 const PANEL_SM = 'min-w-0 rounded-card border border-line bg-surface p-4';
 const PRICE_LABEL: Record<PriceField, string> = { sell: 'Jual', buyback: 'Buyback' };
 const DIR_CLASS = { up: 'text-up', down: 'text-down', flat: 'text-muted' } as const;
+// Bagian panel: kartu di tablet/desktop, polos dipisah garis di lembar HP.
+const SECTION =
+  'min-w-0 rounded-[18px] border border-line bg-surface p-5 max-sm:rounded-none max-sm:border-0 max-sm:border-t max-sm:bg-transparent max-sm:px-0 max-sm:py-4';
+const FIELD_LABEL = 'flex min-w-0 flex-col gap-1.5 text-xs font-medium text-muted';
+const GROUP_LABEL = 'text-xs font-medium text-muted';
 const GRID = 'grid grid-cols-[minmax(220px,2fr)_repeat(5,minmax(100px,1fr))] px-5';
 
 function seriesLabel(o: ExplorerOption, price: PriceField): string {
@@ -123,6 +130,40 @@ function chartTitle(mode: ValueMode, agg: Aggregation): string {
     pct: 'Perubahan harga sejak awal rentang',
   }[mode];
   return `${head} · ${AGG_NOUN[agg]}`;
+}
+
+/** Judul ringkas di panel: brand + gramasi (sumber dan jenis harga ditampilkan terpisah). */
+function seriesTitle(o: ExplorerOption): string {
+  return [displayBrand(o), o.kind === 'fisik' ? formatWeight(o.w) : null]
+    .filter(Boolean)
+    .join(' · ');
+}
+
+function PriceTag({ price }: { price: PriceField }) {
+  return (
+    <span className="flex-none rounded-full border border-line bg-surface px-1.5 py-px text-2xs font-semibold uppercase tracking-[.06em] text-muted">
+      {PRICE_LABEL[price]}
+    </span>
+  );
+}
+
+function SectionSummary({ children }: { children: React.ReactNode }) {
+  return (
+    <summary className="-my-1 flex min-h-9 cursor-pointer list-none items-center justify-between gap-3 [&::-webkit-details-marker]:hidden">
+      <h2 className="m-0 text-base font-semibold">{children}</h2>
+      <svg
+        width="16"
+        height="16"
+        viewBox="0 0 24 24"
+        aria-hidden="true"
+        className="flex-none fill-none stroke-current stroke-2 text-faint transition-transform group-open:rotate-180"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d="M6 9l6 6 6-6" />
+      </svg>
+    </summary>
+  );
 }
 
 function seriesMeta(o: ExplorerOption, price: PriceField, perGram = false): string {
@@ -183,7 +224,7 @@ export function ExplorerBoard({ options, asOf, stamps, calendar }: ExplorerBoard
       mode: decodeMode(query.m),
       agg: decodeAgg(query.agg),
       band: decodeFlag(query.band),
-      ffill: decodeFlag(query.ffill),
+      ffill: decodeFlagOn(query.ffill),
     }),
     [query.m, query.agg, query.band, query.ffill],
   );
@@ -195,7 +236,7 @@ export function ExplorerBoard({ options, asOf, stamps, calendar }: ExplorerBoard
         m: encodeMode(n.mode),
         agg: encodeAgg(n.agg),
         band: encodeFlag(n.band),
-        ffill: encodeFlag(n.ffill),
+        ffill: encodeFlagOn(n.ffill),
       });
     },
     [view, setQuery],
@@ -331,6 +372,13 @@ export function ExplorerBoard({ options, asOf, stamps, calendar }: ExplorerBoard
     opt && price ? { source: opt.source, brand: opt.brand, w: opt.w, price } : null;
   const duplicate = candidate ? active.some((a) => a.id === encodePick(candidate)) : false;
   const full = active.length >= MAX_SERIES;
+  const addNote = duplicate
+    ? 'Series ini sudah ada di grafik.'
+    : full
+      ? `Maksimum ${MAX_SERIES} series. Hapus salah satu untuk menambah.`
+      : opt && !opt.first.buyback
+        ? `${SOURCE_LABELS[opt.source]} tidak menampilkan buyback untuk gramasi ini.`
+        : null;
 
   // --- Tautan -------------------------------------------------------------
   const [base, setBase] = useState('');
@@ -352,7 +400,7 @@ export function ExplorerBoard({ options, asOf, stamps, calendar }: ExplorerBoard
       ['m', encodeMode(view.mode)],
       ['agg', encodeAgg(view.agg)],
       ['band', encodeFlag(view.band)],
-      ['ffill', encodeFlag(view.ffill)],
+      ['ffill', encodeFlagOn(view.ffill)],
     ]
       .filter(([, v]) => v !== null)
       .map(([k, v]) => `&${k}=${v}`)
@@ -423,9 +471,12 @@ export function ExplorerBoard({ options, asOf, stamps, calendar }: ExplorerBoard
             />
           )}
           <p className="m-0 mt-3 text-xs leading-relaxed text-faint">
-            Gulir untuk zoom, seret untuk geser. Area berarsir = hari terbit tanpa data dari sumber
-            (garis diputus). Akhir pekan dan hari libur ketika sumber memang tidak terbit tidak
-            dihitung sebagai celah. Emas fisik: harga per keping; Tabungan Emas: harga per gram.
+            Gulir untuk zoom, seret untuk geser.
+            {view.ffill
+              ? ' Hari terbit tanpa data dari sumber diisi nilai hari sebelumnya (ditandai "isi dari ..." di tooltip, bukan data baru); matikan Isi celah untuk melihat celahnya.'
+              : ' Area berarsir = hari terbit tanpa data dari sumber (garis diputus).'}{' '}
+            Akhir pekan dan hari libur ketika sumber memang tidak terbit tidak dihitung sebagai
+            celah. Emas fisik: harga per keping; Tabungan Emas: harga per gram.
             {hasLate ? ' Series yang lebih pendek mulai dari tanggal datanya yang pertama.' : ''}
             {view.mode === 'gram' ? ' Mode per gram: harga keping dibagi beratnya.' : ''}
             {view.mode === 'index' || view.mode === 'pct'
@@ -435,9 +486,6 @@ export function ExplorerBoard({ options, asOf, stamps, calendar }: ExplorerBoard
               ? ` Titik ${AGG_NOUN[view.agg]} = harga penutupan periode (hari data terakhir).`
               : ''}
             {bandOn ? ' Pita = harga terendah sampai tertinggi dalam periode.' : ''}
-            {view.ffill
-              ? ' Isi celah aktif: nilai yang disalin dari hari sebelumnya ditandai "isi dari ..." di tooltip dan bukan data baru dari sumber.'
-              : ''}
           </p>
 
           {built && built.length > 0 ? (
@@ -609,229 +657,272 @@ export function ExplorerBoard({ options, asOf, stamps, calendar }: ExplorerBoard
         id="explorer-settings"
         aria-label="Pengaturan grafik"
         className={cn(
-          'flex min-w-0 flex-col gap-3 lg:w-[300px] lg:flex-none',
-          'max-sm:fixed max-sm:inset-x-0 max-sm:bottom-0 max-sm:z-50 max-sm:max-h-[85dvh] max-sm:overflow-y-auto max-sm:overscroll-contain max-sm:rounded-t-card max-sm:border-t max-sm:border-line max-sm:bg-bg max-sm:px-[18px] max-sm:pt-3 max-sm:pb-[calc(16px+env(safe-area-inset-bottom))]',
+          'flex min-w-0 flex-col gap-3 sm:max-lg:grid sm:max-lg:grid-cols-2 sm:max-lg:items-start sm:max-lg:gap-4 lg:w-[320px] lg:flex-none',
+          // HP: lembar dari bawah; bagian tanpa kartu, dipisah garis (D-54, D-55).
+          'max-sm:fixed max-sm:inset-x-0 max-sm:bottom-0 max-sm:z-50 max-sm:max-h-[85dvh] max-sm:gap-0 max-sm:overflow-y-auto max-sm:overscroll-contain max-sm:rounded-t-card max-sm:border-t max-sm:border-line max-sm:bg-bg max-sm:px-[18px] max-sm:pb-[calc(16px+env(safe-area-inset-bottom))]',
           !sheetOpen && 'max-sm:hidden',
         )}
       >
-        <div className="sticky top-0 z-10 -mx-[18px] -mt-3 flex items-center justify-between bg-bg px-[18px] py-3 sm:hidden">
-          <span className="text-base font-semibold">Pengaturan grafik</span>
-          <button
-            type="button"
-            onClick={() => setSheetOpen(false)}
-            className="min-h-10 cursor-pointer rounded-control bg-btn px-4 text-sm font-semibold text-btntext"
-          >
-            Selesai
-          </button>
-        </div>
-        <div className={cn(CARD, 'flex flex-col gap-2')}>
+        <div className="sticky top-0 z-10 -mx-[18px] flex flex-col bg-bg px-[18px] pb-3 pt-2 sm:hidden">
+          <span aria-hidden="true" className="mx-auto mb-2 h-1 w-10 rounded-full bg-line" />
           <div className="flex items-center justify-between">
-            <h2 className="m-0 text-base font-semibold">Series aktif</h2>
-            <span className="text-xs text-faint">
+            <span className="text-base font-semibold">Pengaturan grafik</span>
+            <button
+              type="button"
+              onClick={() => setSheetOpen(false)}
+              className="min-h-10 cursor-pointer rounded-control bg-btn px-4 text-sm font-semibold text-btntext"
+            >
+              Selesai
+            </button>
+          </div>
+        </div>
+
+        <section aria-labelledby="active-title" className={cn(SECTION, 'flex flex-col gap-3')}>
+          <div className="flex items-baseline justify-between gap-3">
+            <h2 id="active-title" className="m-0 text-base font-semibold">
+              Series aktif
+            </h2>
+            <span className="num text-xs text-faint">
               {active.length} dari maks. {MAX_SERIES}
             </span>
           </div>
           {active.length === 0 ? (
-            <p className="m-0 text-sm leading-relaxed text-muted">
-              Belum ada series. Pilih di bawah lalu tambahkan ke grafik.
+            <p className="m-0 rounded-xl border border-dashed border-line px-3 py-4 text-center text-sm leading-relaxed text-muted">
+              Belum ada series. Pilih di bagian Tambah series.
             </p>
-          ) : null}
-          {active.map((a) => {
-            const label = seriesLabel(a.opt, a.pick.price);
-            return (
-              <div
-                key={a.id}
-                className="flex items-center gap-3 rounded-xl bg-surface2 px-3 py-1.5"
-              >
-                <Swatch color={optionColor(a.opt)} dashed={a.pick.price === 'buyback'} />
-                <div className="min-w-0 flex-1">
-                  <div className="text-sm font-semibold">{label}</div>
-                  <div className="mt-0.5 text-xs text-muted">
-                    {seriesMeta(a.opt, a.pick.price, view.mode === 'gram')}
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  aria-label={`Hapus series ${label}`}
-                  onClick={() => setPicks(active.filter((x) => x.id !== a.id).map((x) => x.pick))}
-                  className="-my-2 -mr-2 grid size-11 flex-none cursor-pointer place-items-center border-0 bg-transparent text-faint hover:text-text"
-                >
-                  <svg
-                    width="14"
-                    height="14"
-                    viewBox="0 0 24 24"
-                    aria-hidden="true"
-                    className="fill-none stroke-current stroke-2"
-                    strokeLinecap="round"
+          ) : (
+            <ul className="m-0 flex list-none flex-col gap-2 p-0">
+              {active.map((a) => {
+                const label = seriesLabel(a.opt, a.pick.price);
+                return (
+                  <li
+                    key={a.id}
+                    className="flex min-w-0 items-center gap-3 rounded-xl border border-line bg-surface2 py-2 pl-3 pr-1"
                   >
-                    <path d="M6 6l12 12M18 6L6 18" />
-                  </svg>
-                </button>
-              </div>
-            );
-          })}
-        </div>
+                    <Swatch
+                      color={optionColor(a.opt)}
+                      dashed={a.pick.price === 'buyback'}
+                      width={20}
+                    />
+                    <div className="min-w-0 flex-1">
+                      <div className="flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-0.5">
+                        <span className="min-w-0 break-words text-sm font-semibold leading-snug">
+                          {seriesTitle(a.opt)}
+                        </span>
+                        <PriceTag price={a.pick.price} />
+                      </div>
+                      <div className="mt-0.5 break-words text-xs leading-snug text-muted">
+                        {SOURCE_LABELS[a.opt.source]} ·{' '}
+                        {seriesMeta(a.opt, a.pick.price, view.mode === 'gram')}
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      aria-label={`Hapus series ${label}`}
+                      title="Hapus dari grafik"
+                      onClick={() =>
+                        setPicks(active.filter((x) => x.id !== a.id).map((x) => x.pick))
+                      }
+                      className="grid size-10 flex-none cursor-pointer place-items-center rounded-full border-0 bg-transparent text-faint transition-colors hover:bg-surface hover:text-text"
+                    >
+                      <svg
+                        width="14"
+                        height="14"
+                        viewBox="0 0 24 24"
+                        aria-hidden="true"
+                        className="fill-none stroke-current stroke-2"
+                        strokeLinecap="round"
+                      >
+                        <path d="M6 6l12 12M18 6L6 18" />
+                      </svg>
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </section>
 
-        <details open className={cn(CARD, 'group flex flex-col gap-3')}>
-          <summary className="flex min-h-9 cursor-pointer list-none items-center justify-between [&::-webkit-details-marker]:hidden">
-            <h2 className="m-0 text-base font-semibold">Tambah series</h2>
-            <span aria-hidden="true" className="text-xs text-faint group-open:rotate-180">
-              ▾
-            </span>
-          </summary>
-          <Segmented
-            label="Produk"
-            className="grid grid-cols-2"
-            options={(['fisik', 'tabungan'] as const).map((k) => ({
-              value: k,
-              label: PRODUCT_KIND_LABELS[k],
-            }))}
-            value={kind}
-            onChange={setKind}
-          />
-          <div className="grid grid-cols-2 gap-2.5">
-            <label className="flex min-w-0 flex-col gap-1.5 text-xs text-muted">
-              Brand
-              <select
-                className={FIELD}
-                value={brand}
-                onChange={(e) => setBrandSel(e.target.value as Brand)}
+        <details open className={cn(SECTION, 'group')}>
+          <SectionSummary>Tambah series</SectionSummary>
+          <div className="mt-3 flex flex-col gap-3">
+            <Segmented
+              label="Produk"
+              size="sm"
+              className="grid w-full grid-cols-2"
+              options={(['fisik', 'tabungan'] as const).map((k) => ({
+                value: k,
+                label: PRODUCT_KIND_LABELS[k],
+              }))}
+              value={kind}
+              onChange={setKind}
+            />
+            <div className="grid grid-cols-2 gap-x-2.5 gap-y-3">
+              <label className={FIELD_LABEL}>
+                Brand
+                <select
+                  className={FIELD}
+                  value={brand}
+                  onChange={(e) => setBrandSel(e.target.value as Brand)}
+                >
+                  {brands.map((b) => (
+                    <option key={b} value={b}>
+                      {displayBrand({
+                        brand: b,
+                        product: kind === 'tabungan' ? 'gold_savings' : 'gold_bar',
+                      })}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className={FIELD_LABEL}>
+                Sumber
+                <select
+                  className={FIELD}
+                  value={source}
+                  onChange={(e) => setSourceSel(e.target.value as PriceSource)}
+                >
+                  {sources.map((s) => (
+                    <option key={s} value={s}>
+                      {SOURCE_LABELS[s]}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className={FIELD_LABEL}>
+                Gramasi
+                <select
+                  className={FIELD}
+                  value={opt ? String(opt.w) : ''}
+                  onChange={(e) => setWSel(e.target.value)}
+                >
+                  {weights.map((o) => (
+                    <option key={o.id} value={String(o.w)}>
+                      {o.kind === 'tabungan' ? 'per gram' : formatWeight(o.w)}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className={FIELD_LABEL}>
+                Jenis harga
+                <select
+                  className={FIELD}
+                  value={price}
+                  onChange={(e) => setPriceSel(e.target.value as PriceField)}
+                >
+                  {prices.map((p) => (
+                    <option key={p} value={p}>
+                      {PRICE_LABEL[p]}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
+            {opt && price ? (
+              <div className="flex min-w-0 items-center gap-2.5 rounded-xl border border-dashed border-line px-3 py-2.5">
+                <Swatch color={optionColor(opt)} dashed={price === 'buyback'} width={20} />
+                <span className="min-w-0 flex-1 break-words text-xs leading-snug text-muted">
+                  <span className="font-semibold text-text">{seriesTitle(opt)}</span> ·{' '}
+                  {SOURCE_LABELS[opt.source]} · {PRICE_LABEL[price]}
+                </span>
+              </div>
+            ) : null}
+            <button
+              type="button"
+              disabled={!candidate || duplicate || full}
+              onClick={() => candidate && setPicks([...active.map((a) => a.pick), candidate])}
+              className="inline-flex min-h-11 w-full cursor-pointer items-center justify-center gap-2 rounded-xl border-0 bg-btn text-sm font-semibold text-btntext disabled:cursor-not-allowed disabled:bg-surface2 disabled:text-faint"
+            >
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+                className="fill-none stroke-current stroke-[2.4]"
+                strokeLinecap="round"
               >
-                {brands.map((b) => (
-                  <option key={b} value={b}>
-                    {displayBrand({
-                      brand: b,
-                      product: kind === 'tabungan' ? 'gold_savings' : 'gold_bar',
-                    })}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="flex min-w-0 flex-col gap-1.5 text-xs text-muted">
-              Sumber
-              <select
-                className={FIELD}
-                value={source}
-                onChange={(e) => setSourceSel(e.target.value as PriceSource)}
-              >
-                {sources.map((s) => (
-                  <option key={s} value={s}>
-                    {SOURCE_LABELS[s]}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="flex min-w-0 flex-col gap-1.5 text-xs text-muted">
-              Gramasi
-              <select
-                className={FIELD}
-                value={opt ? String(opt.w) : ''}
-                onChange={(e) => setWSel(e.target.value)}
-              >
-                {weights.map((o) => (
-                  <option key={o.id} value={String(o.w)}>
-                    {o.kind === 'tabungan' ? 'per gram' : formatWeight(o.w)}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="flex min-w-0 flex-col gap-1.5 text-xs text-muted">
-              Jenis harga
-              <select
-                className={FIELD}
-                value={price}
-                onChange={(e) => setPriceSel(e.target.value as PriceField)}
-              >
-                {prices.map((p) => (
-                  <option key={p} value={p}>
-                    {PRICE_LABEL[p]}
-                  </option>
-                ))}
-              </select>
-            </label>
+                <path d="M12 5v14M5 12h14" />
+              </svg>
+              Tambah ke grafik
+            </button>
+            {addNote ? (
+              <p role="status" className="m-0 text-xs leading-relaxed text-muted">
+                {addNote}
+              </p>
+            ) : null}
           </div>
-          {opt && !opt.first.buyback ? (
-            <p className="m-0 text-xs text-faint">
-              {SOURCE_LABELS[opt.source]} tidak menampilkan buyback untuk gramasi ini.
-            </p>
-          ) : null}
-          <button
-            type="button"
-            disabled={!candidate || duplicate || full}
-            onClick={() => candidate && setPicks([...active.map((a) => a.pick), candidate])}
-            className="min-h-11 cursor-pointer rounded-xl border border-dashed border-goldline bg-goldsoft text-sm font-semibold text-gold disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            {duplicate
-              ? 'Sudah ada di grafik'
-              : full
-                ? `Maksimum ${MAX_SERIES} series`
-                : '+ Tambah ke grafik'}
-          </button>
         </details>
 
-        <details open className={cn(CARD, 'group flex flex-col gap-3')}>
-          <summary className="flex min-h-9 cursor-pointer list-none items-center justify-between [&::-webkit-details-marker]:hidden">
-            <h2 className="m-0 text-base font-semibold">Tampilan</h2>
-            <span aria-hidden="true" className="text-xs text-faint group-open:rotate-180">
-              ▾
-            </span>
-          </summary>
-          <div className="flex flex-col gap-2">
-            <span className="text-xs text-muted">Mode nilai</span>
-            <Segmented
-              label="Mode nilai"
-              className="grid grid-cols-2"
-              options={MODE_OPTIONS}
-              value={view.mode}
-              onChange={(mode) => setView({ mode })}
-            />
+        <details open className={cn(SECTION, 'group sm:max-lg:col-span-2')}>
+          <SectionSummary>Tampilan</SectionSummary>
+          <div className="mt-3 grid gap-4 sm:max-lg:grid-cols-2 sm:max-lg:gap-x-6">
+            <div className="flex min-w-0 flex-col gap-4">
+              <div className="flex flex-col gap-1.5">
+                <span className={GROUP_LABEL}>Mode nilai</span>
+                <Segmented
+                  label="Mode nilai"
+                  size="sm"
+                  className="grid w-full grid-cols-4 [&>button]:min-w-0 [&>button]:px-1"
+                  options={MODE_OPTIONS}
+                  value={view.mode}
+                  onChange={(mode) => setView({ mode })}
+                />
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <span className={GROUP_LABEL}>Agregasi · harga penutupan periode</span>
+                <Segmented
+                  label="Agregasi"
+                  size="sm"
+                  className="grid w-full grid-cols-3"
+                  options={AGG_OPTIONS}
+                  value={view.agg}
+                  onChange={(agg) => setView({ agg })}
+                />
+              </div>
+            </div>
+            <div className="flex min-w-0 flex-col gap-1.5">
+              <span className={GROUP_LABEL}>Opsi grafik</span>
+              <div className="flex flex-col divide-y divide-line rounded-xl border border-line">
+                <label className="flex min-h-11 cursor-pointer items-start gap-3 px-3 py-2.5 text-sm leading-snug">
+                  <input
+                    type="checkbox"
+                    checked={view.ffill}
+                    onChange={(e) => setView({ ffill: e.target.checked })}
+                    className="mt-0.5 size-[18px] flex-none accent-gold"
+                  />
+                  <span>
+                    Isi celah (forward-fill)
+                    <span className="mt-0.5 block text-xs text-muted">
+                      Hari tanpa data memakai nilai sebelumnya, ditandai di tooltip. Matikan untuk
+                      melihat celah.
+                    </span>
+                  </span>
+                </label>
+                <label
+                  className={cn(
+                    'flex min-h-11 items-start gap-3 px-3 py-2.5 text-sm leading-snug',
+                    view.agg === 'd' ? 'cursor-not-allowed' : 'cursor-pointer',
+                  )}
+                >
+                  <input
+                    type="checkbox"
+                    checked={bandOn}
+                    disabled={view.agg === 'd'}
+                    onChange={(e) => setView({ band: e.target.checked })}
+                    className="mt-0.5 size-[18px] flex-none accent-gold disabled:opacity-50"
+                  />
+                  <span className={view.agg === 'd' ? 'text-muted' : undefined}>
+                    Pita min–maks
+                    <span className="mt-0.5 block text-xs text-muted">
+                      {view.agg === 'd'
+                        ? 'Pilih agregasi mingguan atau bulanan untuk mengaktifkan.'
+                        : 'Rentang terendah–tertinggi dalam periode.'}
+                    </span>
+                  </span>
+                </label>
+              </div>
+            </div>
           </div>
-          <div className="flex flex-col gap-2">
-            <span className="text-xs text-muted">Agregasi (penutupan periode)</span>
-            <Segmented
-              label="Agregasi"
-              className="grid grid-cols-3"
-              options={AGG_OPTIONS}
-              value={view.agg}
-              onChange={(agg) => setView({ agg })}
-            />
-          </div>
-          <label
-            className={cn(
-              'flex min-h-11 items-start gap-3 text-sm leading-snug',
-              view.agg === 'd' ? 'cursor-not-allowed opacity-60' : 'cursor-pointer',
-            )}
-          >
-            <input
-              type="checkbox"
-              checked={bandOn}
-              disabled={view.agg === 'd'}
-              onChange={(e) => setView({ band: e.target.checked })}
-              className="mt-0.5 size-[18px] accent-gold"
-            />
-            <span>
-              Pita min–maks
-              <br />
-              <span className="text-xs text-muted">
-                Terendah–tertinggi dalam periode. Hanya untuk agregasi mingguan/bulanan.
-              </span>
-            </span>
-          </label>
-          <label className="flex min-h-11 cursor-pointer items-start gap-3 text-sm leading-snug">
-            <input
-              type="checkbox"
-              checked={view.ffill}
-              onChange={(e) => setView({ ffill: e.target.checked })}
-              className="mt-0.5 size-[18px] accent-gold"
-            />
-            <span>
-              Isi celah (forward-fill)
-              <br />
-              <span className="text-xs text-muted">
-                Hanya tampilan, diberi penanda. Default: celah tetap terlihat.
-              </span>
-            </span>
-          </label>
         </details>
       </aside>
     </section>

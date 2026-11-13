@@ -473,3 +473,14 @@ Log keputusan produk dan teknis (format ringkas ala ADR). Keputusan baru ditamba
 - Tooltip grafik: latar `surface`, radius 12 px, contoh garis per seri (solid/putus-putus 5–4) menggantikan kotak warna.
 - Beranda: pembanding spot dunia bertumpuk satu baris per angka di HP (label kiri, angka kanan), 2 per baris di tablet, satu baris di desktop. Kolom gramasi matriks menempel di kiri saat tabel digeser.
 **Konsekuensi:** di tablet panel Explorer tetap di bawah grafik (design system: di atas grafik), karena panel ±1.400 px akan mendorong grafik ke bawah lipatan (bertentangan dengan D-47). Legenda di atas grafik desktop dan di bawah di HP belum diseragamkan; tiap halaman memakai posisi legenda yang sudah ada.
+
+### D-55 — Panel pengaturan Explorer dirapikan; isi celah (forward-fill) aktif secara bawaan
+
+**Konteks:** di panel "Pengaturan grafik" halaman Riwayat harga (Explorer), label series aktif memanjang 3–4 baris, tombol tambah sempit dan pudar saat nonaktif, jarak label dan kontrol tidak konsisten, di tablet panel memakan satu kolom penuh, dan di HP lembar bawah berisi kartu di dalam kartu. Celah yang tampil secara bawaan memutus garis grafik di banyak titik sehingga tren sulit dibaca.
+**Keputusan:**
+- Series aktif: judul ringkas (brand · gramasi) + label jenis harga (JUAL/BUYBACK), baris kedua sumber · satuan · sejak; tombol hapus bulat 40 px. Label panjang tetap dipakai di grafik, kartu, dan tabel.
+- Tambah series: segmen produk dan kontrol tampilan memakai ukuran `sm`; pratinjau series yang akan ditambahkan (contoh garis + label); tombol "Tambah ke grafik" selebar panel dengan gaya utama; alasan nonaktif (sudah ada, maksimum, tanpa buyback) ditulis di bawah tombol, bukan menggantikan teks tombol.
+- Tampilan: mode nilai satu baris empat segmen; kotak centang "Isi celah" dan "Pita min–maks" dalam satu grup berbingkai, isi celah di atas.
+- Tablet (640–1023 px): panel dua kolom (Series aktif | Tambah series), Tampilan selebar penuh dengan dua kolom di dalamnya. Desktop: panel 320 px (sebelumnya 300). HP: bagian di lembar bawah tanpa kartu, dipisah garis, dengan pegangan lembar.
+- **Isi celah aktif secara bawaan.** URL: tanpa parameter = aktif, `ffill=0` = mati (`decodeFlagOn`/`encodeFlagOn`); `ffill=1` lama tetap terbaca aktif. Titik terisi tetap ditandai "isi dari <tanggal>" di tooltip; catatan kaki grafik menjelaskan isi celah atau arsiran sesuai pilihan.
+**Konsekuensi:** mengubah bawaan FR-35 dan P4-03 ("default tetap menampilkan celah"): celah kini hanya terlihat setelah isi celah dimatikan. Tautan lama tanpa `ffill` kini tampil terisi. Ringkasan rentang (hari tanpa data) tetap dihitung dari data asli.

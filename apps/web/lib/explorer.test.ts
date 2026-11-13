@@ -6,6 +6,8 @@ import {
   applyMode,
   decodeAgg,
   decodeFlag,
+  decodeFlagOn,
+  encodeFlagOn,
   decodeMode,
   encodeAgg,
   encodeMode,
@@ -234,6 +236,12 @@ describe('parameter tampilan di URL', () => {
     expect(decodeFlag('1')).toBe(true);
     expect(decodeFlag('true')).toBe(false);
     expect(decodeFlag(null)).toBe(false);
+    // ffill aktif secara bawaan: hanya `0` yang mematikan, aktif tidak ditulis ke URL.
+    expect(decodeFlagOn(null)).toBe(true);
+    expect(decodeFlagOn('1')).toBe(true);
+    expect(decodeFlagOn('0')).toBe(false);
+    expect(encodeFlagOn(true)).toBeNull();
+    expect(encodeFlagOn(false)).toBe('0');
   });
 });
 

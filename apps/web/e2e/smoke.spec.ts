@@ -124,12 +124,12 @@ test.describe('Explorer', () => {
 
   test('mode, agregasi, pita, dan isi celah dipulihkan saat reload', async ({ page }) => {
     const errors = collectErrors(page);
-    await page.goto(`${START}&m=idx&agg=w&band=1&ffill=1`);
+    await page.goto(`${START}&m=idx&agg=w&band=1&ffill=0`);
     const check = async () => {
       await expect(page.getByRole('radio', { name: 'Indeks', exact: true })).toBeChecked();
       await expect(page.getByRole('radio', { name: 'Mingguan', exact: true })).toBeChecked();
       await expect(page.getByRole('checkbox', { name: /Pita min–maks/ })).toBeChecked();
-      await expect(page.getByRole('checkbox', { name: /Isi celah/ })).toBeChecked();
+      await expect(page.getByRole('checkbox', { name: /Isi celah/ })).not.toBeChecked();
       await expect(page.getByRole('heading', { name: /Indeks harga .* mingguan/ })).toBeVisible();
     };
     await check();
@@ -140,7 +140,7 @@ test.describe('Explorer', () => {
       'idx',
       'w',
       '1',
-      '1',
+      '0',
     ]);
     expect(errors).toEqual([]);
   });
@@ -149,13 +149,14 @@ test.describe('Explorer', () => {
     await page.goto(START);
     await page.getByRole('radio', { name: '% ubah', exact: true }).click();
     await page.getByRole('radio', { name: 'Bulanan', exact: true }).click();
-    await page.getByRole('checkbox', { name: /Isi celah/ }).check();
+    await expect(page.getByRole('checkbox', { name: /Isi celah/ })).toBeChecked();
+    await page.getByRole('checkbox', { name: /Isi celah/ }).uncheck();
     await expect(page).toHaveURL(/[?&]m=pct(&|$)/);
     await expect(page).toHaveURL(/[?&]agg=m(&|$)/);
-    await expect(page).toHaveURL(/[?&]ffill=1(&|$)/);
+    await expect(page).toHaveURL(/[?&]ffill=0(&|$)/);
     await page.getByRole('radio', { name: 'Nominal', exact: true }).click();
     await page.getByRole('radio', { name: 'Harian', exact: true }).click();
-    await page.getByRole('checkbox', { name: /Isi celah/ }).uncheck();
+    await page.getByRole('checkbox', { name: /Isi celah/ }).check();
     await expect(page).not.toHaveURL(/[?&](m|agg|ffill)=/);
   });
 

@@ -113,7 +113,7 @@ Prioritas: **P0** = wajib untuk rilis publik (MVP) · **P1** = wajib untuk v1 le
 | FR-32 | **Grafik kelipatan** (skala log): emas Rp/gram vs emas US$/oz vs kurs, pilihan tahun dasar dan agregasi, titik spot hari ini bergaris putus, anotasi peristiwa dari `config/events.yml`, subjudul kelipatan + CAGR otomatis | P1 | 4 |
 | FR-33 | **Premi Antam vs spot**: harga Antam 1 g ÷ Rp/gram spot − 1, dari waktu ke waktu | P1 | 4 |
 | FR-34 | API statis: `/data/latest.json`, `/data/series/{source}-{brand}.json`, `/data/macro/*.json` | P1 | 4 |
-| FR-35 | Hari tanpa data tampil sebagai celah; opsi *forward-fill* berlabel | P1 | 4 |
+| FR-35 | Hari tanpa data diisi *forward-fill* berlabel secara bawaan; opsi menampilkan celah (D-55) | P1 | 4 |
 | FR-36 | Halaman **Kualitas data**: kelengkapan per sumber per bulan, riwayat run, insiden | P2 | 5 |
 
 ## 8. Kebutuhan non-fungsional

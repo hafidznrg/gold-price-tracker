@@ -302,7 +302,7 @@ export function optionColor(o: Pick<ExplorerOption, 'brand' | 'product'>): Color
 //   &m=gram|idx|pct   mode nilai (kosong = nominal)
 //   &agg=w|m          agregasi mingguan / bulanan (kosong = harian)
 //   &band=1           pita min–maks (hanya berlaku bila agregasi bukan harian)
-//   &ffill=1          isi celah (forward-fill, hanya tampilan)
+//   &ffill=0          matikan isi celah (forward-fill aktif secara bawaan, hanya tampilan; D-55)
 
 export type ValueMode = 'nominal' | 'gram' | 'index' | 'pct';
 export type Aggregation = 'd' | 'w' | 'm';
@@ -314,7 +314,7 @@ export interface ViewOptions {
   ffill: boolean;
 }
 
-export const DEFAULT_VIEW: ViewOptions = { mode: 'nominal', agg: 'd', band: false, ffill: false };
+export const DEFAULT_VIEW: ViewOptions = { mode: 'nominal', agg: 'd', band: false, ffill: true };
 
 const MODE_CODES: Record<ValueMode, string | null> = {
   nominal: null,
@@ -338,6 +338,9 @@ export const encodeAgg = (a: Aggregation): string | null => AGG_CODES[a];
 
 export const decodeFlag = (param: string | null | undefined): boolean => param === '1';
 export const encodeFlag = (on: boolean): string | null => (on ? '1' : null);
+/** Bendera yang aktif secara bawaan (mis. `ffill`): hanya `0` yang mematikan; aktif tidak ditulis. */
+export const decodeFlagOn = (param: string | null | undefined): boolean => param !== '0';
+export const encodeFlagOn = (on: boolean): string | null => (on ? null : '0');
 
 /** Titik tampilan: satu per hari (harian) atau per periode (penutupan), dengan penanda dan pita. */
 export interface ViewPoint {
