@@ -3264,3 +3264,4 @@ date,series,frequency,value,unit,source,scraped_at,run_id,origin
 2026-11-10,usd_idr_jisdor,D,18059,IDR/USD,bi,2026-11-10T17:18:21Z,42863394470-1,scrape
 2026-11-11,usd_idr_jisdor,D,18154,IDR/USD,bi,2026-11-11T13:35:40Z,43030370574-1,scrape
 2026-11-12,usd_idr_jisdor,D,18241,IDR/USD,bi,2026-11-12T09:42:01Z,43193620225-1,scrape
+2026-11-13,usd_idr_jisdor,D,18218,IDR/USD,bi,2026-11-13T09:41:41Z,43403300127-1,scrape
