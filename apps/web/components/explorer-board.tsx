@@ -7,7 +7,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { TimeSeriesChart, type TimeSeries } from '@/components/charts/time-series-chart';
 import { RangeControl, type RangeValue } from '@/components/range-control';
 import { Segmented } from '@/components/segmented';
-import { InfoDisclosure } from '@/components/info-disclosure';
+import { InfoPopover } from '@/components/info-popover';
 import { SourceStamp } from '@/components/source-stamp';
 import { useSeriesFiles } from '@/components/use-series-files';
 import {
@@ -426,9 +426,33 @@ export function ExplorerBoard({ options, asOf, stamps, calendar }: ExplorerBoard
         <div className={PANEL_SM}>
           <div className="mb-3 flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
             <div className="min-w-0">
-              <h2 className="m-0 text-xl font-semibold max-sm:text-lg">
-                {chartTitle(view.mode, view.agg)}
-              </h2>
+              {/* Di HP popover dijangkarkan ke baris judul (bukan ikon) agar tidak meluber ke kanan. */}
+              <div className="relative flex items-center gap-2">
+                <h2 className="m-0 text-xl font-semibold max-sm:text-lg">
+                  {chartTitle(view.mode, view.agg)}
+                </h2>
+                <InfoPopover ariaLabel="Keterangan grafik" className="max-sm:static">
+                  <p className="m-0">
+                    Gulir untuk zoom, seret untuk geser.
+                    {view.ffill
+                      ? ' Hari terbit tanpa data dari sumber diisi nilai hari sebelumnya (ditandai "isi dari ..." di tooltip, bukan data baru); matikan Isi celah untuk melihat celahnya.'
+                      : ' Area berarsir = hari terbit tanpa data dari sumber (garis diputus).'}{' '}
+                    Akhir pekan dan hari libur ketika sumber memang tidak terbit tidak dihitung
+                    sebagai celah. Emas fisik: harga per keping; Tabungan Emas: harga per gram.
+                    {hasLate
+                      ? ' Series yang lebih pendek mulai dari tanggal datanya yang pertama.'
+                      : ''}
+                    {view.mode === 'gram' ? ' Mode per gram: harga keping dibagi beratnya.' : ''}
+                    {view.mode === 'index' || view.mode === 'pct'
+                      ? ' Indeks dan % ubah dihitung per series dari titik pertamanya yang terlihat di rentang; mengubah rentang menghitung ulang dasar.'
+                      : ''}
+                    {view.agg !== 'd'
+                      ? ` Titik ${AGG_NOUN[view.agg]} = harga penutupan periode (hari data terakhir).`
+                      : ''}
+                    {bandOn ? ' Pita = harga terendah sampai tertinggi dalam periode.' : ''}
+                  </p>
+                </InfoPopover>
+              </div>
               <p className="num m-0 mt-0.5 text-sm text-muted">
                 {eff.from ? `${formatDate(eff.from)} – ` : 'sampai '}
                 {formatDate(eff.to)} · {formatNumber(active.length)} series
@@ -470,23 +494,6 @@ export function ExplorerBoard({ options, asOf, stamps, calendar }: ExplorerBoard
               ariaLabel={`Grafik harga: ${series.map((s) => s.label).join(', ')}`}
             />
           )}
-          <p className="m-0 mt-3 text-xs leading-relaxed text-faint">
-            Gulir untuk zoom, seret untuk geser.
-            {view.ffill
-              ? ' Hari terbit tanpa data dari sumber diisi nilai hari sebelumnya (ditandai "isi dari ..." di tooltip, bukan data baru); matikan Isi celah untuk melihat celahnya.'
-              : ' Area berarsir = hari terbit tanpa data dari sumber (garis diputus).'}{' '}
-            Akhir pekan dan hari libur ketika sumber memang tidak terbit tidak dihitung sebagai
-            celah. Emas fisik: harga per keping; Tabungan Emas: harga per gram.
-            {hasLate ? ' Series yang lebih pendek mulai dari tanggal datanya yang pertama.' : ''}
-            {view.mode === 'gram' ? ' Mode per gram: harga keping dibagi beratnya.' : ''}
-            {view.mode === 'index' || view.mode === 'pct'
-              ? ' Indeks dan % ubah dihitung per series dari titik pertamanya yang terlihat di rentang; mengubah rentang menghitung ulang dasar.'
-              : ''}
-            {view.agg !== 'd'
-              ? ` Titik ${AGG_NOUN[view.agg]} = harga penutupan periode (hari data terakhir).`
-              : ''}
-            {bandOn ? ' Pita = harga terendah sampai tertinggi dalam periode.' : ''}
-          </p>
 
           {built && built.length > 0 ? (
             <div className="mt-5 grid grid-cols-[repeat(auto-fit,minmax(min(220px,100%),1fr))] gap-2.5">
@@ -520,7 +527,7 @@ export function ExplorerBoard({ options, asOf, stamps, calendar }: ExplorerBoard
             </div>
           ) : null}
 
-          <InfoDisclosure className="mt-4">
+          <InfoPopover label="Sumber" ariaLabel="Sumber data" side="top" className="mt-4">
             {stampSources.map((src) => {
               const st = stamps[src];
               const date =
@@ -541,7 +548,7 @@ export function ExplorerBoard({ options, asOf, stamps, calendar }: ExplorerBoard
                 </SourceStamp>
               );
             })}
-          </InfoDisclosure>
+          </InfoPopover>
         </div>
 
         <div className={cn(CARD, 'flex flex-wrap items-center gap-3 px-5 py-[18px]')}>
