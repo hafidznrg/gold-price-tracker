@@ -6,7 +6,7 @@ import { BarChart, type BarItem } from '@/components/charts/bar-chart';
 import { SpreadBandChart } from '@/components/charts/spread-band-chart';
 import { TimeSeriesChart, type TimeSeries } from '@/components/charts/time-series-chart';
 import { RangeControl, type RangeValue } from '@/components/range-control';
-import { InfoDisclosure } from '@/components/info-disclosure';
+import { InfoPopover } from '@/components/info-popover';
 import { SourceStamp } from '@/components/source-stamp';
 import { useSeriesFiles } from '@/components/use-series-files';
 import type { ColorToken } from '@/lib/data';
@@ -412,9 +412,11 @@ export function SpreadBoard({
                   )}
                 </div>
               </div>
-              <SourceStamp source={sell.source} date={stats?.last.date ?? asOf} className="mt-3">
-                {stampNote || null}
-              </SourceStamp>
+              <InfoPopover label="Sumber" ariaLabel="Sumber data" side="top" className="mt-3">
+                <SourceStamp source={sell.source} date={stats?.last.date ?? asOf} bare>
+                  {stampNote || null}
+                </SourceStamp>
+              </InfoPopover>
             </div>
           </section>
         </>
@@ -443,14 +445,14 @@ export function SpreadBoard({
               ariaLabel="Spread persen Antam Logam Mulia dan Tabungan Emas"
             />
           )}
-          <InfoDisclosure className="mt-3">
+          <InfoPopover label="Sumber" ariaLabel="Sumber data" side="top" className="mt-3">
             <SourceStamp source="logammulia" date={lmStats?.last.date ?? asOf} bare>
               Antam 1 g
             </SourceStamp>
             <SourceStamp source="pegadaian" date={tabDays?.at(-1)?.date ?? asOf} bare>
               Tabungan Emas, per gram
             </SourceStamp>
-          </InfoDisclosure>
+          </InfoPopover>
         </div>
 
         <div className={PANEL}>
@@ -490,7 +492,9 @@ export function SpreadBoard({
             </p>
           ) : null}
           {bar ? (
-            <SourceStamp source={bar.source} date={bar.date ?? asOf} at={bar.at} className="mt-3" />
+            <InfoPopover label="Sumber" ariaLabel="Sumber data" side="top" className="mt-3">
+              <SourceStamp source={bar.source} date={bar.date ?? asOf} at={bar.at} bare />
+            </InfoPopover>
           ) : null}
         </div>
       </section>
@@ -534,9 +538,16 @@ export function SpreadBoard({
             ))}
           </div>
           {compare[0]?.date ? (
-            <SourceStamp source={compare[0].source} date={compare[0].date} at={compare[0].at}>
-              Logam Mulia, UBS Lifestyle
-            </SourceStamp>
+            <InfoPopover label="Sumber" ariaLabel="Sumber data" side="top" className="self-start">
+              <SourceStamp
+                source={compare[0].source}
+                date={compare[0].date}
+                at={compare[0].at}
+                bare
+              >
+                Logam Mulia, UBS Lifestyle
+              </SourceStamp>
+            </InfoPopover>
           ) : null}
         </div>
 
@@ -578,7 +589,7 @@ export function SpreadBoard({
                   </div>
                 </div>
               </div>
-              <InfoDisclosure>
+              <InfoPopover label="Sumber" ariaLabel="Sumber data" side="top" className="self-start">
                 <SourceStamp
                   source={sell.source}
                   date={pairToday.sellDate ?? asOf}
@@ -597,7 +608,7 @@ export function SpreadBoard({
                     buyback
                   </SourceStamp>
                 ) : null}
-              </InfoDisclosure>
+              </InfoPopover>
             </>
           ) : problem ? null : (
             <p className="m-0 text-sm text-muted">

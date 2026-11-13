@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { TimeSeriesChart, type TimeSeries } from '@/components/charts/time-series-chart';
+import { InfoPopover } from '@/components/info-popover';
 import { SourceStamp } from '@/components/source-stamp';
 import { fetchPremiumAntam, type PremiumAntamFile } from '@/lib/data';
 import { premiumStats } from '@/lib/bandingkan';
@@ -138,15 +139,17 @@ export function PremiumSection() {
               showZoom
               ariaLabel="Premi Antam 1 gram terhadap harga emas dunia dari waktu ke waktu"
             />
-            <SourceStamp source="logammulia" date={stats.last.date} className="mt-3">
-              Antam 1 g · spot penutupan {formatDate(stats.last.spotDate)} ·{' '}
-              {file.monthly?.[0]
-                ? `premi bulanan ${formatMonthYear(`${file.monthly[0][0]}-01`)} – ${formatMonthYear(`${file.monthly.at(-1)![0]}-01`)}, harian sejak `
-                : 'riwayat tersedia sejak '}
-              {formatDate(stats.firstDate)} · terendah (harian) {formatPct(stats.min.pct, 1, false)}{' '}
-              ({formatDate(stats.min.date)}), tertinggi {formatPct(stats.max.pct, 1, false)} (
-              {formatDate(stats.max.date)})
-            </SourceStamp>
+            <InfoPopover label="Sumber" ariaLabel="Sumber data" side="top" className="mt-3">
+              <SourceStamp source="logammulia" date={stats.last.date} bare>
+                Antam 1 g · spot penutupan {formatDate(stats.last.spotDate)} ·{' '}
+                {file.monthly?.[0]
+                  ? `premi bulanan ${formatMonthYear(`${file.monthly[0][0]}-01`)} – ${formatMonthYear(`${file.monthly.at(-1)![0]}-01`)}, harian sejak `
+                  : 'riwayat tersedia sejak '}
+                {formatDate(stats.firstDate)} · terendah (harian){' '}
+                {formatPct(stats.min.pct, 1, false)} ({formatDate(stats.min.date)}), tertinggi{' '}
+                {formatPct(stats.max.pct, 1, false)} ({formatDate(stats.max.date)})
+              </SourceStamp>
+            </InfoPopover>
           </>
         )}
 

@@ -1,14 +1,14 @@
 import type { PriceSource } from '@gold/schema';
 import type { ReactNode } from 'react';
-import { InfoDisclosure } from '@/components/info-disclosure';
+import { InfoPopover } from '@/components/info-popover';
 import { sourceStampText } from '@/lib/source-stamp';
 import { cn } from '@/lib/utils';
 
 /**
  * Atribusi sumber + waktu update di setiap tampilan harga (FR-26). Teks diatur `sourceStampText`.
  * `children` = keterangan tambahan setelah waktu (mis. "12 gramasi", "butik Jakarta").
- * Default terlipat di balik "Sumber" (D-48); `bare` = baris polos, untuk dikelompokkan di dalam
- * satu `InfoDisclosure` atau panel yang sudah tersembunyi.
+ * Default tersembunyi di balik popover "ⓘ Sumber" (D-48); `bare` = baris polos, untuk dikelompokkan
+ * di dalam satu `InfoPopover` atau panel yang sudah tersembunyi.
  */
 export function SourceStamp({
   source,
@@ -33,5 +33,16 @@ export function SourceStamp({
       {children ? <> · {children}</> : null}
     </p>
   );
-  return bare ? line : <InfoDisclosure className={className}>{line}</InfoDisclosure>;
+  return bare ? (
+    line
+  ) : (
+    <InfoPopover
+      label="Sumber"
+      ariaLabel="Sumber data"
+      side="top"
+      className={cn('self-start', className)}
+    >
+      {line}
+    </InfoPopover>
+  );
 }

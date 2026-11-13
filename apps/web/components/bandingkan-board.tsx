@@ -6,7 +6,7 @@ import { TimeSeriesChart, type TimeSeries } from '@/components/charts/time-serie
 import { PremiumSection } from '@/components/premium-section';
 import { RangeControl, type RangeValue } from '@/components/range-control';
 import { Segmented } from '@/components/segmented';
-import { InfoDisclosure } from '@/components/info-disclosure';
+import { InfoPopover } from '@/components/info-popover';
 import { SourceStamp } from '@/components/source-stamp';
 import { useSeriesFiles } from '@/components/use-series-files';
 import {
@@ -314,22 +314,27 @@ export function BandingkanBoard({ options, weights, today, asOf, calendar }: Ban
               )}
             </div>
           </div>
-          <InfoDisclosure
-            label="Sumber & catatan"
-            className="border-t border-line px-6 py-3.5 max-sm:px-4"
-          >
-            <p className="m-0 text-xs text-muted">
-              Tabungan emas tidak berbentuk keping: harganya linear terhadap berat (dicatat sumber
-              per 0,01 g). Mencetaknya menjadi emas fisik dikenai biaya cetak terpisah.
-            </p>
-            <p className="m-0 text-xs text-muted">
-              Harga Logam Mulia = Harga Dasar, belum termasuk PPh 0,25%; buyback Logam Mulia hanya
-              untuk 1 g.
-            </p>
-            {stamps.map((r) => (
-              <SourceStamp key={r.def.source} source={r.def.source} date={r.date} at={r.at} bare />
-            ))}
-          </InfoDisclosure>
+          <div className="border-t border-line px-6 py-3.5 max-sm:px-4">
+            <InfoPopover label="Sumber & catatan" ariaLabel="Sumber & catatan" side="top">
+              <p className="m-0 text-xs text-muted">
+                Tabungan emas tidak berbentuk keping: harganya linear terhadap berat (dicatat sumber
+                per 0,01 g). Mencetaknya menjadi emas fisik dikenai biaya cetak terpisah.
+              </p>
+              <p className="m-0 text-xs text-muted">
+                Harga Logam Mulia = Harga Dasar, belum termasuk PPh 0,25%; buyback Logam Mulia hanya
+                untuk 1 g.
+              </p>
+              {stamps.map((r) => (
+                <SourceStamp
+                  key={r.def.source}
+                  source={r.def.source}
+                  date={r.date}
+                  at={r.at}
+                  bare
+                />
+              ))}
+            </InfoPopover>
+          </div>
         </div>
       </section>
 
