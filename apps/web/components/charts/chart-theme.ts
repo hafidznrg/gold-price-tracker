@@ -40,21 +40,21 @@ const TOKEN_NAMES = [
   'down',
 ] as const;
 
-/** Nilai tema gelap (default) — cadangan saat DOM belum ada (SSR/prerender, uji). */
+/** Nilai tema terang (bawaan, D-43/D-50) — cadangan saat DOM belum ada (SSR/prerender, uji). */
 export const FALLBACK_TOKENS: ChartTokens = {
-  bg: '#0e0f12',
-  surface: '#16181d',
-  surface2: '#1d2027',
-  line: '#2a2e37',
-  grid: '#22252d',
-  text: '#edeae3',
-  muted: '#ababa4',
-  faint: '#8e9097',
-  gold: '#ddb563',
-  goldsoft: 'rgba(221, 181, 99, 0.13)',
-  goldline: 'rgba(221, 181, 99, 0.38)',
-  up: '#6cc59a',
-  down: '#f28c6c',
+  bg: '#f7f5f0',
+  surface: '#ffffff',
+  surface2: '#f0efea',
+  line: '#e1dfd8',
+  grid: '#eceae4',
+  text: '#15171c',
+  muted: '#55575e',
+  faint: '#686a71',
+  gold: '#8a6618',
+  goldsoft: 'rgba(176, 132, 40, 0.12)',
+  goldline: 'rgba(138, 102, 24, 0.35)',
+  up: '#1e7a4e',
+  down: '#b4442a',
   fontFamily: 'Inter, system-ui, sans-serif',
 };
 
@@ -88,7 +88,7 @@ const LITERAL_COLOR = /^(#|rgb|hsl|hwb|lab|lch|oklab|oklch|color\(|transparent$)
  * Warna seri → warna konkret. Menerima nama token ("antam", "tab"), `var(--antam)`,
  * `--antam`, atau warna literal (#hex, rgb(), …). Token tak dikenal → `fallback`.
  */
-export function resolveColor(color: string, lookup: CssVarLookup, fallback = '#8e9097'): string {
+export function resolveColor(color: string, lookup: CssVarLookup, fallback = '#686a71'): string {
   const c = color.trim();
   if (LITERAL_COLOR.test(c)) return c;
   const m = /^var\(\s*--([\w-]+)\s*(?:,[^)]*)?\)$/.exec(c);

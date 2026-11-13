@@ -423,3 +423,12 @@ Log keputusan produk dan teknis (format ringkas ala ADR). Keputusan baru ditamba
 **Konteks:** 13 Nov 2026 ketiga run UBS `stale`. Run 08.49 dan 09.06 WIB membaca data 12 Nov (UBS belum terbit, wajar). Run retry 12.05 WIB membaca grafik yang sudah memuat 13 Nov (Rp2.276.000), tetapi tabel halaman masih identik dengan snapshot 08.49 WIB (buyback 1 g Rp2.290.000 = harga 12 Nov), karena halaman disajikan dari cache FastCGI (`x-fastcgi-cache: HIT`). Uji 15.15 WIB: URL dengan query unik dijawab `x-fastcgi-cache: BYPASS`. Harga UBS juga bisa berubah lebih dari sekali sehari (grafik 13 Nov: 2.276.000 pukul 12.06, 2.269.000 pukul 15.15 WIB).
 **Keputusan:** `fetchRaw` meminta `PAGE_URL?nc={epoch ms}` (`pageUrl()`). Endpoint grafik (POST admin-ajax) tidak di-cache dan tidak diubah. Parser dan `parser_version` tetap.
 **Konsekuensi:** satu permintaan per run tetap menembus cache ke PHP situs (paling banyak beberapa kali sehari). Run yang jatuh tepat saat situs sedang memperbarui harga masih bisa `stale` dan ditambal slot berikutnya. Data UBS 12 Nov hanya tersedia sebagai buyback 1 g backfill (tidak ada run 12 Nov sebelum Worker aktif, D-46).
+
+### D-50 — Token warna design system Momen Emas; tema gelap jadi Navy
+
+**Konteks:** design system "Momen Emas" (13 Nov 2026, artifact claude.ai) menetapkan nama token yang sama dengan `globals.css`, tetapi mengganti tema gelap abu-arang (`#0e0f12`) dengan Navy (`#0f1a2b`), mengubah warna seri Antam dan Galeri 24 agar terbedakan bagi buta warna merah-hijau, dan menambah token `gold-strong`, `gold-glint`, `spot`, `navy`. Penerapan dibagi gelombang: (1) token, (2) nama, logo, favicon, OG, (3) warna seri grafik dan `spot`, (4) menu bawah dan tata letak HP.
+**Keputusan (gelombang 1):**
+- `:root` = tema terang (bawaan, D-43); `[data-theme='dark']` = nilai Navy dari design system. Tema terang tidak berubah kecuali `antam` `#a67c1e` dan `g24` `#9c3220`; Navy: `antam` `#e6c27a`, `g24` `#d8603c`.
+- Token baru dan kelas Tailwind-nya: `gold-strong` (teks emas di atas `goldsoft`, dipakai menu aktif), `gold-glint` (penanda titik grafik), `spot` (seri pembanding non-brand), `navy` (warna merek tetap).
+- `FALLBACK_TOKENS` grafik dan `themeColor` viewport mengikuti nilai baru (terang `#F7F5F0`, Navy `#0F1A2B`).
+**Konsekuensi:** tampilan mode gelap berubah warna; tata letak, data, dan build tidak berubah. Seri non-brand (Kelipatan, premi, spread) masih memakai `gold`/`ubs`/`g24` sampai gelombang 3. Nama situs dan OG image (`#F4F4F1`) baru diubah di gelombang 2.

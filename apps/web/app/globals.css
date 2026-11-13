@@ -1,35 +1,11 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
 
-/* Tema: gelap default (:root), terang lewat <html data-theme="light">. Nilai = plan/mockup/README.md. */
 @custom-variant dark (&:where([data-theme='dark'], [data-theme='dark'] *));
 @custom-variant light (&:where([data-theme='light'], [data-theme='light'] *));
 
+/* Tema (design system Momen Emas, D-50): terang bawaan (:root), Navy lewat <html data-theme="dark">. */
 :root,
-[data-theme='dark'] {
-  --bg: #0e0f12;
-  --surface: #16181d;
-  --surface2: #1d2027;
-  --line: #2a2e37;
-  --grid: #22252d;
-  --text: #edeae3;
-  --muted: #ababa4;
-  --faint: #8e9097;
-  --gold: #ddb563;
-  --goldsoft: rgba(221, 181, 99, 0.13);
-  --goldline: rgba(221, 181, 99, 0.38);
-  --up: #6cc59a;
-  --down: #f28c6c;
-  --antam: #ddb563;
-  --ubs: #7ea8ff;
-  --g24: #ee8a60;
-  --tab: #5fd0b8;
-  --btn: #edeae3;
-  --btntext: #0e0f12;
-  --hero: #121418;
-  color-scheme: dark;
-}
-
 [data-theme='light'] {
   --bg: #f7f5f0;
   --surface: #ffffff;
@@ -40,18 +16,50 @@
   --muted: #55575e;
   --faint: #686a71;
   --gold: #8a6618;
+  --gold-strong: #7d5c14;
+  --gold-glint: #a67c1e;
   --goldsoft: rgba(176, 132, 40, 0.12);
   --goldline: rgba(138, 102, 24, 0.35);
   --up: #1e7a4e;
   --down: #b4442a;
-  --antam: #b8892b;
+  --antam: #a67c1e;
   --ubs: #2f64d6;
-  --g24: #c4562e;
+  --g24: #9c3220;
   --tab: #0f7f6c;
+  --spot: #15171c;
+  --navy: #0f1a2b;
   --btn: #15171c;
   --btntext: #ffffff;
   --hero: #efece4;
   color-scheme: light;
+}
+
+[data-theme='dark'] {
+  --bg: #0f1a2b;
+  --surface: #16233a;
+  --surface2: #1d2c46;
+  --line: #2b3b57;
+  --grid: #213049;
+  --text: #edeae3;
+  --muted: #abb0b8;
+  --faint: #8e96a3;
+  --gold: #ddb563;
+  --gold-strong: #ddb563;
+  --gold-glint: #f0cf7e;
+  --goldsoft: rgba(221, 181, 99, 0.13);
+  --goldline: rgba(221, 181, 99, 0.38);
+  --up: #6cc59a;
+  --down: #f28c6c;
+  --antam: #e6c27a;
+  --ubs: #7ea8ff;
+  --g24: #d8603c;
+  --tab: #5fd0b8;
+  --spot: #edeae3;
+  --navy: #0f1a2b;
+  --btn: #edeae3;
+  --btntext: #0f1a2b;
+  --hero: #14223a;
+  color-scheme: dark;
 }
 
 @theme inline {
@@ -65,6 +73,8 @@
   --color-muted: var(--muted);
   --color-faint: var(--faint);
   --color-gold: var(--gold);
+  --color-gold-strong: var(--gold-strong);
+  --color-gold-glint: var(--gold-glint);
   --color-goldsoft: var(--goldsoft);
   --color-goldline: var(--goldline);
   --color-up: var(--up);
@@ -73,6 +83,8 @@
   --color-ubs: var(--ubs);
   --color-g24: var(--g24);
   --color-tab: var(--tab);
+  --color-spot: var(--spot);
+  --color-navy: var(--navy);
   --color-btn: var(--btn);
   --color-btntext: var(--btntext);
   --color-hero: var(--hero);
