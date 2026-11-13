@@ -320,7 +320,7 @@ export interface MetaFile {
 }
 
 /** Token warna Tailwind (`globals.css`). */
-export type ColorToken = 'antam' | 'ubs' | 'g24' | 'tab' | 'gold' | 'muted';
+export type ColorToken = 'antam' | 'ubs' | 'g24' | 'tab' | 'spot' | 'gold' | 'muted';
 
 // ---------------------------------------------------------------------------
 // derived/*.json (DATA-MODEL §6, dihitung saat build)

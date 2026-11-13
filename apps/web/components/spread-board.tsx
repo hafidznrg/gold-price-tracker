@@ -59,6 +59,7 @@ const BG: Record<ColorToken, string> = {
   ubs: 'bg-ubs',
   g24: 'bg-g24',
   tab: 'bg-tab',
+  spot: 'bg-spot',
   gold: 'bg-gold',
   muted: 'bg-muted',
 };
@@ -179,7 +180,7 @@ export function SpreadBoard({
       out.push({
         id: 'lm',
         label: 'Antam 1 g · Logam Mulia',
-        color: 'gold',
+        color: 'antam',
         highlightMin: true,
         points: lmDays.map((d) => [d.date, d.pct]),
       });

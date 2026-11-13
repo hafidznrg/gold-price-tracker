@@ -442,3 +442,14 @@ Log keputusan produk dan teknis (format ringkas ala ADR). Keputusan baru ditamba
 - Favicon `app/icon.svg` = ikon flat navy; `app/apple-icon.png` dan ikon PWA 512 px; `app/manifest.ts` (`theme_color`/`background_color` `#F7F5F0`). OG image statis `app/opengraph-image.png` (1200×630, navy) menggantikan `opengraph-image.tsx`. Aset lockup di `public/brand/` untuk materi di luar situs.
 - Beranda: tagline serif italic 22 px di bawah judul; "Bukan rekomendasi investasi." di akhir lead.
 **Konsekuensi:** judul yang sudah terindeks mesin pencari berubah. Nama repo dan domain tetap. Ikon PWA 192 px belum ada (pakai SVG `any` + 512 px). Galeri24 tetap ditulis tanpa spasi seperti di seluruh situs (design system menulis "Galeri 24").
+
+### D-52 — Warna brand hanya untuk brand; seri pembanding memakai `spot`
+
+**Konteks:** gelombang 3 penerapan design system (D-50). Seri yang bukan brand memakai warna brand: Kelipatan (Rp/gram `gold`, US$/oz `ubs`, USD/IDR `g24`), premi Antam vs spot (`gold`), emas dunia dan kurs di Explorer (`gold`, `ubs`, `g24`), sehingga mudah tertukar dengan Antam, UBS, dan Galeri24. Spread Antam LM memakai `gold`, bukan `antam`.
+**Keputusan:**
+- `ColorToken` mendapat `spot` (netral: teks utama tiap tema). Seri pembanding: `spot` solid, lalu `spot` putus-putus, lalu `muted` solid. `gold` tidak dipakai sebagai warna seri.
+- Kelipatan: Rp/gram `spot` solid, US$/oz `spot` putus-putus (1,8 px), USD/IDR `muted`; chip ringkasan menampilkan contoh garis (solid/putus-putus), bukan kotak warna.
+- `MACRO_COLORS`: `xau_usd_oz` `spot`; kurs JISDOR, ECB, dan tahunan `muted`.
+- Premi: premi harian `spot` (area), premi bulanan `spot` putus-putus. Spread Antam LM `antam`. Kalkulator tanpa brand jatuh ke `spot`.
+- Penanda titik minimum (`highlightMin`) memakai `--gold-glint` dengan cincin `surface`; contoh garis putus-putus di legenda 5–4 seperti grafik.
+**Konsekuensi:** tebal garis (2,2 / 1,8 px, pola 5–4) sudah sesuai dan tidak berubah. Kurs JISDOR dan ECB berwarna sama bila ditampilkan bersamaan di Explorer; dibedakan lewat legenda. Titik akhir (`endDot`) tetap berwarna seri agar tetap terhubung dengan legendanya. Batang sorotan di bar chart Spread tetap `gold` (aksen, bukan seri).

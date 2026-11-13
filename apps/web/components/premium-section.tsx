@@ -51,7 +51,8 @@ export function PremiumSection() {
             {
               id: 'premi-bulanan',
               label: 'Premi bulanan (sebelum spot harian)',
-              color: 'gold',
+              color: 'spot',
+              dashed: true,
               width: 1.4,
               points: monthly.map((m) => [`${m[0]}-15`, m[1]]),
               notes: Object.fromEntries(
@@ -67,7 +68,7 @@ export function PremiumSection() {
       {
         id: 'premi',
         label: 'Premi Antam 1 g vs spot',
-        color: 'gold',
+        color: 'spot',
         area: true,
         points: file.rows.map((r) => [r[0], r[1]]),
       },

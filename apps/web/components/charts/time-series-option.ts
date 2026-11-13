@@ -479,7 +479,7 @@ export function buildTimeSeriesOption(input: BuildInput): {
         symbol: 'circle',
         symbolSize: 11,
         silent: true,
-        itemStyle: { color: s.rgb, borderColor: t.surface, borderWidth: 3 },
+        itemStyle: { color: t.goldGlint, borderColor: t.surface, borderWidth: 3 },
         label: {
           show: true,
           position: 'bottom',

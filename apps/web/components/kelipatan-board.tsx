@@ -45,10 +45,16 @@ const PANEL = 'min-w-0 rounded-card border border-line bg-surface p-4 sm:px-5';
 const COLS =
   'grid grid-cols-[72px_minmax(100px,.9fr)_minmax(150px,1.1fr)_minmax(100px,.9fr)_minmax(150px,1.1fr)_minmax(120px,1fr)_90px] items-center gap-x-3 px-6';
 
-const CONCEPTS: { id: Exclude<ConceptId, 'lm'>; name: string; color: string; cls: string }[] = [
-  { id: 'idr', name: 'Emas Rp/gram', color: 'gold', cls: 'bg-gold' },
-  { id: 'usd', name: 'Emas US$/oz', color: 'ubs', cls: 'bg-ubs' },
-  { id: 'fx', name: 'USD/IDR', color: 'g24', cls: 'bg-g24' },
+/** Seri bukan brand (D-52): `spot` solid, `spot` putus-putus, lalu `muted` solid. */
+const CONCEPTS: {
+  id: Exclude<ConceptId, 'lm'>;
+  name: string;
+  color: string;
+  dashed: boolean;
+}[] = [
+  { id: 'idr', name: 'Emas Rp/gram', color: 'spot', dashed: false },
+  { id: 'usd', name: 'Emas US$/oz', color: 'spot', dashed: true },
+  { id: 'fx', name: 'USD/IDR', color: 'muted', dashed: false },
 ];
 
 function cagrText(line: KLine | null): string {
@@ -106,7 +112,8 @@ export function KelipatanBoard({ annual, until, spot, events }: KelipatanBoardPr
         id: `k-${c.id}`,
         label: c.name,
         color: c.color,
-        width: c.id === 'idr' ? 3 : 2.2,
+        dashed: c.dashed,
+        width: c.id === 'idr' ? 3 : c.dashed ? 1.8 : 2.2,
         ...(hasSpot ? {} : { endLabel: formatMultiple(line.last), endDot: true }),
         points: line.points,
       });
@@ -189,7 +196,18 @@ export function KelipatanBoard({ annual, until, spot, events }: KelipatanBoardPr
                 key={c.id}
                 className="num inline-flex shrink-0 items-center gap-2.5 whitespace-nowrap rounded-[10px] border border-line bg-surface px-3 py-1.5 text-sm"
               >
-                <span aria-hidden="true" className={cn('size-2.5 rounded-[3px]', c.cls)} />
+                <svg aria-hidden="true" width="18" height="8" className="shrink-0">
+                  <line
+                    x1="1"
+                    y1="4"
+                    x2="17"
+                    y2="4"
+                    strokeWidth={2.2}
+                    strokeLinecap="round"
+                    strokeDasharray={c.dashed ? '5 4' : undefined}
+                    style={{ stroke: `var(--${c.color})` }}
+                  />
+                </svg>
                 <span className="text-muted">{c.name}</span>
                 <span className="font-semibold">{formatMultiple(line?.last)}</span>
                 <span className="text-faint">CAGR {cagrText(line ?? null)}</span>

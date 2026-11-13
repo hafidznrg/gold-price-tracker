@@ -214,10 +214,11 @@ export function colorToken(ref: Pick<SeriesRef, 'brand' | 'product'>): ColorToke
   }
 }
 
+/** Seri pembanding dunia bukan brand (D-52): emas dunia `spot`, kurs `muted`. */
 export const MACRO_COLORS: Record<Series, ColorToken> = {
-  xau_usd_oz: 'gold',
-  usd_idr_jisdor: 'ubs',
-  usd_idr_ecb: 'g24',
+  xau_usd_oz: 'spot',
+  usd_idr_jisdor: 'muted',
+  usd_idr_ecb: 'muted',
   usd_idr_annual: 'muted',
 };
 
@@ -232,6 +233,7 @@ export const COLOR_CLASSES: Record<ColorToken, { text: string; bg: string; borde
   ubs: { text: 'text-ubs', bg: 'bg-ubs', border: 'border-ubs' },
   g24: { text: 'text-g24', bg: 'bg-g24', border: 'border-g24' },
   tab: { text: 'text-tab', bg: 'bg-tab', border: 'border-tab' },
+  spot: { text: 'text-spot', bg: 'bg-spot', border: 'border-spot' },
   gold: { text: 'text-gold', bg: 'bg-gold', border: 'border-gold' },
   muted: { text: 'text-muted', bg: 'bg-muted', border: 'border-muted' },
 };

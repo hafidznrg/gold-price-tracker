@@ -34,7 +34,7 @@ export function ChartLegend({ items, className }: { items: LegendItem[]; classNa
                 fill="none"
                 stroke={cssColor(it.color)}
                 strokeWidth={2.4}
-                strokeDasharray={it.dashed ? '4 3' : undefined}
+                strokeDasharray={it.dashed ? '5 4' : undefined}
                 strokeLinecap="round"
               />
             </svg>

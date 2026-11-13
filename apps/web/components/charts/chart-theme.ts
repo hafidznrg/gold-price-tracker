@@ -17,6 +17,8 @@ export interface ChartTokens {
   muted: string;
   faint: string;
   gold: string;
+  /** `--gold-glint`: penanda titik penting (D-52). */
+  goldGlint: string;
   goldsoft: string;
   goldline: string;
   up: string;
@@ -51,6 +53,7 @@ export const FALLBACK_TOKENS: ChartTokens = {
   muted: '#55575e',
   faint: '#686a71',
   gold: '#8a6618',
+  goldGlint: '#a67c1e',
   goldsoft: 'rgba(176, 132, 40, 0.12)',
   goldline: 'rgba(138, 102, 24, 0.35)',
   up: '#1e7a4e',
@@ -75,6 +78,8 @@ export function readTokens(lookup: CssVarLookup = cssVarLookup()): ChartTokens {
     const v = lookup(name);
     if (v) out[name] = v;
   }
+  const glint = lookup('gold-glint');
+  if (glint) out.goldGlint = glint;
   if (typeof document !== 'undefined' && document.body) {
     const ff = getComputedStyle(document.body).fontFamily;
     if (ff) out.fontFamily = ff;

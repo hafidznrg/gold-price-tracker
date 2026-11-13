@@ -33,6 +33,7 @@ const DOT: Record<ColorToken, string> = {
   ubs: 'bg-ubs',
   g24: 'bg-g24',
   tab: 'bg-tab',
+  spot: 'bg-spot',
   gold: 'bg-gold',
   muted: 'bg-muted',
 };

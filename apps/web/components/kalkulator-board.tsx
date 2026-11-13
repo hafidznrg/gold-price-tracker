@@ -187,7 +187,7 @@ export function KalkulatorBoard({ options, asOf, calendar }: KalkulatorBoardProp
       {
         id: 'value',
         label: 'Nilai jual (buyback)',
-        color: sellDef?.color ?? 'gold',
+        color: sellDef?.color ?? 'spot',
         width: 2.4,
         points: chart.value,
       },
