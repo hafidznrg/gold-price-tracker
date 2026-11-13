@@ -84,7 +84,7 @@ function Kpi({
       >
         {value}
       </div>
-      <div className="num truncate text-[11.5px] text-muted">{sub}</div>
+      <div className="num truncate text-[11.5px] text-muted lg:whitespace-normal">{sub}</div>
     </div>
   );
 }
