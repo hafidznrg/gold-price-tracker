@@ -68,13 +68,15 @@ export function InfoPopover({
         </svg>
         {label ? <span>{label}</span> : null}
       </button>
+      {/* Lebar di HP: 100vw dikurangi gutter halaman (2×16) dan padding kartu (±2×20), agar panel
+          tidak menembus tepi kartu (beberapa kartu `overflow-hidden` akan memotongnya). */}
       {/* Selalu dirender (disembunyikan saat tertutup) agar atribusi tetap di DOM (FR-26, D-48). */}
       <div
         id={panelId}
         role="note"
         hidden={!open}
         className={cn(
-          'absolute z-30 flex w-[min(360px,calc(100vw-48px))] flex-col gap-1 rounded-field border border-line bg-surface px-3.5 py-3 text-left text-xs leading-normal font-normal text-muted shadow-lg [&[hidden]]:hidden',
+          'absolute z-30 flex w-[min(360px,calc(100vw-72px))] flex-col gap-1 rounded-field border border-line bg-surface px-3.5 py-3 text-left text-xs leading-normal font-normal text-muted shadow-lg [&[hidden]]:hidden',
           side === 'bottom' ? 'top-full mt-1.5' : 'bottom-full mb-1.5',
           align === 'left' ? 'left-0' : 'right-0',
         )}
