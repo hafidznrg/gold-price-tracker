@@ -16,7 +16,7 @@ import type {
   SeriesFile,
 } from '../data/types';
 import { buildPremiumAntamMonthly } from './derived';
-import { buildSpark, computeChange, computeSpread } from './latest';
+import { buildSpark, computeChange, computeSpread, liveLastDate } from './latest';
 import { buildOutputs, type BuildInput } from './outputs';
 import { groupByFile, toSeriesFile } from './series';
 
@@ -336,6 +336,42 @@ describe('latest.json', () => {
       last_data_date: '2026-10-27',
       source_updated_at: null,
     });
+  });
+});
+
+describe('backfill lebih baru dari scrape', () => {
+  // Backfill riwayat UBS (buyback 1 g saja) bertanggal sesudah scrape terakhir.
+  const late = price({
+    date: '2026-10-28',
+    source: 'ubslifestyle',
+    brand: 'ubs',
+    location: '',
+    sell_price: null,
+    buyback_price: 2_290_000,
+    source_updated_at: null,
+    origin: 'backfill',
+  });
+  const { latest } = buildOutputs(input({ prices: [...prices, late] }));
+
+  it('liveLastDate mengabaikan backfill, kecuali semua baris backfill', () => {
+    expect(
+      liveLastDate([
+        { date: '2026-10-27', origin: 'scrape' },
+        { date: '2026-10-28', origin: 'backfill' },
+      ]),
+    ).toBe('2026-10-27');
+    expect(liveLastDate([{ date: '2026-10-28', origin: 'backfill' }])).toBe('2026-10-28');
+    expect(liveLastDate([])).toBeNull();
+  });
+
+  it('seri scrape tetap current; kartu tetap tahun produksi terbaru', () => {
+    const scraped = latest.series.find((s) => s.key === 'ubslifestyle:ubs:gold_bar:2026:1')!;
+    expect(scraped.current).toBe(true);
+    const ubs = latest.highlights.find((h) => h.file === 'ubslifestyle-ubs')!;
+    expect(ubs).toMatchObject({ variant: '2026', sell: 2490900 });
+    expect(latest.sources.find((s) => s.source === 'ubslifestyle')!.last_data_date).toBe(
+      '2026-10-27',
+    );
   });
 });
 

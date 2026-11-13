@@ -32,6 +32,20 @@ export function round(n: number, digits = 4): number {
   return Math.round(n * f) / f;
 }
 
+/**
+ * Tanggal acuan "kondisi terkini" sebuah file/sumber: tanggal terbaru dari baris scrape/manual.
+ * Baris backfill diabaikan agar backfill riwayat yang kebetulan lebih baru (mis. `ubs-history`
+ * 1 g buyback saja) tidak membuat series hasil scrape dianggap basi. Bila semua baris backfill
+ * (file arsip murni), semua baris dipakai.
+ */
+export function liveLastDate(rows: readonly Pick<PriceRow, 'date' | 'origin'>[]): string | null {
+  const live = rows.filter((r) => r.origin !== 'backfill');
+  const pool = live.length > 0 ? live : rows;
+  let last: string | null = null;
+  for (const r of pool) if (last === null || r.date > last) last = r.date;
+  return last;
+}
+
 export function computeChange(cur: number | null, prev: number | null): Change | null {
   if (cur === null || prev === null || prev === 0) return null;
   const abs = cur - prev;
@@ -86,7 +100,7 @@ export function latestOfSeries(s: SeriesGroup, fileLastDate: string): LatestSeri
       buyback: computeChange(last.buyback_price, prev?.buyback_price ?? null),
     },
     ...computeSpread(last.sell_price, last.buyback_price),
-    current: last.date === fileLastDate,
+    current: last.date >= fileLastDate,
     spark: buildSpark(s.rows, last.date),
   };
 }
@@ -101,7 +115,7 @@ export function pickHighlightSeries(
   series: readonly SeriesGroup[],
   fileLastDate: string,
 ): { main: SeriesGroup; fallback: SeriesGroup | null } | null {
-  const current = series.filter((s) => s.rows.at(-1)!.date === fileLastDate);
+  const current = series.filter((s) => s.rows.at(-1)!.date >= fileLastDate);
   if (current.length === 0) return null;
   const w = current.some((s) => s.ref.w === 1) ? 1 : Math.min(...current.map((s) => s.ref.w));
   const atW = current.filter((s) => s.ref.w === w);
@@ -127,7 +141,7 @@ export function buildHighlight(
   group: FileGroup,
   latest: readonly LatestSeries[],
 ): Highlight | null {
-  const fileLastDate = group.rows.at(-1)?.date;
+  const fileLastDate = liveLastDate(group.rows);
   if (!fileLastDate) return null;
   const picked = pickHighlightSeries(splitSeries(group), fileLastDate);
   if (!picked) return null;
@@ -194,8 +208,8 @@ export function buildHighlight(
 export function buildLatestSources(groups: readonly FileGroup[]): LatestSource[] {
   return PRICE_SOURCES.map((source) => {
     const rows = groups.filter((g) => g.source === source).flatMap((g) => g.rows);
-    if (rows.length === 0) return { source, last_data_date: null, source_updated_at: null };
-    const last = rows.reduce((m, r) => (r.date > m ? r.date : m), rows[0]!.date);
+    const last = liveLastDate(rows);
+    if (last === null) return { source, last_data_date: null, source_updated_at: null };
     const stamps = rows
       .filter((r) => r.date === last && r.source_updated_at !== null)
       .map((r) => r.source_updated_at!)
@@ -246,7 +260,7 @@ export function buildLatest(input: LatestInput): LatestFile {
   const groups = [...input.groups].sort((a, b) => compareFileIds(a.file, b.file));
   const series: LatestSeries[] = [];
   for (const g of groups) {
-    const fileLastDate = g.rows.at(-1)?.date;
+    const fileLastDate = liveLastDate(g.rows);
     if (!fileLastDate) continue;
     for (const s of splitSeries(g)) series.push(latestOfSeries(s, fileLastDate));
   }
