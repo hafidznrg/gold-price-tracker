@@ -4,6 +4,7 @@ import { parseAsString, useQueryStates } from 'nuqs';
 import { useCallback, useMemo } from 'react';
 import { TimeSeriesChart, type TimeSeries } from '@/components/charts/time-series-chart';
 import { PageIntro } from '@/components/page-intro';
+import { InfoPopover } from '@/components/info-popover';
 import { Segmented } from '@/components/segmented';
 import { SourceStamp } from '@/components/source-stamp';
 import type { AnnualRow, LatestSpot } from '@/lib/data';
@@ -251,12 +252,51 @@ export function KelipatanBoard({ annual, until, spot, events }: KelipatanBoardPr
 
       <section className="wrap pb-[22px]">
         <div className={PANEL}>
-          <h2 className="m-0 text-xl font-semibold max-sm:text-lg">
-            Kelipatan harga emas dan kurs sejak {base}{' '}
-            <span className="font-normal text-muted">
-              ({agg === 'avg' ? 'rata-rata tahunan' : 'penutupan akhir tahun'})
-            </span>
-          </h2>
+          {/* Di HP popover dijangkarkan ke baris judul (bukan ikon) agar tidak meluber ke kanan. */}
+          <div className="relative flex items-start gap-2">
+            <h2 className="m-0 text-xl font-semibold max-sm:text-lg">
+              Kelipatan harga emas dan kurs sejak {base}{' '}
+              <span className="font-normal text-muted">
+                ({agg === 'avg' ? 'rata-rata tahunan' : 'penutupan akhir tahun'})
+              </span>
+            </h2>
+            {!noData ? (
+              <InfoPopover ariaLabel="Keterangan grafik" className="mt-1 max-sm:static">
+                <ul className="m-0 flex list-disc flex-col gap-1 pl-4">
+                  <li>
+                    {agg === 'avg'
+                      ? 'Satu titik = rata-rata setahun, digambar di pertengahan tahun.'
+                      : 'Satu titik = harga terakhir hingga 31 Desember.'}
+                    {partialYear ? ` ${partialYear} baru sampai ${formatDate(until ?? '')}.` : ''}
+                  </li>
+                  {spotPt ? (
+                    <li>
+                      Garis putus-putus menyambung ke harga spot hari ini ({formatDate(spotPt.date)}
+                      ): XAU/USD {formatNumber(spotPt.usd, 2)} × kurs {formatRupiah(spotPt.fx)} ÷
+                      31,1035 = {formatRupiah(spotPt.idr)}/gram.
+                    </li>
+                  ) : null}
+                  <li>
+                    Spot dari xaus.com hanya indikatif (kontrak berjangka COMEX GC=F, bukan patokan
+                    LBMA).
+                  </li>
+                  <li>
+                    Kelipatan dibandingkan dengan {baseRow ? `nilai ${base}` : 'tahun dasar'} pada
+                    agregasi yang sama, jadi titik spot tidak selalu searah dengan garis tahunan.
+                  </li>
+                  {showLm ? (
+                    <li>
+                      Antam LM 1 g (harga jual, bukan spot) mulai {LM_FIRST_YEAR},{' '}
+                      {lm && lm.baseYear !== base
+                        ? `dihitung dari tahun pertamanya (${lm.baseYear} = ×1) karena belum ada data pada ${base}, jadi tidak sejajar dengan garis lain`
+                        : `dihitung dari tahun dasar yang sama (${base} = ×1)`}
+                      . Jaraknya ke garis emas Rp/gram mencerminkan premi Antam.
+                    </li>
+                  ) : null}
+                </ul>
+              </InfoPopover>
+            ) : null}
+          </div>
           <p className="m-0 mt-1 mb-2.5 text-sm text-muted">
             Nilai tahun {base} = ×1 · sumbu Y berskala log, jarak yang sama berarti kenaikan persen
             yang sama
@@ -280,37 +320,10 @@ export function KelipatanBoard({ annual, until, spot, events }: KelipatanBoardPr
               ariaLabel={`Kelipatan harga emas dalam rupiah dan dolar serta kurs USD/IDR sejak ${base}, skala logaritmik`}
             />
           )}
-          {!noData ? (
-            <div className="mt-3 flex flex-col gap-1.5 text-xs leading-normal text-faint">
-              <p className="m-0">
-                {agg === 'avg'
-                  ? `Titik tiap tahun = rata-rata setahun, digambar di pertengahan tahun${partialYear ? ` (${partialYear} = rata-rata 1 Jan – ${formatDate(until ?? '')})` : ''}.`
-                  : `Titik tiap tahun = nilai terakhir hingga 31 Des${partialYear ? ` (${partialYear} = nilai terakhir, ${formatDate(until ?? '')})` : ''}.`}
-                {spotPt
-                  ? ` Garis putus-putus berujung di titik spot hari ini (${formatDate(spotPt.date)}): XAU/USD ${formatNumber(spotPt.usd, 2)} × kurs ${formatRupiah(spotPt.fx)} ÷ 31,1035 = ${formatRupiah(spotPt.idr)}/gram.`
-                  : ''}
-              </p>
-              <p className="m-0">
-                Spot dari xaus.com bersifat indikatif (kontrak berjangka COMEX GC=F, bukan patokan
-                LBMA). Kelipatan dihitung terhadap {baseRow ? `nilai ${base}` : 'tahun dasar'} pada
-                agregasi yang sama, jadi titik spot hari ini tidak selalu searah dengan garis
-                tahunan.
-              </p>
-              {showLm ? (
-                <p className="m-0">
-                  Garis Antam LM 1 g (harga jual, bukan spot) mulai {LM_FIRST_YEAR}:{' '}
-                  {lm && lm.baseYear !== base
-                    ? `diindeks ke tahun pertamanya (${lm.baseYear} = ×1) karena data Antam belum ada pada ${base}, sehingga tidak sejajar dengan garis lain`
-                    : `diindeks ke tahun dasar yang sama (${base} = ×1)`}
-                  . Selisihnya dengan garis emas Rp/gram mencerminkan premi Antam.
-                </p>
-              ) : null}
-              {showLm && lmLastDate ? (
-                <SourceStamp source="logammulia" date={lmLastDate}>
-                  Antam LM 1 g, harga jual
-                </SourceStamp>
-              ) : null}
-            </div>
+          {!noData && showLm && lmLastDate ? (
+            <SourceStamp source="logammulia" date={lmLastDate} className="mt-3">
+              Antam LM 1 g, harga jual
+            </SourceStamp>
           ) : null}
         </div>
       </section>
@@ -318,15 +331,29 @@ export function KelipatanBoard({ annual, until, spot, events }: KelipatanBoardPr
       <section className="wrap pb-16">
         <div className="overflow-hidden rounded-card border border-line bg-surface">
           <div className="px-6 pt-[22px] pb-3.5 max-sm:px-4">
-            <h2 className="serif m-0 text-[30px]">Angka di balik garis</h2>
-            <p className="m-0 mt-1.5 text-sm text-muted">
-              Untuk setiap tahun dipakai data harian bila cakupannya ≥ 80% hari kerja, jika tidak
-              rata-rata bulanan, jika tidak nilai tahunan.
-              {partialYear ? ` *${partialYear} = sampai ${formatDate(until ?? '')}.` : ''}
-              {agg === 'end'
-                ? ' Penutupan akhir tahun = titik terakhir hingga 31 Des pada seri yang sama; seri bulanan memakai rata-rata bulan Desember dan seri tahunan tidak punya penutupan.'
-                : ''}
-            </p>
+            <div className="relative flex items-center gap-2">
+              <h2 className="serif m-0 text-[30px]">Angka di balik garis</h2>
+              <InfoPopover ariaLabel="Keterangan tabel" className="max-sm:static">
+                <ul className="m-0 flex list-disc flex-col gap-1 pl-4">
+                  <li>
+                    Tiap tahun memakai data harian bila tersedia di ≥ 80% hari kerja. Jika tidak,
+                    rata-rata bulanan; jika tidak juga, nilai tahunan.
+                  </li>
+                  {agg === 'end' ? (
+                    <li>
+                      Penutupan akhir tahun = titik terakhir hingga 31 Des. Seri bulanan memakai
+                      rata-rata Desember; seri tahunan tidak punya penutupan.
+                    </li>
+                  ) : null}
+                  {partialYear ? (
+                    <li>
+                      {partialYear}* = sampai {formatDate(until ?? '')}.
+                    </li>
+                  ) : null}
+                  <li>Baris berwarna = tahun dasar (×1).</li>
+                </ul>
+              </InfoPopover>
+            </div>
           </div>
           <div
             className="max-h-[560px] overflow-auto"
@@ -419,11 +446,21 @@ export function KelipatanBoard({ annual, until, spot, events }: KelipatanBoardPr
             </div>
           </div>
           {stampDate ? (
-            <p className="m-0 border-t border-line px-6 py-3 text-xs text-faint max-sm:px-4">
-              Emas dunia: xaus.com (harian sejak 2021), World Bank Pink Sheet (bulanan sebelumnya).
-              Kurs: Bank Indonesia JISDOR, ECB via Frankfurter, World Bank WDI (1996–1998, nilai
-              tahunan). Rp/gram = US$/oz × kurs ÷ 31,1035.
-            </p>
+            <div className="border-t border-line px-6 py-2.5 max-sm:px-4">
+              <InfoPopover label="Sumber" ariaLabel="Sumber data" side="top">
+                <ul className="m-0 flex list-disc flex-col gap-1 pl-4">
+                  <li>
+                    Emas dunia: xaus.com (harian sejak 2021), World Bank Pink Sheet (bulanan
+                    sebelumnya).
+                  </li>
+                  <li>
+                    Kurs: Bank Indonesia JISDOR, ECB via Frankfurter, World Bank WDI (1996–1998,
+                    nilai tahunan).
+                  </li>
+                  <li>Rp/gram = US$/oz × kurs ÷ 31,1035.</li>
+                </ul>
+              </InfoPopover>
+            </div>
           ) : null}
         </div>
       </section>
