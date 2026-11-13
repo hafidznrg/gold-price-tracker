@@ -453,3 +453,12 @@ Log keputusan produk dan teknis (format ringkas ala ADR). Keputusan baru ditamba
 - Premi: premi harian `spot` (area), premi bulanan `spot` putus-putus. Spread Antam LM `antam`. Kalkulator tanpa brand jatuh ke `spot`.
 - Penanda titik minimum (`highlightMin`) memakai `--gold-glint` dengan cincin `surface`; contoh garis putus-putus di legenda 5–4 seperti grafik.
 **Konsekuensi:** tebal garis (2,2 / 1,8 px, pola 5–4) sudah sesuai dan tidak berubah. Kurs JISDOR dan ECB berwarna sama bila ditampilkan bersamaan di Explorer; dibedakan lewat legenda. Titik akhir (`endDot`) tetap berwarna seri agar tetap terhubung dengan legendanya. Batang sorotan di bar chart Spread tetap `gold` (aksen, bukan seri).
+
+### D-53 — Menu bawah di HP; header HP satu baris
+
+**Konteks:** gelombang 4 penerapan design system (D-50). Di HP header dua baris (brand + status, lalu nav pil bergulir, D-47) menghabiskan ruang di atas lipatan dan menyembunyikan sebagian menu di luar layar.
+**Keputusan:**
+- < 640 px (`sm`): `BottomNav` tetap di bawah, tinggi 64 px + `env(safe-area-inset-bottom)` (`viewportFit: 'cover'`). Empat tab berikon (Hari ini, Riwayat, Selisih, Bandingkan; label ringkas `NavItem.short`) dan tombol "Lainnya" yang membuka panel Kalkulator, Kelipatan, Data, dan tombol tema (`NavItem.more`). Tab aktif `goldsoft` + `gold-strong` 600 + `aria-current="page"`; "Lainnya" ikut aktif bila halamannya ada di dalamnya. Panel tertutup saat pindah halaman, Escape, atau ketuk di luar.
+- Header HP satu baris: logo + wordmark dan chip tanggal data; nav pil dan tombol tema disembunyikan (55 px, sebelumnya ±105 px). `body` diberi `padding-bottom` setinggi menu.
+- ≥ 640 px tidak berubah: nav pil di header (bergulir di tablet), tombol tema di header.
+**Konsekuensi:** satu `nav` "Navigasi utama" yang terlihat di tiap ukuran (yang lain `display: none`). Label tab 11 px dengan `tracking-tight` agar "Bandingkan" muat di 360 px. Bagian Responsif design system yang lain (bottom sheet filter, navigator grafik disembunyikan, tinggi grafik 240/320/400) belum dikerjakan; tinggi grafik HP masih mengikuti `useChartHeight` D-47.

@@ -1,6 +1,10 @@
 export interface NavItem {
   href: string;
   label: string;
+  /** Label ringkas untuk menu bawah HP (D-53). */
+  short?: string;
+  /** `true` = di menu bawah HP masuk ke "Lainnya". */
+  more?: boolean;
 }
 
 /**
@@ -8,12 +12,12 @@ export interface NavItem {
  */
 export const NAV_ITEMS: readonly NavItem[] = [
   { href: '/', label: 'Hari ini' },
-  { href: '/explorer', label: 'Riwayat harga' },
-  { href: '/spread', label: 'Selisih jual-beli' },
+  { href: '/explorer', label: 'Riwayat harga', short: 'Riwayat' },
+  { href: '/spread', label: 'Selisih jual-beli', short: 'Selisih' },
   { href: '/bandingkan', label: 'Bandingkan' },
-  { href: '/kalkulator', label: 'Kalkulator' },
-  { href: '/kelipatan', label: 'Kelipatan' },
-  { href: '/data', label: 'Data' },
+  { href: '/kalkulator', label: 'Kalkulator', more: true },
+  { href: '/kelipatan', label: 'Kelipatan', more: true },
+  { href: '/data', label: 'Data', more: true },
 ];
 
 export function isActivePath(pathname: string, href: string): boolean {

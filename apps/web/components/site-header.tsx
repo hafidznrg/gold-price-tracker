@@ -31,10 +31,13 @@ export function SiteHeader({ status }: { status?: ReactNode }) {
             </span>
           </span>
         </Link>
-        <SiteNav className="order-last w-full xl:order-none xl:w-auto" />
+        {/* HP (< 640 px): navigasi dan tombol tema pindah ke menu bawah (BottomNav, D-53). */}
+        <SiteNav className="order-last w-full max-sm:hidden xl:order-none xl:w-auto" />
         <div className="flex items-center gap-2">
           {status}
-          <ThemeToggle />
+          <span className="max-sm:hidden">
+            <ThemeToggle />
+          </span>
         </div>
       </div>
     </header>

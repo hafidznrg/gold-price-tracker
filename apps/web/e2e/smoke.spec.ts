@@ -330,6 +330,29 @@ test('navigasi utama memuat ketujuh halaman dan semua tautannya sampai', async (
   expect(errors).toEqual([]);
 });
 
+test('menu bawah HP: empat tab utama, "Lainnya" membuka sisa halaman dan tombol tema', async ({
+  page,
+}) => {
+  const errors = collectErrors(page);
+  await page.setViewportSize({ width: 360, height: 780 });
+  await page.goto('/');
+  const nav = page.getByRole('navigation', { name: 'Navigasi utama' });
+  await expect(nav).toHaveCount(1);
+  await expect(nav.getByRole('link')).toHaveCount(4);
+  await expect(nav.locator('a[aria-current="page"]')).toHaveAttribute('href', '/');
+  await expect(page.getByRole('button', { name: 'Ganti tema terang atau Navy' })).toBeHidden();
+
+  const more = nav.getByRole('button', { name: 'Lainnya' });
+  await more.click();
+  await expect(more).toHaveAttribute('aria-expanded', 'true');
+  await expect(nav.getByRole('button', { name: /Ganti tema/ })).toBeVisible();
+  await nav.locator('a[href="/kalkulator"]').click();
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText(PAGES[4].heading);
+  await expect(more).toHaveAttribute('aria-expanded', 'false');
+  await expect(more).toHaveClass(/text-gold-strong/);
+  expect(errors).toEqual([]);
+});
+
 test('rute tak dikenal menampilkan halaman 404', async ({ page }) => {
   const res = await page.goto('/tidak-ada-halaman');
   expect(res?.status()).toBe(404);
