@@ -361,7 +361,7 @@ export function tooltipRows(
     color: string;
     dashed?: boolean;
     data: Datum[];
-    /** Rentang min–maks (waktu → [min, maks]) dan catatan (waktu → teks), ditambahkan ke nilai. */
+    /** Rentang min–maks (waktu → [min, maks]) dan catatan (waktu → teks), tampil sebagai `detail`. */
     envelope?: Map<number, [number, number]>;
     notes?: Map<number, string>;
   }[],
@@ -376,11 +376,19 @@ export function tooltipRows(
     const v = hit ? hit[1] : null;
     const env = v === null ? undefined : s.envelope?.get(at);
     const note = v === null ? undefined : s.notes?.get(at);
-    const value =
-      fmt(v) +
-      (env ? ` · min–maks ${fmt(env[0])} – ${fmt(env[1])}` : '') +
-      (note ? ` · ${note}` : '');
-    rows.push({ label: s.label, color: s.color, dashed: s.dashed, value, muted: v === null });
+    // Rincian (min–maks, catatan) dipisah dari nilai: tampil di baris sendiri yang boleh membungkus,
+    // bukan menempel di nilai `nowrap` yang bisa keluar dari kotak tooltip di HP.
+    const detail = [env ? `min–maks ${fmt(env[0])} – ${fmt(env[1])}` : '', note ?? '']
+      .filter(Boolean)
+      .join(' · ');
+    rows.push({
+      label: s.label,
+      color: s.color,
+      dashed: s.dashed,
+      value: fmt(v),
+      muted: v === null,
+      ...(detail ? { detail } : {}),
+    });
   }
   return rows;
 }

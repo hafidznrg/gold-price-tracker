@@ -277,7 +277,7 @@ export function tooltipBoxStyle(t: ChartTokens) {
     padding: [12, 14] as [number, number],
     textStyle: { color: t.text, fontFamily: t.fontFamily, fontSize: 12.5 },
     extraCssText:
-      'border-radius:12px;box-shadow:0 12px 32px rgba(0,0,0,.18);font-variant-numeric:tabular-nums;min-width:220px;max-width:min(320px,85vw);',
+      'border-radius:12px;box-shadow:0 12px 32px rgba(0,0,0,.18);font-variant-numeric:tabular-nums;min-width:220px;max-width:min(320px,85vw);white-space:normal;overflow:hidden;',
   };
 }
 
@@ -294,6 +294,8 @@ export interface TooltipRow {
   muted?: boolean;
   /** Contoh garis putus-putus (pola 5–4) seperti seri di grafik. */
   dashed?: boolean;
+  /** Rincian panjang (min–maks, catatan) di bawah baris; boleh membungkus. */
+  detail?: string;
 }
 
 /** Contoh garis 18×8 px (solid/putus-putus) untuk tooltip dan legenda HTML. */
@@ -302,7 +304,11 @@ function lineSample(color: string, dashed?: boolean): string {
   return `<svg width="18" height="8" style="flex:none" aria-hidden="true"><line x1="1" y1="4" x2="17" y2="4" stroke="${color}" stroke-width="2.2" stroke-linecap="round"${dash}/></svg>`;
 }
 
-/** Isi HTML tooltip seperti mockup: tanggal (muted) lalu baris warna · nama · nilai tebal. */
+/**
+ * Isi HTML tooltip seperti mockup: tanggal (muted) lalu baris warna · nama · nilai tebal, dengan
+ * rincian opsional di bawahnya. Kotak `overflow:hidden` (tooltipBoxStyle) agar isi apa pun tidak
+ * keluar dari kotak; tooltip ECharts absolut, jadi luberan akan melebarkan halaman dan navbar HP.
+ */
 export function tooltipHtml(title: string, rows: TooltipRow[], t: ChartTokens): string {
   const head = `<div style="font-size:12px;color:${t.muted};margin-bottom:8px">${escapeHtml(title)}</div>`;
   const body = rows
@@ -311,7 +317,10 @@ export function tooltipHtml(title: string, rows: TooltipRow[], t: ChartTokens): 
         `<div style="display:flex;justify-content:space-between;align-items:center;gap:14px;font-size:12.5px;padding:3px 0">` +
         `<span style="display:flex;align-items:center;gap:7px;min-width:0">${lineSample(r.color, r.dashed)}` +
         `<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(r.label)}</span></span>` +
-        `<span style="font-weight:600;color:${r.muted ? t.faint : t.text};white-space:nowrap">${escapeHtml(r.value)}</span></div>`,
+        `<span style="flex:none;font-weight:600;color:${r.muted ? t.faint : t.text};white-space:nowrap">${escapeHtml(r.value)}</span></div>` +
+        (r.detail
+          ? `<div style="font-size:11.5px;line-height:1.4;color:${t.muted};padding:0 0 3px 25px;overflow-wrap:anywhere">${escapeHtml(r.detail)}</div>`
+          : ''),
     )
     .join('');
   return head + body;

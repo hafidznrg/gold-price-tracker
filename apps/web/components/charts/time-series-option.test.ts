@@ -157,6 +157,12 @@ describe('tooltipRows', () => {
       { label: 'B', color: '#b', value: '—', muted: true },
     ]);
   });
+  it('catatan masuk ke `detail`, bukan ditempel ke nilai', () => {
+    const at = s[0]!.data[0]![0];
+    const [row] = tooltipRows(at, [{ ...s[0]!, notes: new Map([[at, 'rata-rata bulan']]) }], fmt);
+    expect(row?.value).toBe(fmt(s[0]!.data[0]![1]));
+    expect(row?.detail).toBe('rata-rata bulan');
+  });
 });
 
 describe('buildTimeSeriesOption', () => {
