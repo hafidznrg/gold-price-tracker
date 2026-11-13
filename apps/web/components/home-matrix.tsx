@@ -78,7 +78,9 @@ export function HomeMatrix({ cells }: { cells: TodayCells }) {
             />
           </div>
         </div>
-        <div className="overflow-x-auto">
+        {/* `relative`: jadikan blok penampung elemen absolut (mis. sr-only "termurah") agar ikut
+            terpotong di dalam scroller, bukan melebarkan halaman dan navbar bawah di HP. */}
+        <div className="relative overflow-x-auto">
           <div role="table" aria-label="Perbandingan harga per gramasi" className="min-w-[720px]">
             <div
               role="row"
