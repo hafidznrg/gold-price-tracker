@@ -212,12 +212,12 @@ test.describe('Bandingkan', () => {
 });
 
 test.describe('Kelipatan', () => {
-  const START = '/kelipatan?b=2010&a=end&lm=1';
+  const START = '/kelipatan?b=2010&a=end&lm=0';
 
   async function expectState(page: Page) {
     await expect(page.getByRole('radio', { name: '2010', exact: true })).toBeChecked();
     await expect(page.getByRole('radio', { name: 'Penutupan akhir tahun' })).toBeChecked();
-    await expect(page.getByRole('checkbox', { name: /Garis Antam LM/ })).toBeChecked();
+    await expect(page.getByRole('checkbox', { name: /Garis Antam LM/ })).not.toBeChecked();
     await expect(page.getByRole('heading', { level: 1 })).toContainText('sejak 2010');
     await expect(
       page.getByRole('heading', { name: /sejak 2010 .penutupan akhir tahun/ }),
@@ -231,7 +231,7 @@ test.describe('Kelipatan', () => {
     await page.reload();
     await expectState(page);
     const q = new URL(page.url()).searchParams;
-    expect([q.get('b'), q.get('a'), q.get('lm')]).toEqual(['2010', 'end', '1']);
+    expect([q.get('b'), q.get('a'), q.get('lm')]).toEqual(['2010', 'end', '0']);
     await page.waitForLoadState('load');
     expect(errors).toEqual([]);
   });
@@ -240,13 +240,13 @@ test.describe('Kelipatan', () => {
     await page.goto('/kelipatan');
     await page.getByRole('radio', { name: '2005', exact: true }).click();
     await page.getByRole('radio', { name: 'Penutupan akhir tahun' }).click();
-    await page.getByRole('checkbox', { name: /Garis Antam LM/ }).check();
+    await page.getByRole('checkbox', { name: /Garis Antam LM/ }).uncheck();
     await expect(page).toHaveURL(/[?&]b=2005(&|$)/);
     await expect(page).toHaveURL(/[?&]a=end(&|$)/);
-    await expect(page).toHaveURL(/[?&]lm=1(&|$)/);
+    await expect(page).toHaveURL(/[?&]lm=0(&|$)/);
     await page.getByRole('radio', { name: '1996', exact: true }).click();
     await page.getByRole('radio', { name: 'Rata-rata tahunan' }).click();
-    await page.getByRole('checkbox', { name: /Garis Antam LM/ }).uncheck();
+    await page.getByRole('checkbox', { name: /Garis Antam LM/ }).check();
     await expect(page).not.toHaveURL(/[?&](b|a|lm)=/);
   });
 

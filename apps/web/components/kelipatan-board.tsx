@@ -69,7 +69,8 @@ export function KelipatanBoard({ annual, until, spot, events }: KelipatanBoardPr
   );
   const base = decodeBaseYear(query.b);
   const agg: Aggregation = decodeAggregation(query.a);
-  const showLm = query.lm === '1';
+  // Garis Antam LM tampil secara bawaan; `lm=0` menyembunyikannya.
+  const showLm = query.lm !== '0';
 
   const setBase = useCallback(
     (y: number) => void setQuery({ b: y === DEFAULT_BASE_YEAR ? null : String(y) }),
@@ -79,7 +80,7 @@ export function KelipatanBoard({ annual, until, spot, events }: KelipatanBoardPr
     (a: Aggregation) => void setQuery({ a: a === DEFAULT_AGGREGATION ? null : a }),
     [setQuery],
   );
-  const setLm = useCallback((on: boolean) => void setQuery({ lm: on ? '1' : null }), [setQuery]);
+  const setLm = useCallback((on: boolean) => void setQuery({ lm: on ? null : '0' }), [setQuery]);
 
   const chartHeight = useChartHeight(330, 240);
 
