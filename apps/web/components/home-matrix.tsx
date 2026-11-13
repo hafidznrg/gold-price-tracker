@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
 import { InfoDisclosure } from '@/components/info-disclosure';
 import { Segmented } from '@/components/segmented';
 import type { TodayCells } from '@/lib/bandingkan';
@@ -17,15 +17,30 @@ import {
 import { EMPTY, formatPct, formatRupiah, formatWeight } from '@/lib/format';
 import { cn } from '@/lib/utils';
 
-const MODES: { value: MatrixMode; label: string }[] = [
-  { value: 'jual', label: 'Harga jual' },
+/** Label pendek di HP agar kedua toggle muat satu baris; nama aksesibel tetap label lengkap. */
+function short(full: string, mobile: string): ReactNode {
+  return (
+    <>
+      <span aria-hidden="true" className="sm:hidden">
+        {mobile}
+      </span>
+      <span className="max-sm:sr-only">{full}</span>
+    </>
+  );
+}
+
+const MODES: { value: MatrixMode; label: ReactNode }[] = [
+  { value: 'jual', label: short('Harga jual', 'Jual') },
   { value: 'buyback', label: 'Buyback' },
   { value: 'spread', label: 'Selisih' },
 ];
-const UNITS: { value: MatrixUnit; label: string }[] = [
-  { value: 'keping', label: 'Per keping' },
-  { value: 'gram', label: 'Per gram' },
+const UNITS: { value: MatrixUnit; label: ReactNode }[] = [
+  { value: 'keping', label: short('Per keping', 'Keping') },
+  { value: 'gram', label: short('Per gram', 'Gram') },
 ];
+
+/** Padding tombol toggle dirapatkan di HP agar dua grup muat satu baris. */
+const TIGHT = 'max-sm:[&>button]:px-2';
 
 const GRID = 'grid grid-cols-[110px_repeat(4,minmax(0,1fr))] items-center px-6';
 /** Kolom gramasi menempel di kiri saat tabel digeser di HP (D-54); latar menutup padding baris. */
@@ -44,14 +59,23 @@ export function HomeMatrix({ cells }: { cells: TodayCells }) {
             <h2 className="serif m-0 text-[32px] max-sm:text-[26px]">Bandingkan per gramasi</h2>
             <p className="m-0 mt-1.5 text-sm text-muted">{MATRIX_HINT[mode]}</p>
           </div>
-          <div className="flex flex-wrap gap-2.5">
+          <div className="flex flex-wrap gap-2 max-sm:gap-1.5">
             <Segmented
               label="Nilai yang dibandingkan"
               options={MODES}
               value={mode}
               onChange={setMode}
+              size="sm"
+              className={TIGHT}
             />
-            <Segmented label="Satuan" options={UNITS} value={unit} onChange={setUnit} />
+            <Segmented
+              label="Satuan"
+              options={UNITS}
+              value={unit}
+              onChange={setUnit}
+              size="sm"
+              className={TIGHT}
+            />
           </div>
         </div>
         <div className="overflow-x-auto">
@@ -106,10 +130,7 @@ export function HomeMatrix({ cells }: { cells: TodayCells }) {
                         ? formatPct(x.value, 2, false)
                         : formatRupiah(x.value)}
                     {x.best ? (
-                      <span
-                        data-testid="matrix-best"
-                        className="rounded-full border border-up px-[7px] py-px text-2xs font-semibold whitespace-nowrap text-up"
-                      >
+                      <span data-testid="matrix-best" className="sr-only">
                         {BEST_LABEL[mode]}
                       </span>
                     ) : null}
@@ -124,6 +145,17 @@ export function HomeMatrix({ cells }: { cells: TodayCells }) {
             ) : null}
           </div>
         </div>
+        {rows.length > 0 ? (
+          <div
+            data-testid="matrix-legend"
+            className="flex items-center gap-2 border-t border-line px-6 py-2.5 text-xs text-muted max-sm:px-4"
+          >
+            <span aria-hidden="true" className="h-3.5 w-5 flex-none rounded-[4px] bg-up/10" />
+            <span>
+              <b className="font-semibold text-up">{BEST_LABEL[mode]}</b> di tiap gramasi
+            </span>
+          </div>
+        ) : null}
         <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2.5 border-t border-line px-6 py-3.5 text-sm max-sm:px-4">
           <InfoDisclosure label="Catatan" className="min-w-0 flex-[1_1_320px]">
             <p className="m-0 text-xs text-muted">

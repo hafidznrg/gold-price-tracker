@@ -48,13 +48,16 @@ export function Freshness({
         aria-expanded={open}
         aria-controls={panelId}
         onClick={() => setOpen((o) => !o)}
-        className="inline-flex min-h-11 cursor-pointer items-center gap-2.5 self-start rounded-full border border-line bg-surface px-4 text-left text-sm text-text"
+        className="inline-flex min-h-11 cursor-pointer items-center gap-2.5 self-start rounded-full border border-line bg-surface px-4 text-left text-sm text-text max-sm:min-h-10 max-sm:gap-2 max-sm:px-3 max-sm:text-xs"
       >
         <LiveDot live={freshCount === items.length} />
         <span>
           <b className="font-semibold">Diperbarui {latestLabel}</b>{' '}
-          <span className="text-muted">
+          <span className="text-muted max-sm:hidden">
             · {freshCount} dari {items.length} sumber terkini
+          </span>
+          <span className="text-muted sm:hidden">
+            · {freshCount}/{items.length} terkini
           </span>
         </span>
         <svg
