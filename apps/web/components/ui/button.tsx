@@ -15,8 +15,8 @@ const buttonVariants = cva(
         gold: 'border border-goldline bg-goldsoft text-gold hover:text-gold',
       },
       size: {
-        default: 'min-h-11 rounded-control px-4 text-[13.5px]',
-        sm: 'min-h-10 rounded-field px-3 text-[13px]',
+        default: 'min-h-11 rounded-control px-4 text-sm',
+        sm: 'min-h-10 rounded-field px-3 text-sm',
         icon: 'size-11 rounded-control',
       },
     },

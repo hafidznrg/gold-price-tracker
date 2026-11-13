@@ -342,7 +342,7 @@ export function KalkulatorBoard({ options, asOf, calendar }: KalkulatorBoardProp
             </div>
           </div>
           <div
-            className="rounded-[12px] bg-surface2 px-3.5 py-2.5 text-[13px] leading-[1.5] text-muted"
+            className="rounded-[12px] bg-surface2 px-3.5 py-2.5 text-sm leading-[1.5] text-muted"
             aria-live="polite"
           >
             {!ready ? (
@@ -365,7 +365,7 @@ export function KalkulatorBoard({ options, asOf, calendar }: KalkulatorBoardProp
                     <button
                       type="button"
                       onClick={() => commit({ date: quote.suggest! })}
-                      className="cursor-pointer border-0 bg-transparent p-0 text-[13px] text-gold underline"
+                      className="cursor-pointer border-0 bg-transparent p-0 text-sm text-gold underline"
                     >
                       Pakai {formatDate(quote.suggest)}
                     </button>
@@ -441,18 +441,14 @@ export function KalkulatorBoard({ options, asOf, calendar }: KalkulatorBoardProp
               <div className="grid grid-cols-[repeat(auto-fit,minmax(150px,1fr))] gap-px overflow-hidden rounded-[16px] border border-line bg-line">
                 <div className="bg-surface p-3.5">
                   <div className="text-xs text-faint">Modal</div>
-                  <div className="num mt-1.5 text-[19px] font-semibold">
-                    {formatRupiah(o.modal)}
-                  </div>
+                  <div className="num mt-1.5 text-xl font-semibold">{formatRupiah(o.modal)}</div>
                   <div className="num mt-1 text-xs text-muted">
                     {formatNumber(o.qty)} × {formatRupiah(o.buyPrice)}
                   </div>
                 </div>
                 <div className="bg-surface p-3.5">
                   <div className="text-xs text-faint">Nilai jual hari ini</div>
-                  <div className="num mt-1.5 text-[19px] font-semibold">
-                    {formatRupiah(o.value)}
-                  </div>
+                  <div className="num mt-1.5 text-xl font-semibold">{formatRupiah(o.value)}</div>
                   <div className="num mt-1 text-xs text-muted">
                     {formatNumber(o.qty)} × {formatRupiah(o.sellPrice)}
                   </div>
@@ -461,7 +457,7 @@ export function KalkulatorBoard({ options, asOf, calendar }: KalkulatorBoardProp
                   <div className="text-xs text-faint">
                     {result.be.reached ? 'Titik impas tercapai' : 'Titik impas'}
                   </div>
-                  <div className="num mt-1.5 text-[19px] font-semibold">
+                  <div className="num mt-1.5 text-xl font-semibold">
                     {result.be.reached
                       ? result.be.truncated && result.be.since === result.be.firstDate
                         ? `≤ ${formatDate(result.be.since!)}`
@@ -476,12 +472,12 @@ export function KalkulatorBoard({ options, asOf, calendar }: KalkulatorBoardProp
                 </div>
               </div>
               {!result.be.reached && result.be.lastAbove ? (
-                <p className="num m-0 text-[12.5px] text-muted">
+                <p className="num m-0 text-xs text-muted">
                   Terakhir buyback di atas harga beli: {formatDate(result.be.lastAbove)}.
                 </p>
               ) : null}
               {result.be.truncated && result.be.firstDate ? (
-                <p className="m-0 text-[12.5px] text-muted" role="note">
+                <p className="m-0 text-xs text-muted" role="note">
                   Data buyback {sellDef ? sourceLabel(sellDef) : ''} baru ada sejak{' '}
                   {formatDate(result.be.firstDate)}; titik impas dan grafik sebelum tanggal itu
                   tidak diketahui.
@@ -490,7 +486,7 @@ export function KalkulatorBoard({ options, asOf, calendar }: KalkulatorBoardProp
               {sellNow &&
               sellNow.date < asOf &&
               daysBetween(sellNow.date, asOf) > CALCULATOR_TOLERANCE_DAYS ? (
-                <p className="num m-0 text-[12.5px] text-muted" role="note">
+                <p className="num m-0 text-xs text-muted" role="note">
                   Buyback terbaru yang tercatat bertanggal {formatDate(sellNow.date)}.
                 </p>
               ) : null}
@@ -514,7 +510,7 @@ export function KalkulatorBoard({ options, asOf, calendar }: KalkulatorBoardProp
               </p>
             </div>
           )}
-          <p className="m-0 text-[12.5px] leading-[1.6] text-muted">
+          <p className="m-0 text-xs leading-[1.6] text-muted">
             Belum memperhitungkan PPh 22 yang dapat dipotong saat menjual kembali
             {isLm ? ' dan PPh 0,25% pada pembelian Logam Mulia (harga dasar)' : ''}. Hitungan ini
             bukan rekomendasi investasi.
@@ -524,8 +520,10 @@ export function KalkulatorBoard({ options, asOf, calendar }: KalkulatorBoardProp
 
       <section className="wrap pb-16">
         <div className={cn(PANEL, 'rounded-[22px]')}>
-          <h2 className="m-0 text-[19px] font-semibold">Nilai jual sejak tanggal beli</h2>
-          <p className="num m-0 mt-1.5 mb-3 text-[13px] text-muted">
+          <h2 className="m-0 text-xl font-semibold max-sm:text-lg">
+            Nilai jual sejak tanggal beli
+          </h2>
+          <p className="num m-0 mt-1.5 mb-3 text-sm text-muted">
             {buyLabel}
             {sellDef ? ` · dijual ke ${sourceLabel(sellDef)}` : ''}
             {chart?.first && chart.last

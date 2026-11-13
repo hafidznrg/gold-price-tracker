@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useMemo, useState } from 'react';
+import { InfoDisclosure } from '@/components/info-disclosure';
 import { Segmented } from '@/components/segmented';
 import type { TodayCells } from '@/lib/bandingkan';
 import { COLOR_CLASSES } from '@/lib/data';
@@ -38,7 +39,7 @@ export function HomeMatrix({ cells }: { cells: TodayCells }) {
       <div className="overflow-hidden rounded-card border border-line bg-surface">
         <div className="flex flex-wrap items-end justify-between gap-3.5 px-6 pt-[22px] pb-4 max-sm:px-4">
           <div>
-            <h2 className="serif m-0 text-[32px]">Bandingkan per gramasi</h2>
+            <h2 className="serif m-0 text-[32px] max-sm:text-[26px]">Bandingkan per gramasi</h2>
             <p className="m-0 mt-1.5 text-sm text-muted">{MATRIX_HINT[mode]}</p>
           </div>
           <div className="flex flex-wrap gap-2.5">
@@ -64,7 +65,7 @@ export function HomeMatrix({ cells }: { cells: TodayCells }) {
                 <span
                   key={d.id}
                   role="columnheader"
-                  className="flex items-center gap-2 text-[13.5px] text-text"
+                  className="flex items-center gap-2 text-sm text-text"
                 >
                   <span
                     aria-hidden="true"
@@ -84,7 +85,7 @@ export function HomeMatrix({ cells }: { cells: TodayCells }) {
                 data-testid="matrix-row"
                 className={cn(GRID, 'border-t border-line py-1')}
               >
-                <span role="rowheader" className="text-[14.5px] font-semibold">
+                <span role="rowheader" className="text-sm font-semibold">
                   {formatWeight(r.w)}
                 </span>
                 {r.cells.map((x, i) => (
@@ -92,7 +93,7 @@ export function HomeMatrix({ cells }: { cells: TodayCells }) {
                     key={MATRIX_COLS[i]?.id}
                     role="cell"
                     className={cn(
-                      'num mr-2 flex items-center gap-2 rounded-[9px] px-2.5 py-[9px] text-[14.5px]',
+                      'num mr-2 flex items-center gap-2 rounded-[9px] px-2.5 py-[9px] text-sm',
                       x.value === null ? 'text-faint' : 'text-text',
                       x.best ? 'bg-up/10 font-semibold' : 'font-normal',
                     )}
@@ -105,7 +106,7 @@ export function HomeMatrix({ cells }: { cells: TodayCells }) {
                     {x.best ? (
                       <span
                         data-testid="matrix-best"
-                        className="rounded-full border border-up px-[7px] py-px text-[11px] font-semibold text-up"
+                        className="rounded-full border border-up px-[7px] py-px text-2xs font-semibold text-up"
                       >
                         {BEST_LABEL[mode]}
                       </span>
@@ -121,12 +122,17 @@ export function HomeMatrix({ cells }: { cells: TodayCells }) {
             ) : null}
           </div>
         </div>
-        <div className="flex flex-wrap justify-between gap-2.5 border-t border-line px-6 py-3.5 text-[12.5px] text-muted max-sm:px-4">
-          <span>
-            {EMPTY} = tidak ditampilkan sumber. Buyback Antam hanya untuk 1 g; Pegadaian tidak
-            menampilkan buyback batangan (D-07).
-          </span>
-          <Link href="/bandingkan" className="font-semibold text-gold no-underline hover:text-text">
+        <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2.5 border-t border-line px-6 py-3.5 text-sm max-sm:px-4">
+          <InfoDisclosure label="Catatan" className="min-w-0 flex-[1_1_320px]">
+            <p className="m-0 text-xs text-muted">
+              {EMPTY} = tidak ditampilkan sumber. Buyback Antam hanya untuk 1 g; Pegadaian tidak
+              menampilkan buyback batangan (D-07).
+            </p>
+          </InfoDisclosure>
+          <Link
+            href="/bandingkan"
+            className="text-sm font-semibold whitespace-nowrap text-gold no-underline hover:text-text"
+          >
             Semua gramasi &amp; sumber →
           </Link>
         </div>

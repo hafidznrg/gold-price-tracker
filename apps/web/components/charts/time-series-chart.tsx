@@ -330,7 +330,7 @@ export function TimeSeriesChart({
           className="absolute inset-0"
         />
         {!hasData && (
-          <div className="pointer-events-none absolute inset-0 grid place-items-center text-[13px] text-faint">
+          <div className="pointer-events-none absolute inset-0 grid place-items-center text-sm text-faint">
             {emptyText}
           </div>
         )}

@@ -7,6 +7,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { TimeSeriesChart, type TimeSeries } from '@/components/charts/time-series-chart';
 import { RangeControl, type RangeValue } from '@/components/range-control';
 import { Segmented } from '@/components/segmented';
+import { InfoDisclosure } from '@/components/info-disclosure';
 import { SourceStamp } from '@/components/source-stamp';
 import { useSeriesFiles } from '@/components/use-series-files';
 import {
@@ -367,8 +368,10 @@ export function ExplorerBoard({ options, asOf, stamps, calendar }: ExplorerBoard
         <div className={PANEL_SM}>
           <div className="mb-3 flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
             <div className="min-w-0">
-              <h2 className="m-0 text-[17px] font-semibold">{chartTitle(view.mode, view.agg)}</h2>
-              <p className="num m-0 mt-0.5 text-[13px] text-muted">
+              <h2 className="m-0 text-xl font-semibold max-sm:text-lg">
+                {chartTitle(view.mode, view.agg)}
+              </h2>
+              <p className="num m-0 mt-0.5 text-sm text-muted">
                 {eff.from ? `${formatDate(eff.from)} – ` : 'sampai '}
                 {formatDate(eff.to)} · {formatNumber(active.length)} series
               </p>
@@ -425,7 +428,7 @@ export function ExplorerBoard({ options, asOf, stamps, calendar }: ExplorerBoard
                   key={b.id}
                   className="flex min-w-0 flex-col gap-1.5 rounded-[14px] border border-line px-3.5 py-3"
                 >
-                  <span className="flex min-w-0 items-center gap-2 text-[12.5px] text-muted">
+                  <span className="flex min-w-0 items-center gap-2 text-xs text-muted">
                     <Swatch
                       color={optionColor(b.opt)}
                       dashed={b.pick.price === 'buyback'}
@@ -438,7 +441,7 @@ export function ExplorerBoard({ options, asOf, stamps, calendar }: ExplorerBoard
                   </span>
                   <span
                     className={cn(
-                      'num text-[12.5px]',
+                      'num text-xs',
                       s ? DIR_CLASS[changeDirection(s.changePct)] : 'text-muted',
                     )}
                   >
@@ -450,7 +453,7 @@ export function ExplorerBoard({ options, asOf, stamps, calendar }: ExplorerBoard
             </div>
           ) : null}
 
-          <div className="mt-4 flex flex-col gap-1">
+          <InfoDisclosure className="mt-4">
             {stampSources.map((src) => {
               const st = stamps[src];
               const date =
@@ -462,7 +465,7 @@ export function ExplorerBoard({ options, asOf, stamps, calendar }: ExplorerBoard
                   .at(-1) ??
                 asOf;
               return (
-                <SourceStamp key={src} source={src} date={date || asOf} at={st?.at ?? null}>
+                <SourceStamp key={src} source={src} date={date || asOf} at={st?.at ?? null} bare>
                   {active
                     .filter((a) => a.opt.source === src)
                     .map((a) => displayBrand(a.opt))
@@ -471,11 +474,11 @@ export function ExplorerBoard({ options, asOf, stamps, calendar }: ExplorerBoard
                 </SourceStamp>
               );
             })}
-          </div>
+          </InfoDisclosure>
         </div>
 
         <div className={cn(CARD, 'flex flex-wrap items-center gap-3 px-5 py-[18px]')}>
-          <label htmlFor="share" className="flex-none text-[13px] font-semibold">
+          <label htmlFor="share" className="flex-none text-sm font-semibold">
             Tautan konfigurasi
           </label>
           <input
@@ -483,18 +486,18 @@ export function ExplorerBoard({ options, asOf, stamps, calendar }: ExplorerBoard
             readOnly
             value={base ? shareUrl : ''}
             onFocus={(e) => e.currentTarget.select()}
-            className={cn(FIELD, 'num min-w-0 flex-[1_1_320px] text-[12.5px] text-muted')}
+            className={cn(FIELD, 'num min-w-0 flex-[1_1_320px] text-xs text-muted')}
           />
           <button
             type="button"
             onClick={copy}
-            className="min-h-11 cursor-pointer rounded-xl border-0 bg-btn px-[18px] text-[13.5px] font-semibold text-btntext"
+            className="min-h-11 cursor-pointer rounded-xl border-0 bg-btn px-[18px] text-sm font-semibold text-btntext"
           >
             Salin tautan
           </button>
           <Link
             href="/data"
-            className="inline-flex min-h-11 items-center rounded-xl border border-line px-4 text-[13.5px] font-semibold text-text no-underline hover:text-gold"
+            className="inline-flex min-h-11 items-center rounded-xl border border-line px-4 text-sm font-semibold text-text no-underline hover:text-gold"
           >
             Unduh CSV di halaman Data
           </Link>
@@ -508,14 +511,14 @@ export function ExplorerBoard({ options, asOf, stamps, calendar }: ExplorerBoard
         </div>
 
         <div className="overflow-hidden rounded-[18px] border border-line bg-surface">
-          <h2 className="m-0 px-5 py-[18px] text-[15px] font-semibold">Ringkasan rentang</h2>
+          <h2 className="m-0 px-5 py-[18px] text-base font-semibold">Ringkasan rentang</h2>
           <div className="overflow-x-auto">
             <div role="table" aria-label="Ringkasan rentang" className="min-w-[720px]">
               <div
                 role="row"
                 className={cn(
                   GRID,
-                  'border-t border-line py-2.5 text-[11.5px] font-semibold uppercase tracking-[.1em] text-faint',
+                  'border-t border-line py-2.5 text-2xs font-semibold uppercase tracking-[.1em] text-faint',
                 )}
               >
                 <span role="columnheader">Series</span>
@@ -526,7 +529,7 @@ export function ExplorerBoard({ options, asOf, stamps, calendar }: ExplorerBoard
                 <span role="columnheader">Hari tanpa data</span>
               </div>
               {stats.length === 0 ? (
-                <p className="m-0 border-t border-line px-5 py-4 text-[13px] text-muted">
+                <p className="m-0 border-t border-line px-5 py-4 text-sm text-muted">
                   {loading ? 'Memuat data…' : 'Belum ada series aktif.'}
                 </p>
               ) : null}
@@ -534,7 +537,7 @@ export function ExplorerBoard({ options, asOf, stamps, calendar }: ExplorerBoard
                 <div
                   key={b.id}
                   role="row"
-                  className={cn(GRID, 'items-center border-t border-line py-3 text-[13.5px]')}
+                  className={cn(GRID, 'items-center border-t border-line py-3 text-sm')}
                 >
                   <span role="cell" className="flex min-w-0 items-center gap-2 pr-2 font-semibold">
                     <span
@@ -582,13 +585,13 @@ export function ExplorerBoard({ options, asOf, stamps, calendar }: ExplorerBoard
       >
         <div className={cn(CARD, 'flex flex-col gap-2')}>
           <div className="flex items-center justify-between">
-            <h2 className="m-0 text-[15px] font-semibold">Series aktif</h2>
+            <h2 className="m-0 text-base font-semibold">Series aktif</h2>
             <span className="text-xs text-faint">
               {active.length} dari maks. {MAX_SERIES}
             </span>
           </div>
           {active.length === 0 ? (
-            <p className="m-0 text-[13px] leading-relaxed text-muted">
+            <p className="m-0 text-sm leading-relaxed text-muted">
               Belum ada series. Pilih di bawah lalu tambahkan ke grafik.
             </p>
           ) : null}
@@ -601,7 +604,7 @@ export function ExplorerBoard({ options, asOf, stamps, calendar }: ExplorerBoard
               >
                 <Swatch color={optionColor(a.opt)} dashed={a.pick.price === 'buyback'} />
                 <div className="min-w-0 flex-1">
-                  <div className="text-[13.5px] font-semibold">{label}</div>
+                  <div className="text-sm font-semibold">{label}</div>
                   <div className="mt-0.5 text-xs text-muted">
                     {seriesMeta(a.opt, a.pick.price, view.mode === 'gram')}
                   </div>
@@ -630,7 +633,7 @@ export function ExplorerBoard({ options, asOf, stamps, calendar }: ExplorerBoard
 
         <details open className={cn(CARD, 'group flex flex-col gap-3')}>
           <summary className="flex min-h-9 cursor-pointer list-none items-center justify-between [&::-webkit-details-marker]:hidden">
-            <h2 className="m-0 text-[15px] font-semibold">Tambah series</h2>
+            <h2 className="m-0 text-base font-semibold">Tambah series</h2>
             <span aria-hidden="true" className="text-xs text-faint group-open:rotate-180">
               ▾
             </span>
@@ -727,7 +730,7 @@ export function ExplorerBoard({ options, asOf, stamps, calendar }: ExplorerBoard
 
         <details open className={cn(CARD, 'group flex flex-col gap-3')}>
           <summary className="flex min-h-9 cursor-pointer list-none items-center justify-between [&::-webkit-details-marker]:hidden">
-            <h2 className="m-0 text-[15px] font-semibold">Tampilan</h2>
+            <h2 className="m-0 text-base font-semibold">Tampilan</h2>
             <span aria-hidden="true" className="text-xs text-faint group-open:rotate-180">
               ▾
             </span>
@@ -754,7 +757,7 @@ export function ExplorerBoard({ options, asOf, stamps, calendar }: ExplorerBoard
           </div>
           <label
             className={cn(
-              'flex min-h-11 items-start gap-3 text-[13.5px] leading-snug',
+              'flex min-h-11 items-start gap-3 text-sm leading-snug',
               view.agg === 'd' ? 'cursor-not-allowed opacity-60' : 'cursor-pointer',
             )}
           >
@@ -773,7 +776,7 @@ export function ExplorerBoard({ options, asOf, stamps, calendar }: ExplorerBoard
               </span>
             </span>
           </label>
-          <label className="flex min-h-11 cursor-pointer items-start gap-3 text-[13.5px] leading-snug">
+          <label className="flex min-h-11 cursor-pointer items-start gap-3 text-sm leading-snug">
             <input
               type="checkbox"
               checked={view.ffill}

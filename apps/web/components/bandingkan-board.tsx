@@ -6,6 +6,7 @@ import { TimeSeriesChart, type TimeSeries } from '@/components/charts/time-serie
 import { PremiumSection } from '@/components/premium-section';
 import { RangeControl, type RangeValue } from '@/components/range-control';
 import { Segmented } from '@/components/segmented';
+import { InfoDisclosure } from '@/components/info-disclosure';
 import { SourceStamp } from '@/components/source-stamp';
 import { useSeriesFiles } from '@/components/use-series-files';
 import {
@@ -206,8 +207,8 @@ export function BandingkanBoard({ options, weights, today, asOf, calendar }: Ban
 
       <section className="wrap pb-[22px]">
         <div className={PANEL}>
-          <h2 className="m-0 text-[19px] font-semibold max-sm:text-[16px]">{chartTitle}</h2>
-          <p className="num m-0 mt-1 mb-2.5 text-[13px] text-muted">
+          <h2 className="m-0 text-xl font-semibold max-sm:text-lg">{chartTitle}</h2>
+          <p className="num m-0 mt-1 mb-2.5 text-sm text-muted">
             {shownFrom ? `${formatDate(shownFrom)} – ${formatDate(to)}` : formatDate(to)} · garis
             putus-putus = harga di Pegadaian
           </p>
@@ -245,7 +246,7 @@ export function BandingkanBoard({ options, weights, today, asOf, calendar }: Ban
         <div className="overflow-hidden rounded-card border border-line bg-surface">
           <div className="flex flex-wrap items-end justify-between gap-2.5 px-6 pt-[22px] pb-3.5 max-sm:px-4">
             <h2 className="serif m-0 text-[30px]">Hari ini · {wText}</h2>
-            <span className="text-[12.5px] text-muted">Diurutkan dari harga per gram termurah</span>
+            <span className="text-xs text-muted">Diurutkan dari harga per gram termurah</span>
           </div>
           <div className="overflow-x-auto">
             <div role="table" aria-label="Perbandingan hari ini" className="min-w-[880px]">
@@ -253,7 +254,7 @@ export function BandingkanBoard({ options, weights, today, asOf, calendar }: Ban
                 role="row"
                 className={cn(
                   COLS,
-                  'border-t border-line py-[11px] text-[11.5px] font-semibold tracking-[.1em] text-faint uppercase',
+                  'border-t border-line py-[11px] text-2xs font-semibold tracking-[.1em] text-faint uppercase',
                 )}
               >
                 <span role="columnheader">Brand · sumber</span>
@@ -312,25 +313,23 @@ export function BandingkanBoard({ options, weights, today, asOf, calendar }: Ban
                 })
               )}
             </div>
-            {/* Catatan tabel di luar role="table": baris tanpa sel melanggar aria-required-children. */}
-            <div className="min-w-[880px]">
-              <p className="m-0 border-t border-line px-6 py-3 text-[12.5px] text-muted">
-                Tabungan emas tidak berbentuk keping: harganya linear terhadap berat (dicatat sumber
-                per 0,01 g). Mencetaknya menjadi emas fisik dikenai biaya cetak terpisah.
-              </p>
-              <p className="m-0 px-6 pb-3.5 text-[12.5px] text-muted">
-                Harga Logam Mulia = Harga Dasar, belum termasuk PPh 0,25%; buyback Logam Mulia hanya
-                untuk 1 g.
-              </p>
-            </div>
           </div>
-          {stamps.length > 0 ? (
-            <div className="flex flex-col gap-1 border-t border-line px-6 py-3.5 max-sm:px-4">
-              {stamps.map((r) => (
-                <SourceStamp key={r.def.source} source={r.def.source} date={r.date} at={r.at} />
-              ))}
-            </div>
-          ) : null}
+          <InfoDisclosure
+            label="Sumber & catatan"
+            className="border-t border-line px-6 py-3.5 max-sm:px-4"
+          >
+            <p className="m-0 text-xs text-muted">
+              Tabungan emas tidak berbentuk keping: harganya linear terhadap berat (dicatat sumber
+              per 0,01 g). Mencetaknya menjadi emas fisik dikenai biaya cetak terpisah.
+            </p>
+            <p className="m-0 text-xs text-muted">
+              Harga Logam Mulia = Harga Dasar, belum termasuk PPh 0,25%; buyback Logam Mulia hanya
+              untuk 1 g.
+            </p>
+            {stamps.map((r) => (
+              <SourceStamp key={r.def.source} source={r.def.source} date={r.date} at={r.at} bare />
+            ))}
+          </InfoDisclosure>
         </div>
       </section>
 

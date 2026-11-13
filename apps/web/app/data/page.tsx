@@ -79,9 +79,9 @@ function DownloadCard({ d, builtAt }: { d: DownloadEntry; builtAt: string }) {
       <div className="flex items-start gap-2.5">
         <span className={cn('mt-[5px] size-2.5 flex-none rounded-[3px]', DOT[d.color])} />
         <div>
-          <h3 className="m-0 text-[15.5px] font-semibold">{d.label}</h3>
+          <h3 className="m-0 text-base font-semibold">{d.label}</h3>
           {DESC[d.id] ? (
-            <div className="mt-1 text-[12.5px] leading-[1.45] text-muted">{DESC[d.id]}</div>
+            <div className="mt-1 text-xs leading-[1.45] text-muted">{DESC[d.id]}</div>
           ) : null}
         </div>
       </div>
@@ -96,11 +96,11 @@ function DownloadCard({ d, builtAt }: { d: DownloadEntry; builtAt: string }) {
           />
         </div>
         <div className="num text-base font-semibold">{whenText(d)}</div>
-        <div className="num text-[12.5px] leading-normal text-muted">{valueText(d)}</div>
+        <div className="num text-xs leading-normal text-muted">{valueText(d)}</div>
       </div>
       <div className="mt-auto flex flex-col gap-2.5">
         <div className="flex flex-wrap items-center justify-between gap-2.5">
-          <span className="num text-[12.5px] text-faint">{rangeText(d)}</span>
+          <span className="num text-xs text-faint">{rangeText(d)}</span>
           {multi ? null : (
             <DownloadButtons json={d.files[0]?.json} csv={d.files[0]?.csv} label={d.label} />
           )}
@@ -108,7 +108,7 @@ function DownloadCard({ d, builtAt }: { d: DownloadEntry; builtAt: string }) {
         {multi
           ? d.files.map((f) => (
               <div key={f.csv} className="flex flex-wrap items-center justify-between gap-2.5">
-                <span className="text-[12.5px] text-muted">{f.label}</span>
+                <span className="text-xs text-muted">{f.label}</span>
                 <DownloadButtons json={f.json} csv={f.csv} label={`${d.label} ${f.label}`} />
               </div>
             ))
@@ -145,8 +145,8 @@ function DownloadButtons({ json, csv, label }: { json?: string; csv?: string; la
 function SectionHead({ title, note }: { title: string; note: string }) {
   return (
     <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
-      <h2 className="serif m-0 text-[32px]">{title}</h2>
-      <span className="text-[12.5px] text-muted">{note}</span>
+      <h2 className="serif m-0 text-[32px] max-sm:text-[26px]">{title}</h2>
+      <span className="text-xs text-muted">{note}</span>
     </div>
   );
 }
@@ -169,7 +169,7 @@ export default function DataPage() {
         }
         lead="Data mentah yang sama dengan yang dipakai grafik di situs ini, diperbarui otomatis setiap hari. Bebas dipakai untuk analisis pribadi."
         aside={
-          <span className="rounded-full border border-line px-[13px] py-[9px] text-[12.5px] text-muted">
+          <span className="rounded-full border border-line px-[13px] py-[9px] text-xs text-muted">
             CSV UTF-8 · koma · tanggal Asia/Jakarta
           </span>
         }
@@ -193,7 +193,7 @@ export default function DataPage() {
             ))}
           </div>
         ) : (
-          <div className="rounded-[20px] border border-dashed border-line bg-surface p-5 text-[13.5px] leading-[1.6] text-muted">
+          <div className="rounded-[20px] border border-dashed border-line bg-surface p-5 text-sm leading-[1.6] text-muted">
             Seri pembanding dunia (emas XAU/USD dan kurs USD/IDR) belum dikumpulkan, jadi belum ada
             berkas yang dapat diunduh. Kartu akan muncul di sini begitu datanya tersedia.
           </div>

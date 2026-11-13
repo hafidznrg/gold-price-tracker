@@ -151,7 +151,7 @@ export function PremiumSection() {
 
         <div
           role="note"
-          className="mt-5 rounded-[14px] border border-goldline bg-goldsoft p-4 text-[13px] leading-[1.6] text-text"
+          className="mt-5 rounded-[14px] border border-goldline bg-goldsoft p-4 text-sm leading-[1.6] text-text"
         >
           <strong className="font-semibold">
             Spot dunia bersifat indikatif, premi hanya estimasi.
@@ -166,12 +166,12 @@ export function PremiumSection() {
           {EXPLAIN.map((e) => (
             <div key={e.title} className="rounded-[14px] bg-surface2 p-4">
               <div className="text-sm font-semibold">{e.title}</div>
-              <div className="mt-1.5 text-[12.5px] leading-[1.55] text-muted">{e.body}</div>
+              <div className="mt-1.5 text-xs leading-[1.55] text-muted">{e.body}</div>
             </div>
           ))}
           <div className="rounded-[14px] bg-surface2 p-4">
             <div className="text-sm font-semibold">Estimasi, bukan valuasi</div>
-            <div className="mt-1.5 text-[12.5px] leading-[1.55] text-muted">
+            <div className="mt-1.5 text-xs leading-[1.55] text-muted">
               Spot xaus bersifat indikatif (futures COMEX GC=F); premi dipakai untuk melihat tren.
             </div>
           </div>

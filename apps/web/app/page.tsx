@@ -56,7 +56,7 @@ function SpotStrip({ spot }: { spot: LatestSpot | null }) {
   return (
     <div
       aria-label="Pembanding spot dunia"
-      className="flex flex-wrap gap-x-7 gap-y-2 rounded-xl border border-dashed border-line px-4 py-3 text-[13px] text-muted"
+      className="flex flex-wrap gap-x-7 gap-y-2 rounded-xl border border-dashed border-line px-4 py-3 text-sm text-muted"
     >
       <SpotItem
         label="Emas dunia"
@@ -143,7 +143,7 @@ export default function HomePage() {
               <h1 className="serif m-0 text-[46px] leading-[1.05] max-sm:text-[38px]">
                 Harga emas hari ini
               </h1>
-              <p className="m-0 mt-2.5 max-w-[560px] text-[15px] leading-[1.55] text-muted">
+              <p className="m-0 mt-2.5 max-w-[560px] text-base leading-[1.55] text-muted max-sm:text-sm">
                 Harga jual, buyback, dan selisihnya untuk keping 1 gram, dari situs resmi
                 masing-masing penerbit.
               </p>

@@ -75,7 +75,7 @@ export function HomeTrend({ options, asOf, calendar }: HomeTrendProps) {
       <div className="flex flex-col gap-[18px] rounded-card border border-line bg-surface p-6 max-sm:p-4">
         <div className="flex flex-wrap items-end justify-between gap-3.5">
           <div>
-            <h2 className="serif m-0 text-[32px]">Tren harga jual 1 gram</h2>
+            <h2 className="serif m-0 text-[32px] max-sm:text-[26px]">Tren harga jual 1 gram</h2>
             <p className="m-0 mt-1.5 text-sm text-muted">Tabungan Emas dihitung per gram.</p>
           </div>
           <Segmented
@@ -126,7 +126,7 @@ export function HomeTrend({ options, asOf, calendar }: HomeTrendProps) {
                 data-testid="trend-stat"
                 className="flex flex-col gap-2 rounded-xl border border-line px-3.5 py-3"
               >
-                <span className="flex items-center gap-2 text-[13.5px] font-semibold">
+                <span className="flex items-center gap-2 text-sm font-semibold">
                   <span
                     aria-hidden="true"
                     className={cn('size-2 rounded-[2px]', COLOR_CLASSES[d.color].bg)}
@@ -141,7 +141,7 @@ export function HomeTrend({ options, asOf, calendar }: HomeTrendProps) {
                     {chg === null ? EMPTY : formatPct(chg, 1)}
                   </span>
                 </span>
-                <div className="num grid grid-cols-3 gap-1.5 text-[12.5px]">
+                <div className="num grid grid-cols-3 gap-1.5 text-xs">
                   {[
                     ['Tertinggi', s?.hi],
                     ['Terendah', s?.lo],
@@ -158,7 +158,7 @@ export function HomeTrend({ options, asOf, calendar }: HomeTrendProps) {
           })}
         </div>
 
-        <div className="flex justify-end text-[13px]">
+        <div className="flex justify-end text-sm">
           <Link href="/explorer" className="font-semibold text-gold no-underline hover:text-text">
             Buka riwayat lengkap sejak 2010 →
           </Link>

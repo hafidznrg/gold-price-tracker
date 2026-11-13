@@ -41,18 +41,18 @@ export function HomeEducation() {
   return (
     <section className="wrap flex flex-wrap gap-6 pt-6 pb-16">
       <div className="flex min-w-0 flex-[1_1_520px] flex-col gap-3.5">
-        <h2 className="serif m-0 text-[32px]">Cara membaca angka ini</h2>
+        <h2 className="serif m-0 text-[32px] max-sm:text-[26px]">Cara membaca angka ini</h2>
         <div className="grid grid-cols-2 gap-3 max-sm:grid-cols-1">
           {TERMS.map((t) => (
             <div key={t.title} className="rounded-[14px] border border-line bg-surface p-4">
-              <h3 className="m-0 text-[14.5px] font-semibold">{t.title}</h3>
-              <p className="m-0 mt-1.5 text-[13.5px] leading-[1.55] text-muted">{t.body}</p>
+              <h3 className="m-0 text-sm font-semibold">{t.title}</h3>
+              <p className="m-0 mt-1.5 text-sm leading-[1.55] text-muted">{t.body}</p>
             </div>
           ))}
         </div>
       </div>
       <div className="flex min-w-0 flex-[1_1_420px] flex-col gap-3.5">
-        <h2 className="serif m-0 text-[32px]">Pertanyaan umum</h2>
+        <h2 className="serif m-0 text-[32px] max-sm:text-[26px]">Pertanyaan umum</h2>
         <div className="overflow-hidden rounded-[14px] border border-line bg-surface">
           {FAQ.map((f) => (
             <details key={f.q} className="group border-b border-line px-4 last:border-b-0">
@@ -65,7 +65,7 @@ export function HomeEducation() {
                   +
                 </span>
               </summary>
-              <p className="m-0 mb-3.5 text-[13.5px] leading-[1.6] text-muted">{f.a}</p>
+              <p className="m-0 mb-3.5 text-sm leading-[1.6] text-muted">{f.a}</p>
             </details>
           ))}
         </div>

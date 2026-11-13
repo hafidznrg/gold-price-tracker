@@ -15,7 +15,7 @@ export function ChartLegend({ items, className }: { items: LegendItem[]; classNa
   return (
     <ul
       className={cn(
-        'm-0 flex list-none flex-wrap gap-x-4 gap-y-2 p-0 text-[12.5px] text-muted',
+        'm-0 flex list-none flex-wrap gap-x-4 gap-y-2 p-0 text-xs text-muted',
         className,
       )}
     >

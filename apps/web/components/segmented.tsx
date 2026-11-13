@@ -87,8 +87,8 @@ export function Segmented<T extends string>({
             className={cn(
               'shrink-0 cursor-pointer rounded-field border-0 font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50',
               size === 'sm'
-                ? 'min-h-9 min-w-10 px-2.5 text-[12.5px] max-sm:min-h-10'
-                : 'min-h-11 min-w-12 px-3.5 text-[13px]',
+                ? 'min-h-9 min-w-10 px-2.5 text-xs max-sm:min-h-10'
+                : 'min-h-11 min-w-12 px-3.5 text-sm',
               active ? 'bg-btn text-btntext' : 'bg-transparent text-muted hover:text-text',
             )}
           >

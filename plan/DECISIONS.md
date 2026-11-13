@@ -409,3 +409,11 @@ Log keputusan produk dan teknis (format ringkas ala ADR). Keputusan baru ditamba
 - HP (< 640 px): lead dan eyebrow `PageIntro` disembunyikan (lead tetap di DOM); `Segmented scroll` dan pilihan rentang jadi satu baris geser; chip ringkasan Kelipatan bergeser horizontal; KPI Spread di bawah grafik; tinggi grafik lewat `useChartHeight(desktop, phone)`.
 - Target per halaman alat di 1366×768: kartu grafik/hasil utama mulai ≤ ±330 px dan sebisa mungkin utuh di layar pertama; di HP grafik mendahului panel pengaturan.
 **Konsekuensi:** menyimpang dari ukuran mockup `plan/mockup/*.dc.html` untuk header, pembuka halaman, dan toolbar; beranda tidak berubah. Target sentuh di layar sempit 40 px (masih di atas minimum WCAG 2.5.8 24 px, di bawah saran 44 px).
+
+### D-48 — Skala teks bertingkat dan teks pendukung terlipat
+**Konteks:** audit 13 Nov di HP: beranda memakai 9 ukuran berbeda antara 11–15 px (11, 11,5, 12, 12,5, 13, 13,5, 14, 14,5, 15) sehingga judul panel, isi, dan keterangan tampak sama besar; atribusi "Sumber: …" dan catatan kaki tampil penuh di setiap panel dan bersaing dengan angka.
+**Keputusan:**
+- Skala teks di `globals.css` (`@theme`): `2xs` 11 px (label kapital), `xs` 12 px (keterangan/meta), `sm` 14 px (teks pendukung, tabel, tombol), `base` 16 px (isi/lead), `lg` 18 px / `xl` 20 px (judul panel, angka sekunder), serif 26–60 px (judul seksi, angka utama). Ukuran arbitrer `text-[N px]` di bawah 16 px tidak dipakai lagi.
+- Judul panel 20 px (18 px di HP); judul seksi serif 32 px (26 px di HP, di bawah judul halaman); lead beranda 14 px di HP.
+- `SourceStamp` default terlipat di balik tombol "Sumber" (`InfoDisclosure`, `<details>` tanpa JS, dibuka dengan klik/ketuk). Beberapa sumber di satu panel digabung dalam satu lipatan (`bare`); catatan kaki tabel beranda ("Catatan") dan Bandingkan ("Sumber & catatan") ikut terlipat.
+**Konsekuensi:** FR-26 tetap terpenuhi (atribusi ada di setiap tampilan harga, satu ketukan, dan tetap di DOM), tetapi tidak lagi terlihat tanpa interaksi. Disclaimer "bukan rekomendasi investasi" dan catatan indikatif spot tetap terlihat.

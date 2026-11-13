@@ -51,8 +51,8 @@ export function PageIntro({
             className={cn(
               'm-0 text-muted',
               hero
-                ? 'mt-4 max-w-[620px] text-[15.5px] leading-[1.65]'
-                : 'mt-2 max-w-[760px] text-[14px] leading-[1.55] max-sm:hidden',
+                ? 'mt-4 max-w-[620px] text-base leading-[1.65]'
+                : 'mt-2 max-w-[760px] text-sm leading-[1.55] max-sm:hidden',
             )}
           >
             {lead}

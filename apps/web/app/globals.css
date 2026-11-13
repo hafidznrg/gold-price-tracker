@@ -100,6 +100,22 @@
   --font-sans: var(--font-inter), system-ui, sans-serif;
   --font-serif: var(--font-instrument-serif), Georgia, serif;
 
+  /* Skala teks (D-48): sedikit langkah, jarak ≥ 2 px, agar peran teks terbedakan di HP.
+     2xs label kapital · xs keterangan/meta · sm teks pendukung & tabel · base isi/lead ·
+     lg–xl judul panel & angka sekunder · serif 26–60 judul seksi & angka utama. */
+  --text-2xs: 11px;
+  --text-2xs--line-height: 1.4;
+  --text-xs: 12px;
+  --text-xs--line-height: 1.5;
+  --text-sm: 14px;
+  --text-sm--line-height: 1.5;
+  --text-base: 16px;
+  --text-base--line-height: 1.55;
+  --text-lg: 18px;
+  --text-lg--line-height: 1.4;
+  --text-xl: 20px;
+  --text-xl--line-height: 1.35;
+
   /* Bentuk (mockup README): kartu 18–22 px, kontrol 10–12 px, chip 999 px. */
   --radius-card: 22px;
   --radius-card-sm: 18px;

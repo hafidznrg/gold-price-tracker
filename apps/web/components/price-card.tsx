@@ -58,17 +58,14 @@ export function PriceCard({ c }: { c: CardModel }) {
           {formatRupiah(c.sell)}
         </div>
         <div
-          className={cn(
-            'num mt-1 text-[13px] font-medium',
-            TEXT_DIR[changeDirection(c.change?.abs)],
-          )}
+          className={cn('num mt-1 text-sm font-medium', TEXT_DIR[changeDirection(c.change?.abs)])}
         >
           {c.change ? `${formatChangeRupiah(c.change.abs)} (${formatPct(c.change.pct)})` : EMPTY}{' '}
           <span className="font-normal text-faint">vs kemarin</span>
         </div>
       </div>
       <div className="flex flex-col gap-2 border-t border-line pt-3">
-        <div className="flex justify-between gap-3 text-[13px]">
+        <div className="flex justify-between gap-3 text-sm">
           <span className="text-muted">Buyback</span>
           {hasBuy ? (
             <span className="num font-semibold">{formatRupiah(c.buyback)}</span>
@@ -76,7 +73,7 @@ export function PriceCard({ c }: { c: CardModel }) {
             <span className="text-muted">tidak ditampilkan</span>
           )}
         </div>
-        <div className="flex justify-between gap-3 text-[13px]">
+        <div className="flex justify-between gap-3 text-sm">
           <span className="text-muted">Selisih jual-beli</span>
           {hasBuy ? (
             <span className="num font-semibold">
@@ -96,10 +93,10 @@ export function PriceCard({ c }: { c: CardModel }) {
       {open ? (
         <div
           id={panelId}
-          className="rounded-field bg-surface2 px-3 py-2.5 text-[12.5px] leading-normal text-muted"
+          className="rounded-field bg-surface2 px-3 py-2.5 text-xs leading-normal text-muted"
         >
           {c.note}
-          <SourceStamp source={c.source} date={c.date} at={c.at} className="mt-1.5 text-xs" />
+          <SourceStamp source={c.source} date={c.date} at={c.at} className="mt-1.5" bare />
         </div>
       ) : null}
     </article>

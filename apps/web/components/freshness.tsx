@@ -47,7 +47,7 @@ export function Freshness({
         aria-expanded={open}
         aria-controls={panelId}
         onClick={() => setOpen((o) => !o)}
-        className="inline-flex min-h-11 cursor-pointer items-center gap-2.5 self-start rounded-full border border-line bg-surface px-4 text-left text-[13px] text-text"
+        className="inline-flex min-h-11 cursor-pointer items-center gap-2.5 self-start rounded-full border border-line bg-surface px-4 text-left text-sm text-text"
       >
         <span
           aria-hidden="true"
@@ -85,14 +85,14 @@ export function Freshness({
         >
           {items.map((i) => (
             <li key={i.id} className="flex flex-col gap-1 bg-surface px-3.5 py-3">
-              <span className="flex items-center gap-2 text-[13px] font-semibold">
+              <span className="flex items-center gap-2 text-sm font-semibold">
                 <span
                   aria-hidden="true"
                   className={cn('size-[7px] rounded-full', isFresh(i.date) ? 'bg-up' : 'bg-faint')}
                 />
                 {i.name}
               </span>
-              <span className="text-[12.5px] text-muted">{i.when}</span>
+              <span className="text-xs text-muted">{i.when}</span>
               <span className="sr-only">{isFresh(i.date) ? 'terkini' : 'belum terkini'}</span>
             </li>
           ))}

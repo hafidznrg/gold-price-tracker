@@ -48,7 +48,7 @@ export function BarChart({
     return (
       <ul
         aria-label={ariaLabel}
-        className={cn('m-0 flex list-none items-end gap-2 p-0 text-[12px]', className)}
+        className={cn('m-0 flex list-none items-end gap-2 p-0 text-xs', className)}
       >
         {rows.map((r) => (
           <li key={r.item.label} className="flex min-w-0 flex-1 flex-col items-center gap-1.5">
@@ -77,7 +77,7 @@ export function BarChart({
       {rows.map((r) => (
         <li
           key={r.item.label}
-          className="grid items-center gap-3 text-[13px]"
+          className="grid items-center gap-3 text-sm"
           style={{ gridTemplateColumns: '62px minmax(0,1fr) 64px' }}
         >
           <span className="truncate text-right text-muted">{r.item.label}</span>

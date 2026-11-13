@@ -6,6 +6,7 @@ import { BarChart, type BarItem } from '@/components/charts/bar-chart';
 import { SpreadBandChart } from '@/components/charts/spread-band-chart';
 import { TimeSeriesChart, type TimeSeries } from '@/components/charts/time-series-chart';
 import { RangeControl, type RangeValue } from '@/components/range-control';
+import { InfoDisclosure } from '@/components/info-disclosure';
 import { SourceStamp } from '@/components/source-stamp';
 import { useSeriesFiles } from '@/components/use-series-files';
 import type { ColorToken } from '@/lib/data';
@@ -75,7 +76,7 @@ function Kpi({
 }) {
   return (
     <div className="min-w-0 bg-surface px-3 py-2">
-      <div className="truncate text-[11.5px] text-faint">{label}</div>
+      <div className="truncate text-xs text-faint">{label}</div>
       <div
         className={cn(
           'num text-lg font-semibold leading-tight tracking-[-0.02em]',
@@ -84,7 +85,7 @@ function Kpi({
       >
         {value}
       </div>
-      <div className="num truncate text-[11.5px] text-muted lg:whitespace-normal">{sub}</div>
+      <div className="num truncate text-xs text-muted lg:whitespace-normal">{sub}</div>
     </div>
   );
 }
@@ -290,7 +291,7 @@ export function SpreadBoard({
           </div>
           <div className="flex min-w-0">
             <div className="flex min-w-0 flex-1 items-center gap-2 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-              <span className="mr-1 flex-none whitespace-nowrap text-[12.5px] text-faint">
+              <span className="mr-1 flex-none whitespace-nowrap text-xs text-faint">
                 Pasangan populer
               </span>
               {POPULAR_PAIRS.map((p) => {
@@ -305,7 +306,7 @@ export function SpreadBoard({
                       setBuyId(p.buyback);
                     }}
                     className={cn(
-                      'min-h-9 flex-none cursor-pointer whitespace-nowrap rounded-full border px-3.5 text-[12.5px]',
+                      'min-h-9 flex-none cursor-pointer whitespace-nowrap rounded-full border px-3.5 text-xs',
                       on
                         ? 'border-goldline bg-goldsoft text-text'
                         : 'border-line bg-transparent text-muted hover:text-text',
@@ -332,8 +333,10 @@ export function SpreadBoard({
             <div className="min-w-0 rounded-card border border-line bg-surface p-4">
               <div className="mb-3 flex flex-wrap items-start justify-between gap-3">
                 <div className="min-w-0 flex-[1_1_320px]">
-                  <h2 className="m-0 text-[17px] font-semibold">Harga jual vs buyback</h2>
-                  <p className="num m-0 mt-0.5 text-[13px] text-muted max-sm:truncate">
+                  <h2 className="m-0 text-xl font-semibold max-sm:text-lg">
+                    Harga jual vs buyback
+                  </h2>
+                  <p className="num m-0 mt-0.5 text-sm text-muted max-sm:truncate">
                     {pairLabel} · per gram
                     {days.length > 0
                       ? ` · ${formatDate(days[0]!.date)} – ${formatDate(days.at(-1)!.date)}`
@@ -408,8 +411,8 @@ export function SpreadBoard({
 
       <section className="wrap grid grid-cols-[repeat(auto-fit,minmax(min(420px,100%),1fr))] gap-5 pb-[22px]">
         <div className={PANEL}>
-          <h2 className="m-0 text-[17px] font-semibold">Spread % dari waktu ke waktu</h2>
-          <p className="m-0 mt-1.5 mb-3 text-[13px] text-muted">
+          <h2 className="m-0 text-xl font-semibold max-sm:text-lg">Spread % dari waktu ke waktu</h2>
+          <p className="m-0 mt-1.5 mb-3 text-sm text-muted">
             Garis putus-putus = rata-rata Antam LM · titik = spread tersempit
             {tabDays && tabDays.length > 0 && tabDays[0]!.date > (from ?? '')
               ? ' · Tabungan Emas hanya tersedia 360 hari terakhir'
@@ -429,19 +432,23 @@ export function SpreadBoard({
               ariaLabel="Spread persen Antam Logam Mulia dan Tabungan Emas"
             />
           )}
-          <SourceStamp source="logammulia" date={lmStats?.last.date ?? asOf} className="mt-3">
-            Antam 1 g
-          </SourceStamp>
-          <SourceStamp source="pegadaian" date={tabDays?.at(-1)?.date ?? asOf} className="mt-1">
-            Tabungan Emas, per gram
-          </SourceStamp>
+          <InfoDisclosure className="mt-3">
+            <SourceStamp source="logammulia" date={lmStats?.last.date ?? asOf} bare>
+              Antam 1 g
+            </SourceStamp>
+            <SourceStamp source="pegadaian" date={tabDays?.at(-1)?.date ?? asOf} bare>
+              Tabungan Emas, per gram
+            </SourceStamp>
+          </InfoDisclosure>
         </div>
 
         <div className={PANEL}>
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div className="min-w-0">
-              <h2 className="m-0 text-[17px] font-semibold">Spread % per gramasi hari ini</h2>
-              <p className="m-0 mt-1.5 mb-4 text-[13px] text-muted">{bar?.note}</p>
+              <h2 className="m-0 text-xl font-semibold max-sm:text-lg">
+                Spread % per gramasi hari ini
+              </h2>
+              <p className="m-0 mt-1.5 mb-4 text-sm text-muted">{bar?.note}</p>
             </div>
             <div className="w-[190px] max-w-full">
               <label htmlFor="barSrc" className="sr-only">
@@ -480,8 +487,10 @@ export function SpreadBoard({
       <section className="wrap grid grid-cols-[repeat(auto-fit,minmax(min(420px,100%),1fr))] gap-5 pb-16">
         <div className={cn(PANEL, 'flex flex-col gap-[18px]')}>
           <div>
-            <h2 className="m-0 text-[17px] font-semibold">Emas fisik vs tabungan emas</h2>
-            <p className="m-0 mt-2 text-[13.5px] leading-[1.6] text-muted">
+            <h2 className="m-0 text-xl font-semibold max-sm:text-lg">
+              Emas fisik vs tabungan emas
+            </h2>
+            <p className="m-0 mt-2 text-sm leading-[1.6] text-muted">
               Spread per gram hari ini. Tabungan emas tidak menanggung ongkos cetak per keping,
               sehingga jarak jual–buyback-nya biasanya lebih sempit.
             </p>
@@ -489,7 +498,7 @@ export function SpreadBoard({
           <div className="flex flex-col gap-3">
             {compare.map((c) => (
               <div key={`${c.name}${c.src}`} className="flex flex-col gap-1.5">
-                <div className="flex flex-wrap justify-between gap-x-2.5 text-[13px]">
+                <div className="flex flex-wrap justify-between gap-x-2.5 text-sm">
                   <span className="flex min-w-0 items-center gap-2">
                     <span className={cn('size-[9px] flex-none rounded-[2px]', BG[c.color])} />
                     <span className="font-semibold">{c.name}</span>
@@ -522,8 +531,8 @@ export function SpreadBoard({
 
         <div className={cn(PANEL, 'flex flex-col gap-[18px]')}>
           <div>
-            <h2 className="m-0 text-[17px] font-semibold">Pasangan lintas sumber</h2>
-            <p className="m-0 mt-2 text-[13.5px] leading-[1.6] text-muted">
+            <h2 className="m-0 text-xl font-semibold max-sm:text-lg">Pasangan lintas sumber</h2>
+            <p className="m-0 mt-2 text-sm leading-[1.6] text-muted">
               {problem
                 ? problem
                 : `${pairLabel}. Dicocokkan pada brand, produk, dan gramasi yang sama di tanggal yang sama; buyback UBS memakai tahun produksi berjalan.`}
@@ -558,11 +567,12 @@ export function SpreadBoard({
                   </div>
                 </div>
               </div>
-              <div className="flex flex-col gap-1">
+              <InfoDisclosure>
                 <SourceStamp
                   source={sell.source}
                   date={pairToday.sellDate ?? asOf}
                   at={pairToday.sellAt}
+                  bare
                 >
                   harga jual
                 </SourceStamp>
@@ -571,11 +581,12 @@ export function SpreadBoard({
                     source={buy.source}
                     date={pairToday.buyDate ?? asOf}
                     at={pairToday.buyAt}
+                    bare
                   >
                     buyback
                   </SourceStamp>
                 ) : null}
-              </div>
+              </InfoDisclosure>
             </>
           ) : problem ? null : (
             <p className="m-0 text-sm text-muted">

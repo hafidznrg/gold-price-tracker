@@ -187,7 +187,7 @@ export function KelipatanBoard({ annual, until, spot, events }: KelipatanBoardPr
             return (
               <span
                 key={c.id}
-                className="num inline-flex shrink-0 items-center gap-2.5 whitespace-nowrap rounded-[10px] border border-line bg-surface px-3 py-1.5 text-[13px]"
+                className="num inline-flex shrink-0 items-center gap-2.5 whitespace-nowrap rounded-[10px] border border-line bg-surface px-3 py-1.5 text-sm"
               >
                 <span aria-hidden="true" className={cn('size-2.5 rounded-[3px]', c.cls)} />
                 <span className="text-muted">{c.name}</span>
@@ -201,7 +201,7 @@ export function KelipatanBoard({ annual, until, spot, events }: KelipatanBoardPr
 
       <section className="wrap flex flex-wrap items-center justify-between gap-x-4 gap-y-2.5 pb-3.5">
         <div className="flex max-w-full min-w-0 flex-wrap items-center gap-2.5">
-          <span className="text-[12.5px] text-muted max-sm:hidden">Tahun dasar</span>
+          <span className="text-xs text-muted max-sm:hidden">Tahun dasar</span>
           <Segmented
             size="sm"
             scroll
@@ -219,7 +219,7 @@ export function KelipatanBoard({ annual, until, spot, events }: KelipatanBoardPr
             value={agg}
             onChange={setAgg}
           />
-          <label className="inline-flex min-h-9 cursor-pointer items-center gap-2.5 text-[13.5px]">
+          <label className="inline-flex min-h-9 cursor-pointer items-center gap-2.5 text-sm">
             <input
               type="checkbox"
               checked={showLm}
@@ -233,13 +233,13 @@ export function KelipatanBoard({ annual, until, spot, events }: KelipatanBoardPr
 
       <section className="wrap pb-[22px]">
         <div className={PANEL}>
-          <h2 className="m-0 text-[19px] font-semibold max-sm:text-[16px]">
+          <h2 className="m-0 text-xl font-semibold max-sm:text-lg">
             Kelipatan harga emas dan kurs sejak {base}{' '}
             <span className="font-normal text-muted">
               ({agg === 'avg' ? 'rata-rata tahunan' : 'penutupan akhir tahun'})
             </span>
           </h2>
-          <p className="m-0 mt-1 mb-2.5 text-[13px] text-muted">
+          <p className="m-0 mt-1 mb-2.5 text-sm text-muted">
             Nilai tahun {base} = ×1 · sumbu Y berskala log, jarak yang sama berarti kenaikan persen
             yang sama
           </p>
@@ -301,7 +301,7 @@ export function KelipatanBoard({ annual, until, spot, events }: KelipatanBoardPr
         <div className="overflow-hidden rounded-card border border-line bg-surface">
           <div className="px-6 pt-[22px] pb-3.5 max-sm:px-4">
             <h2 className="serif m-0 text-[30px]">Angka di balik garis</h2>
-            <p className="m-0 mt-1.5 text-[13.5px] text-muted">
+            <p className="m-0 mt-1.5 text-sm text-muted">
               Untuk setiap tahun dipakai data harian bila cakupannya ≥ 80% hari kerja, jika tidak
               rata-rata bulanan, jika tidak nilai tahunan.
               {partialYear ? ` *${partialYear} = sampai ${formatDate(until ?? '')}.` : ''}
@@ -325,7 +325,7 @@ export function KelipatanBoard({ annual, until, spot, events }: KelipatanBoardPr
                 role="row"
                 className={cn(
                   COLS,
-                  'sticky top-0 z-10 border-t border-line bg-surface py-[11px] text-[11.5px] font-semibold tracking-[.1em] text-faint uppercase',
+                  'sticky top-0 z-10 border-t border-line bg-surface py-[11px] text-2xs font-semibold tracking-[.1em] text-faint uppercase',
                 )}
               >
                 <span role="columnheader">Tahun</span>
@@ -342,7 +342,7 @@ export function KelipatanBoard({ annual, until, spot, events }: KelipatanBoardPr
                   role="row"
                   className={cn(
                     COLS,
-                    'border-t border-line py-3 text-[13.5px]',
+                    'border-t border-line py-3 text-sm',
                     r.year === base && 'bg-goldsoft',
                   )}
                 >
@@ -353,13 +353,13 @@ export function KelipatanBoard({ annual, until, spot, events }: KelipatanBoardPr
                   <span role="cell" className="num">
                     {r.usd === null ? EMPTY : `US$${formatNumber(r.usd, 2)}`}
                   </span>
-                  <span role="cell" className="text-[12.5px] text-muted">
+                  <span role="cell" className="text-xs text-muted">
                     {sourceLabel(r.usdSrc, agg)}
                   </span>
                   <span role="cell" className="num">
                     {r.fx === null ? EMPTY : formatRupiah(r.fx)}
                   </span>
-                  <span role="cell" className="text-[12.5px] text-muted">
+                  <span role="cell" className="text-xs text-muted">
                     {sourceLabel(r.fxSrc, agg)}
                   </span>
                   <span role="cell" className="num">
@@ -373,7 +373,7 @@ export function KelipatanBoard({ annual, until, spot, events }: KelipatanBoardPr
               {spotPt && baseRow?.idr ? (
                 <div
                   role="row"
-                  className={cn(COLS, 'border-t border-line bg-surface2 py-3 text-[13.5px]')}
+                  className={cn(COLS, 'border-t border-line bg-surface2 py-3 text-sm')}
                 >
                   <span role="cell" className="num font-semibold">
                     Spot
@@ -381,13 +381,13 @@ export function KelipatanBoard({ annual, until, spot, events }: KelipatanBoardPr
                   <span role="cell" className="num">
                     US${formatNumber(spotPt.usd, 2)}
                   </span>
-                  <span role="cell" className="text-[12.5px] text-muted">
+                  <span role="cell" className="text-xs text-muted">
                     xaus · indikatif, {formatDate(spotPt.date)}
                   </span>
                   <span role="cell" className="num">
                     {formatRupiah(spotPt.fx)}
                   </span>
-                  <span role="cell" className="text-[12.5px] text-muted">
+                  <span role="cell" className="text-xs text-muted">
                     JISDOR · harian
                   </span>
                   <span role="cell" className="num">
