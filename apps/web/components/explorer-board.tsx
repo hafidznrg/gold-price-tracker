@@ -88,17 +88,36 @@ const SECTION =
   'min-w-0 rounded-[18px] border border-line bg-surface p-5 max-sm:rounded-none max-sm:border-0 max-sm:border-t max-sm:bg-transparent max-sm:px-0 max-sm:py-4';
 const FIELD_LABEL = 'flex min-w-0 flex-col gap-1.5 text-xs font-medium text-muted';
 const GROUP_LABEL = 'text-xs font-medium text-muted';
-const GRID = 'grid grid-cols-[minmax(220px,2fr)_repeat(4,minmax(100px,1fr))] px-5';
+/**
+ * Tabel ringkasan diatur menurut lebar kartunya sendiri (container query). Di HP tiap series
+ * jadi blok ringkas: judul + Akhir di baris atas, Awal/Terendah/Tertinggi sejajar di bawahnya,
+ * tanpa geser ke samping. Dari 580px kartu berubah jadi tabel 5 kolom.
+ */
+const SUM_WIDE = '@min-[580px]:grid-cols-[minmax(0,1.5fr)_repeat(4,minmax(0,1fr))]';
+const SUM_ROW = cn(
+  'grid grid-cols-3 gap-x-3 gap-y-2.5 border-t border-line px-5 @min-[580px]:items-center',
+  SUM_WIDE,
+);
+const SUM_CELL = 'num flex min-w-0 flex-col @min-[580px]:items-end @min-[580px]:text-right';
+const SUM_CELL_LABEL =
+  'mb-px text-2xs font-semibold uppercase tracking-[.08em] text-faint @min-[580px]:hidden';
+/** Teks keterangan di bawah angka (tanggal, "mulai …"): di HP lebih kecil dari angkanya. */
+const SUM_NOTE = 'text-[11px] leading-snug text-muted @min-[580px]:text-xs';
+/** Teks utama blok (nama series, harga Akhir): di HP sedikit lebih besar dari angka lain. */
+const SUM_PRIMARY = 'text-[15px] font-semibold leading-snug @min-[580px]:text-sm';
+
+function seriesParts(o: ExplorerOption, price: PriceField): { title: string; meta: string } {
+  return {
+    title: [displayBrand(o), SOURCE_LABELS[o.source]].join(' · '),
+    meta: [o.kind === 'fisik' ? formatWeight(o.w) : null, PRICE_LABEL[price]]
+      .filter(Boolean)
+      .join(' · '),
+  };
+}
 
 function seriesLabel(o: ExplorerOption, price: PriceField): string {
-  return [
-    displayBrand(o),
-    SOURCE_LABELS[o.source],
-    o.kind === 'fisik' ? formatWeight(o.w) : null,
-    PRICE_LABEL[price],
-  ]
-    .filter(Boolean)
-    .join(' · ');
+  const { title, meta } = seriesParts(o, price);
+  return meta ? `${title} · ${meta}` : title;
 }
 
 const MODE_OPTIONS: { value: ValueMode; label: string }[] = [
@@ -175,14 +194,24 @@ function seriesMeta(o: ExplorerOption, price: PriceField, perGram = false): stri
     .join(' · ');
 }
 
-function Swatch({ color, dashed, width = 26 }: { color: string; dashed: boolean; width?: number }) {
+function Swatch({
+  color,
+  dashed,
+  width = 26,
+  className,
+}: {
+  color: string;
+  dashed: boolean;
+  width?: number;
+  className?: string;
+}) {
   return (
     <svg
       width={width}
       height="10"
       viewBox={`0 0 ${width} 10`}
       aria-hidden="true"
-      className="flex-none"
+      className={cn('flex-none', className)}
     >
       <path
         d={`M1 5 H${width - 1}`}
@@ -547,64 +576,114 @@ export function ExplorerBoard({ options, asOf, stamps, calendar }: ExplorerBoard
 
         <div className="overflow-hidden rounded-[18px] border border-line bg-surface">
           <h2 className="m-0 px-5 py-[18px] text-base font-semibold">Ringkasan rentang</h2>
-          <div className="overflow-x-auto">
-            <div role="table" aria-label="Ringkasan rentang" className="min-w-[620px]">
+          <div className="@container">
+            <div role="table" aria-label="Ringkasan rentang">
               <div
                 role="row"
                 className={cn(
-                  GRID,
-                  'border-t border-line py-2.5 text-2xs font-semibold uppercase tracking-[.1em] text-faint',
+                  SUM_ROW,
+                  'hidden py-2.5 text-2xs font-semibold uppercase tracking-[.1em] text-faint @min-[580px]:grid',
                 )}
               >
                 <span role="columnheader">Series</span>
-                <span role="columnheader">Awal</span>
-                <span role="columnheader">Akhir</span>
-                <span role="columnheader">Terendah</span>
-                <span role="columnheader">Tertinggi</span>
+                <span role="columnheader" className="text-right">
+                  Awal
+                </span>
+                <span role="columnheader" className="text-right">
+                  Akhir
+                </span>
+                <span role="columnheader" className="text-right">
+                  Terendah
+                </span>
+                <span role="columnheader" className="text-right">
+                  Tertinggi
+                </span>
               </div>
               {stats.length === 0 ? (
                 <p className="m-0 border-t border-line px-5 py-4 text-sm text-muted">
                   {loading ? 'Memuat data…' : 'Belum ada series aktif.'}
                 </p>
               ) : null}
-              {stats.map(({ b, s }) => (
-                <div
-                  key={b.id}
-                  role="row"
-                  className={cn(GRID, 'items-center border-t border-line py-3 text-sm')}
-                >
-                  <span role="cell" className="flex min-w-0 items-center gap-2 pr-2 font-semibold">
+              {stats.map(({ b, s }) => {
+                const { title, meta } = seriesParts(b.opt, b.pick.price);
+                return (
+                  <div
+                    key={b.id}
+                    role="row"
+                    className={cn(
+                      SUM_ROW,
+                      'py-3 text-[13px] @min-[580px]:py-3.5 @min-[580px]:text-sm',
+                      // HP sangat sempit (≈320px): angka sedikit lebih kecil agar 3 kolom muat.
+                      '@max-[330px]:gap-x-2 @max-[330px]:px-4 @max-[330px]:text-xs',
+                    )}
+                  >
+                    {/* HP: judul selebar baris, ruang kanannya dipakai sel Akhir (lihat di bawah). */}
                     <span
-                      className="size-2 flex-none rounded-[2px]"
-                      style={{ background: colorVar(optionColor(b.opt)) }}
-                    />
-                    <span className="min-w-0">{seriesLabel(b.opt, b.pick.price)}</span>
-                  </span>
-                  <span role="cell" className="num">
-                    {s ? formatRupiah(s.first.value) : EMPTY}
-                    {s?.startsLate ? (
-                      <span className="block text-xs text-muted">
-                        mulai {formatDate(s.first.date)}
+                      role="cell"
+                      className="col-span-3 col-start-1 row-start-1 flex min-w-0 items-start gap-2.5 pr-[108px] @min-[580px]:col-span-1 @min-[580px]:col-start-auto @min-[580px]:row-start-auto @min-[580px]:pr-0"
+                    >
+                      <Swatch
+                        color={optionColor(b.opt)}
+                        dashed={b.pick.price === 'buyback'}
+                        width={16}
+                        className="mt-[6px] flex-none @min-[580px]:mt-[5px]"
+                      />
+                      <span className="flex min-w-0 flex-col">
+                        <span className={SUM_PRIMARY}>{title}</span>
+                        {meta ? <span className="text-xs text-muted">{meta}</span> : null}
                       </span>
-                    ) : null}
-                  </span>
-                  <span role="cell" className="num">
-                    {s ? formatRupiah(s.last.value) : EMPTY}
-                  </span>
-                  <span role="cell" className="num">
-                    {s ? formatRupiah(s.min.value) : EMPTY}
-                    {s ? (
-                      <span className="block text-xs text-muted">{formatDate(s.min.date)}</span>
-                    ) : null}
-                  </span>
-                  <span role="cell" className="num">
-                    {s ? formatRupiah(s.max.value) : EMPTY}
-                    {s ? (
-                      <span className="block text-xs text-muted">{formatDate(s.max.date)}</span>
-                    ) : null}
-                  </span>
-                </div>
-              ))}
+                    </span>
+                    <span role="cell" className={SUM_CELL}>
+                      <span aria-hidden="true" className={SUM_CELL_LABEL}>
+                        Awal
+                      </span>
+                      <span className="whitespace-nowrap">
+                        {s ? formatRupiah(s.first.value) : EMPTY}
+                      </span>
+                      {s?.startsLate ? (
+                        <span className={SUM_NOTE}>mulai {formatDate(s.first.date)}</span>
+                      ) : null}
+                    </span>
+                    {/* HP: Akhir menumpang di kanan baris judul; sel lain mengalir ke baris kedua. */}
+                    <span
+                      role="cell"
+                      className="num col-span-3 col-start-1 row-start-1 flex flex-col items-end justify-self-end text-right @min-[580px]:col-span-1 @min-[580px]:col-start-auto @min-[580px]:row-start-auto @min-[580px]:justify-self-stretch"
+                    >
+                      <span className={cn(SUM_PRIMARY, 'whitespace-nowrap')}>
+                        {s ? formatRupiah(s.last.value) : EMPTY}
+                      </span>
+                      {s ? (
+                        <span
+                          className={cn(
+                            'text-xs font-medium',
+                            DIR_CLASS[changeDirection(s.changePct)],
+                          )}
+                        >
+                          {formatPct(s.changePct)}
+                        </span>
+                      ) : null}
+                    </span>
+                    <span role="cell" className={SUM_CELL}>
+                      <span aria-hidden="true" className={SUM_CELL_LABEL}>
+                        Terendah
+                      </span>
+                      <span className="whitespace-nowrap">
+                        {s ? formatRupiah(s.min.value) : EMPTY}
+                      </span>
+                      {s ? <span className={SUM_NOTE}>{formatDate(s.min.date)}</span> : null}
+                    </span>
+                    <span role="cell" className={SUM_CELL}>
+                      <span aria-hidden="true" className={SUM_CELL_LABEL}>
+                        Tertinggi
+                      </span>
+                      <span className="whitespace-nowrap">
+                        {s ? formatRupiah(s.max.value) : EMPTY}
+                      </span>
+                      {s ? <span className={SUM_NOTE}>{formatDate(s.max.date)}</span> : null}
+                    </span>
+                  </div>
+                );
+              })}
             </div>
           </div>
         </div>
