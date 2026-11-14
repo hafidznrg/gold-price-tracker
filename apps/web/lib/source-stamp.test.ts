@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { sourceStampText } from './source-stamp';
+import { sourceStampParts, sourceStampText } from './source-stamp';
 
 describe('sourceStampText', () => {
   it('Logam Mulia: tanggal + jam', () => {
@@ -21,5 +21,14 @@ describe('sourceStampText', () => {
     expect(sourceStampText('pegadaian', '2026-10-31', null)).toBe(
       'Sumber: pegadaian.co.id · harga terbit 31 Okt 2026',
     );
+  });
+});
+
+describe('sourceStampParts', () => {
+  it('memisahkan domain dan keterangan waktu', () => {
+    expect(sourceStampParts('logammulia', '2026-10-30', '2026-10-30T08:32:00+07:00')).toEqual({
+      domain: 'logammulia.com',
+      when: 'terakhir diperbarui 30 Okt 2026, 08.32 WIB',
+    });
   });
 });

@@ -6,8 +6,7 @@ import { TimeSeriesChart, type TimeSeries } from '@/components/charts/time-serie
 import { PremiumSection } from '@/components/premium-section';
 import { RangeControl, type RangeValue } from '@/components/range-control';
 import { Segmented } from '@/components/segmented';
-import { InfoPopover } from '@/components/info-popover';
-import { SourceStamp } from '@/components/source-stamp';
+import { InfoHeading, InfoPopover, InfoRows } from '@/components/info-popover';
 import { useSeriesFiles } from '@/components/use-series-files';
 import {
   COMPARE_DEFS,
@@ -32,6 +31,7 @@ import {
 } from '@/lib/explorer';
 import { EMPTY, formatDate, formatPct, formatRupiah, formatWeight } from '@/lib/format';
 import { rangeToDates } from '@/lib/range';
+import { sourceStampParts } from '@/lib/source-stamp';
 import { cn } from '@/lib/utils';
 import { useChartHeight } from '@/components/use-chart-height';
 
@@ -316,23 +316,22 @@ export function BandingkanBoard({ options, weights, today, asOf, calendar }: Ban
           </div>
           <div className="border-t border-line px-6 py-3.5 max-sm:px-4">
             <InfoPopover label="Sumber & catatan" ariaLabel="Sumber & catatan" side="top">
-              <p className="m-0 text-xs text-muted">
-                Tabungan emas tidak berbentuk keping: harganya linear terhadap berat (dicatat sumber
-                per 0,01 g). Mencetaknya menjadi emas fisik dikenai biaya cetak terpisah.
-              </p>
-              <p className="m-0 text-xs text-muted">
-                Harga Logam Mulia = Harga Dasar, belum termasuk PPh 0,25%; buyback Logam Mulia hanya
-                untuk 1 g.
-              </p>
-              {stamps.map((r) => (
-                <SourceStamp
-                  key={r.def.source}
-                  source={r.def.source}
-                  date={r.date}
-                  at={r.at}
-                  bare
-                />
-              ))}
+              <InfoHeading>Catatan</InfoHeading>
+              <ul className="m-0 flex list-disc flex-col gap-1 pl-4 text-text marker:text-faint">
+                <li>
+                  Tabungan emas tidak berbentuk keping: harganya naik lurus mengikuti berat (dicatat
+                  sumber per 0,01 g). Mencetaknya jadi emas fisik dikenai biaya cetak terpisah.
+                </li>
+                <li>Harga Logam Mulia adalah Harga Dasar, belum termasuk PPh 0,25%.</li>
+                <li>Buyback Logam Mulia hanya tersedia untuk 1 g.</li>
+              </ul>
+              <InfoHeading className="mt-2 border-t border-line pt-2.5">Sumber</InfoHeading>
+              <InfoRows
+                rows={stamps.map((r) => {
+                  const p = sourceStampParts(r.def.source, r.date, r.at);
+                  return [p.domain, p.when] as const;
+                })}
+              />
             </InfoPopover>
           </div>
         </div>

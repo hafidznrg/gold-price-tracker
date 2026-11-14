@@ -2,13 +2,13 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { TimeSeriesChart, type TimeSeries } from '@/components/charts/time-series-chart';
-import { InfoPopover } from '@/components/info-popover';
+import { InfoPopover, InfoRows } from '@/components/info-popover';
 import { Segmented } from '@/components/segmented';
-import { SourceStamp } from '@/components/source-stamp';
 import { fetchPremiumAntam, type PremiumAntamFile } from '@/lib/data';
 import { premiumMonthlyLine, premiumStats } from '@/lib/bandingkan';
 import { formatDate, formatMonthYear, formatPct } from '@/lib/format';
 import { rangeToDates } from '@/lib/range';
+import { sourceStampParts } from '@/lib/source-stamp';
 
 type PremiumView = 'bulanan' | 'harian';
 
@@ -189,11 +189,14 @@ export function PremiumSection() {
               ariaLabel="Premi Antam 1 gram terhadap harga emas dunia dari waktu ke waktu"
             />
             <InfoPopover label="Sumber" ariaLabel="Sumber data" side="top" className="mt-3">
-              <SourceStamp source="logammulia" date={stats.last.date} bare>
-                Antam 1 g
-              </SourceStamp>
-              <dl className="m-0 mt-1.5 grid grid-cols-[auto_minmax(0,1fr)] gap-x-3 gap-y-1.5 border-t border-line pt-2.5">
-                {[
+              <InfoRows
+                rows={[
+                  [
+                    'Sumber',
+                    Object.values(sourceStampParts('logammulia', stats.last.date, null)).join(
+                      ' · ',
+                    ),
+                  ],
                   ['Rumus', 'harga Antam 1 g ÷ (XAU/USD × USD/IDR ÷ 31,1035) − 1'],
                   ['Spot', `penutupan ${formatDate(stats.last.spotDate)}`],
                   [
@@ -210,14 +213,9 @@ export function PremiumSection() {
                     'Tertinggi',
                     `${formatPct(stats.max.pct, 1, false)} · ${formatDate(stats.max.date)}`,
                   ],
-                ].map(([k, v]) => (
-                  <div key={k} className="contents">
-                    <dt className="text-faint">{k}</dt>
-                    <dd className="num m-0 text-text">{v}</dd>
-                  </div>
-                ))}
-              </dl>
-              <p className="m-0 text-[11px] text-faint">
+                ]}
+              />
+              <p className="m-0 mt-1 text-[11px] text-faint">
                 Terendah dan tertinggi dari premi harian.
               </p>
             </InfoPopover>

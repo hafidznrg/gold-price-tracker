@@ -90,3 +90,37 @@ export function InfoPopover({
     </div>
   );
 }
+
+/** Judul kecil pemisah bagian di dalam popover. */
+export function InfoHeading({ children, className }: { children: ReactNode; className?: string }) {
+  return (
+    <p
+      className={cn(
+        'm-0 text-[11px] font-semibold tracking-[0.04em] text-faint uppercase',
+        className,
+      )}
+    >
+      {children}
+    </p>
+  );
+}
+
+/** Daftar label–nilai dua kolom di dalam popover: label pucat, nilai terang. */
+export function InfoRows({
+  rows,
+  className,
+}: {
+  rows: readonly (readonly [ReactNode, ReactNode])[];
+  className?: string;
+}) {
+  return (
+    <dl className={cn('m-0 grid grid-cols-[auto_minmax(0,1fr)] gap-x-3 gap-y-1.5', className)}>
+      {rows.map(([k, v], i) => (
+        <div key={i} className="contents">
+          <dt className="text-faint">{k}</dt>
+          <dd className="num m-0 text-text">{v}</dd>
+        </div>
+      ))}
+    </dl>
+  );
+}

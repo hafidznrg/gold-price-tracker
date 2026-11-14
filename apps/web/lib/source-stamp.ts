@@ -20,10 +20,20 @@ const SOURCE_VERB: Record<PriceSource, string> = {
   ubslifestyle: 'data',
 };
 
-export function sourceStampText(source: PriceSource, date: string, at: string | null): string {
-  const when =
+/** Bagian-bagian atribusi untuk tata letak berkolom: domain dan keterangan waktu. */
+export function sourceStampParts(
+  source: PriceSource,
+  date: string,
+  at: string | null,
+): { domain: string; when: string } {
+  const time =
     source === 'ubslifestyle' || !at
       ? formatDate(date)
       : `${formatDate(date)}, ${formatTimeWib(at)}`;
-  return `Sumber: ${SOURCE_DOMAIN[source]} · ${SOURCE_VERB[source]} ${when}`;
+  return { domain: SOURCE_DOMAIN[source], when: `${SOURCE_VERB[source]} ${time}` };
+}
+
+export function sourceStampText(source: PriceSource, date: string, at: string | null): string {
+  const { domain, when } = sourceStampParts(source, date, at);
+  return `Sumber: ${domain} · ${when}`;
 }
