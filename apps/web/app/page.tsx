@@ -84,7 +84,7 @@ function SpotStrip({ spot }: { spot: LatestSpot | null }) {
 
 function whenOf(source: string, date: string | null, at: string | null): string {
   if (!date) return EMPTY;
-  if (source === 'ubslifestyle' || !at) return `data ${formatDate(date, false)} (sumber tanpa jam)`;
+  if (source === 'ubslifestyle' || !at) return `data ${formatDate(date, false)}`;
   const verb = source === 'pegadaian' ? 'harga terbit' : '';
   return `${formatDate(date, false)} · ${verb} ${formatTimeWib(at)}`.replace('  ', ' ');
 }

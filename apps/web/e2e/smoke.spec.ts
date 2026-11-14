@@ -262,6 +262,48 @@ test.describe('Kelipatan', () => {
   });
 });
 
+test.describe('Data', () => {
+  test('tombol unduh membuka pop-up konfirmasi, tidak langsung mengunduh', async ({ page }) => {
+    await page.goto('/data');
+    await expect(page.locator('main')).not.toContainText('sumber tanpa jam');
+
+    let downloaded = false;
+    page.on('download', () => {
+      downloaded = true;
+    });
+    await page.getByRole('button', { name: 'Unduh data Emas batangan · Pegadaian' }).click();
+    const dialog = page.getByRole('dialog', { name: 'Emas batangan · Pegadaian' });
+    await expect(dialog).toBeVisible();
+    expect(downloaded).toBe(false);
+
+    // Default CSV seri pertama; ganti ke UBS + JSON memperbarui nama berkas dan tautan.
+    await expect(dialog.getByText('pegadaian-galeri24.csv')).toBeVisible();
+    await dialog.getByText('UBS', { exact: true }).click();
+    await dialog.getByText('JSON', { exact: true }).click();
+    await expect(dialog.getByText('pegadaian-ubs.json')).toBeVisible();
+    await expect(dialog.getByRole('link', { name: 'Unduh JSON' })).toHaveAttribute(
+      'href',
+      /pegadaian-ubs\.json$/,
+    );
+
+    await dialog.getByRole('button', { name: 'Batal' }).click();
+    await expect(dialog).toBeHidden();
+    expect(downloaded).toBe(false);
+  });
+
+  test('konfirmasi di pop-up mengunduh berkas yang dipilih', async ({ page }) => {
+    await page.goto('/data');
+    await page.getByRole('button', { name: 'Unduh data Antam · Logam Mulia' }).click();
+    const dialog = page.getByRole('dialog', { name: 'Antam · Logam Mulia' });
+    const [download] = await Promise.all([
+      page.waitForEvent('download'),
+      dialog.getByRole('link', { name: 'Unduh CSV' }).click(),
+    ]);
+    expect(download.suggestedFilename()).toMatch(/\.csv$/);
+    await expect(dialog).toBeHidden();
+  });
+});
+
 test.describe('Kalkulator', () => {
   const START = '/kalkulator?d=2024-03-15&q=3';
 

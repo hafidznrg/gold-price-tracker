@@ -202,3 +202,39 @@
     outline-offset: 2px;
   }
 }
+
+/* Pop-up unduh (DownloadDialog): kunci scroll halaman saat terbuka; animasi masuk singkat
+   (muncul di tengah pada desktop/tablet, naik dari bawah pada HP). */
+html:has(dialog.download-dialog[open]) {
+  overflow: hidden;
+}
+@media (prefers-reduced-motion: no-preference) {
+  dialog.download-dialog[open] {
+    animation: download-dialog-in 160ms ease-out;
+  }
+  dialog.download-dialog[open]::backdrop {
+    animation: download-backdrop-in 160ms ease-out;
+  }
+  @media (max-width: 639px) {
+    dialog.download-dialog[open] {
+      animation-name: download-sheet-in;
+      animation-duration: 220ms;
+    }
+  }
+}
+@keyframes download-dialog-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+}
+@keyframes download-sheet-in {
+  from {
+    transform: translateY(100%);
+  }
+}
+@keyframes download-backdrop-in {
+  from {
+    opacity: 0;
+  }
+}

@@ -1,8 +1,7 @@
 import type { Metadata } from 'next';
 import { DataAge } from '@/components/data-age';
 import { PageIntro } from '@/components/page-intro';
-import { buttonVariants } from '@/components/ui/button';
-import { dataUrl } from '@/lib/data/paths';
+import { DownloadDialog } from '@/components/download-dialog';
 import type { ColorToken, DownloadEntry } from '@/lib/data';
 import { readMeta } from '@/lib/data/load-fs';
 import { formatDate, formatNumber, formatRupiah, formatTimeWib, formatWeight } from '@/lib/format';
@@ -40,106 +39,94 @@ const DOT: Record<ColorToken, string> = {
 
 const BRAND_NAME = { antam: 'Antam', ubs: 'UBS', galeri24: 'Galeri24', pegadaian: '' } as const;
 
-/** Baris "kapan": tanggal + jam bila ada; UBS tanpa jam; Pegadaian = jam harga terbit. */
+/** Baris "kapan": tanggal + jam bila sumber mencatat jam; Pegadaian = jam harga terbit. */
 function whenText(d: DownloadEntry): string {
   if (!d.last_date) return '—';
   if (d.last?.kind === 'macro' && d.last.frequency === 'A')
-    return `${d.last.date.slice(0, 4)} · seri statis`;
+    return `Tahun ${d.last.date.slice(0, 4)} · seri statis`;
   if (d.last_updated_at) {
-    const verb = d.id.startsWith('pegadaian') ? 'harga terbit ' : '';
+    const verb = d.id.startsWith('pegadaian') ? 'terbit ' : '';
     return `${formatDate(d.last_date)} · ${verb}${formatTimeWib(d.last_updated_at)}`;
   }
-  return `${formatDate(d.last_date)} · sumber tanpa jam`;
+  return formatDate(d.last_date);
 }
 
-function valueText(d: DownloadEntry): string {
+/** Nilai terakhir: angka utama + keterangan (apa yang diukur, buyback bila ada). */
+function valueParts(d: DownloadEntry): { main: string; caption: string } | null {
   const l = d.last;
-  if (!l) return 'Belum ada data';
+  if (!l) return null;
   if (l.kind === 'macro') {
     return l.unit === 'USD/ozt'
-      ? `US$${formatNumber(l.value, 2)} per troy ounce`
-      : `Rp${formatNumber(l.value, Number.isInteger(l.value) ? 0 : 2)} per US$`;
+      ? { main: `US$${formatNumber(l.value, 2)}`, caption: 'per troy ounce' }
+      : {
+          main: `Rp${formatNumber(l.value, Number.isInteger(l.value) ? 0 : 2)}`,
+          caption: 'per US$',
+        };
   }
-  const prices = `jual ${formatRupiah(l.sell)} · buyback ${l.buyback === null ? 'tidak ditampilkan' : formatRupiah(l.buyback)}`;
   const brand = BRAND_NAME[l.brand];
-  const prefix =
+  const what =
     l.product === 'gold_savings'
-      ? `Per ${formatWeight(l.w)}`
+      ? `per ${formatWeight(l.w)}`
       : `${brand ? `${brand} ` : ''}${formatWeight(l.w)}${l.variant ? ` produksi ${l.variant}` : ''}`;
-  return `${prefix}: ${prices}`;
+  const buyback = l.buyback === null ? '' : ` · buyback ${formatRupiah(l.buyback)}`;
+  return { main: formatRupiah(l.sell), caption: `Harga jual ${what}${buyback}` };
 }
 
 function rangeText(d: DownloadEntry): string {
-  return d.first_date ? `Sejak ${formatDate(d.first_date)}` : '';
+  if (!d.first_date) return '';
+  if (d.static || !d.last_date) return `Sejak ${formatDate(d.first_date)}`;
+  return `${formatDate(d.first_date)} – ${formatDate(d.last_date)}`;
 }
 
 function DownloadCard({ d, builtAt }: { d: DownloadEntry; builtAt: string }) {
-  const multi = d.files.length > 1;
+  const value = valueParts(d);
+  const range = rangeText(d);
   return (
-    <article className="flex flex-col gap-3.5 rounded-[20px] border border-line bg-surface p-5">
+    <article className="flex flex-col gap-4 rounded-card-sm border border-line bg-surface p-5">
       <div className="flex items-start gap-2.5">
-        <span className={cn('mt-[5px] size-2.5 flex-none rounded-[3px]', DOT[d.color])} />
-        <div>
-          <h3 className="m-0 text-base font-semibold">{d.label}</h3>
+        <span className={cn('mt-[6px] size-2.5 flex-none rounded-[3px]', DOT[d.color])} />
+        <div className="min-w-0">
+          <h3 className="m-0 text-[15px] font-semibold leading-snug">{d.label}</h3>
           {DESC[d.id] ? (
-            <div className="mt-1 text-xs leading-[1.45] text-muted">{DESC[d.id]}</div>
+            <p className="m-0 mt-1 text-xs leading-[1.5] text-muted">{DESC[d.id]}</p>
           ) : null}
         </div>
       </div>
-      <div className="flex flex-col gap-2 rounded-[14px] bg-surface2 p-3.5">
-        <div className="flex items-center justify-between gap-2">
-          <span className="eyebrow text-faint">Data terakhir</span>
+
+      <div className="flex flex-col gap-1 rounded-control bg-surface2 px-4 py-3.5">
+        <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
+          <span className="whitespace-nowrap text-xs font-medium text-muted">Data terakhir</span>
           <DataAge
             at={d.last_updated_at}
             date={d.last_date}
             isStatic={d.static}
             builtAt={builtAt}
+            className="whitespace-nowrap"
           />
         </div>
-        <div className="num text-base font-semibold">{whenText(d)}</div>
-        <div className="num text-xs leading-normal text-muted">{valueText(d)}</div>
+        {value ? (
+          <>
+            <div className="num mt-1 text-xl font-semibold leading-tight">{value.main}</div>
+            <div className="num text-xs leading-normal text-muted">{value.caption}</div>
+          </>
+        ) : (
+          <div className="mt-1 text-sm text-muted">Belum ada data</div>
+        )}
+        <div className="num mt-1.5 text-xs text-faint">{whenText(d)}</div>
       </div>
-      <div className="mt-auto flex flex-col gap-2.5">
-        <div className="flex flex-wrap items-center justify-between gap-2.5">
-          <span className="num text-xs text-faint">{rangeText(d)}</span>
-          {multi ? null : (
-            <DownloadButtons json={d.files[0]?.json} csv={d.files[0]?.csv} label={d.label} />
-          )}
+
+      <div className="mt-auto flex flex-col gap-3 border-t border-line pt-4">
+        <div className="num flex flex-wrap justify-between gap-x-3 gap-y-0.5 text-xs text-muted">
+          <span>{range}</span>
+          <span className="text-faint">{formatNumber(d.rows)} baris</span>
         </div>
-        {multi
-          ? d.files.map((f) => (
-              <div key={f.csv} className="flex flex-wrap items-center justify-between gap-2.5">
-                <span className="text-xs text-muted">{f.label}</span>
-                <DownloadButtons json={f.json} csv={f.csv} label={`${d.label} ${f.label}`} />
-              </div>
-            ))
-          : null}
+        <DownloadDialog
+          title={d.label}
+          range={range}
+          files={d.files.map((f) => ({ label: f.label, csv: f.csv, json: f.json, rows: f.rows }))}
+        />
       </div>
     </article>
-  );
-}
-
-function DownloadButtons({ json, csv, label }: { json?: string; csv?: string; label: string }) {
-  if (!json || !csv) return null;
-  return (
-    <div className="flex gap-1.5">
-      <a
-        href={dataUrl(csv)}
-        download
-        aria-label={`Unduh CSV ${label}`}
-        className={buttonVariants({ size: 'sm' })}
-      >
-        CSV
-      </a>
-      <a
-        href={dataUrl(json)}
-        download
-        aria-label={`Unduh JSON ${label}`}
-        className={buttonVariants({ variant: 'outline', size: 'sm' })}
-      >
-        JSON
-      </a>
-    </div>
   );
 }
 
