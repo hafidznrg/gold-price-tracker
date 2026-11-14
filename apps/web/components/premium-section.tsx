@@ -190,15 +190,36 @@ export function PremiumSection() {
             />
             <InfoPopover label="Sumber" ariaLabel="Sumber data" side="top" className="mt-3">
               <SourceStamp source="logammulia" date={stats.last.date} bare>
-                Premi = harga Antam 1 g ÷ (XAU/USD × USD/IDR ÷ 31,1035) − 1 · Antam 1 g · spot
-                penutupan {formatDate(stats.last.spotDate)} ·{' '}
-                {file.monthly?.[0]
-                  ? `premi bulanan ${formatMonthYear(`${file.monthly[0][0]}-01`)} – ${formatMonthYear(`${file.monthly.at(-1)![0]}-01`)}, harian sejak `
-                  : 'riwayat tersedia sejak '}
-                {formatDate(stats.firstDate)} · terendah (harian){' '}
-                {formatPct(stats.min.pct, 1, false)} ({formatDate(stats.min.date)}), tertinggi{' '}
-                {formatPct(stats.max.pct, 1, false)} ({formatDate(stats.max.date)})
+                Antam 1 g
               </SourceStamp>
+              <dl className="m-0 mt-1.5 grid grid-cols-[auto_minmax(0,1fr)] gap-x-3 gap-y-1.5 border-t border-line pt-2.5">
+                {[
+                  ['Rumus', 'harga Antam 1 g ÷ (XAU/USD × USD/IDR ÷ 31,1035) − 1'],
+                  ['Spot', `penutupan ${formatDate(stats.last.spotDate)}`],
+                  [
+                    'Riwayat',
+                    file.monthly?.[0]
+                      ? `bulanan ${formatMonthYear(`${file.monthly[0][0]}-01`)} – ${formatMonthYear(`${file.monthly.at(-1)![0]}-01`)}, harian sejak ${formatDate(stats.firstDate)}`
+                      : `harian sejak ${formatDate(stats.firstDate)}`,
+                  ],
+                  [
+                    'Terendah',
+                    `${formatPct(stats.min.pct, 1, false)} · ${formatDate(stats.min.date)}`,
+                  ],
+                  [
+                    'Tertinggi',
+                    `${formatPct(stats.max.pct, 1, false)} · ${formatDate(stats.max.date)}`,
+                  ],
+                ].map(([k, v]) => (
+                  <div key={k} className="contents">
+                    <dt className="text-faint">{k}</dt>
+                    <dd className="num m-0 text-text">{v}</dd>
+                  </div>
+                ))}
+              </dl>
+              <p className="m-0 text-[11px] text-faint">
+                Terendah dan tertinggi dari premi harian.
+              </p>
             </InfoPopover>
           </>
         )}
