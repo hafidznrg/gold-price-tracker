@@ -79,7 +79,7 @@ export function Freshness({
         <ul
           id={panelId}
           aria-label="Pembaruan tiap sumber"
-          className="absolute top-full z-10 m-0 mt-2 grid w-[min(760px,calc(100vw-32px))] list-none grid-cols-[repeat(auto-fit,minmax(min(200px,100%),1fr))] gap-px overflow-hidden rounded-[14px] border border-line bg-line p-0 shadow-lg max-sm:left-0 sm:right-0"
+          className="absolute top-full z-10 m-0 mt-2 grid left-0 w-[min(760px,calc(100vw-32px))] list-none grid-cols-[repeat(auto-fit,minmax(min(200px,100%),1fr))] gap-px overflow-hidden rounded-[14px] border border-line bg-line p-0 shadow-lg sm:w-[min(760px,calc(100vw-48px))]"
         >
           {items.map((i) => (
             <li key={i.id} className="flex flex-col gap-1 bg-surface px-3.5 py-3">
