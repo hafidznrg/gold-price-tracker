@@ -114,9 +114,7 @@ export function DownloadDialog({
                     key={f.csv}
                     className={cn(
                       'flex min-h-11 cursor-pointer flex-col justify-center rounded-field border px-3 py-2 transition-colors',
-                      i === fileIdx
-                        ? 'border-gold bg-goldsoft'
-                        : 'border-line hover:bg-surface2',
+                      i === fileIdx ? 'border-gold bg-goldsoft' : 'border-line hover:bg-surface2',
                     )}
                   >
                     <input
@@ -153,7 +151,10 @@ export function DownloadDialog({
                     className="sr-only"
                   />
                   <Icon
-                    className={cn('mt-0.5 size-5 flex-none', format === id ? 'text-gold' : 'text-muted')}
+                    className={cn(
+                      'mt-0.5 size-5 flex-none',
+                      format === id ? 'text-gold' : 'text-muted',
+                    )}
                     aria-hidden="true"
                   />
                   <span className="flex min-w-0 flex-col">
