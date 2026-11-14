@@ -32,7 +32,7 @@ function short(full: string, mobile: string): ReactNode {
 const MODES: { value: MatrixMode; label: ReactNode }[] = [
   { value: 'jual', label: short('Harga jual', 'Jual') },
   { value: 'buyback', label: 'Buyback' },
-  { value: 'spread', label: 'Selisih' },
+  { value: 'spread', label: 'Spread' },
 ];
 const UNITS: { value: MatrixUnit; label: ReactNode }[] = [
   { value: 'keping', label: short('Per keping', 'Keping') },

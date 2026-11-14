@@ -47,11 +47,15 @@ export function PriceCard({ c }: { c: CardModel }) {
   const meter = hasBuy ? ((c.buyback as number) / (c.sell as number)) * 100 : 0;
   return (
     <article className="flex min-w-0 flex-col gap-3.5 rounded-card-sm border border-line bg-surface px-5 py-[18px]">
-      <div className="flex items-center justify-between gap-2.5">
-        <div className="flex min-w-0 items-center gap-[9px]">
-          <span className={cn('size-2.5 flex-none rounded-[3px]', DOT[c.color])} />
-          <h2 className="m-0 text-base font-semibold">{c.title}</h2>
-          <span className="text-xs whitespace-nowrap text-faint">{c.unit}</span>
+      {/* Judul dan keterangan satuan ditumpuk (bukan satu baris) agar tidak saling patah di kartu
+          sempit dan tinggi kepala kartu seragam. */}
+      <div className="flex items-start justify-between gap-2.5">
+        <div className="min-w-0">
+          <div className="flex items-center gap-[9px]">
+            <span className={cn('size-2.5 flex-none rounded-[3px]', DOT[c.color])} />
+            <h2 className="m-0 truncate text-base leading-snug font-semibold">{c.title}</h2>
+          </div>
+          <p className="m-0 mt-0.5 truncate pl-[19px] text-xs text-faint">{c.unit}</p>
         </div>
         <div ref={boxRef} className="relative flex-none">
           <button
@@ -98,23 +102,26 @@ export function PriceCard({ c }: { c: CardModel }) {
           <span className="font-normal text-faint">vs kemarin</span>
         </div>
       </div>
-      <div className="flex flex-col gap-2 border-t border-line pt-3">
+      {/* mt-auto: bagian bawah menempel ke dasar kartu sehingga meter sejajar antarkartu. */}
+      <div className="mt-auto flex flex-col gap-2 border-t border-line pt-3">
         <div className="flex justify-between gap-3 text-sm">
-          <span className="text-muted">Buyback</span>
+          <span className="whitespace-nowrap text-muted">Buyback</span>
           {hasBuy ? (
             <span className="num font-semibold">{formatRupiah(c.buyback)}</span>
           ) : (
             <span className="text-muted">tidak ditampilkan</span>
           )}
         </div>
-        <div className="flex justify-between gap-3 text-sm">
-          <span className="text-muted">Selisih jual-beli</span>
+        {/* Bila tak muat satu baris, nilai turun utuh ke baris berikut (rata kanan), bukan patah
+            di tengah label atau angka. */}
+        <div className="flex flex-wrap justify-between gap-x-3 gap-y-0.5 text-sm">
+          <span className="whitespace-nowrap text-muted">Spread</span>
           {hasBuy ? (
-            <span className="num font-semibold">
+            <span className="num ml-auto font-semibold whitespace-nowrap">
               {formatPct(c.spreadPct, 2, false)} · {formatRupiah(c.spread)}
             </span>
           ) : (
-            <span className="text-muted">{EMPTY}</span>
+            <span className="ml-auto text-muted">{EMPTY}</span>
           )}
         </div>
         <div aria-hidden="true" className="h-[5px] overflow-hidden rounded-full bg-surface2">

@@ -8,7 +8,7 @@ const TERMS = [
     body: 'Harga yang dibayar penerbit bila Anda menjual kembali kepingnya.',
   },
   {
-    title: 'Selisih jual-beli (spread)',
+    title: 'Spread (selisih jual-beli)',
     body: 'Kerugian bila dibeli lalu langsung dijual lagi. Makin kecil, makin cepat balik modal.',
   },
   {

@@ -13,7 +13,7 @@ export interface NavItem {
 export const NAV_ITEMS: readonly NavItem[] = [
   { href: '/', label: 'Hari ini' },
   { href: '/explorer', label: 'Riwayat harga', short: 'Riwayat' },
-  { href: '/spread', label: 'Selisih jual-beli', short: 'Selisih' },
+  { href: '/spread', label: 'Spread', short: 'Spread' },
   { href: '/bandingkan', label: 'Bandingkan' },
   { href: '/kalkulator', label: 'Kalkulator', more: true },
   { href: '/kelipatan', label: 'Kelipatan', more: true },

@@ -158,7 +158,8 @@ export default function HomePage() {
             <Freshness items={freshItems} latestLabel={latestLabel} builtAt={meta.built_at} />
           </div>
 
-          <div className="grid grid-cols-[repeat(auto-fit,minmax(min(250px,100%),1fr))] gap-3.5">
+          {/* HP 1 kolom, tablet 2 kolom, desktop lebar 4 kolom. */}
+          <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 xl:grid-cols-4">
             {cards.map((c) => (
               <PriceCard key={c.id} c={c} />
             ))}

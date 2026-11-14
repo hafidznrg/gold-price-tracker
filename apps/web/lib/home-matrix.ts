@@ -27,7 +27,7 @@ export const BEST_LABEL: Record<MatrixMode, string> = {
 export const MATRIX_HINT: Record<MatrixMode, string> = {
   jual: 'Harga jual termurah di tiap gramasi ditandai.',
   buyback: 'Buyback tertinggi di tiap gramasi ditandai.',
-  spread: 'Selisih jual-beli terkecil di tiap gramasi ditandai.',
+  spread: 'Spread terkecil di tiap gramasi ditandai.',
 };
 
 export interface MatrixCell {

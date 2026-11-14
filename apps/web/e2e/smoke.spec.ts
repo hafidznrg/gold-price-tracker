@@ -77,7 +77,7 @@ test.describe('Beranda', () => {
     await expect(page.getByText('Buyback tertinggi di tiap gramasi ditandai.')).toBeVisible();
     await expect(table.getByTestId('matrix-best').first()).toHaveText('tertinggi');
 
-    await page.getByRole('radio', { name: 'Selisih', exact: true }).click();
+    await page.getByRole('radio', { name: 'Spread', exact: true }).click();
     await expect(table.getByTestId('matrix-best').first()).toHaveText('terkecil');
     await expect(table).toContainText('%');
 
