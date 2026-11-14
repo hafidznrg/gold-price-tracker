@@ -9,6 +9,7 @@ import {
   encodeCompareMode,
   encodeWeight,
   findOption,
+  premiumMonthlyLine,
   premiumStats,
   todayCells,
   todayRows,
@@ -215,5 +216,28 @@ describe('premiumStats', () => {
     expect(s.max).toEqual({ date: '2026-01-02', pct: 8 });
     expect(s.last).toEqual({ date: '2026-01-03', pct: 6, spotDate: '2026-01-02' });
     expect(s.firstDate).toBe('2026-01-01');
+  });
+});
+
+describe('premiumMonthlyLine', () => {
+  it('menyambung premi bulanan lama dengan rata-rata harian per bulan', () => {
+    const line = premiumMonthlyLine(
+      [
+        ['2021-11-08', 12, '2021-11-05'],
+        ['2021-11-09', 14, '2021-11-08'],
+        ['2021-12-01', 10, '2021-11-30'],
+      ],
+      [['2021-10', 15, 'M', 20]],
+    );
+    expect(line).toEqual([
+      { month: '2021-10', pct: 15, basis: 'monthly', days: 20 },
+      { month: '2021-11', pct: 13, basis: 'daily', days: 2 },
+      { month: '2021-12', pct: 10, basis: 'daily', days: 1 },
+    ]);
+  });
+  it('bulan yang sudah ada di bagian bulanan tidak diganda', () => {
+    const line = premiumMonthlyLine([['2021-10-29', 9, '2021-10-28']], [['2021-10', 15, 'M', 20]]);
+    expect(line).toHaveLength(1);
+    expect(line[0]!.basis).toBe('monthly');
   });
 });

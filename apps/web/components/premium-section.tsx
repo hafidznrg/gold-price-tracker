@@ -3,10 +3,18 @@
 import { useEffect, useMemo, useState } from 'react';
 import { TimeSeriesChart, type TimeSeries } from '@/components/charts/time-series-chart';
 import { InfoPopover } from '@/components/info-popover';
+import { Segmented } from '@/components/segmented';
 import { SourceStamp } from '@/components/source-stamp';
 import { fetchPremiumAntam, type PremiumAntamFile } from '@/lib/data';
-import { premiumStats } from '@/lib/bandingkan';
+import { premiumMonthlyLine, premiumStats } from '@/lib/bandingkan';
 import { formatDate, formatMonthYear, formatPct } from '@/lib/format';
+
+type PremiumView = 'bulanan' | 'harian';
+
+const VIEWS = [
+  { value: 'bulanan', label: 'Bulanan' },
+  { value: 'harian', label: 'Harian' },
+] as const;
 
 const EXPLAIN: { title: string; body: string }[] = [
   {
@@ -41,51 +49,56 @@ export function PremiumSection() {
     };
   }, []);
 
+  const [view, setView] = useState<PremiumView>('bulanan');
   const stats = useMemo(() => (file ? premiumStats(file.rows) : null), [file]);
+  const line = useMemo(
+    () => (file ? premiumMonthlyLine(file.rows, file.monthly ?? []) : []),
+    [file],
+  );
   const series: TimeSeries[] = useMemo(() => {
     if (!file || !stats) return [];
-    const monthly = file.monthly ?? [];
-    const monthlySeries: TimeSeries[] =
-      monthly.length === 0
-        ? []
-        : [
-            {
-              id: 'premi-bulanan',
-              label: 'Premi bulanan (sebelum spot harian)',
-              color: 'spot',
-              dashed: true,
-              width: 1.4,
-              points: monthly.map((m) => [`${m[0]}-15`, m[1]]),
-              notes: Object.fromEntries(
-                monthly.map((m) => [
-                  `${m[0]}-15`,
-                  `rata-rata bulan ${m[0]} · ${m[3]} hari harga Antam · emas US$ ${m[2] === 'D' ? 'harian' : 'bulanan'}`,
-                ]),
-              ),
-            },
-          ];
+    const avg: TimeSeries = {
+      id: 'premi-avg',
+      label: `Rata-rata harian sejak ${formatDate(stats.firstDate)}`,
+      color: 'muted',
+      dashed: true,
+      width: 1.2,
+      points: [
+        [stats.firstDate, stats.avgPct],
+        [stats.last.date, stats.avgPct],
+      ],
+    };
+    if (view === 'harian') {
+      return [
+        {
+          id: 'premi',
+          label: 'Premi harian Antam 1 g',
+          color: 'spot',
+          area: true,
+          points: file.rows.map((r) => [r[0], r[1]]),
+        },
+        avg,
+      ];
+    }
     return [
-      ...monthlySeries,
       {
-        id: 'premi',
-        label: 'Premi Antam 1 g vs spot',
+        id: 'premi-bulanan',
+        label: 'Premi bulanan Antam 1 g (rata-rata)',
         color: 'spot',
         area: true,
-        points: file.rows.map((r) => [r[0], r[1]]),
+        points: line.map((m) => [`${m.month}-15`, m.pct]),
+        notes: Object.fromEntries(
+          line.map((m) => [
+            `${m.month}-15`,
+            m.basis === 'daily'
+              ? `rata-rata ${m.days} hari premi harian`
+              : `dari harga rata-rata bulanan · ${m.days} hari harga Antam`,
+          ]),
+        ),
       },
-      {
-        id: 'premi-avg',
-        label: `Rata-rata sejak ${formatDate(stats.firstDate)}`,
-        color: 'muted',
-        dashed: true,
-        width: 1.2,
-        points: [
-          [stats.firstDate, stats.avgPct],
-          [stats.last.date, stats.avgPct],
-        ],
-      },
+      avg,
     ];
-  }, [file, stats]);
+  }, [file, stats, line, view]);
 
   return (
     <section className="wrap pb-16" aria-labelledby="premi-judul">
@@ -97,9 +110,15 @@ export function PremiumSection() {
               Berapa mahal emas ritel dibanding harga dunia
             </h2>
             <p className="m-0 mt-3 text-sm leading-[1.6] text-muted">
-              Premi = harga Antam 1 g ÷ (XAU/USD × USD/IDR ÷ 31,1035) − 1. Memakai spot penutupan
-              hari sebelumnya, karena Antam menetapkan harga pagi berdasarkan penutupan itu. Sebelum
-              spot harian tersedia, premi dihitung per bulan dari rata-rata bulanan (garis tipis).
+              Premi menunjukkan seberapa mahal emas Antam 1 gram dibanding harga emas dunia. Premi
+              10% berarti Antam dijual 10% di atas nilai 1 gram emas di pasar dunia. Harga dunia
+              (US$ per troy ons) diubah ke rupiah per gram: dikali kurs USD/IDR, lalu dibagi 31,1035
+              (jumlah gram dalam 1 troy ons).
+            </p>
+            <p className="m-0 mt-2 text-sm leading-[1.6] text-muted">
+              Harga dunia yang dipakai adalah penutupan hari sebelumnya, karena harga pagi Antam
+              ditetapkan dari penutupan itu. Sebelum November 2021 harga dunia harian belum
+              tersedia, jadi premi bulanan masa itu dihitung dari rata-rata bulanan.
             </p>
           </div>
           <div className="flex flex-wrap gap-7">
@@ -132,7 +151,22 @@ export function PremiumSection() {
           </p>
         ) : (
           <>
+            <div className="mb-3 flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+              <Segmented
+                size="sm"
+                label="Tampilan premi"
+                options={VIEWS}
+                value={view}
+                onChange={setView}
+              />
+              <span className="text-xs text-faint">
+                {view === 'bulanan'
+                  ? `Rata-rata per bulan, ${line[0] ? formatMonthYear(`${line[0].month}-01`) : ''} – kini`
+                  : `Per hari, sejak ${formatDate(stats.firstDate)}`}
+              </span>
+            </div>
             <TimeSeriesChart
+              key={view}
               series={series}
               valueFormat="percent"
               height={320}
@@ -141,7 +175,8 @@ export function PremiumSection() {
             />
             <InfoPopover label="Sumber" ariaLabel="Sumber data" side="top" className="mt-3">
               <SourceStamp source="logammulia" date={stats.last.date} bare>
-                Antam 1 g · spot penutupan {formatDate(stats.last.spotDate)} ·{' '}
+                Premi = harga Antam 1 g ÷ (XAU/USD × USD/IDR ÷ 31,1035) − 1 · Antam 1 g · spot
+                penutupan {formatDate(stats.last.spotDate)} ·{' '}
                 {file.monthly?.[0]
                   ? `premi bulanan ${formatMonthYear(`${file.monthly[0][0]}-01`)} – ${formatMonthYear(`${file.monthly.at(-1)![0]}-01`)}, harian sejak `
                   : 'riwayat tersedia sejak '}

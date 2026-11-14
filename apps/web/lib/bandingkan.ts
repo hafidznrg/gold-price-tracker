@@ -6,6 +6,7 @@ import {
   weightKey,
   type ColorToken,
   type LatestFile,
+  type PremiumAntamMonthlyTuple,
   type PremiumAntamTuple,
   type SeriesFile,
 } from './data';
@@ -308,4 +309,44 @@ export function premiumStats(rows: readonly PremiumAntamTuple[]): PremiumStats |
     min: { date: min[0], pct: min[1] },
     max: { date: max[0], pct: max[1] },
   };
+}
+
+export interface PremiumMonthPoint {
+  /** `YYYY-MM`. */
+  month: string;
+  pct: number;
+  /** `daily` = rata-rata premi harian bulan itu; `monthly` = dari rata-rata bulanan (D-38). */
+  basis: 'daily' | 'monthly';
+  /** Jumlah hari yang dirata-rata (hari premi harian, atau hari harga Antam). */
+  days: number;
+}
+
+/**
+ * Satu garis premi bulanan untuk seluruh riwayat: bagian `monthly` (sebelum spot harian) disambung
+ * rata-rata premi harian per bulan, agar bentuk garis seragam dari awal sampai kini.
+ */
+export function premiumMonthlyLine(
+  rows: readonly PremiumAntamTuple[],
+  monthly: readonly PremiumAntamMonthlyTuple[] = [],
+): PremiumMonthPoint[] {
+  const out: PremiumMonthPoint[] = monthly.map((m) => ({
+    month: m[0],
+    pct: m[1],
+    basis: 'monthly',
+    days: m[3],
+  }));
+  const seen = new Set(out.map((p) => p.month));
+  const acc = new Map<string, { sum: number; n: number }>();
+  for (const r of rows) {
+    const m = r[0].slice(0, 7);
+    if (seen.has(m)) continue;
+    const a = acc.get(m) ?? { sum: 0, n: 0 };
+    a.sum += r[1];
+    a.n += 1;
+    acc.set(m, a);
+  }
+  for (const [month, a] of acc) {
+    out.push({ month, pct: Math.round((a.sum / a.n) * 100) / 100, basis: 'daily', days: a.n });
+  }
+  return out.sort((a, b) => (a.month < b.month ? -1 : a.month > b.month ? 1 : 0));
 }
