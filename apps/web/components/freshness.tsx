@@ -1,7 +1,8 @@
 'use client';
 
-import { useEffect, useId, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import { LiveDot } from '@/components/live-dot';
+import { useViewportClamp } from '@/components/use-viewport-clamp';
 import { jakartaDateOf } from '@/lib/format';
 import { cn } from '@/lib/utils';
 
@@ -35,6 +36,8 @@ export function Freshness({
   const [now, setNow] = useState(() => new Date(builtAt));
   useEffect(() => setNow(new Date()), []);
   const panelId = useId();
+  const panelRef = useRef<HTMLUListElement>(null);
+  useViewportClamp(panelRef, open);
 
   const today = Date.parse(`${jakartaDateOf(now)}T00:00:00Z`);
   const isFresh = (date: string | null) =>
@@ -77,6 +80,7 @@ export function Freshness({
       </button>
       {open ? (
         <ul
+          ref={panelRef}
           id={panelId}
           aria-label="Pembaruan tiap sumber"
           className="absolute top-full z-10 m-0 mt-2 grid left-0 w-[min(760px,calc(100vw-32px))] list-none grid-cols-[repeat(auto-fit,minmax(min(200px,100%),1fr))] gap-px overflow-hidden rounded-[14px] border border-line bg-line p-0 shadow-lg sm:w-[min(760px,calc(100vw-48px))]"

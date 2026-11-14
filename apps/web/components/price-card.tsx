@@ -2,6 +2,7 @@
 
 import { useEffect, useId, useRef, useState } from 'react';
 import { SourceStamp } from '@/components/source-stamp';
+import { useViewportClamp } from '@/components/use-viewport-clamp';
 import type { ColorToken } from '@/lib/data';
 import { EMPTY, changeDirection, formatChangeRupiah, formatPct, formatRupiah } from '@/lib/format';
 import type { CardModel } from '@/lib/today';
@@ -24,6 +25,8 @@ export function PriceCard({ c }: { c: CardModel }) {
   const [open, setOpen] = useState(false);
   const panelId = useId();
   const boxRef = useRef<HTMLDivElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+  useViewportClamp(panelRef, open);
   // Popover menutup saat klik di luar atau Escape, supaya tinggi kartu tidak berubah.
   useEffect(() => {
     if (!open) return;
@@ -73,6 +76,7 @@ export function PriceCard({ c }: { c: CardModel }) {
           </button>
           {open ? (
             <div
+              ref={panelRef}
               id={panelId}
               role="note"
               className="absolute top-full right-0 z-20 mt-1 w-[min(280px,calc(100vw-48px))] rounded-field border border-line bg-surface px-3.5 py-3 text-xs leading-normal text-muted shadow-lg"

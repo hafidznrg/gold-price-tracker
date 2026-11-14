@@ -1,6 +1,7 @@
 'use client';
 
 import { type ReactNode, useEffect, useId, useRef, useState } from 'react';
+import { useViewportClamp } from '@/components/use-viewport-clamp';
 import { cn } from '@/lib/utils';
 
 /**
@@ -26,6 +27,8 @@ export function InfoPopover({
   const [open, setOpen] = useState(false);
   const panelId = useId();
   const boxRef = useRef<HTMLDivElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+  useViewportClamp(panelRef, open);
   useEffect(() => {
     if (!open) return;
     const onDown = (e: PointerEvent) => {
@@ -72,6 +75,7 @@ export function InfoPopover({
           tidak menembus tepi kartu (beberapa kartu `overflow-hidden` akan memotongnya). */}
       {/* Selalu dirender (disembunyikan saat tertutup) agar atribusi tetap di DOM (FR-26, D-48). */}
       <div
+        ref={panelRef}
         id={panelId}
         role="note"
         hidden={!open}
