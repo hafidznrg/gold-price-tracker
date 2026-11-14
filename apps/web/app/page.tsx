@@ -147,7 +147,7 @@ export default function HomePage() {
               <h1 className="serif m-0 text-[46px] leading-[1.05] max-sm:text-[38px]">
                 Harga emas hari ini
               </h1>
-              <p className="serif m-0 mt-1.5 text-[22px] leading-[1.3] text-muted italic">
+              <p className="serif m-0 mt-1.5 text-[22px] leading-[1.3] text-gold italic">
                 {SITE_TAGLINE}
               </p>
               <p className="m-0 mt-2.5 max-w-[560px] text-base leading-[1.55] text-muted max-sm:text-sm">
