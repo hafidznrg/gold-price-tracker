@@ -49,7 +49,12 @@ export function DownloadDialog({
   const file = files[fileIdx] ?? files[0]!;
   const path = format === 'csv' ? file.csv : file.json;
 
-  const open = () => ref.current?.showModal();
+  const open = () => {
+    // Lebar scrollbar diukur sebelum scroll dikunci, untuk kompensasi padding (globals.css).
+    const root = document.documentElement;
+    root.style.setProperty('--scrollbar-w', `${window.innerWidth - root.clientWidth}px`);
+    ref.current?.showModal();
+  };
   const close = () => ref.current?.close();
 
   return (

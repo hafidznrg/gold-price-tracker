@@ -205,11 +205,13 @@
 
 /* Pop-up unduh (DownloadDialog): kunci scroll halaman saat terbuka; animasi masuk singkat
    (muncul di tengah pada desktop/tablet, naik dari bawah pada HP).
-   `scrollbar-gutter: stable` menyisakan ruang scrollbar yang hilang karena `overflow: hidden`,
-   agar isi halaman di belakang pop-up tidak bergeser ke kanan. */
+   `overflow: hidden` menghilangkan scrollbar; padding selebar scrollbar (`--scrollbar-w`, diukur
+   DownloadDialog sebelum membuka) menahan isi halaman agar tidak bergeser. Bukan
+   `scrollbar-gutter`, karena gutter berada di luar viewport sehingga tidak ikut digelapkan
+   ::backdrop dan tampil sebagai strip terang di tepi kanan. */
 html:has(dialog.download-dialog[open]) {
   overflow: hidden;
-  scrollbar-gutter: stable;
+  padding-right: var(--scrollbar-w, 0px);
 }
 @media (prefers-reduced-motion: no-preference) {
   dialog.download-dialog[open] {
