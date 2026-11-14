@@ -8,6 +8,7 @@ import { SourceStamp } from '@/components/source-stamp';
 import { fetchPremiumAntam, type PremiumAntamFile } from '@/lib/data';
 import { premiumMonthlyLine, premiumStats } from '@/lib/bandingkan';
 import { formatDate, formatMonthYear, formatPct } from '@/lib/format';
+import { rangeToDates } from '@/lib/range';
 
 type PremiumView = 'bulanan' | 'harian';
 
@@ -55,6 +56,14 @@ export function PremiumSection() {
     () => (file ? premiumMonthlyLine(file.rows, file.monthly ?? []) : []),
     [file],
   );
+  // Mode Harian dibuka di 1 tahun terakhir; riwayat sejak 2021 tetap bisa dibuka lewat slider.
+  const dailyRange = useMemo(() => {
+    if (!stats) return undefined;
+    const from = rangeToDates('1T', stats.last.date).from;
+    return from
+      ? { from: from < stats.firstDate ? stats.firstDate : from, to: stats.last.date }
+      : undefined;
+  }, [stats]);
   const series: TimeSeries[] = useMemo(() => {
     if (!file || !stats) return [];
     const avg: TimeSeries = {
@@ -63,10 +72,15 @@ export function PremiumSection() {
       color: 'muted',
       dashed: true,
       width: 1.2,
-      points: [
-        [stats.firstDate, stats.avgPct],
-        [stats.last.date, stats.avgPct],
-      ],
+      // Mode Harian dibuka ter-zoom; dataZoom membuang titik di luar jendela, jadi garis dua titik
+      // akan hilang. Satu titik per hari menjaga garis tetap tampil di jendela mana pun.
+      points:
+        view === 'harian'
+          ? file.rows.map((r) => [r[0], stats.avgPct])
+          : [
+              [stats.firstDate, stats.avgPct],
+              [stats.last.date, stats.avgPct],
+            ],
     };
     if (view === 'harian') {
       return [
@@ -162,12 +176,13 @@ export function PremiumSection() {
               <span className="text-xs text-faint">
                 {view === 'bulanan'
                   ? `Rata-rata per bulan, ${line[0] ? formatMonthYear(`${line[0].month}-01`) : ''} – kini`
-                  : `Per hari, sejak ${formatDate(stats.firstDate)}`}
+                  : `Per hari, 1 tahun terakhir · geser atau zoom grafik untuk melihat sejak ${formatDate(stats.firstDate)}`}
               </span>
             </div>
             <TimeSeriesChart
               key={view}
               series={series}
+              range={view === 'harian' ? dailyRange : undefined}
               valueFormat="percent"
               height={320}
               showZoom
