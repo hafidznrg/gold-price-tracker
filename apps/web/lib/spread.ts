@@ -274,10 +274,10 @@ export function pairProblem(sell: SpreadOption, buyback: SpreadOption | null): s
 
 export const POPULAR_PAIRS: { sell: string; buyback: string; label: string }[] = [
   { sell: 'lm-antam', buyback: 'lm-antam', label: 'Antam: Logam Mulia → Logam Mulia' },
+  { sell: 'tab', buyback: 'tab', label: 'Tabungan Emas: Pegadaian → Pegadaian' },
   { sell: 'pg-antam', buyback: 'lm-antam', label: 'Antam: Pegadaian → Logam Mulia' },
   { sell: 'pg-ubs', buyback: 'ubsl-ubs', label: 'UBS: Pegadaian → UBS Lifestyle' },
   { sell: 'ubsl-ubs', buyback: 'ubsl-ubs', label: 'UBS: UBS Lifestyle → UBS Lifestyle' },
-  { sell: 'tab', buyback: 'tab', label: 'Tabungan Emas: Pegadaian → Pegadaian' },
 ];
 
 /** Riwayat harga jual per gram dari file series ringkas. */

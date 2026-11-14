@@ -456,14 +456,14 @@ export function SpreadBoard({
         </div>
 
         <div className={PANEL}>
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <div className="min-w-0">
+          <div className="mb-4 flex flex-wrap items-start justify-between gap-x-4 gap-y-3">
+            <div className="min-w-0 flex-[1_1_240px]">
               <h2 className="m-0 text-xl font-semibold max-sm:text-lg">
                 Spread % per gramasi hari ini
               </h2>
-              <p className="m-0 mt-1.5 mb-4 text-sm text-muted">{bar?.note}</p>
+              <p className="m-0 mt-1.5 text-sm text-muted">{bar?.note}</p>
             </div>
-            <div className="w-[190px] max-w-full">
+            <div className="w-[190px] max-w-full flex-none max-sm:w-full">
               <label htmlFor="barSrc" className="sr-only">
                 Sumber
               </label>
