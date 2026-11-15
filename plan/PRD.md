@@ -115,7 +115,7 @@ Prioritas: **P0** = wajib untuk rilis publik (MVP) · **P1** = wajib untuk v1 le
 | FR-34 | API statis: `/data/latest.json`, `/data/series/{source}-{brand}.json`, `/data/macro/*.json` | P1 | 4 |
 | FR-35 | Hari tanpa data diisi *forward-fill* berlabel secara bawaan; opsi menampilkan celah (D-55) | P1 | 4 |
 | FR-36 | Halaman **Kualitas data**: kelengkapan per sumber per bulan, riwayat run, insiden | P2 | 5 |
-| FR-37 | **Kalkulator, harga beli sendiri:** input total yang dibayar (mis. dari reseller) → untung/rugi dan titik impas terhadap buyback resmi, premi terhadap harga resmi pada tanggal beli; gramasi bebas untuk buyback per gram (D-61) | P1 | 4 |
+| FR-37 | **Kalkulator, harga beli yang dibayar:** total harga beli terisi harga resmi dan bisa diubah (mis. beli dari reseller) → untung/rugi dan titik impas terhadap buyback resmi plus selisih dari harga resmi; "Berat lain…" untuk buyback per gram (D-61) | P1 | 4 |
 
 ## 8. Kebutuhan non-fungsional
 
@@ -219,4 +219,4 @@ Ringkasan; rincian dan alasannya di [DECISIONS.md](./DECISIONS.md).
 | 1.0 | 25 Okt 2026 | Versi awal dari artifact fondasi |
 | 1.1 | 25 Okt 2026 | Tinjauan skema & workflow: tambah DATA-MODEL.md (ERD, kamus data, aturan merge, *as-of join*) dan WORKFLOWS.md; FR-15 karantina, FR-16 log revisi, FR-17 monitor kesegaran; pemisahan `config/` vs `data/`; kolom `run_id`; NFR-03 diperjelas; Q-6 |
 | 1.2 | 1 Nov 2026 | Mockup web (`mockup/`): FR-20 dan FR-30 memuat Tabungan Emas, FR-23 disederhanakan menjadi unduhan + data terakhir (D-34) |
-| 1.3 | 15 Nov 2026 | FR-37: Kalkulator dengan harga beli sendiri dan gramasi bebas untuk buyback per gram (D-61) |
+| 1.3 | 15 Nov 2026 | FR-37: Kalkulator dengan total harga beli yang bisa diubah dan berat lain untuk buyback per gram (D-61) |
