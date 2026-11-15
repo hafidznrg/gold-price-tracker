@@ -216,7 +216,7 @@ export function PremiumSection() {
                 ]}
               />
               <p className="m-0 mt-1 text-[11px] text-faint">
-                Terendah dan tertinggi dari premi harian.
+                1 troy ounce = 31,1035 gram. Terendah dan tertinggi dihitung dari premi harian.
               </p>
             </InfoPopover>
           </>

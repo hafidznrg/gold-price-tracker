@@ -280,12 +280,13 @@ export function KelipatanBoard({ annual, until, spot, events }: KelipatanBoardPr
                     </li>
                   ) : null}
                   <li>
-                    Spot dari xaus.com hanya indikatif (kontrak berjangka COMEX GC=F, bukan patokan
-                    LBMA).
+                    Harga spot dari xaus.com hanya perkiraan: diambil dari kontrak berjangka emas
+                    (COMEX), bukan harga patokan resmi (LBMA).
                   </li>
                   <li>
                     Kelipatan dibandingkan dengan {baseRow ? `nilai ${base}` : 'tahun dasar'} pada
-                    agregasi yang sama, jadi titik spot tidak selalu searah dengan garis tahunan.
+                    cara hitung yang sama (rata-rata atau akhir tahun), jadi titik spot tidak selalu
+                    searah dengan garis tahunan.
                   </li>
                   {showLm ? (
                     <li>
@@ -339,13 +340,15 @@ export function KelipatanBoard({ annual, until, spot, events }: KelipatanBoardPr
               <InfoPopover ariaLabel="Keterangan tabel" className="max-sm:static">
                 <ul className="m-0 flex list-disc flex-col gap-1 pl-4">
                   <li>
-                    Tiap tahun memakai data harian bila tersedia di ≥ 80% hari kerja. Jika tidak,
-                    rata-rata bulanan; jika tidak juga, nilai tahunan.
+                    Nilai tiap tahun dihitung dari harga harian bila datanya ada di sedikitnya 80%
+                    hari kerja. Jika kurang, dari rata-rata bulanan; jika tidak ada juga, dari angka
+                    tahunan.
                   </li>
                   {agg === 'end' ? (
                     <li>
-                      Penutupan akhir tahun = titik terakhir hingga 31 Des. Seri bulanan memakai
-                      rata-rata Desember; seri tahunan tidak punya penutupan.
+                      Penutupan akhir tahun = harga terakhir sampai 31 Desember. Tahun yang hanya
+                      punya data bulanan memakai rata-rata Desember; tahun yang hanya punya angka
+                      tahunan tidak punya nilai penutupan.
                     </li>
                   ) : null}
                   {partialYear ? (
@@ -460,7 +463,7 @@ export function KelipatanBoard({ annual, until, spot, events }: KelipatanBoardPr
                     Kurs: Bank Indonesia JISDOR, ECB via Frankfurter, World Bank WDI (1996–1998,
                     nilai tahunan).
                   </li>
-                  <li>Rp/gram = US$/oz × kurs ÷ 31,1035.</li>
+                  <li>Rp/gram = US$/oz × kurs ÷ 31,1035 (1 troy ounce = 31,1035 gram).</li>
                 </ul>
               </InfoPopover>
             </div>

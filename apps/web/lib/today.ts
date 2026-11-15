@@ -49,10 +49,10 @@ function cardNote(h: Highlight, all: Highlight[]): string {
   }
   if (h.source === 'logammulia') return `Harga dasar belum termasuk PPh 0,25%.${pg('antam')}`;
   if (h.source === 'ubslifestyle')
-    return `Buyback tahun produksi ${h.variant || '—'}${pg('ubs') ? ` ·${pg('ubs')}` : ''}`;
+    return `Buyback untuk keping tahun produksi ${h.variant || '—'}${pg('ubs') ? ` ·${pg('ubs')}` : ''}`;
   if (h.brand === 'galeri24')
-    return 'Galeri24 hanya dijual lewat Pegadaian. Sumber buyback masih dipelajari (Q-1).';
-  return 'Pegadaian tidak menampilkan harga buyback batangan (D-07).';
+    return 'Galeri24 hanya dijual lewat Pegadaian. Harga buyback-nya belum tersedia.';
+  return 'Pegadaian tidak menampilkan harga buyback untuk emas batangan.';
 }
 
 function sparkOf(s: Spark): { sell: (number | null)[]; buy: (number | null)[] | null } {
