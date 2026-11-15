@@ -372,6 +372,27 @@ test.describe('Kalkulator', () => {
     await page.getByLabel(/^Total harga beli/).fill('15000000');
     await expect(page.getByTestId('kalk-profit')).toContainText(/[▲▼]|Rp0/);
   });
+
+  test('mengetik di tengah total harga beli tidak memindahkan kursor ke akhir', async ({
+    page,
+  }) => {
+    await page.goto('/kalkulator?p=2000000');
+    const paid = page.getByLabel(/^Total harga beli/);
+    await expect(paid).toHaveValue('2.000.000');
+    await paid.click();
+    await paid.evaluate((el: HTMLInputElement) => el.setSelectionRange(1, 1));
+    await page.keyboard.type('5');
+    await expect(paid).toHaveValue('25.000.000');
+    expect(await paid.evaluate((el: HTMLInputElement) => el.selectionStart)).toBe(2);
+    await page.keyboard.type('1');
+    await expect(paid).toHaveValue('251.000.000');
+    expect(await paid.evaluate((el: HTMLInputElement) => el.selectionStart)).toBe(3);
+    // Backspace tepat setelah titik menghapus digit sebelum titik.
+    await paid.evaluate((el: HTMLInputElement) => el.setSelectionRange(4, 4));
+    await page.keyboard.press('Backspace');
+    await expect(paid).toHaveValue('25.000.000');
+    expect(await paid.evaluate((el: HTMLInputElement) => el.selectionStart)).toBe(2);
+  });
 });
 
 test('navigasi utama memuat ketujuh halaman dan semua tautannya sampai', async ({ page }) => {

@@ -482,3 +482,22 @@ describe('D-61: total harga beli dan berat lain', () => {
     expect(paidDiff(1_000_000, 1, 0)).toBeNull();
   });
 });
+
+describe('kursor isian rupiah', () => {
+  it('menghitung digit sebelum kursor, mengabaikan titik dan nol di depan', async () => {
+    const { digitsBeforeCaret } = await import('./kalkulator');
+    expect(digitsBeforeCaret('2.0500.000', 4)).toBe(3);
+    expect(digitsBeforeCaret('2.000.000', 0)).toBe(0);
+    expect(digitsBeforeCaret('2.000.000', 9)).toBe(7);
+    expect(digitsBeforeCaret('0012', 3)).toBe(1);
+    expect(digitsBeforeCaret('0012', 1)).toBe(0);
+  });
+
+  it('menempatkan kursor setelah digit ke-n pada teks terformat', async () => {
+    const { caretAfterDigits } = await import('./kalkulator');
+    expect(caretAfterDigits('20.500.000', 3)).toBe(4);
+    expect(caretAfterDigits('20.500.000', 2)).toBe(2);
+    expect(caretAfterDigits('20.500.000', 0)).toBe(0);
+    expect(caretAfterDigits('20.500.000', 99)).toBe(10);
+  });
+});

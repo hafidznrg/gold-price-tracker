@@ -1,7 +1,7 @@
 'use client';
 
 import { parseAsString, useQueryStates } from 'nuqs';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { TimeSeriesChart, type TimeSeries } from '@/components/charts/time-series-chart';
 import { SourceStamp } from '@/components/source-stamp';
 import { useSeriesFiles } from '@/components/use-series-files';
@@ -10,6 +10,8 @@ import { expectedFor, labelGaps, type DataCalendar } from '@/lib/calendar';
 import { seriesPoints, type ExplorerOption } from '@/lib/explorer';
 import {
   breakEven,
+  caretAfterDigits,
+  digitsBeforeCaret,
   buyDefs,
   buyQuote,
   chartModel,
@@ -116,6 +118,11 @@ export function KalkulatorBoard({ options, asOf, calendar }: KalkulatorBoardProp
   useEffect(() => setCustomText((t) => (Number(t) === state.w ? t : String(state.w))), [state.w]);
   // Total harga beli: draf teks saat mengetik; null = tampilkan nilai dari keadaan.
   const [paidDraft, setPaidDraft] = useState<string | null>(null);
+  const paidRef = useRef<HTMLInputElement>(null);
+  // Jumlah digit sebelum kursor saat mengetik; dipulihkan setelah teks diformat ulang.
+  const paidCaret = useRef<number | null>(null);
+  // Memicu pemulihan kursor juga saat teks tidak berubah (mis. huruf atau angka di atas batas ditolak).
+  const [caretTick, setCaretTick] = useState(0);
 
   const buys = useMemo(() => buyDefs(options), [options]);
   const buyDef = defById(state.buyId) ?? COMPARE_DEFS[0]!;
@@ -213,6 +220,16 @@ export function KalkulatorBoard({ options, asOf, calendar }: KalkulatorBoardProp
         ? formatNumber(officialTotal)
         : '');
   const needPaid = !loading && !error && state.paid === null && !official;
+
+  // Pulihkan kursor setelah titik ribuan ditulis ulang (tanpa ini kursor lompat ke akhir).
+  useLayoutEffect(() => {
+    const el = paidRef.current;
+    const n = paidCaret.current;
+    if (!el || n === null || document.activeElement !== el) return;
+    paidCaret.current = null;
+    const pos = caretAfterDigits(el.value, n);
+    el.setSelectionRange(pos, pos);
+  }, [paidShown, caretTick]);
 
   const chart = useMemo(
     () =>
@@ -459,8 +476,26 @@ export function KalkulatorBoard({ options, asOf, calendar }: KalkulatorBoardProp
               aria-required={needPaid || undefined}
               aria-describedby="kalk-paid-note"
               className={cn(FIELD, 'num')}
+              ref={paidRef}
               value={paidShown}
+              onKeyDown={(e) => {
+                // Backspace/Delete pada titik pemisah: lompati titiknya, hapus digit di sebelahnya.
+                const el = e.currentTarget;
+                const s = el.selectionStart;
+                if (s === null || s !== el.selectionEnd) return;
+                if (e.key === 'Backspace' && s > 0 && el.value[s - 1] === '.') {
+                  el.setSelectionRange(s - 1, s - 1);
+                } else if (e.key === 'Delete' && el.value[s] === '.') {
+                  el.setSelectionRange(s + 1, s + 1);
+                }
+              }}
               onChange={(e) => {
+                const el = e.target;
+                paidCaret.current = digitsBeforeCaret(
+                  el.value,
+                  el.selectionStart ?? el.value.length,
+                );
+                setCaretTick((x) => x + 1);
                 const digits = e.target.value.replace(/\D/g, '').replace(/^0+/, '');
                 if (digits === '') {
                   setPaidDraft('');
@@ -468,7 +503,11 @@ export function KalkulatorBoard({ options, asOf, calendar }: KalkulatorBoardProp
                   return;
                 }
                 const n = Number(digits);
-                if (!Number.isSafeInteger(n) || n > MAX_PAID) return;
+                if (!Number.isSafeInteger(n) || n > MAX_PAID) {
+                  // Ditolak: kursor kembali ke posisi sebelum ketikan.
+                  paidCaret.current = Math.max(0, (paidCaret.current ?? 0) - 1);
+                  return;
+                }
                 setPaidDraft(formatNumber(n));
                 commit({ paid: n });
               }}

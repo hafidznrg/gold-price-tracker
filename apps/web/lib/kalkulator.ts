@@ -532,3 +532,23 @@ export function chartModel(
     last,
   };
 }
+
+// ---------------------------------------------------------------------------
+// Isian rupiah berpemisah ribuan: kursor tetap di tempatnya saat teks diformat ulang
+
+/** Jumlah digit sebelum posisi `caret`, tanpa nol di depan yang akan dibuang. */
+export function digitsBeforeCaret(text: string, caret: number): number {
+  const before = text.slice(0, caret).replace(/\D/g, '');
+  const leadingZeros = text.replace(/\D/g, '').match(/^0+/)?.[0].length ?? 0;
+  return Math.max(0, before.length - Math.min(leadingZeros, before.length));
+}
+
+/** Posisi kursor di `formatted` tepat setelah digit ke-`n` (0 = awal). */
+export function caretAfterDigits(formatted: string, n: number): number {
+  if (n <= 0) return 0;
+  let seen = 0;
+  for (let i = 0; i < formatted.length; i++) {
+    if (/\d/.test(formatted[i]!) && ++seen === n) return i + 1;
+  }
+  return formatted.length;
+}
