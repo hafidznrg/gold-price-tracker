@@ -195,11 +195,22 @@ describe('tabel hari ini', () => {
   it('5 g: per gram = harga dibagi berat; series tanpa berat itu tidak muncul; buyback kosong = null', () => {
     const rows = todayRows(cells, 5);
     expect(rows.map((r) => r.def.id)).toEqual(['tab', 'lm-antam', 'pg-antam']);
-    const lm = rows.find((r) => r.def.id === 'lm-antam')!;
-    expect(lm.perGram).toBe(1_960_000);
-    expect(lm.buyback).toBeNull();
-    expect(lm.spreadPct).toBeNull();
+    const pg = rows.find((r) => r.def.id === 'pg-antam')!;
+    expect(pg.buyback).toBeNull();
+    expect(pg.spreadPct).toBeNull();
+    expect(rows.find((r) => r.def.id === 'lm-antam')!.perGram).toBe(1_960_000);
     expect(rows[0]!.sell).toBe(9_500_000);
+  });
+  it('D-39: buyback Logam Mulia selain 1 g = buyback 1 g × berat, hanya pada tanggal yang sama', () => {
+    const lm = todayRows(cells, 5).find((r) => r.def.id === 'lm-antam')!;
+    expect(lm).toMatchObject({ buyback: 9_500_000, buybackDerived: true });
+    expect(lm.spreadPct).toBeCloseTo((300_000 / 9_800_000) * 100, 6);
+    expect(todayRows(cells, 1).find((r) => r.def.id === 'lm-antam')!.buybackDerived).toBe(false);
+
+    const stale = todayCells(
+      latest([ls({ w: 1, buyback: 1_900_000, date: '2026-11-06' }), ls({ w: 5, sell: 9_800_000 })]),
+    );
+    expect(stale['lm-antam']!['5']!.buyback).toBeNull();
   });
 });
 

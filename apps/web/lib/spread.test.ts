@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { SeriesRowTuple } from './data';
+import type { LatestFile, LatestSeries, SeriesRowTuple } from './data';
 import {
   breakEvenPct,
   buybackChoices,
@@ -14,6 +14,7 @@ import {
   sliceDays,
   spreadPct,
   spreadStats,
+  weightSpreads,
   type SpreadOption,
 } from './spread';
 
@@ -151,5 +152,45 @@ describe('findGaps dengan kalender sumber', () => {
     expect(findGaps(['2026-03-16', '2026-03-19'], 2, weekdays)).toEqual([
       { from: '2026-03-17', to: '2026-03-18' },
     ]);
+  });
+});
+
+describe('weightSpreads', () => {
+  const row = (over: Partial<LatestSeries>) =>
+    ({
+      file: 'logammulia-antam',
+      variant: '',
+      current: true,
+      date: '2026-11-14',
+      buyback: null,
+      ...over,
+    }) as LatestSeries;
+  const latest = (series: LatestSeries[]) => ({ series }) as unknown as LatestFile;
+
+  it('D-39: Logam Mulia memakai buyback 1 g × berat untuk keping lain di tanggal yang sama', () => {
+    const rows = weightSpreads(
+      latest([
+        row({ w: 0.5, sell: 1_308_500 }),
+        row({ w: 1, sell: 2_517_000, buyback: 2_293_000 }),
+        row({ w: 10, sell: 24_665_000, date: '2026-11-13' }),
+      ]),
+      'logammulia-antam',
+      '',
+    );
+    expect(rows.map((r) => r.w)).toEqual([0.5, 1, 10]);
+    expect(rows[0]!.value).toBeCloseTo((162_000 / 1_308_500) * 100, 6);
+    expect(rows[1]!.value).toBeCloseTo((224_000 / 2_517_000) * 100, 6);
+    expect(rows[2]!.value).toBeNull();
+  });
+  it('sumber lain tetap ketat: tanpa buyback berat itu = null', () => {
+    const rows = weightSpreads(
+      latest([
+        row({ file: 'ubslifestyle-ubs', w: 1, sell: 2_000_000, buyback: 1_900_000 }),
+        row({ file: 'ubslifestyle-ubs', w: 5, sell: 9_800_000 }),
+      ]),
+      'ubslifestyle-ubs',
+      '',
+    );
+    expect(rows[1]!.value).toBeNull();
   });
 });

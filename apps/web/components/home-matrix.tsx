@@ -161,7 +161,8 @@ export function HomeMatrix({ cells }: { cells: TodayCells }) {
         <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2.5 border-t border-line px-6 py-3.5 text-sm max-sm:px-4">
           <InfoPopover label="Catatan" ariaLabel="Catatan tabel" side="top">
             <p className="m-0 text-xs text-muted">
-              {EMPTY} = tidak ditampilkan sumber. Buyback Antam hanya untuk 1 g; Pegadaian tidak
+              {EMPTY} = tidak ditampilkan sumber. Buyback Logam Mulia satu harga per gram untuk
+              semua ukuran keping, jadi buyback selain 1 g = buyback 1 g × berat. Pegadaian tidak
               menampilkan buyback batangan (D-07).
             </p>
           </InfoPopover>

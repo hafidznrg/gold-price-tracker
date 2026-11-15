@@ -51,7 +51,7 @@ export default function SpreadPage() {
     {
       id: 'lm',
       label: 'Logam Mulia · Antam',
-      note: 'Logam Mulia · Antam. Buyback hanya tersedia untuk 1 g',
+      note: 'Logam Mulia · Antam. Buyback selain 1 g = buyback per gram × berat (berlaku untuk semua ukuran keping)',
       rows: weightSpreads(latest, 'logammulia-antam', ''),
       ...stampOf('logammulia', '', 'logammulia-antam'),
     },

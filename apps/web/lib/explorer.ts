@@ -1,6 +1,8 @@
 import type { Brand, PriceSource, Product } from '@gold/schema';
 import {
+  buybackFromGram,
   colorToken,
+  hasPerGramBuyback,
   perGramPrice,
   productKind,
   selectSeries,
@@ -134,6 +136,8 @@ export interface ExplorerOption {
   variants: string[];
   /** Tanggal data pertama per jenis harga; null = sumber tidak menampilkan. */
   first: Record<PriceField, string | null>;
+  /** `true` = buyback dihitung dari buyback 1 g × berat (D-39); sumber tidak mencatatnya. */
+  buybackFromGram?: boolean;
 }
 
 export function optionId(o: Pick<SeriesPick, 'source' | 'brand' | 'w'>): string {
@@ -173,7 +177,21 @@ export function explorerOptions(meta: Pick<MetaFile, 'series'>): ExplorerOption[
       },
     });
   }
+  derivePerGramBuyback(out);
   return out;
+}
+
+/** Keping tanpa buyback pada sumber ber-buyback per gram (D-39) memakai series buyback 1 g. */
+function derivePerGramBuyback(out: ExplorerOption[]): void {
+  for (const o of out) {
+    if (o.first.buyback !== null || o.kind !== 'fisik' || !hasPerGramBuyback(o.file)) continue;
+    const gram = out.find(
+      (g) => g.file === o.file && g.product === o.product && g.w === 1 && g.first.buyback !== null,
+    );
+    if (!gram) continue;
+    o.first = { ...o.first, buyback: gram.first.buyback };
+    o.buybackFromGram = true;
+  }
 }
 
 /** Pilihan → opsi katalog; null bila tidak ada atau jenis harga tidak tersedia. */
@@ -191,12 +209,15 @@ export function resolvePick(p: SeriesPick, options: ExplorerOption[]): ExplorerO
  */
 export function seriesPoints(
   file: Pick<SeriesFile, 'rows'>,
-  o: Pick<ExplorerOption, 'variants' | 'w' | 'product'>,
+  o: Pick<ExplorerOption, 'variants' | 'w' | 'product' | 'buybackFromGram'>,
   price: PriceField,
 ): SeriesPoint[] {
   const by = new Map<string, number>();
+  const fromGram = price === 'buyback' && o.buybackFromGram === true;
   for (const v of [...o.variants].reverse()) {
-    for (const p of selectSeries(file, { variant: v, w: o.w, price })) by.set(p.date, p.value);
+    for (const p of selectSeries(file, { variant: v, w: fromGram ? 1 : o.w, price })) {
+      by.set(p.date, fromGram ? (buybackFromGram(p.value, o.w) as number) : p.value);
+    }
   }
   const perGram = o.product === 'gold_savings';
   return [...by]

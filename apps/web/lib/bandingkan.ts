@@ -1,6 +1,8 @@
 import type { Brand, PriceSource, Product } from '@gold/schema';
 import {
+  buybackFromGram,
   displayBrand,
+  hasPerGramBuyback,
   perGramPrice,
   SOURCE_LABELS,
   weightKey,
@@ -194,6 +196,8 @@ export interface TodayCell {
   /** Rupiah apa adanya per keping (emas fisik) atau per gram (Tabungan Emas). */
   sell: number | null;
   buyback: number | null;
+  /** `true` = buyback dihitung dari buyback 1 g × berat (D-39), bukan dicatat sumber. */
+  buybackDerived?: boolean;
   date: string;
   at: string | null;
 }
@@ -230,9 +234,24 @@ export function todayCells(latest: LatestFile): TodayCells {
         cur.buyback ??= buyback;
       }
     }
+    if (hasPerGramBuyback(d.file)) fillPerGramBuyback(cells);
     out[d.id] = cells;
   }
   return out;
+}
+
+/**
+ * Sumber dengan buyback per gram (D-39): keping tanpa buyback memakai buyback 1 g × berat, hanya
+ * bila baris 1 g bertanggal sama (satu kali scrape) agar tidak memasangkan harga beda hari.
+ */
+function fillPerGramBuyback(cells: Record<string, TodayCell>): void {
+  const gram = cells[weightKey(1)];
+  if (!gram || gram.buyback === null) return;
+  for (const [key, c] of Object.entries(cells)) {
+    if (key === 'linear' || c.buyback !== null || c.date !== gram.date) continue;
+    c.buyback = buybackFromGram(gram.buyback, Number(key));
+    c.buybackDerived = true;
+  }
 }
 
 export interface TodayRow {
@@ -241,6 +260,8 @@ export interface TodayRow {
   sell: number;
   perGram: number;
   buyback: number | null;
+  /** `true` = buyback 1 g × berat (D-39). */
+  buybackDerived: boolean;
   /** Spread jual–buyback dalam persen; null bila buyback tidak ditampilkan sumber. */
   spreadPct: number | null;
   /** Selisih harga per gram terhadap yang termurah, persen (0 untuk yang termurah). */
@@ -263,6 +284,7 @@ export function todayRows(cells: TodayCells, w: number): TodayRow[] {
       sell,
       perGram: d.linear ? c.sell : sell / w,
       buyback,
+      buybackDerived: c.buybackDerived === true,
       spreadPct: spreadPct(sell, buyback),
       date: c.date,
       at: c.at,

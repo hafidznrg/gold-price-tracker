@@ -517,3 +517,13 @@ Log keputusan produk dan teknis (format ringkas ala ADR). Keputusan baru ditamba
 **Konteks:** denyut D-58 memakai `motion-safe:` sehingga hilang di perangkat yang meminta kurangi gerakan (mis. Windows dengan *Animation effects* mati), dan titik di chip navbar tidak berdenyut.
 **Keputusan:** komponen `LiveDot` (`components/live-dot.tsx`) dipakai di chip navbar (`DataStatusChip`) dan tombol "Diperbarui" (`Freshness`). Halo `animate-ping` muncul bila data terkini, tanpa syarat `prefers-reduced-motion`; titik abu-abu tetap diam.
 **Konsekuensi:** pengguna dengan pengaturan kurangi gerakan tetap melihat denyut kecil ini.
+
+### D-60 — Buyback Logam Mulia per gram di semua halaman (memperluas D-39)
+
+**Konteks:** aturan D-39 (satu harga buyback per gram Logam Mulia untuk semua ukuran keping) baru dipakai Kalkulator. Beranda, Bandingkan, grafik spread per gramasi, dan Explorer masih menampilkan buyback Antam LM hanya untuk 1 g, sehingga spread 0,5–1.000 g kosong. Pemilik proyek meminta aturan ini diterapkan menyeluruh (15 Nov 2026).
+**Keputusan:**
+- Aturan tunggal di `lib/data/catalog.ts`: `PER_GRAM_BUYBACK_FILES` (`logammulia-antam`), `hasPerGramBuyback`, `buybackFromGram` (buyback 1 g × berat, dibulatkan ke rupiah). Kalkulator memakai aturan yang sama (konstanta `BUYBACK_PER_GRAM` dihapus).
+- Hari ini (`todayCells` → Beranda dan Bandingkan; `weightSpreads` → Spread): keping tanpa buyback memakai buyback 1 g **hanya bila tanggalnya sama** dengan harga jual keping itu (satu kali scrape). Sel ditandai `buybackDerived`.
+- Explorer: opsi keping Logam Mulia tanpa buyback mendapat `buybackFromGram`, tanggal pertama buyback dari 1 g, dan series buyback = series 1 g × berat (label "buyback 1 g × berat").
+- Data CSV tidak berubah: buyback selain 1 g tetap kosong di data, nilai turunan hanya dihitung di web. Sumber lain tetap ketat.
+**Konsekuensi:** spread Antam LM per gramasi kini terlihat (mis. 14 Nov 2026: 0,5 g 12,4%, 1 g 8,9%, 1.000 g 6,7%). Catatan tabel di Beranda, Bandingkan, dan Spread menyebut aturan per gram. Bila Logam Mulia kelak mencatat buyback per keping, nilai sumber menang dengan sendirinya.

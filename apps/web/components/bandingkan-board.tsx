@@ -323,7 +323,10 @@ export function BandingkanBoard({ options, weights, today, asOf, calendar }: Ban
                   sumber per 0,01 g). Mencetaknya jadi emas fisik dikenai biaya cetak terpisah.
                 </li>
                 <li>Harga Logam Mulia adalah Harga Dasar, belum termasuk PPh 0,25%.</li>
-                <li>Buyback Logam Mulia hanya tersedia untuk 1 g.</li>
+                <li>
+                  Buyback Logam Mulia satu harga per gram untuk semua ukuran keping: buyback selain
+                  1 g = buyback 1 g × berat.
+                </li>
               </ul>
               <InfoHeading className="mt-2 border-t border-line pt-2.5">Sumber</InfoHeading>
               <InfoRows

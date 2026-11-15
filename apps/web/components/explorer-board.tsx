@@ -188,6 +188,7 @@ function seriesMeta(o: ExplorerOption, price: PriceField, perGram = false): stri
   return [
     o.kind === 'fisik' && !perGram ? 'per keping' : 'per gram',
     o.source === 'logammulia' && price === 'sell' ? 'harga dasar' : null,
+    price === 'buyback' && o.buybackFromGram ? 'buyback 1 g × berat' : null,
     first ? `sejak ${formatDate(first)}` : null,
   ]
     .filter(Boolean)

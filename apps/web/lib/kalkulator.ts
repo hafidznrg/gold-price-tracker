@@ -1,5 +1,5 @@
 import { COMPARE_DEFS, findOption, type CompareDef } from './bandingkan';
-import type { SeriesPoint } from './data';
+import { hasPerGramBuyback, type SeriesPoint } from './data';
 import { chartPoints, type ExplorerOption } from './explorer';
 import { asOf as asOfPoint, type Point } from './forward-fill';
 import { formatNumber } from './format';
@@ -83,12 +83,6 @@ export function sellCandidates(buy: CompareDef): CompareDef[] {
   return COMPARE_DEFS.filter((d) => d.brand === buy.brand && d.product === buy.product);
 }
 
-/**
- * Sumber yang buyback-nya berlaku per gram untuk semua ukuran keping (D-39): Logam Mulia
- * menetapkan satu harga buyback per gram, dan data hanya mencatat baris 1 g.
- */
-export const BUYBACK_PER_GRAM: ReadonlySet<string> = new Set(['lm-antam']);
-
 export interface SellOption {
   option: ExplorerOption;
   /** `true` = harga buyback 1 g × berat (D-39), bukan buyback keping berat itu sendiri. */
@@ -97,7 +91,7 @@ export interface SellOption {
 
 /**
  * Series buyback untuk menjual keping berat `w` di sumber `d`: buyback berat itu sendiri bila
- * ada; untuk sumber di `BUYBACK_PER_GRAM`, buyback 1 g (dikali berat di `piecePoints`).
+ * ada; untuk sumber ber-buyback per gram (`hasPerGramBuyback`), buyback 1 g (dikali berat di `piecePoints`).
  */
 export function sellOption(
   d: CompareDef,
@@ -105,8 +99,10 @@ export function sellOption(
   options: readonly ExplorerOption[],
 ): SellOption | null {
   const own = findOption(d, w, options);
-  if (own && own.first.buyback !== null) return { option: own, perGram: false };
-  if (!BUYBACK_PER_GRAM.has(d.id)) return null;
+  if (own && own.first.buyback !== null && !own.buybackFromGram) {
+    return { option: own, perGram: false };
+  }
+  if (!hasPerGramBuyback(d.file)) return null;
   const gram = findOption(d, 1, options);
   return gram && gram.first.buyback !== null ? { option: gram, perGram: true } : null;
 }

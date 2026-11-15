@@ -118,6 +118,27 @@ describe('explorerOptions', () => {
     expect(opts[0]?.first).toEqual({ sell: '2026-10-26', buyback: '2023-11-20' });
   });
 
+  it('D-39: keping Logam Mulia tanpa buyback memakai buyback 1 g; sumber lain tidak', () => {
+    const lm = { source: 'logammulia', brand: 'antam', file: 'logammulia-antam' } as const;
+    const opts = explorerOptions(
+      meta([
+        { ...lm, w: 1, first_buyback_date: '2015-11-25' },
+        { ...lm, w: 5, first_sell_date: '2026-10-26' },
+        { source: 'pegadaian', brand: 'antam', file: 'pegadaian-antam', w: 5 },
+      ]),
+    );
+    const five = opts.find((o) => o.file === 'logammulia-antam' && o.w === 5)!;
+    expect(five).toMatchObject({ buybackFromGram: true });
+    expect(five.first).toEqual({ sell: '2026-10-26', buyback: '2015-11-25' });
+    expect(opts.find((o) => o.file === 'logammulia-antam' && o.w === 1)!.buybackFromGram).toBe(
+      undefined,
+    );
+    expect(opts.find((o) => o.file === 'pegadaian-antam')!.first.buyback).toBeNull();
+    expect(
+      resolvePick({ source: 'logammulia', brand: 'antam', w: 5, price: 'buyback' }, opts),
+    ).not.toBeNull();
+  });
+
   it('resolvePick menolak jenis harga yang tidak tersedia', () => {
     const opts = explorerOptions(meta([{ source: 'pegadaian', brand: 'galeri24' }]));
     expect(
@@ -150,6 +171,19 @@ describe('seriesPoints', () => {
       ['2026-10-02', 2_050_000],
       ['2026-10-03', 2_060_000],
     ]);
+  });
+  it('D-39: buyback dari 1 g dikali berat keping', () => {
+    const pts = seriesPoints(
+      {
+        rows: [
+          ['2026-11-14', '', 1, 2_517_000, 2_293_000],
+          ['2026-11-14', '', 0.5, 1_308_500, null],
+        ],
+      },
+      { variants: [''], w: 0.5, product: 'gold_bar', buybackFromGram: true },
+      'buyback',
+    );
+    expect(pts).toEqual([{ date: '2026-11-14', value: 1_146_500 }]);
   });
   it('Tabungan Emas dibagi berat → per gram', () => {
     const pts = seriesPoints(

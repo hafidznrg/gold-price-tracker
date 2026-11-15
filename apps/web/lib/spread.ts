@@ -1,7 +1,9 @@
 import type { Brand, PriceSource, Product } from '@gold/schema';
 import {
   BRAND_LABELS,
+  buybackFromGram,
   colorToken,
+  hasPerGramBuyback,
   perGramPrice,
   selectSeries,
   weightKey,
@@ -360,12 +362,21 @@ export interface WeightBarRow {
   value: number | null;
 }
 
-/** Spread % per gramasi hari ini untuk satu file + variant; gramasi tanpa buyback → null. */
+/**
+ * Spread % per gramasi hari ini untuk satu file + variant; gramasi tanpa buyback → null. Untuk
+ * sumber dengan buyback per gram (D-39), keping tanpa buyback memakai buyback 1 g × berat dari
+ * tanggal yang sama.
+ */
 export function weightSpreads(latest: LatestFile, file: string, variant: string): WeightBarRow[] {
-  return latest.series
+  const rows = latest.series
     .filter((s) => s.file === file && s.variant === variant && s.current)
-    .sort((a, b) => a.w - b.w)
-    .map((s) => ({ label: formatWeight(s.w), w: s.w, value: spreadPct(s.sell, s.buyback) }));
+    .sort((a, b) => a.w - b.w);
+  const gram = hasPerGramBuyback(file) ? rows.find((s) => s.w === 1) : undefined;
+  return rows.map((s) => {
+    const buyback =
+      s.buyback ?? (gram && gram.date === s.date ? buybackFromGram(gram.buyback, s.w) : null);
+    return { label: formatWeight(s.w), w: s.w, value: spreadPct(s.sell, buyback) };
+  });
 }
 
 export interface CompareItem {

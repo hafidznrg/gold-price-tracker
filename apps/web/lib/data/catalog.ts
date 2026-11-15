@@ -109,6 +109,22 @@ export function perGramPrice(price: number | null, w: number): number | null {
   return Math.round((price / w) * 100) / 100;
 }
 
+/**
+ * File series yang buyback-nya satu harga per gram untuk semua ukuran keping (D-39): Logam Mulia
+ * menetapkan satu harga buyback per gram, dan data hanya mencatat baris 1 g. Buyback berat lain
+ * dihitung di web (buyback 1 g × berat), tidak ditulis ke CSV.
+ */
+export const PER_GRAM_BUYBACK_FILES: ReadonlySet<string> = new Set(['logammulia-antam']);
+
+export function hasPerGramBuyback(file: string): boolean {
+  return PER_GRAM_BUYBACK_FILES.has(file);
+}
+
+/** Buyback keping `w` gram dari buyback 1 g (D-39), dibulatkan ke rupiah. Null tetap null. */
+export function buybackFromGram(buyback1g: number | null, w: number): number | null {
+  return buyback1g === null ? null : Math.round(buyback1g * w);
+}
+
 // ---------------------------------------------------------------------------
 // Label (wording mockup)
 
