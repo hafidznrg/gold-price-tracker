@@ -19,9 +19,16 @@ import {
   encodeState,
   formatHold,
   latestPoint,
+  MAX_PAID,
   MAX_QTY,
   normalizeState,
   outcome,
+  paidDiff,
+  paidPerPiece,
+  parseCustomWeight,
+  supportsCustomWeight,
+  CUSTOM_WEIGHT_MAX,
+  CUSTOM_WEIGHT_MIN,
   piecePoints,
   sellOption,
   nearestPairableWeight,
@@ -58,6 +65,9 @@ const PANEL = 'min-w-0 rounded-card border border-line bg-surface p-5 max-sm:p-4
 const STEP_BTN =
   'size-10 flex-none cursor-pointer rounded-field border border-line bg-surface2 text-lg text-text disabled:cursor-not-allowed disabled:opacity-50';
 
+const CUSTOM_W = '__custom';
+const LINK_BTN = 'cursor-pointer border-0 bg-transparent p-0 text-xs text-gold underline';
+
 const sourceLabel = (d: CompareDef) => `${d.sourceName} · ${d.brandName}`;
 const unitWord = (d: CompareDef) => (d.linear ? 'porsi' : 'keping');
 
@@ -83,6 +93,7 @@ export function KalkulatorBoard({ options, asOf, calendar }: KalkulatorBoardProp
       w: parseAsString,
       q: parseAsString,
       s: parseAsString,
+      p: parseAsString,
     },
     { history: 'replace' },
   );
@@ -99,6 +110,13 @@ export function KalkulatorBoard({ options, asOf, calendar }: KalkulatorBoardProp
   const [qtyText, setQtyText] = useState(String(state.qty));
   useEffect(() => setQtyText(String(state.qty)), [state.qty]);
 
+  // Berat lain (D-61): input angka lokal supaya bisa diketik bertahap ("1." → "1.5").
+  const [customMode, setCustomMode] = useState(false);
+  const [customText, setCustomText] = useState(String(state.w));
+  useEffect(() => setCustomText((t) => (Number(t) === state.w ? t : String(state.w))), [state.w]);
+  // Total harga beli: draf teks saat mengetik; null = tampilkan nilai dari keadaan.
+  const [paidDraft, setPaidDraft] = useState<string | null>(null);
+
   const buys = useMemo(() => buyDefs(options), [options]);
   const buyDef = defById(state.buyId) ?? COMPARE_DEFS[0]!;
   const weights = useMemo(() => weightsFor(buyDef, options), [buyDef, options]);
@@ -110,6 +128,8 @@ export function KalkulatorBoard({ options, asOf, calendar }: KalkulatorBoardProp
     [pairable, buyDef, state.w, options],
   );
   const sellDef = defById(state.sellId);
+  const canCustom = supportsCustomWeight(buyDef);
+  const customActive = canCustom && (customMode || !weights.includes(state.w));
 
   const buyOpt = findOption(buyDef, state.w, options);
   const sell = sellDef ? sellOption(sellDef, state.w, options) : null;
@@ -162,11 +182,37 @@ export function KalkulatorBoard({ options, asOf, calendar }: KalkulatorBoardProp
   );
   const sellNow = useMemo(() => (sellPoints ? latestPoint(sellPoints) : null), [sellPoints]);
 
+  const official = quote?.ok ? quote : null;
+  // Harga beli yang dipakai: total yang diisi ÷ jumlah bila diubah, selain itu harga resmi (D-61).
+  const buyEff = useMemo(
+    () =>
+      state.paid !== null
+        ? { date: state.date, price: paidPerPiece(state.paid, state.qty) }
+        : official
+          ? { date: official.date, price: official.price }
+          : null,
+    [state.paid, state.qty, state.date, official],
+  );
+
   const result = useMemo(() => {
-    if (!quote?.ok || !sellNow || sellNow.date < quote.date || !sellPoints) return null;
-    const o = outcome(quote, { date: sellNow.date, price: sellNow.value }, state.qty);
+    if (!buyEff || !sellNow || sellNow.date < buyEff.date || !sellPoints) return null;
+    const o = outcome(buyEff, { date: sellNow.date, price: sellNow.value }, state.qty);
     return { o, be: breakEven(sellPoints, state.date, o.buyPrice) };
-  }, [quote, sellNow, sellPoints, state.qty, state.date]);
+  }, [buyEff, sellNow, sellPoints, state.qty, state.date]);
+
+  const diff = useMemo(
+    () => (state.paid !== null ? paidDiff(state.paid, state.qty, official?.price) : null),
+    [state.paid, state.qty, official],
+  );
+  const officialTotal = official ? Math.round(official.price * state.qty) : null;
+  const paidShown =
+    paidDraft ??
+    (state.paid !== null
+      ? formatNumber(state.paid)
+      : officialTotal
+        ? formatNumber(officialTotal)
+        : '');
+  const needPaid = !loading && !error && state.paid === null && !official;
 
   const chart = useMemo(
     () =>
@@ -233,11 +279,13 @@ export function KalkulatorBoard({ options, asOf, calendar }: KalkulatorBoardProp
     status = nearestW
       ? `Belum ada data buyback untuk ${buyLabel}, jadi untung/rugi tidak bisa dihitung. Pilih gramasi lain, misalnya ${formatWeight(nearestW)}.`
       : `Belum ada data buyback untuk emas ${buyDef.brandName}, jadi untung/rugi tidak bisa dihitung. Pilih tempat beli lain.`;
-  } else if (quote && !quote.ok) status = missingText(quote, buyLabel, state.date);
-  else if (quote?.ok && !sellNow)
-    status = `Belum ada data buyback ${sourceLabel(sellDef)} ${wText}.`;
-  else if (quote?.ok && sellNow && !result) {
-    status = `Data buyback terakhir (${formatDate(sellNow.date)}) lebih awal dari tanggal harga beli (${formatDate(quote.date)}).`;
+  } else if (needPaid && !buyOpt)
+    status = `${buyLabel} tidak punya harga resmi di data. Isi total harga beli untuk menghitung.`;
+  else if (needPaid && quote && !quote.ok)
+    status = `${missingText(quote, buyLabel, state.date)} Atau isi total harga beli.`;
+  else if (buyEff && !sellNow) status = `Belum ada data buyback ${sourceLabel(sellDef)} ${wText}.`;
+  else if (buyEff && sellNow && !result) {
+    status = `Data buyback terakhir (${formatDate(sellNow.date)}) lebih awal dari tanggal harga beli (${formatDate(buyEff.date)}).`;
   }
 
   return (
@@ -293,8 +341,16 @@ export function KalkulatorBoard({ options, asOf, calendar }: KalkulatorBoardProp
               <select
                 id="kalk-w"
                 className={FIELD}
-                value={String(state.w)}
-                onChange={(e) => commit({ w: Number(e.target.value) })}
+                value={customActive ? CUSTOM_W : String(state.w)}
+                onChange={(e) => {
+                  if (e.target.value === CUSTOM_W) {
+                    setCustomMode(true);
+                    setCustomText(String(state.w));
+                    return;
+                  }
+                  setCustomMode(false);
+                  commit({ w: Number(e.target.value) });
+                }}
               >
                 {weights.map((w) => (
                   <option key={w} value={String(w)}>
@@ -302,7 +358,32 @@ export function KalkulatorBoard({ options, asOf, calendar }: KalkulatorBoardProp
                     {pairable.length > 0 && !pairable.includes(w) ? ' · tanpa buyback' : ''}
                   </option>
                 ))}
+                {canCustom ? <option value={CUSTOM_W}>Berat lain…</option> : null}
               </select>
+              {customActive ? (
+                <div className="flex items-center gap-1.5">
+                  <input
+                    id="kalk-w-custom"
+                    type="number"
+                    inputMode="decimal"
+                    aria-label="Berat lain (gram)"
+                    min={CUSTOM_WEIGHT_MIN}
+                    max={CUSTOM_WEIGHT_MAX}
+                    step={0.01}
+                    className={cn(FIELD, 'num min-w-0')}
+                    value={customText}
+                    onChange={(e) => {
+                      setCustomText(e.target.value);
+                      const w = parseCustomWeight(
+                        e.target.value === '' ? null : Number(e.target.value),
+                      );
+                      if (w !== null) commit({ w });
+                    }}
+                    onBlur={() => setCustomText(String(state.w))}
+                  />
+                  <span className="text-xs text-muted">gram</span>
+                </div>
+              ) : null}
             </div>
             <div className="flex min-w-0 flex-col gap-1">
               <label htmlFor="kalk-qty" className="text-xs text-muted">
@@ -346,12 +427,75 @@ export function KalkulatorBoard({ options, asOf, calendar }: KalkulatorBoardProp
               </div>
             </div>
           </div>
+          <div className="flex min-w-0 flex-col gap-1">
+            <div className="flex flex-wrap items-baseline justify-between gap-x-3">
+              <label htmlFor="kalk-paid" className="text-xs text-muted">
+                Total harga beli (Rp)
+                {state.paid !== null && official ? (
+                  <span className="ml-1.5 rounded-full bg-surface2 px-1.5 py-0.5 text-[11px] text-gold">
+                    diubah
+                  </span>
+                ) : null}
+              </label>
+              {state.paid !== null && official ? (
+                <button
+                  type="button"
+                  className={LINK_BTN}
+                  onClick={() => {
+                    setPaidDraft(null);
+                    commit({ paid: null });
+                  }}
+                >
+                  Kembalikan ke harga resmi
+                </button>
+              ) : null}
+            </div>
+            <input
+              id="kalk-paid"
+              type="text"
+              inputMode="numeric"
+              autoComplete="off"
+              placeholder={needPaid ? 'Isi total harga beli' : undefined}
+              aria-required={needPaid || undefined}
+              aria-describedby="kalk-paid-note"
+              className={cn(FIELD, 'num')}
+              value={paidShown}
+              onChange={(e) => {
+                const digits = e.target.value.replace(/\D/g, '').replace(/^0+/, '');
+                if (digits === '') {
+                  setPaidDraft('');
+                  commit({ paid: null });
+                  return;
+                }
+                const n = Number(digits);
+                if (!Number.isSafeInteger(n) || n > MAX_PAID) return;
+                setPaidDraft(formatNumber(n));
+                commit({ paid: n });
+              }}
+              onBlur={() => setPaidDraft(null)}
+            />
+            <p id="kalk-paid-note" className="m-0 text-xs leading-relaxed text-muted">
+              {official
+                ? `Harga resmi ${sourceLabel(buyDef)}, ${formatDate(official.date)}. Ubah bila Anda membayar berbeda.`
+                : ready
+                  ? 'Tidak ada harga resmi untuk berat dan tanggal ini. Isi total harga beli yang Anda bayar.'
+                  : 'Memuat harga resmi…'}{' '}
+              Khusus emas batangan 24K merek yang dilacak (bukan perhiasan), tanpa potongan tempat
+              buyback. Nominal yang diubah ikut tersimpan di tautan.
+            </p>
+          </div>
           <div
             className="rounded-[12px] bg-surface2 px-3.5 py-2.5 text-sm leading-[1.5] text-muted"
             aria-live="polite"
           >
             {!ready ? (
               'Memuat harga beli…'
+            ) : state.paid !== null && buyEff ? (
+              <>
+                Harga beli: <b className="num text-text">{formatRupiah(buyEff.price)}</b> per {unit}{' '}
+                (total <span className="num">{formatRupiah(state.paid)}</span> ÷{' '}
+                {formatNumber(state.qty)}), sesuai isian Anda.
+              </>
             ) : quote?.ok ? (
               <>
                 Harga beli: <b className="num text-text">{formatRupiah(quote.price)}</b> per {unit}
@@ -373,10 +517,15 @@ export function KalkulatorBoard({ options, asOf, calendar }: KalkulatorBoardProp
                       className="cursor-pointer border-0 bg-transparent p-0 text-sm text-gold underline"
                     >
                       Pakai {formatDate(quote.suggest)}
-                    </button>
+                    </button>{' '}
+                    atau isi total harga beli.
                   </>
-                ) : null}
+                ) : (
+                  ' Isi total harga beli.'
+                )}
               </>
+            ) : needPaid ? (
+              `${buyLabel} tidak punya harga resmi. Isi total harga beli di atas.`
             ) : (
               EMPTY
             )}
@@ -488,6 +637,19 @@ export function KalkulatorBoard({ options, asOf, calendar }: KalkulatorBoardProp
                   </div>
                 </div>
               </div>
+              {diff ? (
+                <p className="num m-0 text-sm text-muted" data-testid="kalk-diff">
+                  {Math.abs(diff.pct) < 0.05
+                    ? 'Sama dengan harga resmi'
+                    : `${formatNumber(Math.abs(diff.pct), 1)}% ${diff.pct > 0 ? 'di atas' : 'di bawah'} harga resmi`}{' '}
+                  ({formatRupiah(diff.officialTotal)}).
+                  {diff.warn ? (
+                    <b className="ml-1 text-text" role="note">
+                      Periksa lagi nominalnya.
+                    </b>
+                  ) : null}
+                </p>
+              ) : null}
               {!result.be.reached && result.be.lastAbove ? (
                 <p className="num m-0 text-xs text-muted">
                   Terakhir buyback di atas harga beli: {formatDate(result.be.lastAbove)}.

@@ -17,6 +17,13 @@ export const MAX_QTY = 100_000;
 export const DEFAULT_BUY_ID = 'lm-antam';
 export const DEFAULT_WEIGHT = 1;
 export const DEFAULT_QTY = 1;
+/** Batas berat lain (gram) dan total harga beli (rupiah), D-61. */
+export const CUSTOM_WEIGHT_MIN = 0.01;
+export const CUSTOM_WEIGHT_MAX = 1000;
+export const MAX_PAID = 1_000_000_000_000;
+/** Selisih dari harga resmi yang memunculkan catatan "Periksa lagi nominalnya" (%). */
+export const PAID_WARN_HIGH_PCT = 50;
+export const PAID_WARN_LOW_PCT = -20;
 
 const DAY_MS = 86_400_000;
 
@@ -68,6 +75,27 @@ export function weightsFor(d: CompareDef, options: readonly ExplorerOption[]): n
     }
   }
   return [...set].sort((a, b) => a - b);
+}
+
+/**
+ * Sumber yang menerima berat bebas (D-61): buyback per gram (Logam Mulia) dan Tabungan Emas
+ * (`linear`). Sumber dengan buyback per keping tetap ketat pada gramasi yang ada.
+ */
+export function supportsCustomWeight(d: CompareDef): boolean {
+  return d.linear || hasPerGramBuyback(d.file);
+}
+
+/** Berat bebas yang sah: 0,01 s.d. 1.000 g, dibulatkan ke 2 desimal; null bila di luar rentang. */
+export function parseCustomWeight(v: number | null | undefined): number | null {
+  if (v === null || v === undefined || !Number.isFinite(v)) return null;
+  const r = Math.round(v * 100) / 100;
+  return r >= CUSTOM_WEIGHT_MIN && r <= CUSTOM_WEIGHT_MAX ? r : null;
+}
+
+/** Total harga beli yang sah: bilangan bulat 1 s.d. 10^12; selain itu null (kembali ke harga resmi). */
+export function parsePaid(v: number | null | undefined): number | null {
+  if (v === null || v === undefined || !Number.isInteger(v)) return null;
+  return v >= 1 && v <= MAX_PAID ? v : null;
 }
 
 /** Sumber yang punya harga jual (bisa dipilih sebagai tempat beli). */
@@ -149,6 +177,8 @@ export interface CalcState {
   qty: number;
   /** null = tak ada sumber buyback untuk kombinasi ini. */
   sellId: string | null;
+  /** Total harga beli (rupiah) yang diisi pengguna; null = pakai harga resmi (D-61). */
+  paid: number | null;
 }
 
 export interface CalcContext {
@@ -163,6 +193,7 @@ export interface RawState {
   w?: string | null;
   q?: string | null;
   s?: string | null;
+  p?: string | null;
 }
 
 /** Bawaan: beli 1 tahun lalu, Antam LM 1 g, 1 keping, jual ke buyback Antam LM. */
@@ -181,6 +212,7 @@ export function normalizeState(
     w?: number | null;
     qty?: number | null;
     sellId?: string | null;
+    paid?: number | null;
   },
   ctx: CalcContext,
 ): CalcState {
@@ -190,6 +222,7 @@ export function normalizeState(
     buys.find((d) => d.id === raw.buyId) ?? buys.find((d) => d.id === DEFAULT_BUY_ID) ?? buys[0];
   const qty =
     raw.qty && Number.isInteger(raw.qty) && raw.qty >= 1 ? Math.min(raw.qty, MAX_QTY) : DEFAULT_QTY;
+  const paid = parsePaid(raw.paid);
   if (!buy) {
     return {
       date: date > ctx.asOf ? ctx.asOf : date,
@@ -197,15 +230,19 @@ export function normalizeState(
       w: DEFAULT_WEIGHT,
       qty,
       sellId: null,
+      paid,
     };
   }
   const weights = weightsFor(buy, ctx.options);
+  const custom = supportsCustomWeight(buy) ? parseCustomWeight(raw.w) : null;
   const w =
     raw.w && weights.includes(raw.w)
       ? raw.w
-      : weights.includes(DEFAULT_WEIGHT)
-        ? DEFAULT_WEIGHT
-        : weights[0]!;
+      : custom !== null
+        ? custom
+        : weights.includes(DEFAULT_WEIGHT)
+          ? DEFAULT_WEIGHT
+          : weights[0]!;
   const sells = sellChoices(buy, w, ctx.options);
   const sell = sells.find((d) => d.id === raw.sellId) ?? sells[0] ?? null;
   return {
@@ -214,12 +251,14 @@ export function normalizeState(
     w,
     qty,
     sellId: sell?.id ?? null,
+    paid,
   };
 }
 
 export function decodeState(raw: RawState, ctx: CalcContext): CalcState {
   const w = Number(raw.w);
   const q = Number(raw.q);
+  const p = Number(raw.p);
   return normalizeState(
     {
       date: raw.d,
@@ -227,6 +266,7 @@ export function decodeState(raw: RawState, ctx: CalcContext): CalcState {
       w: raw.w && Number.isFinite(w) ? w : null,
       qty: raw.q && Number.isFinite(q) ? q : null,
       sellId: raw.s,
+      paid: raw.p && raw.p.trim() !== '' && Number.isFinite(p) ? p : null,
     },
     ctx,
   );
@@ -247,6 +287,7 @@ export function encodeState(
     w: s.w === DEFAULT_WEIGHT ? null : String(s.w),
     q: s.qty === DEFAULT_QTY ? null : String(s.qty),
     s: s.sellId === null || s.sellId === autoSell ? null : s.sellId,
+    p: s.paid === null ? null : String(s.paid),
   };
 }
 
@@ -301,6 +342,41 @@ export function buyQuote(points: readonly Point[], date: string): BuyQuote {
   };
 }
 
+/** Harga beli per keping dari total yang dibayar: total ÷ jumlah keping. */
+export function paidPerPiece(paid: number, qty: number): number {
+  return paid / qty;
+}
+
+export interface PaidDiff {
+  /** Persen total yang dibayar terhadap total harga resmi; > 0 = di atas harga resmi. */
+  pct: number;
+  /** Total harga resmi (harga resmi per keping × jumlah), dibulatkan ke rupiah. */
+  officialTotal: number;
+  /** Selisih tak lazim (> 50% atau < −20%): tampilkan catatan lunak, tidak memblokir. */
+  warn: boolean;
+}
+
+/**
+ * Selisih total yang dibayar dari harga resmi (D-61). Null bila tak ada pembanding yang sah
+ * (harga resmi tidak ada untuk berat/tanggal itu); berat atau sumber lain tidak dipakai pengganti.
+ */
+export function paidDiff(
+  paid: number,
+  qty: number,
+  officialPrice: number | null | undefined,
+): PaidDiff | null {
+  if (officialPrice === null || officialPrice === undefined || !(officialPrice > 0) || qty < 1) {
+    return null;
+  }
+  const official = officialPrice * qty;
+  const pct = (paid / official - 1) * 100;
+  return {
+    pct,
+    officialTotal: Math.round(official),
+    warn: pct > PAID_WARN_HIGH_PCT || pct < PAID_WARN_LOW_PCT,
+  };
+}
+
 /** Harga buyback terbaru ("nilai sekarang"); null bila tak ada data. */
 export function latestPoint(points: readonly Point[]): Point | null {
   return points.at(-1) ?? null;
@@ -334,7 +410,8 @@ export function outcome(
   sell: { date: string; price: number },
   qty: number,
 ): Outcome {
-  const modal = qty * buy.price;
+  // Dibulatkan 2 desimal: harga per keping dari total ÷ jumlah bisa tak bulat (D-61).
+  const modal = Math.round(qty * buy.price * 100) / 100;
   const value = qty * sell.price;
   const holdDays = daysBetween(buy.date, sell.date);
   const cagr =

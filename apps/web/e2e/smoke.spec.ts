@@ -347,6 +347,31 @@ test.describe('Kalkulator', () => {
     await expect(page.getByText(/Data paling awal: 4 Jan 2010/).first()).toBeVisible();
     await expect(page.getByRole('button', { name: /Pakai 4 Jan 2010/ })).toBeVisible();
   });
+
+  test('total harga beli bisa diubah, dikembalikan, dan berat lain butuh total', async ({
+    page,
+  }) => {
+    await page.goto('/kalkulator?d=2024-03-15');
+    const paid = page.getByLabel(/^Total harga beli/);
+    await expect(paid).not.toHaveValue('');
+    await expect(page.getByRole('button', { name: 'Kembalikan ke harga resmi' })).toBeHidden();
+    await paid.fill('99999999');
+    await expect(page).toHaveURL(/[?&]p=99999999(&|$)/);
+    await expect(paid).toHaveValue('99.999.999');
+    await expect(page.getByText('diubah', { exact: true })).toBeVisible();
+    await expect(page.getByTestId('kalk-diff')).toContainText('di atas harga resmi');
+    await expect(page.getByTestId('kalk-diff')).toContainText('Periksa lagi nominalnya');
+    await page.getByRole('button', { name: 'Kembalikan ke harga resmi' }).click();
+    await expect(page).not.toHaveURL(/[?&]p=/);
+    await expect(page.getByTestId('kalk-diff')).toBeHidden();
+
+    await page.getByLabel('Gramasi').selectOption({ label: 'Berat lain…' });
+    await page.getByLabel('Berat lain (gram)').fill('2.5');
+    await expect(page).toHaveURL(/[?&]w=2\.5(&|$)/);
+    await expect(page.getByText(/tidak punya harga resmi/).first()).toBeVisible();
+    await page.getByLabel(/^Total harga beli/).fill('15000000');
+    await expect(page.getByTestId('kalk-profit')).toContainText(/[▲▼]|Rp0/);
+  });
 });
 
 test('navigasi utama memuat ketujuh halaman dan semua tautannya sampai', async ({ page }) => {

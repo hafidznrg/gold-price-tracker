@@ -15,6 +15,11 @@ import {
   formatHold,
   normalizeState,
   outcome,
+  paidDiff,
+  paidPerPiece,
+  parseCustomWeight,
+  parsePaid,
+  supportsCustomWeight,
   piecePoints,
   priceOn,
   sellAvailable,
@@ -321,22 +326,44 @@ describe('pilihan sumber dari katalog', () => {
 describe('keadaan di URL', () => {
   it('bawaan: 1 tahun lalu, Antam LM 1 g, 1 keping, jual ke Antam LM', () => {
     const s = decodeState({}, CTX);
-    expect(s).toEqual({ date: '2025-11-07', buyId: 'lm-antam', w: 1, qty: 1, sellId: 'lm-antam' });
-    expect(encodeState(s, CTX)).toEqual({ d: null, b: null, w: null, q: null, s: null });
-  });
-  it('pulang-pergi nilai non-bawaan', () => {
-    const raw = { d: '2024-03-15', b: 'tab', w: '5', q: '3', s: 'tab' };
-    const s = decodeState(raw, CTX);
-    expect(s).toEqual({ date: '2024-03-15', buyId: 'tab', w: 5, qty: 3, sellId: 'tab' });
-    expect(encodeState(s, CTX)).toEqual({ d: '2024-03-15', b: 'tab', w: '5', q: '3', s: null });
-  });
-  it('nilai rusak atau tidak ada di data kembali ke pilihan sah terdekat', () => {
-    expect(decodeState({ d: 'abc', b: 'zzz', w: '77', q: '-2', s: 'pg-antam' }, CTX)).toEqual({
+    expect(s).toEqual({
       date: '2025-11-07',
       buyId: 'lm-antam',
       w: 1,
       qty: 1,
       sellId: 'lm-antam',
+      paid: null,
+    });
+    expect(encodeState(s, CTX)).toEqual({ d: null, b: null, w: null, q: null, s: null, p: null });
+  });
+  it('pulang-pergi nilai non-bawaan', () => {
+    const raw = { d: '2024-03-15', b: 'tab', w: '5', q: '3', s: 'tab' };
+    const s = decodeState(raw, CTX);
+    expect(s).toEqual({
+      date: '2024-03-15',
+      buyId: 'tab',
+      w: 5,
+      qty: 3,
+      sellId: 'tab',
+      paid: null,
+    });
+    expect(encodeState(s, CTX)).toEqual({
+      d: '2024-03-15',
+      b: 'tab',
+      w: '5',
+      q: '3',
+      s: null,
+      p: null,
+    });
+  });
+  it('nilai rusak atau tidak ada di data kembali ke pilihan sah terdekat', () => {
+    expect(decodeState({ d: 'abc', b: 'zzz', w: '5000', q: '-2', s: 'pg-antam' }, CTX)).toEqual({
+      date: '2025-11-07',
+      buyId: 'lm-antam',
+      w: 1,
+      qty: 1,
+      sellId: 'lm-antam',
+      paid: null,
     });
     expect(decodeState({ q: '2.5' }, CTX).qty).toBe(1);
     expect(decodeState({ q: '999999999' }, CTX).qty).toBe(100_000);
@@ -364,5 +391,94 @@ describe('keadaan di URL', () => {
   it('yearAgo menangani 29 Februari', () => {
     expect(yearAgo('2024-02-29')).toBe('2023-02-28');
     expect(defaultDate('2026-11-07')).toBe('2025-11-07');
+  });
+});
+
+describe('D-61: total harga beli dan berat lain', () => {
+  const def = (id: string) => COMPARE_DEFS.find((d) => d.id === id)!;
+
+  it('p valid dibawa pulang-pergi sebagai bilangan bulat rupiah', () => {
+    const s = decodeState({ p: '2750000', q: '2' }, CTX);
+    expect(s.paid).toBe(2_750_000);
+    expect(encodeState(s, CTX).p).toBe('2750000');
+    expect(decodeState({ p: '1000000000000' }, CTX).paid).toBe(1_000_000_000_000);
+    expect(decodeState({ p: '1' }, CTX).paid).toBe(1);
+  });
+  it('p tidak valid dibuang (kembali ke harga resmi)', () => {
+    for (const p of ['abc', '', '0', '-5', '12.5', '1000000000001', 'NaN', 'Infinity', '1e3x']) {
+      expect(decodeState({ p }, CTX).paid).toBeNull();
+    }
+    expect(parsePaid(2.5)).toBeNull();
+    expect(parsePaid(Number.NaN)).toBeNull();
+    expect(parsePaid(null)).toBeNull();
+    expect(parsePaid(500)).toBe(500);
+  });
+  it('w desimal diterima untuk Logam Mulia dan Tabungan Emas, dibulatkan 2 desimal', () => {
+    expect(supportsCustomWeight(def('lm-antam'))).toBe(true);
+    expect(supportsCustomWeight(def('tab'))).toBe(true);
+    expect(supportsCustomWeight(def('pg-antam'))).toBe(false);
+    expect(decodeState({ w: '1.5' }, CTX).w).toBe(1.5);
+    expect(decodeState({ w: '0.015' }, CTX).w).toBe(0.02);
+    expect(decodeState({ w: '1000' }, CTX).w).toBe(1000);
+    expect(decodeState({ b: 'tab', w: '3.25' }, CTX)).toMatchObject({ w: 3.25, sellId: 'tab' });
+    const s = decodeState({ w: '7.5' }, CTX);
+    expect(s.sellId).toBe('lm-antam');
+    expect(encodeState(s, CTX).w).toBe('7.5');
+  });
+  it('w di luar rentang atau bukan angka kembali ke gramasi sah', () => {
+    expect(decodeState({ w: '0.001' }, CTX).w).toBe(1);
+    expect(decodeState({ w: '1000.5' }, CTX).w).toBe(1);
+    expect(decodeState({ w: 'abc' }, CTX).w).toBe(1);
+    expect(parseCustomWeight(0)).toBeNull();
+    expect(parseCustomWeight(0.01)).toBe(0.01);
+  });
+  it('sumber per keping tetap ketat pada w', () => {
+    expect(decodeState({ b: 'pg-antam', w: '1.5' }, CTX).w).toBe(1);
+    expect(decodeState({ b: 'pg-antam', w: '5' }, CTX).w).toBe(5);
+    expect(decodeState({ b: 'ubsl-ubs', w: '0.5' }, CTX).w).toBe(1);
+    // Ganti ke sumber per keping: berat bebas digeser ke gramasi sah.
+    const s = normalizeState({ ...decodeState({ w: '1.5' }, CTX), buyId: 'pg-g24' }, CTX);
+    expect(s.w).toBe(1);
+  });
+  it('p bertahan saat tanggal, sumber, berat, atau jumlah berubah', () => {
+    const s = decodeState({ p: '900000' }, CTX);
+    expect(normalizeState({ ...s, date: '2024-01-01', qty: 4, buyId: 'tab', w: 5 }, CTX).paid).toBe(
+      900_000,
+    );
+  });
+  it('berat lain: jual per gram × berat dibulatkan, termasuk Tabungan Emas', () => {
+    const lm = sellOption(def('lm-antam'), 1.5, OPTIONS);
+    expect(lm?.perGram).toBe(true);
+    expect(piecePoints([{ date: '2026-11-06', value: 2_350_001 }], true, 1.5)).toEqual([
+      { date: '2026-11-06', value: 3_525_002 },
+    ]);
+    expect(sellAvailable(def('tab'), 1.5, OPTIONS)).toBe(true);
+    expect(sellOption(def('pg-antam'), 1.5, OPTIONS)).toBeNull();
+  });
+  it('harga per keping = total ÷ jumlah; modal tidak melenceng karena desimal', () => {
+    expect(paidPerPiece(3_000_000, 3)).toBe(1_000_000);
+    const per = paidPerPiece(1_000_000, 3);
+    const o = outcome(
+      { date: '2026-01-01', price: per },
+      { date: '2026-02-01', price: 400_000 },
+      3,
+    );
+    expect(o.modal).toBe(1_000_000);
+    expect(o.profit).toBe(200_000);
+  });
+  it('selisih dari harga resmi dan ambang peringatan lunak', () => {
+    const above = paidDiff(1_200_000, 1, 1_000_000)!;
+    expect(above.pct).toBeCloseTo(20, 6);
+    expect(above.officialTotal).toBe(1_000_000);
+    expect(above.warn).toBe(false);
+    expect(paidDiff(2_400_000, 2, 1_000_000)!.pct).toBeCloseTo(20, 6);
+    expect(paidDiff(2_400_000, 2, 1_000_000)!.officialTotal).toBe(2_000_000);
+    expect(paidDiff(900_000, 1, 1_000_000)!.pct).toBeCloseTo(-10, 6);
+    expect(paidDiff(1_500_000, 1, 1_000_000)!.warn).toBe(false);
+    expect(paidDiff(1_500_001, 1, 1_000_000)!.warn).toBe(true);
+    expect(paidDiff(800_000, 1, 1_000_000)!.warn).toBe(false);
+    expect(paidDiff(799_999, 1, 1_000_000)!.warn).toBe(true);
+    expect(paidDiff(1_000_000, 1, null)).toBeNull();
+    expect(paidDiff(1_000_000, 1, 0)).toBeNull();
   });
 });
