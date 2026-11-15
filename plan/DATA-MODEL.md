@@ -344,7 +344,7 @@ premium_antam   = sell_price(logammulia, antam, 1 g) / gold_idr_gram − 1
 | Kurs untuk tanggal emas `d` | Seri `usd_idr` dengan `precedence` terkecil yang punya nilai pada tanggal terakhir ≤ `d`; toleransi 5 hari, selebihnya null |
 | `premium_antam(d)` | `gold_idr_gram` pada tanggal terakhir **< d** (Antam menetapkan harga pagi berdasarkan penutupan sebelumnya); toleransi 5 hari |
 | Spread lintas sumber | Cocokkan `brand + product + weight_g` pada tanggal yang sama. Untuk buyback UBS, default `variant` = tahun berjalan; pengguna bisa memilih tahun lain |
-| Kalkulator, harga beli pada tanggal X | Nilai terakhir ≤ X (toleransi 7 hari); UI menampilkan tanggal yang benar-benar dipakai |
+| Kalkulator, harga beli pada tanggal X | Nilai terakhir ≤ X (toleransi 7 hari); UI menampilkan tanggal yang benar-benar dipakai. Mode "Harga saya" (D-61): harga beli dari pengguna, aturan ini hanya dipakai untuk pembanding premi |
 | *Forward-fill* | Hanya di tampilan, selalu diberi penanda; tidak pernah ditulis ke data |
 
 ### 6.3 Resolusi frekuensi untuk agregat tahunan/bulanan
