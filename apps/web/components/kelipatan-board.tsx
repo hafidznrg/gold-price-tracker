@@ -190,6 +190,8 @@ export function KelipatanBoard({ annual, until, spot, events }: KelipatanBoardPr
         <section
           className="wrap flex flex-wrap gap-2 pb-2.5 max-sm:flex-nowrap max-sm:overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
           aria-label="Ringkasan kelipatan"
+          // Di HP baris ini bisa digeser: perlu bisa difokus agar terjangkau keyboard (WCAG 2.1.1).
+          tabIndex={0}
         >
           {CONCEPTS.map((c) => {
             const line = lines[c.id];

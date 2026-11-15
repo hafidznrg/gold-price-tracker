@@ -44,7 +44,9 @@ function SpotItem({
           <b className="font-semibold text-muted">{NA}</b>
         ) : (
           <>
-            <b className={`num font-semibold ${gold ? 'text-gold' : 'text-text'}`}>{value}</b>
+            <b className={`num font-semibold ${gold ? 'text-gold-strong' : 'text-text'}`}>
+              {value}
+            </b>
             {unit}
           </>
         )}
@@ -141,13 +143,13 @@ export default function HomePage() {
         <div className="wrap flex flex-col gap-6 py-9">
           <div className="flex flex-wrap items-end justify-between gap-x-8 gap-y-4">
             <div className="min-w-0">
-              <p className="eyebrow m-0 mb-2.5 text-xs tracking-[0.14em] text-gold">
+              <p className="eyebrow m-0 mb-2.5 text-xs tracking-[0.14em] text-gold-strong">
                 {latest.as_of ? formatDateLong(latest.as_of) : 'Harga per 1 gram'}
               </p>
               <h1 className="serif m-0 text-[46px] leading-[1.05] max-sm:text-[38px]">
                 Harga emas hari ini
               </h1>
-              <p className="serif m-0 mt-1.5 text-[22px] leading-[1.3] text-gold italic">
+              <p className="serif m-0 mt-1.5 text-[22px] leading-[1.3] text-gold-strong italic">
                 {SITE_TAGLINE}
               </p>
               <p className="m-0 mt-2.5 max-w-[560px] text-base leading-[1.55] text-muted max-sm:text-sm">

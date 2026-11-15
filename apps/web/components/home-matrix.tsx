@@ -80,7 +80,13 @@ export function HomeMatrix({ cells }: { cells: TodayCells }) {
         </div>
         {/* `relative`: jadikan blok penampung elemen absolut (mis. sr-only "termurah") agar ikut
             terpotong di dalam scroller, bukan melebarkan halaman dan navbar bawah di HP. */}
-        <div className="relative overflow-x-auto">
+        <div
+          className="relative overflow-x-auto"
+          // Bisa digeser di HP: perlu bisa difokus agar tabel terjangkau keyboard (WCAG 2.1.1).
+          tabIndex={0}
+          role="region"
+          aria-label="Tabel per gramasi, geser ke samping untuk kolom lain"
+        >
           <div role="table" aria-label="Perbandingan harga per gramasi" className="min-w-[720px]">
             <div
               role="row"
@@ -123,7 +129,7 @@ export function HomeMatrix({ cells }: { cells: TodayCells }) {
                     className={cn(
                       'num mr-2 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 rounded-[9px] px-2.5 py-[9px] text-sm',
                       x.value === null ? 'text-faint' : 'text-text',
-                      x.best ? 'bg-up/10 font-semibold' : 'font-normal',
+                      x.best ? 'bg-goldsoft font-semibold' : 'font-normal',
                     )}
                   >
                     {x.value === null
@@ -152,9 +158,12 @@ export function HomeMatrix({ cells }: { cells: TodayCells }) {
             data-testid="matrix-legend"
             className="flex items-center gap-2 border-t border-line px-6 py-2.5 text-xs text-muted max-sm:px-4"
           >
-            <span aria-hidden="true" className="h-3.5 w-5 flex-none rounded-[4px] bg-up/10" />
+            <span
+              aria-hidden="true"
+              className="h-3.5 w-5 flex-none rounded-[4px] border border-goldline bg-goldsoft"
+            />
             <span>
-              <b className="font-semibold text-up">{BEST_LABEL[mode]}</b> di tiap gramasi
+              <b className="font-semibold text-gold-strong">{BEST_LABEL[mode]}</b> di tiap gramasi
             </span>
           </div>
         ) : null}

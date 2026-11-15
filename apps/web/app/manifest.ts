@@ -16,6 +16,7 @@ export default function manifest(): MetadataRoute.Manifest {
     background_color: '#F7F5F0',
     icons: [
       { src: '/icon.svg', sizes: 'any', type: 'image/svg+xml' },
+      { src: '/brand/momen-emas-app-icon-192.png', sizes: '192x192', type: 'image/png' },
       { src: '/brand/momen-emas-app-icon-512.png', sizes: '512x512', type: 'image/png' },
     ],
   };

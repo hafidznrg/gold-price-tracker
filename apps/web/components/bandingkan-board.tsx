@@ -248,7 +248,12 @@ export function BandingkanBoard({ options, weights, today, asOf, calendar }: Ban
             <h2 className="serif m-0 text-[30px]">Hari ini · {wText}</h2>
             <span className="text-xs text-muted">Diurutkan dari harga per gram termurah</span>
           </div>
-          <div className="overflow-x-auto">
+          <div
+            className="overflow-x-auto"
+            tabIndex={0}
+            role="region"
+            aria-label="Tabel hari ini, geser ke samping untuk kolom lain"
+          >
             <div role="table" aria-label="Perbandingan hari ini" className="min-w-[880px]">
               <div
                 role="row"

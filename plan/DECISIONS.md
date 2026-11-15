@@ -541,3 +541,15 @@ Log keputusan produk dan teknis (format ringkas ala ADR). Keputusan baru ditamba
 - **URL:** `p` = total harga beli (rupiah, tanpa pemisah), hanya ditulis bila diubah. `w` boleh desimal hanya bila sumber mendukung berat lain; selain itu `normalizeState` menggeser ke gramasi sah terdekat seperti sekarang. `p` tidak valid dibuang (kembali ke harga resmi).
 - **Di luar cakupan**, disebut di teks bantu: perhiasan dan emas kadar < 24K, emas merek yang tidak dilacak, dan potongan atau biaya tempat buyback di luar harga terbitannya.
 **Konsekuensi:** jalur bawaan tetap nol isian tambahan; kasus "harga digoreng" cukup satu isian. Tautan yang dibagikan setelah harga diubah memuat nominalnya di URL (disebut di teks bantu; tidak ada data yang dikirim ke server selain permintaan halaman statis). Tautan lama tanpa `p` tidak berubah. Implementasi di `apps/web/lib/kalkulator.ts` (logika murni + uji unit) dan `components/kalkulator-board.tsx`; tidak ada perubahan data atau build (P4-13).
+
+### D-62 — Kesesuaian dengan design system: kontras hero, sorotan terbaik, ikon Apple, tabel bergulir
+
+**Konteks:** audit 15 Nov 2026 web live terhadap design system Momen Emas (artifact claude.ai) menemukan: (1) teks `gold` di atas latar `hero` hanya 4,45:1 (tanggal, tagline, dan angka premi di strip spot beranda) sehingga gagal WCAG AA; (2) sorotan nilai terbaik di matriks beranda memakai `up` (hijau 10%), padahal hijau berarti harga naik; (3) `apple-icon.png` bersudut transparan sehingga iOS mengisinya hitam; (4) tiga wadah yang bisa digeser di HP (matriks beranda, tabel "Hari ini" Bandingkan, ringkasan Kelipatan) tidak bisa difokus keyboard; (5) ikon PWA 192 px belum ada (D-51).
+**Keputusan:**
+- Teks emas di blok `hero` memakai `gold-strong` (5,2:1 di tema terang; di Navy nilainya sama dengan `gold`).
+- Sorotan nilai terbaik (termurah, tertinggi, terkecil) memakai `goldsoft`; contoh di legenda bertepi `goldline`, labelnya `gold-strong`. Selaras dengan "Termurah" berwarna `gold` di Bandingkan. `up`/`down` hanya untuk arah harga.
+- `apple-icon.png` 180×180 persegi penuh navy tanpa sudut membulat (iOS membulatkan sendiri).
+- Wadah yang bisa digeser diberi `tabIndex={0}`; matriks beranda dan tabel Bandingkan juga `role="region"` dengan `aria-label`.
+- Manifest menambah ikon `/brand/momen-emas-app-icon-192.png`.
+- Design system diperbarui mengikuti penyimpangan yang disengaja: favicon terang (D-57), logo header 26/22 px (D-51), panel Explorer di tablet di bawah grafik (D-54), isi celah bawaan dengan penanda wajib (D-55), penulisan "Galeri24", label menu, padding tablet 32 px, dan posisi legenda per halaman.
+**Konsekuensi:** pemeriksaan axe (WCAG 2 A/AA) bersih di tujuh halaman, desktop dan HP, kedua tema. Tema Navy tidak berubah kecuali warna sorotan nilai terbaik.
