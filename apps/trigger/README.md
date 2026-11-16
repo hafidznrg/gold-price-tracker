@@ -6,10 +6,12 @@ kunci slot di `SCHEDULES`/`WATCHDOG_SCHEDULES`, sehingga `plan`/`watchdog` mempe
 run terjadwal. Cron GitHub tinggal cadangan berslot retry (04.15, 09.15, 19.15, 16.45 hari kerja,
 dan watchdog 23.15 WIB).
 
-| Cron Worker (UTC)        | WIB                                | Dispatch                                                         |
-| ------------------------ | ---------------------------------- | ---------------------------------------------------------------- |
-| `5 2,5,6,12,15,16 * * *` | 09.05, 12.05, 13.05, 19.05, 22.05, 23.05 | `scrape-retail` primary/retry siang, `watchdog` siang, `scrape-retail` primary/retry malam, `watchdog` semua |
-| `40 9 * * MON-FRI`       | 16.40 hari kerja                   | `scrape-macro` primary                                           |
+| Cron Worker (UTC)                 | WIB                                                     | Dispatch                                                                                                                                                  |
+| --------------------------------- | ------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `5 2,5,6,8,10,11,12,15,16 * * *` | 09.05, 12.05, 13.05, 15.05, 17.05, 18.05, 19.05, 22.05, 23.05 | `scrape-retail` primary/retry siang, `watchdog` siang, `scrape-retail` primary/retry sore (UBS, D-63), `watchdog` sore, `scrape-retail` primary/retry malam, `watchdog` semua |
+| `40 9 * * MON-FRI`                | 16.40 hari kerja                                        | `scrape-macro` primary                                                                                                                                    |
+
+Setelah `crons` di `wrangler.toml` berubah, Worker harus di-deploy ulang (langkah 4 di bawah).
 
 Hari-minggu memakai nama hari: di Cloudflare `1` = Minggu, bukan Senin.
 

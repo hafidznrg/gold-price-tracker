@@ -53,7 +53,7 @@ describe('ROUTES', () => {
   });
 
   it('route memilih menurut jam UTC scheduledTime', () => {
-    const all = '5 2,5,6,12,15,16 * * *';
+    const all = '5 2,5,6,8,10,11,12,15,16 * * *';
     expect(route(all, Date.parse('2026-11-13T02:05:00Z'))).toEqual({
       workflow: 'scrape-retail.yml',
       schedule: '5 2 * * *',
@@ -104,7 +104,7 @@ describe('dispatch', () => {
     const errors = vi.spyOn(console, 'error').mockImplementation(() => undefined);
     await expect(
       run(
-        '5 2,5,6,12,15,16 * * *',
+        '5 2,5,6,8,10,11,12,15,16 * * *',
         Date.parse('2026-11-13T02:05:00Z'),
         {
           ...env,

@@ -29,6 +29,8 @@ function isExpectedDay(
       return isWeekday;
     case 'business_days_id':
       return isWeekday && !holidays.some((h) => h.date === date);
+    case 'mon_sat_id':
+      return weekday >= 1 && weekday <= 6 && !holidays.some((h) => h.date === date);
     case 'monthly':
       return false;
   }

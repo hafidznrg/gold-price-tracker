@@ -9,11 +9,14 @@
 #   daily            — diharapkan ada data setiap hari
 #   weekdays         — Senin–Jumat
 #   business_days_id — Senin–Jumat dikurangi config/holidays.yml
+#   mon_sat_id       — Senin–Sabtu dikurangi config/holidays.yml (D-63)
 #   monthly          — sekali per bulan (World Bank Pink Sheet)
 #
 # `schedule_window` (default `day`): pasangan cron primary + retry tempat sumber dijalankan.
 #   day     — scrape-retail Cloudflare 09.05 (primary) & 12.05 WIB (retry); cadangan GitHub 04.15 &
 #             09.15 WIB (retry, tiba ±5–10 jam kemudian); dilewati sebelum 08.30 WIB (D-46)
+#   afternoon — scrape-retail Cloudflare 15.05 (primary) & 17.05 WIB (retry); cadangan GitHub 09.15 WIB
+#             (retry, tiba ±14–19 WIB); dilewati sebelum 12.00 WIB; watchdog 18.05 WIB (D-63)
 #   evening — scrape-retail Cloudflare 19.05 (primary) & 22.05 WIB (retry); cadangan GitHub 19.15 WIB
 #   any     — semua slot di atas (D-42)
 # `accept_previous_day` (default false): V-06 menerima tanggal data sasaran − 1 s/d tanggal WIB run (D-42).
@@ -25,7 +28,8 @@ sources:
     url: https://ubslifestyle.com/harga-buyback-hari-ini/
     fetch_method: http
     workflow: scrape-retail
-    update_calendar: business_days_id # P0-07: histori menunjukkan Senin–Sabtu; final di P1-11 (Q-6)
+    update_calendar: mon_sat_id # terbit Senin–Sabtu, tidak Minggu (31 Okt, 7 & 14 Nov 2026; D-63)
+    schedule_window: afternoon # terbit ±12.00–16.30 WIB; slot 09.05/12.05 terlalu pagi (D-63)
     stale_is_error_on_expected_day: true
     parser_version: 1.0.0
     enabled: true

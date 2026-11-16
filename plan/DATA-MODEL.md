@@ -58,8 +58,8 @@ erDiagram
     string kind "prices | macro"
     string url
     string fetch_method "http | browser | api | file"
-    string update_calendar "daily | weekdays | business_days_id | monthly"
-    string schedule_window "day | evening"
+    string update_calendar "daily | weekdays | business_days_id | mon_sat_id | monthly"
+    string schedule_window "day | afternoon | evening | any"
     bool enabled
   }
   CATALOG_ITEM {
@@ -241,7 +241,8 @@ sources:
     url: https://ubslifestyle.com/harga-buyback-hari-ini/
     fetch_method: http
     workflow: scrape-retail
-    update_calendar: business_days_id   # situs tidak update di akhir pekan/libur
+    update_calendar: mon_sat_id   # situs update Senin–Sabtu, tidak Minggu/libur (D-63)
+    schedule_window: afternoon     # terbit ±12.00–16.30 WIB (D-63)
     stale_is_error_on_expected_day: true
     parser_version: 1.0.0
     enabled: true
@@ -260,7 +261,7 @@ macro_series:
   - { id: usd_idr_annual, concept: usd_idr,  unit: IDR/USD, source: wdi,       precedence: 3 }
 ```
 
-Nilai `update_calendar` final per sumber ditetapkan dari observasi di Fase 0–1. `schedule_window` (default `day`) memilih pasangan cron primary + retry dalam workflow sumber itu (WORKFLOWS §2.2); Pegadaian = `evening` (D-25).
+Nilai `update_calendar` final per sumber ditetapkan dari observasi di Fase 0–1. `schedule_window` (default `day`) memilih pasangan cron primary + retry dalam workflow sumber itu (WORKFLOWS §2.2); Pegadaian = `evening` (D-25), UBS Lifestyle = `afternoon` (D-63).
 
 **`catalog.yml`** — gramasi valid per `source × brand × product`, dengan `active_from`/`active_to` agar gramasi baru atau yang dihentikan tidak memutus histori.
 
@@ -353,7 +354,7 @@ Untuk setiap tahun (atau bulan) dan konsep (`gold_usd`, `usd_idr`): pakai data `
 
 ## 7. Metrik kualitas data
 
-- **Hari yang diharapkan** per sumber = hari sesuai `update_calendar` dikurangi `holidays.yml` (untuk `business_days_id`).
+- **Hari yang diharapkan** per sumber = hari sesuai `update_calendar` dikurangi `holidays.yml` (untuk `business_days_id` dan `mon_sat_id` = Senin–Sabtu, D-63).
 - **Kelengkapan(sumber, bulan)** = jumlah hari diharapkan yang punya baris data ÷ jumlah hari diharapkan.
 - **Insiden** = run berstatus `failed` atau `partial` pada hari yang diharapkan.
 - `stale` pada hari yang **tidak** diharapkan bukan insiden dan tidak memicu notifikasi.

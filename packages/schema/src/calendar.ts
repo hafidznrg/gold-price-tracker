@@ -2,7 +2,7 @@ import type { Holiday, UpdateCalendar } from './config';
 import { weekdayIso } from './dates';
 
 // DATA-MODEL §7: hari yang diharapkan ada data = hari sesuai `update_calendar`
-// dikurangi `holidays.yml` (untuk `business_days_id`).
+// dikurangi `holidays.yml` (untuk `business_days_id` dan `mon_sat_id`).
 
 /**
  * Apakah sumber diharapkan punya data baru pada `date` (tanggal Jakarta).
@@ -22,6 +22,8 @@ export function isExpectedDay(
       return isWeekday;
     case 'business_days_id':
       return isWeekday && !holidays.some((h) => h.date === date);
+    case 'mon_sat_id':
+      return weekday >= 1 && weekday <= 6 && !holidays.some((h) => h.date === date);
     case 'monthly':
       return false;
   }

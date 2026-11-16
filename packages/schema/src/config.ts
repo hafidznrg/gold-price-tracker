@@ -14,7 +14,13 @@ import {
 
 // DATA-MODEL §3.5 — bentuk file di config/ (ditulis manusia lewat PR, D-13).
 
-export const UPDATE_CALENDARS = ['daily', 'weekdays', 'business_days_id', 'monthly'] as const;
+export const UPDATE_CALENDARS = [
+  'daily',
+  'weekdays',
+  'business_days_id',
+  'mon_sat_id',
+  'monthly',
+] as const;
 export const UpdateCalendar = z.enum(UPDATE_CALENDARS);
 export type UpdateCalendar = z.infer<typeof UpdateCalendar>;
 
@@ -23,9 +29,9 @@ export type FetchMethod = z.infer<typeof FetchMethod>;
 
 /**
  * Pasangan cron (primary + retry) tempat sumber dijalankan dalam workflow-nya (WORKFLOWS §2.2).
- * `any` = ikut semua pasangan (D-42).
+ * `any` = ikut semua pasangan (D-42). `afternoon` = pasangan sore 15.05/17.05 WIB (UBS, D-63).
  */
-export const ScheduleWindow = z.enum(['day', 'evening', 'any']);
+export const ScheduleWindow = z.enum(['day', 'afternoon', 'evening', 'any']);
 export type ScheduleWindow = z.infer<typeof ScheduleWindow>;
 
 export const SourceConfig = z.object({

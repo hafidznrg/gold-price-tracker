@@ -278,7 +278,7 @@ Ringkasan; YAML lengkap, kontrak antar job, logika slot, notifikasi, matriks keg
 
 | Workflow | Jadwal (WIB) | Isi |
 | --- | --- | --- |
-| `scrape-retail.yml` | Dipicu Cloudflare (D-46): jendela siang 09.05 (primary), 12.05 (retry); jendela malam 19.05 (primary), 22.05 (retry). Cadangan GitHub: 04.15, 09.15, 19.15 (retry) | Siang: UBS Lifestyle, Logam Mulia. Malam: —. Keempat slot: Pegadaian (D-42, sebelumnya malam saja, D-25) |
+| `scrape-retail.yml` | Dipicu Cloudflare (D-46): jendela siang 09.05 (primary), 12.05 (retry); jendela sore 15.05 (primary), 17.05 (retry) (D-63); jendela malam 19.05 (primary), 22.05 (retry). Cadangan GitHub: 04.15, 09.15, 19.15 (retry) | Siang: Logam Mulia. Sore: UBS Lifestyle (D-63). Malam: —. Keempat slot: Pegadaian (D-42, sebelumnya malam saja, D-25) |
 | `scrape-macro.yml` | 16.40 hari kerja (Cloudflare); cadangan GitHub 16.45 (retry) | xaus, JISDOR (+ World Bank bulanan) |
 | `freshness.yml` | 22.15 | Deteksi sumber/workflow berhenti |
 | `backfill.yml`, `quarantine.yml`, `probe.yml` | Manual | Histori, tinjauan karantina, uji sumber |

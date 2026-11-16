@@ -16,7 +16,8 @@ import { isExpectedDay } from './calendar';
 
 interface ScheduleSlot {
   slot: 'primary' | 'retry';
-  window: ScheduleWindow;
+  /** Jendela sumber yang diikutkan slot ini (selain sumber `any`). */
+  windows: readonly ScheduleWindow[];
 }
 
 /**
@@ -29,17 +30,20 @@ interface ScheduleSlot {
  */
 export const SCHEDULES: Partial<Record<Workflow, Record<string, ScheduleSlot>>> = {
   'scrape-retail': {
-    '5 2 * * *': { slot: 'primary', window: 'day' }, // Cloudflare 09.05 WIB
-    '5 5 * * *': { slot: 'retry', window: 'day' }, // Cloudflare 12.05 WIB
-    '5 12 * * *': { slot: 'primary', window: 'evening' }, // Cloudflare 19.05 WIB
-    '5 15 * * *': { slot: 'retry', window: 'evening' }, // Cloudflare 22.05 WIB
-    '15 21 * * *': { slot: 'retry', window: 'day' }, // GitHub 04.15 WIB → tiba ±09–14 WIB
-    '15 2 * * *': { slot: 'retry', window: 'day' }, // GitHub 09.15 WIB → tiba ±14–19 WIB
-    '15 12 * * *': { slot: 'retry', window: 'evening' }, // GitHub 19.15 WIB → tiba ±02 WIB esok
+    '5 2 * * *': { slot: 'primary', windows: ['day'] }, // Cloudflare 09.05 WIB
+    '5 5 * * *': { slot: 'retry', windows: ['day'] }, // Cloudflare 12.05 WIB
+    '5 8 * * *': { slot: 'primary', windows: ['afternoon'] }, // Cloudflare 15.05 WIB (UBS, D-63)
+    '5 10 * * *': { slot: 'retry', windows: ['afternoon'] }, // Cloudflare 17.05 WIB (UBS, D-63)
+    '5 12 * * *': { slot: 'primary', windows: ['evening'] }, // Cloudflare 19.05 WIB
+    '5 15 * * *': { slot: 'retry', windows: ['evening'] }, // Cloudflare 22.05 WIB
+    '15 21 * * *': { slot: 'retry', windows: ['day'] }, // GitHub 04.15 WIB → tiba ±09–14 WIB
+    // GitHub 09.15 WIB → tiba ±14–19 WIB, jadi juga cadangan jendela sore (D-63).
+    '15 2 * * *': { slot: 'retry', windows: ['day', 'afternoon'] },
+    '15 12 * * *': { slot: 'retry', windows: ['evening'] }, // GitHub 19.15 WIB → tiba ±02 WIB esok
   },
   'scrape-macro': {
-    '40 9 * * 1-5': { slot: 'primary', window: 'day' }, // Cloudflare 16.40 WIB, setelah JISDOR 15.15
-    '45 9 * * 1-5': { slot: 'retry', window: 'day' }, // GitHub 16.45 WIB → tiba ±00 WIB
+    '40 9 * * 1-5': { slot: 'primary', windows: ['day'] }, // Cloudflare 16.40 WIB, setelah JISDOR 15.15
+    '45 9 * * 1-5': { slot: 'retry', windows: ['day'] }, // GitHub 16.45 WIB → tiba ±00 WIB
   },
 };
 
@@ -64,6 +68,13 @@ export const EVENING_FROM = '18:45';
  * sumber `day` sebelum jam ini, alih-alih mencatat `stale` (D-46).
  */
 export const DAY_FROM = '08:30';
+
+/**
+ * Jam Jakarta (`HH:mm`) mulai jendela `afternoon`: UBS terbit ±12.00–16.30 WIB (D-63). Cron GitHub
+ * 09.15 WIB yang tiba lebih awal (atau run manual tanpa daftar sumber) melewati sumber
+ * `afternoon` sebelum jam ini, alih-alih mencatat `stale`.
+ */
+export const AFTERNOON_FROM = '12:00';
 
 export interface PlanInput {
   workflow: Workflow;
@@ -180,10 +191,10 @@ export function plan(input: PlanInput): PlanResult {
   const inWorkflow = config.sources.filter((s) => s.workflow === workflow);
 
   let candidates = inWorkflow.filter((s) => s.enabled);
-  const window = slot === 'manual' ? undefined : scheduleOf(workflow, input.schedule)?.window;
-  if (window !== undefined) {
+  const windows = slot === 'manual' ? undefined : scheduleOf(workflow, input.schedule)?.windows;
+  if (windows !== undefined) {
     candidates = candidates.filter(
-      (s) => s.schedule_window === window || s.schedule_window === 'any',
+      (s) => windows.includes(s.schedule_window) || s.schedule_window === 'any',
     );
   }
   const requested = input.sources
@@ -208,7 +219,9 @@ export function plan(input: PlanInput): PlanResult {
   const beforeEvening = nowWib.slice(11, 16) < EVENING_FROM;
   // Hanya untuk run yang tiba pada tanggal sasarannya sendiri; run kemarin yang terlambat lewat
   // tengah malam tetap jalan (data hari itu sudah terbit).
-  const beforeDay = nowWib.slice(0, 10) === today && nowWib.slice(11, 16) < DAY_FROM;
+  const onTargetDay = nowWib.slice(0, 10) === today;
+  const beforeDay = onTargetDay && nowWib.slice(11, 16) < DAY_FROM;
+  const beforeAfternoon = onTargetDay && nowWib.slice(11, 16) < AFTERNOON_FROM;
   const selected = candidates.filter((s) => {
     const entry = status[s.id];
     const manualAll = slot === 'manual' && requested.length === 0;
@@ -218,6 +231,10 @@ export function plan(input: PlanInput): PlanResult {
     }
     if ((manualAll || slot !== 'manual') && s.schedule_window === 'day' && beforeDay) {
       skipped.push({ source: s.id, reason: `jendela siang mulai ${DAY_FROM} WIB` });
+      return false;
+    }
+    if ((manualAll || slot !== 'manual') && s.schedule_window === 'afternoon' && beforeAfternoon) {
+      skipped.push({ source: s.id, reason: `jendela sore mulai ${AFTERNOON_FROM} WIB` });
       return false;
     }
     if (s.id === 'worldbank' && !(slot === 'manual' && requested.length > 0)) {
@@ -234,7 +251,8 @@ export function plan(input: PlanInput): PlanResult {
     if (slot === 'retry') {
       // Sumber `accept_previous_day` (Pegadaian) di siang hari hanya bisa mendapat snapshot
       // kemarin; sekali sukses hari ini, retry siang berikutnya cuma menghasilkan commit `+0`.
-      const caughtUp = s.accept_previous_day && window === 'day' && successToday(entry, today);
+      const caughtUp =
+        s.accept_previous_day && windows?.includes('day') === true && successToday(entry, today);
       if (
         doneToday(entry, today) ||
         caughtUp ||

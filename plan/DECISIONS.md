@@ -553,3 +553,13 @@ Log keputusan produk dan teknis (format ringkas ala ADR). Keputusan baru ditamba
 - Manifest menambah ikon `/brand/momen-emas-app-icon-192.png`.
 - Design system diperbarui mengikuti penyimpangan yang disengaja: favicon terang (D-57), logo header 26/22 px (D-51), panel Explorer di tablet di bawah grafik (D-54), isi celah bawaan dengan penanda wajib (D-55), penulisan "Galeri24", label menu, padding tablet 32 px, dan posisi legenda per halaman.
 **Konsekuensi:** pemeriksaan axe (WCAG 2 A/AA) bersih di tujuh halaman, desktop dan HP, kedua tema. Tema Navy tidak berubah kecuali warna sorotan nilai terbaik.
+
+### D-63 — UBS Lifestyle di jendela sore dan kalender Senin–Sabtu (melengkapi D-46, menutup Q-6 untuk UBS)
+
+**Konteks:** sejak pemicu Cloudflare tepat waktu (D-46), UBS hanya dicoba 09.05 dan 12.05 WIB, dan hampir selalu `stale`. Run 13–16 Nov 2026: 09.06 WIB selalu membaca data kemarin; 12.06 WIB sudah terbit pada 13 Nov tetapi belum pada 16 Nov; sukses baru datang dari run manual 15.16 WIB (13 Nov) dan cron GitHub cadangan yang terlambat ke 16.32 WIB (16 Nov). Sebelum D-46 semua sukses UBS jatuh ±16–18 WIB karena cron GitHub terlambat. Jadi UBS terbit ±12.00–16.30 WIB (titik grafik hanya per hari, jam pastinya tidak tersedia). Selain itu kalender `business_days_id` (Senin–Jumat) membuat retry melewati UBS yang `stale` pada hari Sabtu, padahal UBS terbit hari Sabtu (31 Okt, 7 Nov, dan titik grafik 14 Nov). Akibatnya harga jual UBS 14 Nov tidak tercatat. Watchdog siang 13.05 WIB juga memberi alarm UBS yang memang belum waktunya terbit.
+**Keputusan:**
+- `schedule_window` baru `afternoon`: Cloudflare 15.05 WIB (`5 8 * * *`, primary) dan 17.05 WIB (`5 10 * * *`, retry). Cron GitHub cadangan 09.15 WIB (tiba ±14–19 WIB) kini mencakup jendela `day` dan `afternoon` (`SCHEDULES` memakai daftar `windows`). Sumber `afternoon` dilewati sebelum 12.00 WIB pada tanggal sasarannya (`AFTERNOON_FROM`). UBS pindah ke `afternoon`.
+- `update_calendar` baru `mon_sat_id` = Senin–Sabtu dikurangi `holidays.yml`; dipakai UBS. Salinan `isExpectedDay` di web ikut diperbarui.
+- Watchdog `afternoon` 18.05 WIB (`5 11 * * *`) memeriksa sumber ritel jendela `afternoon`; watchdog siang 13.05 WIB tidak lagi memeriksa UBS.
+- Jam baru masuk ke Cron Trigger yang sudah ada (`5 2,5,6,8,10,11,12,15,16 * * *`), jadi tetap 2 dari 5 Cron Trigger paket Free. Worker harus di-deploy ulang.
+**Konsekuensi:** UBS dicoba 15.05 dan 17.05 WIB plus cadangan GitHub; data UBS Sabtu kini diharapkan, sehingga stale Sabtu dicoba ulang, dialarmkan watchdog, dan tampil sebagai celah di grafik bila hilang. Minggu tetap bukan hari terbit. Harga 14 Nov hanya bisa ditambal buyback 1 g lewat `backfill.yml` (ubs-history); harga jual per gramasi hari itu hilang.

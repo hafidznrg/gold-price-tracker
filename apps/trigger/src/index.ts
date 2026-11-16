@@ -30,10 +30,13 @@ const d = (workflow: string, schedule: string): Dispatch => ({ workflow, schedul
  * memuat banyak jam selama menitnya sama, jadi cukup dua dari batas 5 per akun paket Free.
  */
 export const ROUTES: Record<string, Record<number, Dispatch>> = {
-  '5 2,5,6,12,15,16 * * *': {
+  '5 2,5,6,8,10,11,12,15,16 * * *': {
     2: d('scrape-retail.yml', '5 2 * * *'), // 09.05 WIB primary siang
     5: d('scrape-retail.yml', '5 5 * * *'), // 12.05 WIB retry siang
     6: d('watchdog.yml', '5 6 * * *'), // 13.05 WIB watchdog ritel siang
+    8: d('scrape-retail.yml', '5 8 * * *'), // 15.05 WIB primary sore (UBS, D-63)
+    10: d('scrape-retail.yml', '5 10 * * *'), // 17.05 WIB retry sore (UBS, D-63)
+    11: d('watchdog.yml', '5 11 * * *'), // 18.05 WIB watchdog ritel sore
     12: d('scrape-retail.yml', '5 12 * * *'), // 19.05 WIB primary malam
     15: d('scrape-retail.yml', '5 15 * * *'), // 22.05 WIB retry malam
     16: d('watchdog.yml', '5 16 * * *'), // 23.05 WIB watchdog semua sumber

@@ -20,6 +20,8 @@ const config: ProjectConfig = await loadConfig(ROOT);
 /**
  * Konfigurasi uji: UBS dan Pegadaian aktif, Logam Mulia nonaktif. Pegadaian dipaksa berjendela
  * `evening` agar perilaku jendela malam tetap teruji; jendela `any` asli diuji terpisah (D-42).
+ * UBS dipaksa ke jendela `day` dan kalender Senin–Jumat (konfigurasi sebelum D-63) sebagai sumber
+ * jendela siang generik; konfigurasi aslinya (`afternoon`, `mon_sat_id`) diuji terpisah.
  */
 const retail: ProjectConfig = {
   ...config,
@@ -27,6 +29,9 @@ const retail: ProjectConfig = {
     ...s,
     enabled: s.id === 'ubslifestyle' || s.id === 'pegadaian',
     ...(s.id === 'pegadaian' ? { schedule_window: 'evening' as const } : {}),
+    ...(s.id === 'ubslifestyle'
+      ? { schedule_window: 'day' as const, update_calendar: 'business_days_id' as const }
+      : {}),
   })),
 };
 const anyWindow: ProjectConfig = {
@@ -70,6 +75,9 @@ describe('isExpectedDay', () => {
     ['weekdays', '2026-10-26', true],
     ['business_days_id', '2026-10-26', true],
     ['business_days_id', '2026-12-25', false],
+    ['mon_sat_id', '2026-11-14', true], // Sabtu
+    ['mon_sat_id', '2026-11-15', false], // Minggu
+    ['mon_sat_id', '2026-12-25', false],
     ['weekdays', '2026-12-25', true],
     ['monthly', '2026-10-26', false],
   ] as const)('%s %s → %s', (calendar, date, expected) => {
@@ -296,5 +304,87 @@ describe('targetDate (D-27)', () => {
     const r = plan(input({ schedule: '15 12 * * *', now, status: { pegadaian: done } }));
     expect(r.date).toBe('2026-10-26');
     expect(r.skipped).toEqual([{ source: 'pegadaian', reason: 'sudah sukses hari ini' }]);
+  });
+});
+
+describe('jendela sore UBS (D-63)', () => {
+  /** Konfigurasi asli: UBS `afternoon` + `mon_sat_id`, Logam Mulia `day`, Pegadaian `any`. */
+  const real: ProjectConfig = config;
+  const SAT = '2026-11-14';
+  const at = (wib: string) => new Date(`${SAT}T${wib}:00+07:00`);
+  const stale = entry({
+    last_status: 'stale',
+    last_data_date: '2026-11-13',
+    last_success_at: '2026-11-13T08:16:50Z',
+    updated_at: '2026-11-14T02:06:15Z',
+  });
+
+  it('konfigurasi UBS: jendela afternoon, kalender Senin–Sabtu', () => {
+    const ubs = real.sources.find((s) => s.id === 'ubslifestyle')!;
+    expect(ubs.schedule_window).toBe('afternoon');
+    expect(ubs.update_calendar).toBe('mon_sat_id');
+  });
+
+  it('slot siang 09.05 dan 12.05 tidak menjalankan UBS', () => {
+    for (const [schedule, wib] of [
+      ['5 2 * * *', '09:05'],
+      ['5 5 * * *', '12:05'],
+    ] as const) {
+      const r = plan(input({ config: real, schedule, now: at(wib) }));
+      expect(r.sources).not.toContain('ubslifestyle');
+    }
+  });
+
+  it('primary 15.05 dan retry 17.05 menjalankan UBS yang stale di hari Sabtu', () => {
+    const primary = plan(input({ config: real, schedule: '5 8 * * *', now: at('15:05') }));
+    expect(primary).toMatchObject({ slot: 'primary', date: SAT });
+    expect(primary.sources).toContain('ubslifestyle'); // plus Pegadaian (jendela any)
+    const retry = plan(
+      input({
+        config: real,
+        schedule: '5 10 * * *',
+        now: at('17:05'),
+        status: { ubslifestyle: stale },
+      }),
+    );
+    expect(retry.slot).toBe('retry');
+    expect(retry.sources).toContain('ubslifestyle');
+  });
+
+  it('retry 17.05 melewati UBS yang sudah sukses atau stale di hari Minggu', () => {
+    const done = plan(
+      input({
+        config: real,
+        schedule: '5 10 * * *',
+        now: at('17:05'),
+        status: { ubslifestyle: entry({ last_data_date: SAT }) },
+      }),
+    );
+    expect(done.sources).not.toContain('ubslifestyle');
+    const sunday = plan(
+      input({
+        config: real,
+        schedule: '5 10 * * *',
+        now: new Date('2026-11-15T17:05:00+07:00'),
+        status: {
+          ubslifestyle: { ...stale, last_data_date: SAT, updated_at: '2026-11-15T08:05:00Z' },
+        },
+      }),
+    );
+    expect(sunday.skipped).toContainEqual({
+      source: 'ubslifestyle',
+      reason: 'stale di hari yang tidak diharapkan',
+    });
+  });
+
+  it('cron GitHub 09.15 mencakup day dan afternoon; UBS dilewati bila tiba sebelum 12.00 WIB', () => {
+    const late = plan(input({ config: real, schedule: '15 2 * * *', now: at('16:30') }));
+    expect(late.sources).toEqual(expect.arrayContaining(['ubslifestyle', 'logammulia']));
+    const early = plan(input({ config: real, schedule: '15 2 * * *', now: at('11:30') }));
+    expect(early.sources).not.toContain('ubslifestyle');
+    expect(early.skipped).toContainEqual({
+      source: 'ubslifestyle',
+      reason: 'jendela sore mulai 12:00 WIB',
+    });
   });
 });

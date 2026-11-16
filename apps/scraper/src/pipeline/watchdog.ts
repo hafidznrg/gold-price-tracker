@@ -8,15 +8,16 @@ import { doneToday, succeededOn, targetDate } from './plan';
 // membaca data/meta/status.json lewat cron tersendiri dan melapor ke Telegram bila sumber yang
 // diharapkan hari itu belum punya data.
 
-export type WatchdogScope = 'day' | 'all';
+export type WatchdogScope = 'day' | 'afternoon' | 'all';
 
 /**
- * Cron watchdog → cakupan (D-46). Dua yang pertama hanya dipicu Cloudflare (tepat waktu); yang
+ * Cron watchdog → cakupan (D-46, D-63). Tiga yang pertama hanya dipicu Cloudflare (tepat waktu); yang
  * terakhir ada di `on.schedule` `.github/workflows/watchdog.yml` sebagai cadangan bila Worker mati
  * total. Karena terlambat ±7 jam, ia tiba esok pagi dan tetap memeriksa tanggal cron-nya (D-27).
  */
 export const WATCHDOG_SCHEDULES: Record<string, WatchdogScope> = {
   '5 6 * * *': 'day', // Cloudflare 13.05 WIB, setelah retry siang 12.05
+  '5 11 * * *': 'afternoon', // Cloudflare 18.05 WIB, setelah retry sore 17.05 (UBS, D-63)
   '5 16 * * *': 'all', // Cloudflare 23.05 WIB, setelah retry malam 22.05
   '15 16 * * *': 'all', // GitHub 23.15 WIB → tiba ±06 WIB esok
 };
@@ -56,7 +57,7 @@ export function watchdog(input: {
     (s) =>
       s.enabled &&
       isExpectedDay(s.update_calendar, date, config.holidays) &&
-      (scope === 'all' || (s.workflow === 'scrape-retail' && s.schedule_window === 'day')),
+      (scope === 'all' || (s.workflow === 'scrape-retail' && s.schedule_window === scope)),
   );
   const overdue: Overdue[] = [];
   for (const s of sources) {
