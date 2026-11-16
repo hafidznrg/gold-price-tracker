@@ -1,11 +1,11 @@
 {
   "jisdor": {
-    "last_run_id": "43403300127-1",
+    "last_run_id": "43841883799-1",
     "last_status": "success",
-    "last_success_at": "2026-11-13T09:41:17Z",
-    "last_data_date": "2026-11-13",
+    "last_success_at": "2026-11-16T09:41:23Z",
+    "last_data_date": "2026-11-16",
     "consecutive_failures": 0,
-    "updated_at": "2026-11-13T09:41:41Z"
+    "updated_at": "2026-11-16T09:41:47Z"
   },
   "logammulia": {
     "last_run_id": "43790056047-1",
@@ -32,11 +32,11 @@
     "updated_at": "2026-11-16T09:33:10Z"
   },
   "xaus": {
-    "last_run_id": "43403300127-1",
+    "last_run_id": "43841883799-1",
     "last_status": "success",
-    "last_success_at": "2026-11-13T09:41:16Z",
-    "last_data_date": "2026-11-12",
+    "last_success_at": "2026-11-16T09:41:14Z",
+    "last_data_date": "2026-11-13",
     "consecutive_failures": 0,
-    "updated_at": "2026-11-13T09:41:41Z"
+    "updated_at": "2026-11-16T09:41:47Z"
   }
 }
