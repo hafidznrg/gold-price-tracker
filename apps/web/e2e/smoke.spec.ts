@@ -256,9 +256,10 @@ test.describe('Kelipatan', () => {
     await expect(page.getByRole('table', { name: 'Rata-rata tahunan' })).toContainText(
       'xaus · harian',
     );
-    // Catatan spot berada di popover ⓘ "Keterangan grafik" sejak 22a3a68.
+    // Catatan spot berada di popover ⓘ "Keterangan grafik" sejak 22a3a68; teksnya bahasa awam
+    // ("perkiraan", bukan "indikatif") sejak 415ac4a.
     await page.getByRole('button', { name: 'Keterangan grafik' }).click();
-    await expect(page.getByText(/Spot dari xaus.com hanya indikatif/)).toBeVisible();
+    await expect(page.getByText(/Harga spot dari xaus.com hanya perkiraan/)).toBeVisible();
   });
 });
 
