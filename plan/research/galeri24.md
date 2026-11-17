@@ -65,7 +65,8 @@ Contoh 1 g, 16 Nov 2026 (jual / buyback):
 - Harga tanggal D umumnya dibuat **sore D−1**: baris ber-`date` 16 Nov punya `updatedAt` 15 Nov ±17.50–17.56 WIB.
 - Revisi pada hari D bisa terjadi: ANTAM 16 Nov di-update **10.14 WIB** (pola periode II seperti Pegadaian).
 - Pada 16 Nov pukul 18.10 WIB, baris ber-`date` 17 Nov sudah ada di endpoint histori, tetapi `page-data` dan halaman masih menampilkan 16 Nov. Artinya `page-data` memilih harga yang **berlaku hari ini**.
-- Apakah server memakai parameter `date` untuk tanggal lampau **belum terbukti**: uji `date=2025-06-02` tetap mengembalikan harga terkini. P6-01 menguji ulang dengan `date` = kemarin.
+- Server **mengabaikan** parameter `date`: 17 Nov 2026 08.39 WIB, `date=2026-11-16` dan `date=2026-11-17` memberi respons identik byte demi byte (bertanggal 17 Nov). Run yang terlambat lewat tengah malam tidak bisa mengambil harga kemarin; `accept_previous_day` hanya mencegah alarm palsu (D-42).
+- Jam pembuatan harga D bervariasi: harga 16 Nov dibuat 15 Nov ±17.51 WIB, harga 17 Nov dibuat 16 Nov ±21.37–21.42 WIB. Observasi probe P6-01 memastikan polanya.
 - Halaman tidak menampilkan jam; jam tersedia dari `updatedAt`.
 
 Usulan jendela: `afternoon` (Cloudflare 15.05 / 17.05 WIB). Pada jam itu revisi pagi sudah masuk dan halaman masih menampilkan tanggal D. Bandingkan dengan `day` (09.05) yang bisa mendahului revisi, dan dengan `evening`/`any` yang aman tetapi menambah run tanpa nilai tambah. Konfirmasi lewat observasi P6-01.
@@ -85,12 +86,16 @@ Dirinci sebagai tugas P6-04/P6-05. Intinya:
 - Bentuk respons: `{ count, next, previous, results }`, urut `date` menurun, default 20 baris/halaman, `take=5000` diterima. Dengan 178 ribu baris, seluruh histori ≈ 36 request.
 - Nilainya besar: buyback Antam, UBS, Galeri24 per gramasi sejak ±Feb 2024.
 
-Belum diverifikasi (probe sengaja dihentikan di tengah jalan):
+**Hasil P6-01b (17 Nov 2026, 08.40 WIB, 3 request, jeda 5 detik):**
 
-- Nama parameter filter. `date=` dan `vendorCode=` mengembalikan 0 baris; `orderBy=date&order=ASC` → 400.
-- Arti `status` di histori. Tampaknya ada beberapa entri per tanggal × vendor × gramasi (revisi intraday, yang lama berstatus 3).
-- Stabilitas urutan antarhalaman saat data baru masuk.
-- Batas `take` maksimum dan tanggal tertua yang sebenarnya.
+- **Paginasi:** `?take=N&page=P` (`next` = `…/gold-prices?take=N&page=P+1`, `null` di halaman terakhir). `take=10000` diterima (±3,4 MB, ±3 detik, ±50 hari data). `count` 178.157 → **18 halaman**.
+- **Tanggal tertua:** `2024-02-01` (halaman 18, 8.157 baris, 4 Apr → 1 Feb 2024).
+- **`status`:** revisi intraday **tidak** menurunkan entri lama ke status 3. Contoh: Antam 16 Nov 2026 punya dua entri `status = 1` per gramasi (`updatedAt` 15 Nov 17.51 WIB dan 16 Nov 10.14 WIB). Jadi aturan per kunci = **`status = 1` dengan `updatedAt` terbesar**. `status = 3` = gramasi nonaktif (mis. Antam 250/500/1.000 g pada 7 Nov 2026 hanya ada sebagai status 3). `status = 2` muncul 11 kali di 2024; perlakukan seperti 3 (abaikan).
+- **Kunci tanpa `status = 1`:** 3 di halaman 1 dan 14 di halaman 18, semuanya gramasi besar yang nonaktif → diabaikan, bukan diambil "entri terbaru".
+- **Gramasi historis** (perlu grup katalog dengan `active_to`): Antam 250/500/1.000 g, UBS 1.000 g, Antam non-Pegadaian 250/500/1.000 g, Lotus Archi 2,5 dan 4 g (2024).
+- **Filter:** tidak diperlukan; seluruh histori cukup ditelusuri halaman demi halaman (18 request).
+- **Stabilitas urutan:** urut `date` menurun; baris baru masuk di atas ±sekali sehari (±17.50 dan ±21.40 WIB, revisi pagi ±10.14 WIB), sehingga halaman bergeser. Mitigasi: jalankan di luar jam itu, dedup berdasarkan `id`, dan bandingkan `count` awal-akhir.
+- Daily `page-data` hanya memuat satu entri per kunci (yang berlaku), jadi aturan dedup hanya penting untuk histori.
 
 Pertimbangan: endpoint ini tidak ditautkan dari halaman harga, meski `robots.txt` tidak melarang `/api`. **Q-7 disetujui pemilik proyek (17 Nov 2026).** Pertanyaan di atas dijawab di P6-01b sebelum P6-11. Cara ambil: sekali jalan, jeda ≥ 5 detik, `origin = backfill`, tanggal yang sudah di-scrape dibuang (pola D-28/D-29).
 

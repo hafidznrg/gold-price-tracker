@@ -350,3 +350,150 @@ export function checkWorldBank(
   freshness(c, 'periode terakhir', dataDate, today, 75);
   return { checks: c.list, dataDate };
 }
+
+// ── Galeri24 (TECH-SPEC §5.7, P6-01) ────────────────────────────────────────
+
+/** Kode vendor wajib di `page-data` Galeri24 (kode yang sama dengan Pegadaian). */
+export const GALERI24_VENDORS = {
+  '00005201808001': 'antam',
+  '00005201808002': 'ubs',
+  '00005202003010': 'galeri24',
+} as const;
+
+/** Brand opsional: boleh hilang tanpa menggagalkan probe, hanya dilaporkan. */
+export const GALERI24_OPTIONAL_VENDORS = {
+  '00005202001009': 'lotusarchi',
+  '00005201905007': 'antam non-Pegadaian',
+} as const;
+
+interface Galeri24Row {
+  price: string;
+  margin: string;
+  sellingPrice: string;
+  vendorCode: string;
+  date: string;
+  denomination: string;
+  status: string;
+}
+
+function galeri24Rows(body: Buffer | string): Galeri24Row[] {
+  const json = JSON.parse(text(body)) as { results?: Galeri24Row[] };
+  if (!Array.isArray(json.results)) throw new Error('`results` bukan array');
+  return json.results;
+}
+
+export function checkGaleri24(
+  pageData: Buffer | string,
+  pageDataYesterday: Buffer | string | null,
+  hargaEmasHtml: Buffer | string | null,
+  today: string,
+): CheckResult {
+  const c = new Checks();
+  let dataDate: string | null = null;
+  const rows = c.try('JSON valid, results array', () => {
+    const r = galeri24Rows(pageData);
+    c.add('JSON valid, results array', true, `${r.length} baris`);
+    return r;
+  });
+  if (rows) {
+    const dates = new Set<string>();
+    for (const [code, brand] of Object.entries(GALERI24_VENDORS)) {
+      const own = rows.filter((r) => r.vendorCode === code);
+      if (!c.add(`vendor ${brand} (${code}) ada`, own.length > 0)) continue;
+      const active = own.filter((r) => r.status === '1');
+      c.add(`${brand} status = "1"`, active.length > 0, `${active.length} baris`);
+      const priced = active.filter((r) => Number(r.sellingPrice) > 0);
+      c.add(`${brand} ≥ 5 gramasi (V-04)`, priced.length >= 5, `${priced.length} gramasi`);
+      for (const r of active) dates.add(r.date);
+    }
+    c.add('date sama untuk semua brand wajib', dates.size === 1, [...dates].sort().join(', '));
+    dataDate = [...dates].sort().at(-1) ?? null;
+    for (const [code, brand] of Object.entries(GALERI24_OPTIONAL_VENDORS)) {
+      const n = rows.filter((r) => r.vendorCode === code && r.status === '1').length;
+      c.add(
+        `brand opsional ${brand} (${code}, informatif)`,
+        true,
+        n > 0 ? `${n} baris` : 'tidak ada',
+      );
+    }
+    // V-12: sellingPrice = ceil(price × (1 + margin/100) / 1000) × 1000.
+    const targets = new Set<string>([
+      ...Object.keys(GALERI24_VENDORS),
+      ...Object.keys(GALERI24_OPTIONAL_VENDORS),
+    ]);
+    const mismatches = rows.filter(
+      (r) =>
+        targets.has(r.vendorCode) &&
+        r.status === '1' &&
+        Number(r.sellingPrice) > 0 &&
+        Number(r.sellingPrice) !==
+          Math.ceil((Number(r.price) * (1 + Number(r.margin) / 100)) / 1000) * 1000,
+    );
+    c.add('rumus sellingPrice (V-12)', mismatches.length === 0, `${mismatches.length} selisih`);
+  }
+  // Informatif: apakah parameter `date` benar-benar dipakai server.
+  if (pageDataYesterday !== null) {
+    c.try('parameter date dipakai? (informatif)', () => {
+      const identical = text(pageData) === text(pageDataYesterday);
+      const set = (b: Buffer | string) => [...new Set(galeri24Rows(b).map((r) => r.date))].sort();
+      const a = set(pageData);
+      const b = set(pageDataYesterday);
+      const same = identical || a.join() === b.join();
+      c.add(
+        'parameter date dipakai? (informatif)',
+        true,
+        same
+          ? `diabaikan (identik): ${a.join(', ')}`
+          : `hari ini ${a.join(', ')}; kemarin ${b.join(', ')}`,
+      );
+    });
+  }
+  // Jalur fallback P6-04: data awal Nuxt di halaman /harga-emas.
+  const html = hargaEmasHtml === null ? null : text(hargaEmasHtml);
+  c.add(
+    '__NUXT_DATA__ ada di /harga-emas',
+    html !== null && /<script[^>]*id="__NUXT_DATA__"[^>]*>/.test(html),
+    html === null ? 'halaman tidak terambil' : '',
+  );
+  freshness(c, 'date', dataDate, today, 3);
+  return { checks: c.list, dataDate };
+}
+
+// ── Lotus Archi (TECH-SPEC §5.8, P6-01) ─────────────────────────────────────
+
+const BULAN_LOTUS: Record<string, number> = {
+  JANUARI: 1, JANUARY: 1, FEBRUARI: 2, FEBRUARY: 2, MARET: 3, MARCH: 3, APRIL: 4,
+  MEI: 5, MAY: 5, JUNI: 6, JUNE: 6, JULI: 7, JULY: 7, AGUSTUS: 8, AUGUST: 8,
+  SEPTEMBER: 9, OKTOBER: 10, OCTOBER: 10, NOVEMBER: 11, DESEMBER: 12, DECEMBER: 12,
+}; // prettier-ignore
+
+export function checkLotusArchi(html: Buffer | string, today: string): CheckResult {
+  const c = new Checks();
+  const body = text(html);
+  // `challenge-platform/scripts/jsd` ikut disuntik di halaman normal; tantangan asli memakai `/h/`.
+  c.add(
+    'bukan halaman tantangan Cloudflare',
+    !/Just a moment|cf-chl|challenge-platform\/h\//i.test(body),
+  );
+  c.add('header "QTY (GR)"', body.includes('QTY (GR)'));
+  c.add('header "HARGA JUAL"', body.includes('HARGA JUAL'));
+  // Baris tabel: sel gramasi (`1 gr`, `0.1 gr`) lalu sel harga `2.591.000`.
+  const priced = [
+    ...body.matchAll(
+      /<td[^>]*>\s*(?:<strong>)?\s*(\d+(?:[.,]\d+)?) gr\s*(?:<\/strong>)?\s*<\/td>\s*<td[^>]*>\s*([\d.]{4,})\s*<\/td>/gi,
+    ),
+  ];
+  c.add('≥ 8 baris gramasi + harga', priced.length >= 8, `${priced.length} baris`);
+  const dates: string[] = [];
+  const re =
+    /(\d{1,2}) ([A-Za-z]+) (\d{4}) \|\| Gold Price \/gram : Rp ([\d.]+) \|\| Buyback Price : Rp ([\d.]+)/g;
+  for (const m of body.matchAll(re)) {
+    const month = BULAN_LOTUS[m[2]!.toUpperCase()];
+    const iso = month ? `${m[3]}-${String(month).padStart(2, '0')}-${m[1]!.padStart(2, '0')}` : '';
+    if (isIsoDate(iso)) dates.push(iso);
+  }
+  c.add('baris bertanggal (Gold Price / Buyback Price)', dates.length >= 1, dates.join(', '));
+  const dataDate = [...dates].sort().at(-1) ?? null;
+  freshness(c, 'tanggal halaman', dataDate, today, 3);
+  return { checks: c.list, dataDate };
+}

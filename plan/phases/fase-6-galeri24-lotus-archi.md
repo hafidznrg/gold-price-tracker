@@ -54,13 +54,13 @@
 - [ ] **P6-01** Probe `galeri24` dan `lotusarchi` dari runner GitHub. — `G0`-style · S
   - Tambah target di `apps/scraper/src/probe/targets.ts` + `checks.ts` (`checkGaleri24`, `checkLotusArchi`), jalankan lewat `probe.yml`.
   - `galeri24`: `GET https://galeri24.co.id/api/gold-prices/page-data?take=1000&date={hari ini WIB}` → 200 JSON, `results` berisi keempat kode brand (Lotus Archi opsional) dengan `status = "1"`, ≥ 5 gramasi berharga per brand wajib, `date` sama untuk brand wajib. Cek juga `GET /harga-emas` memuat `<script id="__NUXT_DATA__">` (jalur fallback).
-  - `galeri24`, satu request tambahan: `date` = kemarin. Catat apakah server memakai parameter itu (hasil bertanggal kemarin) atau mengabaikannya (hasil = hari ini). Hasilnya menentukan perilaku run terlambat (lihat P6-04).
-  - `galeri24`, dari fixture: catat `sellingPrice` dan gramasi ANTAM NON PEGADAIAN (`00005201905007`). Bila `sellingPrice = "0"`, baris dipakai sebagai buyback saja (P6-04).
+  - *Dicek lokal 17 Nov 2026: `date` diabaikan server (respons identik).* `galeri24`, satu request tambahan: `date` = kemarin. Catat apakah server memakai parameter itu (hasil bertanggal kemarin) atau mengabaikannya (hasil = hari ini). Hasilnya menentukan perilaku run terlambat (lihat P6-04).
+  - `galeri24`, dari fixture: catat `sellingPrice` dan gramasi ANTAM NON PEGADAIAN (`00005201905007`). Bila `sellingPrice = "0"`, baris dipakai sebagai buyback saja (P6-04). *Fixture 17 Nov 2026: harga jual terisi (1 g 2.464.000 / buyback 2.178.000), 9 gramasi 0,5–100 g.*
   - `lotusarchi`: `GET https://lotusarchi.com/pricing/` → 200 HTML tanpa halaman tantangan Cloudflare, memuat tabel `QTY (GR) | HARGA JUAL` dan baris `<tanggal> || Gold Price /gram : Rp … || Buyback Price : Rp …`.
   - Simpan fixture: `apps/scraper/test/fixtures/galeri24/` (`page-data-<tanggal>.json`, `harga-emas-<tanggal>.html`, satu fixture sintetis kasus tepi) dan `apps/scraper/test/fixtures/lotusarchi/` (`pricing-<tanggal>.html`), masing-masing dengan `README.md` seperti fixture Pegadaian. Fixture pertama boleh diambil dari terminal lokal; probe runner tetap menentukan lolos/tidaknya akses.
   - **Observasi jam terbit 3–5 hari:** `probe.yml` saat ini hanya `workflow_dispatch`. Tambah `schedule:` **sementara** (mis. 00.00, 04.00, 08.00, 12.00, 16.00 UTC = 07.00, 11.00, 15.00, 19.00, 23.00 WIB) yang hanya mem-probe `galeri24,lotusarchi`, lalu cabut setelah observasi. Yang dikonfirmasi: Galeri24 (harga tanggal D dibuat ±17.50 WIB hari D−1, revisi pagi D mis. Antam 10.14 WIB) dan lotusarchi.com (belum diketahui; 17 Nov masih menampilkan 16 Nov saat dicek).
   - **Hasil P6-01 dicatat di TECH-SPEC §5.7/§5.8 dan research/*.md sebelum lanjut.** Bila lotusarchi.com diblokir dari runner → P6-09 ditandai "tertahan", fase tetap bisa selesai tanpanya.
-- [ ] **P6-01b** Investigasi `GET /api/gold-prices` untuk P6-11 (dari terminal lokal, bukan runner). — S
+- [x] **P6-01b** Investigasi `GET /api/gold-prices` untuk P6-11 (dari terminal lokal, bukan runner). — S
   - Maksimal ±15 request, jeda ≥ 5 detik. Simpan contoh respons (dipangkas) di `apps/scraper/test/fixtures/galeri24/history-*.json` + README.
   - Jawab pertanyaan di research/galeri24.md §5:
     - nama parameter halaman dan filter (`page`/`skip`/`next`, filter tanggal/vendor bila ada);
@@ -100,7 +100,7 @@
 
   - `config/catalog.yml`:
     - grup `galeri24 × antam` [0.5, 1, 2, 3, 5, 10, 25, 50, 100], `galeri24 × ubs` [0.5, 1, 2, 5, 10, 25, 50, 100, 250, 500], `galeri24 × galeri24` [0.5, 1, 2, 5, 10, 25, 50, 100, 250, 500, 1000], `galeri24 × lotusarchi` [1, 5, 10, 25, 50, 100]. Cocokkan dengan fixture P6-01.
-    - `active_from` = tanggal tertua dari P6-01b (perkiraan `'2024-02-01'`). Gramasi yang hanya ada di masa lalu → grup terpisah dengan `active_to`, agar backfill P6-11 lolos V-02.
+    - `active_from: '2024-02-01'` (tanggal tertua, P6-01b). Gramasi yang hanya ada di masa lalu → grup terpisah dengan `active_to`, agar backfill P6-11 lolos V-02. Dari P6-01b: Antam 250/500/1.000 g, UBS 1.000 g, Antam non-Pegadaian 250/500/1.000 g, Lotus Archi 2,5 dan 4 g; tanggal `active_to` dipastikan dari hasil unduhan P6-11.
     - Kunci katalog **tidak memuat `variant`** (`catalogItemKey` = source × brand × product × weight_g). Baris Antam non-Pegadaian ikut tervalidasi oleh grup `galeri24 × antam`. Gramasi non-Pegadaian di luar grup itu → tambah ke grup.
 
 ### Gelombang C — scraper Galeri24
@@ -112,7 +112,7 @@
     - Semua angka datang sebagai **string** → `Number()` + cek integer aman; `denomination` lewat `canonicalWeight`.
     - Ambil baris dengan `vendorCode` di tabel kode, `status === "1"`. Kode lain diabaikan tanpa karantina.
     - Brand wajib dan Lotus Archi: `sellingPrice > 0` wajib, selain itu baris dilewati (gramasi tidak dijual).
-    - Antam non-Pegadaian: `variant = 'non_pegadaian'`. `sellingPrice = 0` → `sell_price = null` (baris buyback saja; V-01 tetap lolos karena buyback terisi). Kedua harga 0 → dilewati.
+    - Antam non-Pegadaian: `variant = 'non_pegadaian'`, jual dan buyback seperti brand lain (fixture 17 Nov 2026). Bila suatu hari `sellingPrice = 0` → `sell_price = null` (baris buyback saja; V-01 tetap lolos karena buyback terisi). Kedua harga 0 → dilewati.
     - Tanggal: semua baris brand **wajib** harus ber-`date` sama, selain itu `VALIDATION_FAILED` (pola Pegadaian). Baris opsional dengan tanggal lain dibuang dan dicatat di `note`.
     - Duplikat kunci (tanggal × vendor × gramasi) dengan status 1 → ambil `updatedAt` terbesar, catat di `note`.
     - Baris: `source = galeri24`, `brand` dan `variant` dari tabel kode, `product = gold_bar`, `location = ''`, `sell_price = sellingPrice`, `buyback_price = buybackPrice` (`0` → `null`), `source_updated_at = jakartaIso(updatedAt)`.
@@ -164,8 +164,8 @@
   - **Dua langkah, pola `logammulia-archive` (job lokal):**
     1. Skrip unduh (`apps/scraper/src/backfill/galeri24-download.ts` atau perintah CLI) dijalankan sekali dari terminal: menelusuri semua halaman, jeda ≥ 5 detik, berhenti di tanggal tertua. Hanya baris dengan lima kode vendor di tabel Prinsip yang disimpan, apa adanya per baris, ke folder lokal (satu file per halaman). Total raw diperkirakan ±70 MB tanpa filter → filter wajib agar arsip raw di repo tetap kecil.
     2. Job `galeri24-history` (`localOnly: true`, `--input <folder>`): gabungkan, lalu pakai fungsi pemetaan dari P6-04.
-  - Per kunci tanggal × vendor × gramasi: ambil `status = 1` dengan `updatedAt` terbesar; bila tidak ada `status = 1`, ambil entri terbaru dan catat jumlahnya di `note` (keputusan final dari arti `status` di P6-01b).
-  - Urutan halaman tidak stabil → dedup berdasarkan `id`; hentikan bila `count` berubah lebih dari jumlah baris satu hari selama penelusuran, lalu ulangi.
+  - Per kunci tanggal × vendor × gramasi: ambil `status = 1` dengan `updatedAt` terbesar (revisi intraday tetap berstatus 1, P6-01b). Kunci tanpa `status = 1` (gramasi nonaktif, status 2/3) diabaikan; jumlahnya dicatat di `note`.
+  - Urutan halaman tidak stabil → dedup berdasarkan `id`; `take=10000` → 18 halaman; jalankan di luar jam terbit (±10.14, ±17.50, ±21.40 WIB) dan bandingkan `count` awal-akhir; bila berubah, ulangi.
   - `origin = backfill`; `select` membuang tanggal yang sudah di-scrape (D-28). Jalankan **setelah** P6-06 aktif agar tumpang tindihnya jelas.
   - V-02 lewat `validateBackfill`: gramasi historis di luar katalog masuk karantina `UNKNOWN_ITEM`. Perbaiki katalog dulu (P6-03), bukan menyetujui massal.
   - Uji `apps/scraper/test/galeri24-history.test.ts` dengan fixture P6-01b: dedup revisi, status 3 diabaikan, vendor lain diabaikan, `select` membuang tanggal yang sudah ada.

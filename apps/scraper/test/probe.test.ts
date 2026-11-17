@@ -5,6 +5,8 @@ import { gunzipSync } from 'node:zlib';
 import { describe, expect, it } from 'vitest';
 import {
   checkFrankfurter,
+  checkGaleri24,
+  checkLotusArchi,
   checkJisdor,
   checkLogamMulia,
   checkPegadaian,
@@ -132,5 +134,37 @@ describe('util probe', () => {
     const hidden = hiddenFields(html);
     expect(hidden.has('__VIEWSTATE')).toBe(true);
     expect(hidden.has('__EVENTVALIDATION')).toBe(true);
+  });
+});
+
+describe('probe Galeri24 & Lotus Archi (P6-01)', () => {
+  const NOW = '2026-11-17';
+  const pageData = read('galeri24/page-data-2026-11-17.json');
+  const harga = gz('galeri24/harga-emas-2026-11-17.html.gz');
+
+  it('Galeri24 lolos; parameter date diabaikan', () => {
+    const r = checkGaleri24(pageData, pageData, harga, NOW);
+    expect(failed(r)).toEqual([]);
+    expect(r.dataDate).toBe('2026-11-17');
+    expect(r.checks.find((x) => x.name.startsWith('parameter date'))?.detail).toMatch(/identik/);
+  });
+
+  it('Galeri24 sintetis: tanggal campur gagal; halaman null gagal NUXT', () => {
+    const r = checkGaleri24(read('galeri24/page-data-edge-synthetic.json'), null, null, NOW);
+    expect(failed(r)).toContain('date sama untuk semua brand wajib');
+    expect(failed(r)).toContain('__NUXT_DATA__ ada di /harga-emas');
+  });
+
+  it('Lotus Archi lolos; tanggal terbaru dipilih', () => {
+    const r = checkLotusArchi(gz('lotusarchi/pricing-2026-11-17.html.gz'), NOW);
+    expect(failed(r)).toEqual([]);
+    expect(r.dataDate).toBe('2026-11-16');
+    const rows = r.checks.find((x) => x.name.startsWith('≥ 8 baris'));
+    expect(Number.parseInt(rows!.detail)).toBeGreaterThanOrEqual(8);
+  });
+
+  it('Lotus Archi: halaman tantangan Cloudflare gagal', () => {
+    const r = checkLotusArchi('<html><title>Just a moment...</title></html>', NOW);
+    expect(failed(r)).toContain('bukan halaman tantangan Cloudflare');
   });
 });

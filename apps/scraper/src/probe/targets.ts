@@ -1,6 +1,8 @@
 import { addDaysIso } from '@gold/schema';
 import {
   checkFrankfurter,
+  checkGaleri24,
+  checkLotusArchi,
   checkJisdor,
   checkLogamMulia,
   checkPegadaian,
@@ -23,6 +25,8 @@ export const PROBE_TARGETS = [
   'jisdor',
   'worldbank',
   'frankfurter',
+  'galeri24',
+  'lotusarchi',
 ] as const;
 export type ProbeTarget = (typeof PROBE_TARGETS)[number];
 
@@ -269,6 +273,40 @@ export async function probeLogamMulia(ctx: ProbeContext): Promise<TargetOutput> 
   }
 }
 
+export async function probeGaleri24(ctx: ProbeContext): Promise<TargetOutput> {
+  const raws: RawFile[] = [];
+  const get = recorder(ctx, raws);
+  const pageData = (date: string) =>
+    `https://galeri24.co.id/api/gold-prices/page-data?take=1000&date=${date}`;
+  const headers = { Accept: 'application/json' };
+  const today = ensureOk(await get('page-data.json', pageData(ctx.today), { headers }));
+  // Pembanding: server diduga mengabaikan `date` (respons kemarin identik dengan hari ini).
+  const yesterday = ensureOk(
+    await get('page-data-yesterday.json', pageData(addDaysIso(ctx.today, -1)), { headers }),
+  );
+  // Jalur fallback (P6-04): tidak wajib, kegagalan hanya membuat pemeriksaan NUXT gagal.
+  const html = await get('harga-emas.html', 'https://galeri24.co.id/harga-emas');
+  return {
+    raws,
+    result: checkGaleri24(
+      today.body,
+      yesterday.body,
+      html.status === 200 ? html.body : null,
+      ctx.today,
+    ),
+  };
+}
+
+export async function probeLotusArchi(ctx: ProbeContext): Promise<TargetOutput> {
+  const raws: RawFile[] = [];
+  const get = recorder(ctx, raws);
+  // Tanpa ensureOk: tantangan Cloudflare (403/503) harus dilaporkan oleh pemeriksaan.
+  const res = await get('pricing.html', 'https://lotusarchi.com/pricing/');
+  const result = checkLotusArchi(res.body, ctx.today);
+  result.checks.unshift({ name: 'HTTP 200', ok: res.status === 200, detail: String(res.status) });
+  return { raws, result };
+}
+
 export const PROBES: Record<ProbeTarget, (ctx: ProbeContext) => Promise<TargetOutput>> = {
   ubslifestyle: probeUbsLifestyle,
   pegadaian: probePegadaian,
@@ -277,4 +315,6 @@ export const PROBES: Record<ProbeTarget, (ctx: ProbeContext) => Promise<TargetOu
   jisdor: probeJisdor,
   worldbank: probeWorldBank,
   frankfurter: probeFrankfurter,
+  galeri24: probeGaleri24,
+  lotusarchi: probeLotusArchi,
 };
