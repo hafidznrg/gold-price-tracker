@@ -276,7 +276,7 @@ test.describe('Spread', () => {
     expect(errors).toEqual([]);
   });
 
-  test('spread per gramasi: enam sumber, ganti sumber, gramasi 1 g disorot', async ({ page }) => {
+  test('spread per gramasi: tujuh sumber, ganti sumber, gramasi 1 g disorot', async ({ page }) => {
     await page.goto('/spread');
     const src = page.locator('#barSrc');
     await expect(src.locator('option')).toHaveText([
@@ -286,6 +286,7 @@ test.describe('Spread', () => {
       'Galeri24 · UBS',
       'Galeri24 · Galeri24',
       'Galeri24 · Lotus Archi',
+      'Lotus Archi (situs resmi) · buyback per gram',
     ]);
     await src.selectOption({ label: 'Galeri24 · Lotus Archi' });
     const list = page.getByRole('list', { name: 'Spread persen per gramasi' });

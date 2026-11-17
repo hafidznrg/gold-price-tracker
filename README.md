@@ -27,7 +27,7 @@ Pipeline berjalan sendiri lewat GitHub Actions. Bagian ini untuk saat ada yang p
 
 | Workflow | Kapan | Isi |
 | --- | --- | --- |
-| `scrape-retail` | 10.25 & 13.25 WIB (jendela `day`: UBS Lifestyle, Logam Mulia); 19.05 & 21.05 WIB (jendela `evening`: Pegadaian) | Slot pertama `primary`; slot kedua `retry` hanya untuk sumber yang belum sukses |
+| `scrape-retail` | Pemicu Cloudflare per jendela `schedule_window` di `config/sources.yml` (primary → retry): `day` 09.05 → 12.05 WIB (Logam Mulia); `afternoon` 15.05 → 17.05 WIB (UBS Lifestyle, Galeri24, Lotus Archi); `evening` 19.05 → 22.05 WIB; Pegadaian (`any`) ikut semua slot. Cadangan cron GitHub 04.15, 09.15, 19.15 WIB | Slot pertama `primary`; slot kedua `retry` hanya untuk sumber yang belum sukses. Watchdog 13.05 (siang), 18.05 (sore: UBS Lifestyle, Galeri24, Lotus Archi), 23.05 WIB (semua) |
 | `ci` | Setiap push kode (bukan `data/**`) dan PR | Lint, typecheck, test |
 | `backfill`, `quarantine`, `probe`, `notify-test` | Manual | Lihat di bawah |
 
@@ -118,6 +118,7 @@ Actions → **backfill** → pilih `job`, opsional `from`/`to` (`YYYY-MM-DD`). S
 | `pegadaian-savings` | Tabungan Emas Pegadaian (jual + buyback per 0,01 g), 360 hari terakhir dari grafik (D-30); bisa diulang untuk menambal hari terlewat | Sudah dijalankan 31 Okt 2026 |
 | `pegadaian-raw-brand` | Histori Lotus Archi (jual) dari arsip raw Pegadaian sejak Okt 2026, di-parse ulang dengan `pegadaian@1.2.0` (`--input data/raw/pegadaian`, hanya dari terminal, P6-08) | Sudah diimpor 17 Nov 2026 (138 baris, 23 tanggal 25 Okt–17 Nov) |
 | `galeri24-history` | Histori Galeri24 (jual + buyback Antam/UBS/Galeri24/Lotus Archi/Antam non-Pegadaian) sejak Feb 2024 dari `/api/gold-prices`; dua langkah lokal: `galeri24-download` lalu `backfill --input` (hanya dari terminal, P6-11) | Sudah diimpor 17 Nov 2026 (47.569 baris, 1.012 tanggal 1 Feb 2024–16 Nov 2026) |
+| `lotusarchi-history` | Histori Lotus Archi resmi (lotusarchi.com), 1 g jual + buyback per gram, dari respons penuh `wp-json/la/v1/harga-gold` sejak 27 Feb 2025 (`--input` = file `harga-gold.json` atau foldernya, hanya dari terminal, P6-09). Asumsi: `harga_emas` = harga jual keping 1 g (sama dengan "1 gr" di `harga-display`); tanggal ganda = revisi, `harga_id` terbesar menang | Sudah diimpor 17 Nov 2026 (489 baris, 489 tanggal 27 Feb 2025–17 Nov 2026) |
 | `worldbank`, `xaus`, `ecb`, `jisdor`, `annual-fx` | Seri makro | Fase 2 |
 
 Backfill tidak menimpa nilai yang sama, mencatat nilai yang berbeda sebagai revisi `source_changed`, dan tidak mengubah `status.json`.
@@ -136,6 +137,17 @@ corepack pnpm --filter scraper start merge --root <repo> --in <artifacts> --orig
 ```
 
 Semua path absolut. Setelah diff benar, ulangi langkah 3 tanpa `--dry-run`, lalu commit.
+
+#### Histori Lotus Archi (lokal)
+
+Simpan respons `https://lotusarchi.com/wp-json/la/v1/harga-gold` (satu request, User-Agent proyek) sebagai `harga-gold.json`, lalu:
+
+```sh
+corepack pnpm --filter scraper start backfill --job lotusarchi-history --root <repo> --input <harga-gold.json atau foldernya> --out <artifacts>/lotusarchi
+corepack pnpm --filter scraper start merge --root <repo> --in <artifacts> --origin backfill --dry-run true
+```
+
+Job melewati tanggal yang sudah ada untuk Lotus Archi (lotusarchi.com) 1 g, jadi aman diulang. Setelah diff benar, ulangi `merge` tanpa `--dry-run`, lalu commit.
 
 ### Menambah sumber baru
 

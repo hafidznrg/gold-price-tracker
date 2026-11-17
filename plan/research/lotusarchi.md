@@ -56,6 +56,12 @@ Alasannya: Lotus Archi tidak boleh mengganggu sumber yang sudah hijau berminggu-
 - Tidak ada jam terbit → `source_updated_at = null`.
 - "Gold Price /gram" adalah harga dasar, bukan harga keping 1 g → hanya disimpan di raw.
 
+### Histori `harga-gold` (backfill `lotusarchi-history`)
+
+- Respons penuh `GET https://lotusarchi.com/wp-json/la/v1/harga-gold` (17 Nov 2026, satu request): 518 baris `{harga_id, harga_emas, buyback_emas, tanggal}` dari 2025-02-27 sampai 2026-11-17, terbaru dulu; 29 tanggal ganda (revisi) → `harga_id` terbesar menang, sisa 489 tanggal.
+- **Asumsi:** `harga_emas` = harga jual keping **1 g**. Bukti: pada 17 Nov 2026 "1 gr" di `api.lotusarchi.com/harga-display` = 2.397.000 = `harga_emas`, dan grafik situs memberi label `harga_emas` "Harga Jual". `buyback_emas` = buyback per gram (baris 1 g saja, D-26).
+- Hasil: satu baris per tanggal (`lotusarchi` × `lotusarchi` × `gold_bar` × 1 g, `source_updated_at` kosong, `origin = backfill`). Baris dengan harga ≤ 0 atau buyback ≥ jual dibuang dan dicatat di `note` (0 baris pada unduhan ini). Katalog: 1 g `active_from: 2025-02-27`; gramasi lain `active_from: 2026-11-17`.
+
 ## 4. Risiko
 
 | Risiko | Mitigasi |

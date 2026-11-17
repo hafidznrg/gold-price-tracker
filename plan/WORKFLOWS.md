@@ -345,6 +345,7 @@ Implementasi (P1-13):
 - **Commit:** `data: backfill {job} · {pesan merge}`.
 - **Job lokal** (`localOnly`, mis. `logammulia-archive`, D-29, dan `pegadaian-raw-brand`, P6-08) membaca file dari `--input` dan tidak muncul sebagai pilihan di YAML. Dijalankan dari terminal: `backfill --job … --input … --out …`, lalu `merge --origin backfill --dry-run true` untuk meninjau, baru merge sungguhan dan commit.
 - **`galeri24-history`** (P6-11) berjalan dua langkah: perintah `galeri24-download --out <dir>` menelusuri `GET /api/gold-prices` (jeda 5 detik, hanya vendor tabel Prinsip, satu `page-NNN.json` per halaman + `manifest.json`), lalu `backfill --job galeri24-history --input <dir> --out <artifacts>/galeri24`. Tidak ada di backfill.yml. Jalankan di luar jam terbit; bila `count_first` ≠ `count_last` di manifest, ulangi. Tinjau dengan `merge --in <folder induk artifact> --origin backfill --dry-run true`.
+- **`lotusarchi-history`** (P6-09) satu langkah: simpan respons penuh `wp-json/la/v1/harga-gold` sebagai `harga-gold.json`, lalu `backfill --job lotusarchi-history --input <file atau folder> --out <artifacts>/lotusarchi`. Satu baris 1 g per tanggal (jual = `harga_emas`, buyback = `buyback_emas`; tanggal ganda → `harga_id` terbesar); tanggal yang sudah ada dilewati. Tidak ada di backfill.yml.
 
 ### 3.5 `quarantine.yml`
 

@@ -66,7 +66,7 @@ flowchart LR
 | 3 | 11/12 selesai; situs tayang di <https://gold.hafidznrg.my.id> (P3-10, Q-5). Sisa P3-11: audit Lighthouse mobile. G3 menunggu data ritel ≥ 14 hari (±9 Nov) dan G1 | 1 Nov 2026 | |
 | 4 | 13/13 selesai; P4-13 Kalkulator total harga beli yang bisa diubah + berat lain (FR-37, D-61, 15 Nov 2026). (P4-04 sudah terpenuhi oleh Spread P3-07): Explorer mode nilai/agregasi/isi celah, `derived/*`, Bandingkan + premi Antam sejak 2010 (D-38), Kelipatan, Kalkulator (D-39), API statis di README, fallback 1 g Logam Mulia. G4 menunggu audit Lighthouse mobile ulang di situs live (NFR-08) | 7 Nov 2026 | |
 | 5 | Belum mulai | | |
-| 6 | Rencana siap (17 Nov 2026; Q-7 disetujui, P6-12 masuk); mulai dari P6-01 (probe dari runner) + P6-01b | | |
+| 6 | 17 Nov 2026: P6-01b–P6-05 dan P6-07–P6-13 selesai; `galeri24` dan `lotusarchi` aktif (histori Galeri24 47.569 baris, histori lotusarchi.com 489 tanggal). Tersisa observasi jam terbit ±21 Nov → finalisasi jadwal P6-01/P6-06 (jendela + kalender, `stale_is_error_on_expected_day` lotusarchi, cabut `schedule:` probe.yml) dan pantau G6 7 hari | 17 Nov 2026 | |
 
 ## Riwayat revisi
 
@@ -91,3 +91,8 @@ flowchart LR
 | 1 Nov 2026 | Situs tayang di gold.hafidznrg.my.id lewat Vercel (P3-10, Q-5 terjawab); README menautkan situs (P3-12). Perbaikan: celah grafik mengikuti kalender terbit sumber; `apps/web/lib/build` sebelumnya terabaikan `.gitignore` |
 | 5 Nov 2026 | Fase 2: `backfill/xaus.ts` (P2-07, belum dijalankan non-dry) dan `check-macro` (P2-12, D-37); evaluasi G2 di fase-2-data-makro.md |
 | 17 Nov 2026 | Rencana Fase 6: riset Galeri24 (`research/galeri24.md`) dan Lotus Archi (`research/lotusarchi.md`), `phases/fase-6-galeri24-lotus-archi.md`; Q-7 (backfill histori Galeri24) disetujui, P6-12 (Antam non-Pegadaian) masuk fase |
+| 17 Nov 2026 | Fase 6 G1–G6: skema (brand `lotusarchi`, varian `non_pegadaian`, `PRICE_FORMULA`), scraper `galeri24` (V-12), Lotus Archi di Pegadaian (`pegadaian@1.2.0`), aktivasi `galeri24`, backfill histori Galeri24 (47.569 baris, 1 Feb 2024–16 Nov 2026) dan Lotus Archi dari arsip raw Pegadaian (138 baris). D-64, D-65 |
+| 17 Nov 2026 | Mockup diselaraskan dengan design system Momen Emas dan situs live; perbaikan halaman Spread |
+| 17 Nov 2026 | P6-10 web: Galeri24 dan Lotus Archi di Hari ini, Data, Spread, Bandingkan, Riwayat harga, Kalkulator, header/footer |
+| 17 Nov 2026 | P6-09 scraper `lotusarchi` dari lotusarchi.com lewat dua endpoint JSON (`harga-display` + `harga-gold`; dua request per run, penyimpangan NFR-12 disetujui pemilik, D-65) |
+| 17 Nov 2026 | Backfill `lotusarchi-history`: 489 tanggal 1 g (jual + buyback) 27 Feb 2025–17 Nov 2026 dari `harga-gold` (satu request, tanggal ganda → `harga_id` terbesar); asumsi `harga_emas` = harga jual keping 1 g; katalog 1 g `active_from: 2025-02-27` |

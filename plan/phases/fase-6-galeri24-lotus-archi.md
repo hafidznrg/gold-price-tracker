@@ -140,6 +140,7 @@
   - TECH-SPEC §5.7 "Galeri24 (`galeri24.ts`)" (isi dari research/galeri24.md + hasil P6-01), PRD §6 tabel sumber, WORKFLOWS bila jendela berbeda dari usulan.
   - Cabut `schedule:` sementara di `probe.yml` (P6-01) bila observasi sudah selesai.
   - Pantau 7 hari (G6).
+  - **Sisa (setelah observasi jam terbit ±21 Nov 2026):** finalkan jendela dan `update_calendar` `galeri24` + `lotusarchi`; set `stale_is_error_on_expected_day: true` untuk `lotusarchi`; cabut `schedule:` sementara di `probe.yml`; pantau G6 7 hari.
 
 ### Gelombang D — Lotus Archi di Pegadaian
 
@@ -219,8 +220,8 @@
 
 ### Gelombang H — dokumentasi
 
-- [ ] **P6-12** *(masuk fase ini)* Antam non-Pegadaian — tidak ada tugas kode tersendiri; tercakup di P6-03 (katalog), P6-04 (parser), P6-05 (V-03/V-12), P6-10 (web, `matchAcrossSources`), dan P6-11 (histori ikut kode `00005201905007`). Centang bila kelimanya selesai.
-- [ ] **P6-13** Keputusan dan dokumen. — · S
+- [x] **P6-12** *(masuk fase ini)* Antam non-Pegadaian — tidak ada tugas kode tersendiri; tercakup di P6-03 (katalog), P6-04 (parser), P6-05 (V-03/V-12), P6-10 (web, `matchAcrossSources`), dan P6-11 (histori ikut kode `00005201905007`). Centang bila kelimanya selesai.
+- [x] **P6-13** Keputusan dan dokumen. — · S
   - DECISIONS:
     - **D-64** sumber `galeri24` (isi dari draf research/galeri24.md §7 + hasil P6-01): termasuk Q-7 disetujui pemilik 17 Nov 2026 (backfill `/api/gold-prices`), aturan baris opsional, V-12, dan varian `antam/non_pegadaian`.
     - **D-65** brand Lotus Archi (tiga kanal; mengubah D-30 untuk Pegadaian; lotusarchi.com jadi/tertahan).
