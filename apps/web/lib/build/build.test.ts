@@ -16,7 +16,13 @@ import type {
   SeriesFile,
 } from '../data/types';
 import { buildPremiumAntamMonthly } from './derived';
-import { buildSpark, computeChange, computeSpread, liveLastDate } from './latest';
+import {
+  buildSpark,
+  computeChange,
+  computeSpread,
+  liveLastDate,
+  pickHighlightSeries,
+} from './latest';
 import { buildOutputs, type BuildInput } from './outputs';
 import { groupByFile, toSeriesFile } from './series';
 
@@ -697,5 +703,29 @@ describe('meta.json', () => {
     expect(pg.color).toBe('g24');
     expect(pg.files.map((f) => f.label)).toEqual(['Galeri24', 'Antam']);
     expect(pg.last).toMatchObject({ brand: 'galeri24', sell: 2443000, buyback: null });
+  });
+});
+
+describe('pickHighlightSeries: variant non-tahun', () => {
+  const g = (variant: string, sell: number, buyback: number) => ({
+    key: `galeri24|antam|gold_bar|${variant}|1`,
+    file: 'galeri24-antam',
+    ref: { variant, w: 1 },
+    rows: [{ date: '2026-11-17', sell_price: sell, buyback_price: buyback }],
+  });
+  it("galeri24 antam: kartu utama = series '', non_pegadaian tidak menang", () => {
+    const series = [g('', 2_560_000, 2_286_000), g('non_pegadaian', 2_464_000, 2_178_000)];
+    const hit = pickHighlightSeries(series as never, '2026-11-17');
+    expect(hit?.main.ref.variant).toBe('');
+    expect(hit?.fallback).toBeNull();
+  });
+  it('hanya non_pegadaian current: tidak ada kartu', () => {
+    expect(pickHighlightSeries([g('non_pegadaian', 1, 1)] as never, '2026-11-17')).toBeNull();
+  });
+  it('UBS: tahun terbaru tetap menang, penyambung variant kosong', () => {
+    const series = [g('', 1, 1), g('2025', 2, 2), g('2026', 3, 3)];
+    const hit = pickHighlightSeries(series as never, '2026-11-17');
+    expect(hit?.main.ref.variant).toBe('2026');
+    expect(hit?.fallback?.ref.variant).toBe('');
   });
 });

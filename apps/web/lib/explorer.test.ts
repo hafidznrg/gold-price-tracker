@@ -118,6 +118,19 @@ describe('explorerOptions', () => {
     expect(opts[0]?.first).toEqual({ sell: '2026-10-26', buyback: '2023-11-20' });
   });
 
+  it("Galeri24: variant non_pegadaian bukan 'tahun'; opsi tetap [''] (D-P6-10)", () => {
+    const g24 = { source: 'galeri24', brand: 'antam', file: 'galeri24-antam' } as const;
+    const opts = explorerOptions(
+      meta([
+        { ...g24, variant: '', first_sell_date: '2026-11-17', first_buyback_date: '2026-11-17' },
+        { ...g24, variant: 'non_pegadaian', first_sell_date: '2026-01-01' },
+      ]),
+    );
+    expect(opts).toHaveLength(1);
+    expect(opts[0]?.variants).toEqual(['']);
+    expect(opts[0]?.first.sell).toBe('2026-11-17');
+  });
+
   it('D-39: keping Logam Mulia tanpa buyback memakai buyback 1 g; sumber lain tidak', () => {
     const lm = { source: 'logammulia', brand: 'antam', file: 'logammulia-antam' } as const;
     const opts = explorerOptions(

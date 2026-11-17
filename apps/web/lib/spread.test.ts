@@ -12,6 +12,8 @@ import {
   resolveBuyback,
   sellPoints,
   sliceDays,
+  todayPair,
+  ubsYear,
   spreadPct,
   spreadStats,
   weightSpreads,
@@ -181,6 +183,42 @@ describe('weightSpreads', () => {
     expect(rows[0]!.value).toBeCloseTo((162_000 / 1_308_500) * 100, 6);
     expect(rows[1]!.value).toBeCloseTo((224_000 / 2_517_000) * 100, 6);
     expect(rows[2]!.value).toBeNull();
+  });
+  it("Galeri24: non_pegadaian = series terpisah; variant '' tidak terpengaruh", () => {
+    const f = { file: 'galeri24-antam' };
+    const L = latest([
+      row({ ...f, w: 1, sell: 2_560_000, buyback: 2_286_000 }),
+      row({ ...f, variant: 'non_pegadaian', w: 1, sell: 2_464_000, buyback: 2_178_000 }),
+    ]);
+    const base = weightSpreads(L, 'galeri24-antam', '');
+    expect(base).toHaveLength(1);
+    expect(base[0]!.value).toBeCloseTo((274_000 / 2_560_000) * 100, 6);
+    const np = weightSpreads(L, 'galeri24-antam', 'non_pegadaian');
+    expect(np[0]!.value).toBeCloseTo((286_000 / 2_464_000) * 100, 6);
+  });
+  it("ubsYear mengabaikan galeri24 non_pegadaian; todayPair '' memakai series ''", () => {
+    const L = latest([
+      row({
+        source: 'galeri24',
+        file: 'galeri24-antam',
+        w: 1,
+        sell: 2_560_000,
+        buyback: 2_286_000,
+      }),
+      row({
+        source: 'galeri24',
+        file: 'galeri24-antam',
+        variant: 'non_pegadaian',
+        w: 1,
+        sell: 2_464_000,
+        buyback: 2_178_000,
+      }),
+    ]);
+    expect(ubsYear(L)).toBe(String(new Date().getUTCFullYear()));
+    const g = o({ source: 'galeri24', file: 'galeri24-antam', variants: [''] });
+    const p = todayPair(L, g, g);
+    expect(p.sell).toBe(2_560_000);
+    expect(p.buyback).toBe(2_286_000);
   });
   it('sumber lain tetap ketat: tanpa buyback berat itu = null', () => {
     const rows = weightSpreads(

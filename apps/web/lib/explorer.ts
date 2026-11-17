@@ -1,4 +1,5 @@
 import type { Brand, PriceSource, Product } from '@gold/schema';
+import { isYearVariant } from '@gold/schema';
 import {
   buybackFromGram,
   colorToken,
@@ -157,7 +158,7 @@ export function explorerOptions(meta: Pick<MetaFile, 'series'>): ExplorerOption[
     const r0 = rows[0]!;
     const year = rows
       .map((r) => r.variant)
-      .filter((v) => v !== '')
+      .filter(isYearVariant)
       .sort()
       .at(-1);
     const variants = (year ? [year, ''] : ['']).filter((v) => rows.some((r) => r.variant === v));

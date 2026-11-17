@@ -1,4 +1,5 @@
 import type { Brand, PriceSource, Product } from '@gold/schema';
+import { isYearVariant } from '@gold/schema';
 import {
   buybackFromGram,
   displayBrand,
@@ -219,7 +220,9 @@ export function todayCells(latest: LatestFile): TodayCells {
           s.source === d.source &&
           s.brand === d.brand &&
           s.product === d.product &&
-          s.current,
+          s.current &&
+          // Hanya '' dan tahun produksi; varian lain (mis. non_pegadaian) = series terpisah.
+          (s.variant === '' || isYearVariant(s.variant)),
       )
       .sort((a, b) => (a.variant < b.variant ? 1 : a.variant > b.variant ? -1 : 0));
     const cells: Record<string, TodayCell> = {};

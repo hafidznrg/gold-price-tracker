@@ -10,7 +10,9 @@ import {
   goldIdrGramSeries,
   indexSeries,
   macroPoints,
+  isYearVariant,
   matchAcrossSources,
+  newestYearVariant,
   perGram,
   premiumAntamSeries,
   premiumAt,
@@ -260,6 +262,38 @@ describe('§6.2 as-of join', () => {
       expect([...out.keys()].sort()).toEqual(['pegadaian', 'ubslifestyle']);
       expect(out.get('ubslifestyle')!.variant).toBe('2026');
       expect(out.get('pegadaian')!.sell_price).toBe(2_510_000);
+    });
+
+    it('isYearVariant: hanya 4 digit; newestYearVariant mengabaikan non_pegadaian', () => {
+      expect(isYearVariant('2026')).toBe(true);
+      expect(isYearVariant('')).toBe(false);
+      expect(isYearVariant('non_pegadaian')).toBe(false);
+      expect(
+        newestYearVariant([{ variant: '' }, { variant: 'non_pegadaian' }, { variant: '2025' }]),
+      ).toBe('2025');
+      expect(newestYearVariant([{ variant: 'non_pegadaian' }])).toBeNull();
+    });
+
+    it("Galeri24 ('' + non_pegadaian): default = '', sumber tidak hilang", () => {
+      const g24 = { source: 'galeri24', brand: 'antam' } as const;
+      const g = [
+        priceRow({
+          ...g24,
+          variant: 'non_pegadaian',
+          sell_price: 2_464_000,
+          buyback_price: 2_178_000,
+        }),
+        priceRow({ ...g24, variant: '', sell_price: 2_560_000, buyback_price: 2_286_000 }),
+        priceRow({ source: 'logammulia', brand: 'antam', variant: '', sell_price: 2_517_000 }),
+      ];
+      const k = { date: '2026-10-24', brand: 'antam', product: 'gold_bar', weight_g: 1 } as const;
+      const out = matchAcrossSources(g, k);
+      expect(out.get('galeri24')!.sell_price).toBe(2_560_000);
+      expect(out.get('galeri24')!.buyback_price).toBe(2_286_000);
+      expect(out.get('logammulia')!.sell_price).toBe(2_517_000);
+      expect(
+        matchAcrossSources(g, { ...k, variant: 'non_pegadaian' }).get('galeri24')!.sell_price,
+      ).toBe(2_464_000);
     });
 
     it('pengguna bisa memilih tahun lain', () => {

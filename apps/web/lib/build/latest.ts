@@ -4,6 +4,7 @@ import {
   addDaysIso,
   goldIdrGram,
   goldIdrGramSeries,
+  isYearVariant,
   newestYearVariant,
   premiumAt,
   type MacroRow,
@@ -118,7 +119,11 @@ export function pickHighlightSeries(
   const current = series.filter((s) => s.rows.at(-1)!.date >= fileLastDate);
   if (current.length === 0) return null;
   const w = current.some((s) => s.ref.w === 1) ? 1 : Math.min(...current.map((s) => s.ref.w));
-  const atW = current.filter((s) => s.ref.w === w);
+  // Varian non-tahun (mis. non_pegadaian) = series terpisah, tidak pernah jadi kartu utama.
+  const atW = current.filter(
+    (s) => s.ref.w === w && (s.ref.variant === '' || isYearVariant(s.ref.variant)),
+  );
+  if (atW.length === 0) return null;
   const variant = newestYearVariant(atW.map((s) => s.ref)) ?? '';
   const main = atW.find((s) => s.ref.variant === variant) ?? atW[0]!;
   const fallback =

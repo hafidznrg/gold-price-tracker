@@ -192,6 +192,22 @@ describe('tabel hari ini', () => {
     expect(row.sell).toBe(1_990_000);
     expect(row.buyback).toBe(1_700_000);
   });
+  it("Galeri24-style: '' menang atas non_pegadaian; non_pegadaian tidak mengisi kolom kosong", () => {
+    const pg = { source: 'pegadaian', file: 'pegadaian-antam' } as const;
+    const c = todayCells(
+      latest([
+        ls({ ...pg, variant: 'non_pegadaian', w: 1, sell: 2_464_000, buyback: 2_178_000 }),
+        ls({ ...pg, variant: '', w: 1, sell: 2_560_000, buyback: null }),
+      ]),
+    );
+    const row = todayRows(c, 1).find((r) => r.def.id === 'pg-antam')!;
+    expect(row.sell).toBe(2_560_000);
+    expect(row.buyback).toBeNull();
+    const only = todayCells(
+      latest([ls({ ...pg, variant: 'non_pegadaian', w: 1, sell: 2_464_000, buyback: 2_178_000 })]),
+    );
+    expect(todayRows(only, 1).find((r) => r.def.id === 'pg-antam')).toBeUndefined();
+  });
   it('5 g: per gram = harga dibagi berat; series tanpa berat itu tidak muncul; buyback kosong = null', () => {
     const rows = todayRows(cells, 5);
     expect(rows.map((r) => r.def.id)).toEqual(['tab', 'lm-antam', 'pg-antam']);

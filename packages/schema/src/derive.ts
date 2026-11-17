@@ -232,9 +232,14 @@ export function priceOn(points: readonly Point[], date: string): Point | null {
 
 type MatchRow = Pick<PriceRow, 'date' | 'source' | 'brand' | 'product' | 'variant' | 'weight_g'>;
 
+/** `true` bila variant = tahun produksi (4 digit, UBS). `''` dan varian lain (`non_pegadaian`) bukan. */
+export function isYearVariant(v: string): boolean {
+  return /^\d{4}$/.test(v);
+}
+
 /** Tahun produksi terbaru di antara baris (buyback UBS, "tahun berjalan"); null bila tidak ada. */
 export function newestYearVariant(rows: readonly Pick<PriceRow, 'variant'>[]): string | null {
-  const years = rows.map((r) => r.variant).filter((v) => /^\d{4}$/.test(v));
+  const years = rows.map((r) => r.variant).filter(isYearVariant);
   return years.length === 0 ? null : years.sort().at(-1)!;
 }
 
@@ -259,7 +264,7 @@ export function matchAcrossSources<R extends MatchRow>(
       out.set(source, list[0]!);
       continue;
     }
-    const variant = key.variant ?? newestYearVariant(list);
+    const variant = key.variant ?? newestYearVariant(list) ?? '';
     const hit = list.find((r) => r.variant === variant);
     if (hit) out.set(source, hit);
   }
