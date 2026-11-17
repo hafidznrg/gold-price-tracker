@@ -126,16 +126,16 @@ html{background:var(--bg)}
 <section class="wrap" style="padding-top:48px;padding-bottom:26px">
 <p class="eyebrow" style="margin:0 0 14px">Kalkulator</p>
 <h1 class="serif page-title" style="margin:0">Kalau dijual hari ini, <span style="color:var(--gold)">untung berapa?</span></h1>
-<p style="margin:16px 0 0;max-width:640px;font-size:16px;line-height:1.65;color:var(--muted)">Masukkan kapan dan di mana emas fisik atau tabungan emas dibeli, lalu pilih ke mana akan dijual kembali. Hasilnya memakai harga buyback hari ini.</p>
+<p style="margin:16px 0 0;max-width:640px;font-size:16px;line-height:1.65;color:var(--muted)">Masukkan kapan dan di mana emas fisik atau tabungan emas dibeli, lalu pilih ke mana akan dijual kembali. Hasilnya memakai harga buyback terbaru.</p>
 </section>
 
 <section class="wrap" style="padding-bottom:22px;display:flex;flex-wrap:wrap;gap:22px;align-items:stretch">
 <form aria-label="Data pembelian" style="flex:1 1 340px;min-width:0;background:var(--surface);border:1px solid var(--line);border-radius:22px;padding:24px;display:flex;flex-direction:column;gap:16px">
 <h2 style="margin:0;font-size:16px;font-weight:600">Pembelian</h2>
 <div style="display:flex;flex-direction:column;gap:6px"><label for="kd" style="font-size:12px;color:var(--muted)">Tanggal beli</label><input id="kd" type="date" class="fld" value="2024-03-15"></div>
-<div style="display:flex;flex-direction:column;gap:6px"><label for="ks" style="font-size:12px;color:var(--muted)">Dibeli di</label><select id="ks" class="fld"><option selected>Logam Mulia · Antam</option><option>Pegadaian · Antam</option><option>Galeri24 · Antam</option><option>UBS Lifestyle · UBS</option><option>Pegadaian · UBS</option><option>Galeri24 · UBS</option><option>Pegadaian · Galeri24</option><option>Galeri24 · Galeri24</option><option>Pegadaian · Lotus Archi</option><option>Galeri24 · Lotus Archi</option><option>Pegadaian · Tabungan Emas</option></select></div>
+<div style="display:flex;flex-direction:column;gap:6px"><label for="ks" style="font-size:12px;color:var(--muted)">Dibeli di</label><select id="ks" class="fld" onChange="{{pickBuy}}"><sc-for list="{{buyOpts}}" as="o" hint-placeholder-count="11"><option value="{{o.id}}" selected="{{o.sel}}">{{o.label}}</option></sc-for></select></div>
 <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px">
-<div style="display:flex;flex-direction:column;gap:6px"><label for="kw" style="font-size:12px;color:var(--muted)">Gramasi</label><select id="kw" class="fld"><option selected>1 g</option></select></div>
+<div style="display:flex;flex-direction:column;gap:6px"><label for="kw" style="font-size:12px;color:var(--muted)">Gramasi</label><select id="kw" class="fld" onChange="{{pickW}}"><sc-for list="{{wOpts}}" as="o" hint-placeholder-count="13"><option value="{{o.id}}" selected="{{o.sel}}">{{o.label}}</option></sc-for></select></div>
 <div style="display:flex;flex-direction:column;gap:6px"><label for="kq" style="font-size:12px;color:var(--muted)">Jumlah keping</label>
 <div style="display:flex;gap:6px">
 <button type="button" onClick="{{dec}}" aria-label="Kurangi keping" style="width:44px;height:44px;flex:none;border-radius:10px;border:1px solid var(--line);background:var(--surface2);color:var(--text);font-size:18px;cursor:pointer">−</button>
@@ -143,34 +143,42 @@ html{background:var(--bg)}
 <button type="button" onClick="{{inc}}" aria-label="Tambah keping" style="width:44px;height:44px;flex:none;border-radius:10px;border:1px solid var(--line);background:var(--surface2);color:var(--text);font-size:18px;cursor:pointer">+</button>
 </div></div>
 </div>
-<div style="padding:12px 14px;border-radius:12px;background:var(--surface2);font-size:14px;line-height:1.55;color:var(--muted)">Harga beli: <b class="num" style="color:var(--text)">{{buyFmt}}</b> per keping (harga dasar Logam Mulia, belum termasuk PPh 0,25%), dari data {{buyDate}}: nilai terakhir ≤ tanggal beli, toleransi 7 hari.</div>
+<sc-if value="{{customShow}}" hint-placeholder-val="{{false}}">
+<div style="display:flex;flex-direction:column;gap:6px"><label for="kwc" style="font-size:12px;color:var(--muted)">Berat lain (gram)</label><input id="kwc" type="number" min="0.01" max="1000" step="0.01" class="fld num" value="{{wCustom}}" onChange="{{setWCustom}}"></div>
+</sc-if>
+<div style="display:flex;flex-direction:column;gap:6px">
+<div style="display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:4px 12px"><label for="kp" style="font-size:12px;color:var(--muted)">Total harga beli (Rp)<sc-if value="{{paidEdited}}" hint-placeholder-val="{{false}}"><span style="margin-left:6px;border-radius:999px;background:var(--surface2);padding:2px 6px;font-size:11px;color:var(--gold-strong)">diubah</span></sc-if></label>
+<sc-if value="{{paidEdited}}" hint-placeholder-val="{{false}}"><button type="button" onClick="{{resetPaid}}" style="border:0;background:transparent;padding:0;font-size:12px;color:var(--gold-strong);text-decoration:underline;cursor:pointer">Kembalikan ke harga resmi</button></sc-if></div>
+<input id="kp" type="text" inputmode="numeric" autocomplete="off" aria-describedby="kp-note" class="fld num" value="{{paidTxt}}" onChange="{{setPaid}}">
+<p id="kp-note" style="margin:0;font-size:12px;line-height:1.6;color:var(--muted)">Harga resmi {{buyLabel}}, {{buyDate}}. Ubah bila Anda membayar berbeda. Khusus emas batangan 24K merek yang dilacak (bukan perhiasan), tanpa potongan tempat buyback. Nominal yang diubah ikut tersimpan di tautan.</p>
+</div>
 <div style="height:1px;background:var(--line)"></div>
 <h2 style="margin:0;font-size:16px;font-weight:600">Penjualan kembali</h2>
-<div style="display:flex;flex-direction:column;gap:6px"><label for="kt" style="font-size:12px;color:var(--muted)">Dijual ke (buyback)</label><select id="kt" class="fld"><option selected>Logam Mulia · Antam · Rp2.358.000</option><option>Galeri24 · Antam · Rp2.350.000 (dibeli di Pegadaian/Galeri24)</option><option>Galeri24 · Antam · Rp2.321.000 (dibeli di luar Pegadaian)</option><option>Galeri24 · UBS · Rp2.280.000</option><option>Galeri24 · Galeri24 · Rp2.256.000</option><option>Galeri24 · Lotus Archi · Rp2.226.000</option><option disabled>Pegadaian · Antam · buyback tidak tersedia</option><option>Pegadaian · Tabungan Emas · Rp2.289.000/g (bila dibeli sebagai tabungan)</option></select></div>
+<div style="display:flex;flex-direction:column;gap:6px"><label for="kt" style="font-size:12px;color:var(--muted)">Dijual ke (buyback)</label><select id="kt" class="fld" onChange="{{pickSell}}"><sc-for list="{{sellOpts}}" as="o" hint-placeholder-count="3"><option value="{{o.id}}" selected="{{o.sel}}">{{o.label}}</option></sc-for></select></div>
 </form>
 
 <div style="flex:1.4 1 460px;min-width:0;background:var(--surface);border:1px solid var(--line);border-radius:22px;padding:28px;display:flex;flex-direction:column;gap:22px">
 <div>
-<div style="font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint);font-weight:600">Untung jika dijual hari ini</div>
+<div style="font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint);font-weight:600">{{headline}} jika dijual hari ini</div>
 <div class="num serif num-xl" style="line-height:1;margin-top:12px;color:{{plColor}}">{{plFmt}}</div>
 <div class="num" style="font-size:16px;margin-top:10px;color:{{plColor}};font-weight:600">{{plPct}} <span style="color:var(--muted);font-weight:400">dalam {{holdTxt}} · setara {{cagr}} per tahun</span></div>
 </div>
 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:18px;overflow:hidden">
 <div style="background:var(--surface);padding:16px"><div style="font-size:12px;color:var(--faint)">Modal</div><div class="num" style="font-size:20px;font-weight:600;margin-top:6px">{{modal}}</div><div class="num" style="font-size:12px;color:var(--muted);margin-top:4px">{{qty}} × {{buyFmt}}</div></div>
-<div style="background:var(--surface);padding:16px"><div style="font-size:12px;color:var(--faint)">Nilai jual hari ini</div><div class="num" style="font-size:20px;font-weight:600;margin-top:6px">{{nilai}}</div><div class="num" style="font-size:12px;color:var(--muted);margin-top:4px">{{qty}} × Rp2.358.000</div></div>
+<div style="background:var(--surface);padding:16px"><div style="font-size:12px;color:var(--faint)">Nilai jual hari ini</div><div class="num" style="font-size:20px;font-weight:600;margin-top:6px">{{nilai}}</div><div class="num" style="font-size:12px;color:var(--muted);margin-top:4px">{{qty}} × {{nowFmt}}</div></div>
 <div style="background:var(--surface);padding:16px"><div style="font-size:12px;color:var(--faint)">Titik impas tercapai</div><div class="num" style="font-size:20px;font-weight:600;margin-top:6px">{{beDate}}</div><div class="num" style="font-size:12px;color:var(--muted);margin-top:4px">{{beTxt}}</div></div>
 </div>
-<p style="margin:0;font-size:12px;line-height:1.6;color:var(--muted)">Belum memperhitungkan PPh 22 yang dapat dipotong saat menjual kembali. Hitungan ini bukan rekomendasi investasi.</p>
+<p style="margin:0;font-size:12px;line-height:1.6;color:var(--muted)">Belum memperhitungkan PPh 22 yang dapat dipotong saat menjual kembali dan PPh 0,25% pada pembelian Logam Mulia (harga dasar). Hitungan ini bukan rekomendasi investasi.</p>
 </div>
 </section>
 
 <section class="wrap" style="padding-bottom:64px">
 <div style="background:var(--surface);border:1px solid var(--line);border-radius:22px;padding:24px">
 <div style="display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px;margin-bottom:22px">
-<div><h2 style="margin:0;font-size:20px;font-weight:600">Buyback sejak tanggal beli</h2><p class="num" style="margin:6px 0 0;font-size:14px;color:var(--muted)">Antam 1 g · Logam Mulia · {{buyDate}} – 30 Okt 2026</p></div>
+<div><h2 style="margin:0;font-size:20px;font-weight:600">Nilai jual sejak tanggal beli</h2><p class="num" style="margin:6px 0 0;font-size:14px;color:var(--muted)">{{buyLabel}} {{wTxt}} · dijual ke {{sellLabel}} · {{buyDate}} – 30 Okt 2026 · {{qty}} keping</p></div>
 <div style="display:flex;gap:16px;font-size:12px;color:var(--muted);align-items:center;flex-wrap:wrap">
-<span style="display:flex;align-items:center;gap:7px"><svg width="20" height="8" viewBox="0 0 20 8" aria-hidden="true"><path d="M1 4H19" style="stroke:var(--antam);stroke-width:2.2"></path></svg>Buyback Antam 1 g · Logam Mulia</span>
-<span style="display:flex;align-items:center;gap:7px"><svg width="20" height="8" viewBox="0 0 20 8" aria-hidden="true"><path d="M1 4H19" style="stroke:var(--muted);stroke-width:1.4;stroke-dasharray:5 4"></path></svg>Harga beli (acuan)</span>
+<span style="display:flex;align-items:center;gap:7px"><svg width="20" height="8" viewBox="0 0 20 8" aria-hidden="true"><path d="M1 4H19" style="stroke:var(--antam);stroke-width:2.2"></path></svg>Nilai jual (buyback)</span>
+<span style="display:flex;align-items:center;gap:7px"><svg width="20" height="8" viewBox="0 0 20 8" aria-hidden="true"><path d="M1 4H19" style="stroke:var(--muted);stroke-width:1.4;stroke-dasharray:5 4"></path></svg>Modal</span>
 </div>
 </div>
 <div style="position:relative;height:320px;margin-left:72px;margin-right:8px">
@@ -189,6 +197,7 @@ html{background:var(--bg)}
 <span style="position:absolute;left:100%;top:{{nowTop}}%;width:12px;height:12px;margin:-6px 0 0 -6px;border-radius:50%;background:var(--gold-glint);box-shadow:0 0 0 3px var(--surface)"></span>
 </div>
 <div style="height:36px"></div>
+<p role="note" style="margin:12px 0 0;font-size:12px;color:var(--faint)">Garis hanya digambar di tanggal ada buyback; hari tanpa data berupa celah, bukan garis tersambung.</p>
 </div>
 </section>
 </main>
@@ -372,11 +381,22 @@ pills(keys, cur, onPick) {
     bg: k === cur ? 'var(--btn)' : 'transparent', fg: k === cur ? 'var(--btntext)' : 'var(--muted)' }));
 }
 
-state = { qty: 5 };
+state = { qty: 5, buyId: 'lm-antam', sellId: 'lm-antam', w: '1', wCustom: 0.75, paid: null };
+BUYS = [['lm-antam', 'Logam Mulia · Antam', 'antam'], ['peg-antam', 'Pegadaian · Antam', 'antam'], ['g24-antam', 'Galeri24 · Antam', 'antam'], ['ubs-ubs', 'UBS Lifestyle · UBS', 'ubs'], ['peg-ubs', 'Pegadaian · UBS', 'ubs'], ['g24-ubs', 'Galeri24 · UBS', 'ubs'], ['peg-g24', 'Pegadaian · Galeri24', 'g24'], ['g24-g24', 'Galeri24 · Galeri24', 'g24'], ['peg-lotus', 'Pegadaian · Lotus Archi', 'lotus'], ['g24-lotus', 'Galeri24 · Lotus Archi', 'lotus'], ['peg-tab', 'Pegadaian · Tabungan Emas', 'tab']];
+SELLS = { antam: [['lm-antam', 'Logam Mulia · Antam'], ['g24-antam', 'Galeri24 · Antam (biasa)'], ['g24-antam-np', 'Galeri24 · Antam non-Pegadaian']], ubs: [['ubs-ubs', 'UBS Lifestyle · UBS'], ['g24-ubs', 'Galeri24 · UBS']], g24: [['g24-g24', 'Galeri24 · Galeri24']], lotus: [['g24-lotus', 'Galeri24 · Lotus Archi']], tab: [['peg-tab', 'Pegadaian · Tabungan Emas']] };
+WS = [0.5, 1, 2, 3, 5, 10, 25, 50, 100, 250, 500, 1000];
 renderVals() {
   const base = this.common();
   const st = this.state || {};
   const qty = Math.max(1, st.qty || 5);
+  const buyId = st.buyId || 'lm-antam';
+  const buyRow = this.BUYS.find(b => b[0] === buyId) || this.BUYS[0];
+  const sells = this.SELLS[buyRow[2]];
+  const sellRow = sells.find(x => x[0] === st.sellId) || sells[0];
+  const wSel = st.w || '1';
+  const perGram = buyRow[2] === 'antam' || buyRow[2] === 'tab';
+  const wNum = wSel === 'custom' ? (st.wCustom || 1) : Number(wSel);
+  const wTxt = this.num(wNum, wNum % 1 ? 2 : 0) + ' g';
   const N = 1000; const ds = this.dates(N); const lm = this.lm(N);
   const target = Date.UTC(2024, 2, 15);
   let bi = ds.findIndex(d => d.getTime() >= target); if (bi < 0) bi = 0;
@@ -391,13 +411,27 @@ renderVals() {
   bb.forEach((v, i) => { area += (i ? 'L' : 'M') + this.xOf(i, n, 1000).toFixed(1) + ' ' + this.yOf(Math.max(v, buyP), e[0], e[1], H).toFixed(1) + ' '; });
   area += 'L1000 ' + yB + ' L0 ' + yB + ' Z';
   const xt = []; dd.forEach((d, i) => { if (d.getUTCDate() === 1 && d.getUTCMonth() % 3 === 0) xt.push({ left: (i / (n - 1) * 100).toFixed(2), label: this.M[d.getUTCMonth()] + ' ' + d.getUTCFullYear() }); });
-  const modal = buyP * qty, nilai = now * qty, pl = nilai - modal;
+  const official = buyP * qty;
+  const paid = st.paid === null || st.paid === undefined ? null : st.paid;
+  const modal = paid === null ? official : paid;
+  const buyEff = modal / qty;
+  const nilai = now * qty, pl = nilai - modal;
   const years = (n - 1) / 365.25;
   const months = Math.round((n - 1) / 30.44);
+  const pickBuy = ev => { const v = ev.target.value; const r = this.BUYS.find(b => b[0] === v) || this.BUYS[0]; const pg = r[2] === 'antam' || r[2] === 'tab'; this.setState({ buyId: v, sellId: this.SELLS[r[2]][0][0], w: (!pg && this.state.w === 'custom') ? '1' : this.state.w }); };
+  const setPaid = ev => { const d = String(ev.target.value).replace(/[^0-9]/g, ''); this.setState({ paid: d === '' ? null : Number(d) }); };
   const setQty = ev => { const v = parseInt(ev && ev.target ? ev.target.value : '', 10); this.setState({ qty: v > 0 ? v : 1 }); };
   return Object.assign(base, {
     qty: qty, setQty: setQty, inc: () => this.setState({ qty: qty + 1 }), dec: () => this.setState({ qty: Math.max(1, qty - 1) }),
-    buyFmt: this.rp(buyP), buyDate: this.dLabel(ds[bi]),
+    buyOpts: this.BUYS.map(b => ({ id: b[0], label: b[1], sel: b[0] === buyId })),
+    sellOpts: sells.map(x => ({ id: x[0], label: x[1], sel: x[0] === sellRow[0] })),
+    wOpts: this.WS.map(w => ({ id: String(w), label: this.wLabel(w), sel: String(w) === wSel })).concat(perGram ? [{ id: 'custom', label: 'Berat lain…', sel: wSel === 'custom' }] : []),
+    pickBuy: pickBuy, pickSell: ev => this.setState({ sellId: ev.target.value }),
+    pickW: ev => this.setState({ w: ev.target.value }),
+    customShow: wSel === 'custom' && perGram, wCustom: wNum, setWCustom: ev => { const v = parseFloat(String(ev.target.value).replace(',', '.')); this.setState({ wCustom: v >= 0.01 && v <= 1000 ? v : 1 }); },
+    paidTxt: this.num(modal, 0), paidEdited: paid !== null, setPaid: setPaid, resetPaid: () => this.setState({ paid: null }),
+    headline: pl >= 0 ? 'Untung' : 'Rugi', buyLabel: buyRow[1], sellLabel: sellRow[1], wTxt: wTxt, nowFmt: this.rp(now),
+    buyFmt: this.rp(buyEff), buyDate: this.dLabel(ds[bi]),
     modal: this.rp(modal), nilai: this.rp(nilai),
     plFmt: (pl >= 0 ? '+' : '−') + this.rp(Math.abs(pl)), plPct: this.pct(pl / modal * 100, 1), plColor: pl >= 0 ? 'var(--up)' : 'var(--down)',
     holdTxt: Math.floor(months / 12) + ' tahun ' + (months % 12) + ' bulan', cagr: this.pct((Math.pow(nilai / modal, 1 / years) - 1) * 100, 1),

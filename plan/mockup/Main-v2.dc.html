@@ -98,6 +98,13 @@ html{background:var(--bg)}
 .bn-sw::after{content:"";position:absolute;top:2px;left:2px;width:20px;height:20px;border-radius:50%;background:var(--surface);box-shadow:0 1px 2px rgba(0,0,0,.3)}
 .t-dark .bn-sw{background:var(--gold)}
 .t-dark .bn-sw::after{transform:translateX(16px)}
+.pop{position:relative;display:inline-block}
+.pop>summary{list-style:none;display:inline-flex;align-items:center;gap:6px;cursor:pointer;min-height:28px;font-size:12px;color:var(--faint)}
+.pop>summary::-webkit-details-marker{display:none}
+.pop>summary:hover{color:var(--text)}
+.pop-p{position:absolute;z-index:30;left:0;width:min(360px,calc(100vw - 72px));box-sizing:border-box;display:flex;flex-direction:column;gap:4px;border:1px solid var(--line);border-radius:12px;background:var(--surface);padding:12px 14px;font-size:12px;line-height:1.5;color:var(--muted);box-shadow:0 12px 32px rgba(0,0,0,.18);text-align:left;font-weight:400}
+.pop.top .pop-p{bottom:calc(100% + 6px)}
+.pop.bot .pop-p{top:calc(100% + 6px)}
 </style>
 </helmet>
 <div class="root {{themeClass}}">
@@ -165,10 +172,10 @@ html{background:var(--bg)}
 <sc-for list="{{barCards}}" as="c" hint-placeholder-count="4">
 <article role="listitem" style="background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:18px 20px;display:flex;flex-direction:column;gap:14px">
 <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
-<div style="display:flex;align-items:center;gap:9px;min-width:0">
+<div style="display:flex;flex-wrap:wrap;align-items:center;gap:0 9px;min-width:0">
 <span style="width:10px;height:10px;border-radius:3px;background:{{c.color}};flex:none"></span>
 <h2 style="margin:0;font-size:16px;font-weight:600">{{c.brand}}</h2>
-<span style="font-size:12px;color:var(--faint);white-space:nowrap">{{c.unit}}</span>
+<span style="flex:0 0 100%;padding-left:19px;margin-top:2px;font-size:12px;color:var(--faint)">{{c.unit}}</span>
 </div>
 <button type="button" onClick="{{c.toggle}}" aria-expanded="{{c.open}}" aria-label="{{c.infoLabel}}" style="width:32px;height:32px;margin:-6px -8px -6px 0;border-radius:8px;border:none;background:transparent;color:var(--faint);display:grid;place-items:center;cursor:pointer">
 <svg width="17" height="17" viewBox="0 0 24 24" aria-hidden="true" style="fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round"><circle cx="12" cy="12" r="9"></circle><path d="M12 11v6M12 7.5v.5"></path></svg>
@@ -180,7 +187,7 @@ html{background:var(--bg)}
 </div>
 <div style="display:flex;flex-direction:column;gap:8px;padding-top:12px;border-top:1px solid var(--line)">
 <div style="display:flex;justify-content:space-between;font-size:14px"><span style="color:var(--muted)">Buyback</span><span class="num" style="font-weight:600;color:{{c.buyColor}}">{{c.buyFmt}}</span></div>
-<div style="display:flex;justify-content:space-between;font-size:14px"><span style="color:var(--muted)">Selisih jual-beli</span><span class="num" style="font-weight:600;color:{{c.buyColor}}">{{c.spreadTxt}}</span></div>
+<div style="display:flex;justify-content:space-between;font-size:14px"><span style="color:var(--muted)">Spread</span><span class="num" style="font-weight:600;color:{{c.buyColor}}">{{c.spreadTxt}}</span></div>
 <div style="height:5px;border-radius:99px;background:var(--surface2);overflow:hidden"><div style="height:100%;width:{{c.meter}}%;background:{{c.color}};border-radius:99px"></div></div>
 </div>
 <sc-if value="{{c.openBool}}" hint-placeholder-val="{{false}}">
@@ -193,10 +200,10 @@ html{background:var(--bg)}
 <article class="tabcard" aria-label="Tabungan Emas" style="margin-top:14px;background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:18px 20px">
 <div style="display:flex;flex-direction:column;gap:6px;min-width:0">
 <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
-<div style="display:flex;align-items:center;gap:9px;min-width:0">
+<div style="display:flex;flex-wrap:wrap;align-items:center;gap:0 9px;min-width:0">
 <span style="width:10px;height:10px;border-radius:3px;background:{{c.color}};flex:none"></span>
 <h2 style="margin:0;font-size:16px;font-weight:600">{{c.brand}}</h2>
-<span style="font-size:12px;color:var(--faint);white-space:nowrap">{{c.unit}}</span>
+<span style="flex:0 0 100%;padding-left:19px;margin-top:2px;font-size:12px;color:var(--faint)">{{c.unit}}</span>
 </div>
 <button type="button" onClick="{{c.toggle}}" aria-expanded="{{c.open}}" aria-label="{{c.infoLabel}}" style="width:32px;height:32px;margin:-6px -8px -6px 0;border-radius:8px;border:none;background:transparent;color:var(--faint);display:grid;place-items:center;cursor:pointer">
 <svg width="17" height="17" viewBox="0 0 24 24" aria-hidden="true" style="fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round"><circle cx="12" cy="12" r="9"></circle><path d="M12 11v6M12 7.5v.5"></path></svg>
@@ -210,7 +217,7 @@ html{background:var(--bg)}
 </div>
 <div class="tc-meta">
 <div style="display:flex;justify-content:space-between;font-size:14px"><span style="color:var(--muted)">Buyback</span><span class="num" style="font-weight:600;color:{{c.buyColor}}">{{c.buyFmt}}</span></div>
-<div style="display:flex;justify-content:space-between;font-size:14px"><span style="color:var(--muted)">Selisih jual-beli</span><span class="num" style="font-weight:600;color:{{c.buyColor}}">{{c.spreadTxt}}</span></div>
+<div style="display:flex;justify-content:space-between;font-size:14px"><span style="color:var(--muted)">Spread</span><span class="num" style="font-weight:600;color:{{c.buyColor}}">{{c.spreadTxt}}</span></div>
 <div style="height:5px;border-radius:99px;background:var(--surface2);overflow:hidden"><div style="height:100%;width:{{c.meter}}%;background:{{c.color}};border-radius:99px"></div></div>
 </div>
 <sc-if value="{{c.openBool}}" hint-placeholder-val="{{false}}">
@@ -261,9 +268,14 @@ html{background:var(--bg)}
 </sc-for>
 </div>
 </div>
-<div style="padding:14px 24px;border-top:1px solid var(--line);display:flex;flex-wrap:wrap;justify-content:space-between;gap:10px;font-size:12px;color:var(--muted)">
-<span>— = tidak ditampilkan sumber. Buyback Antam di Logam Mulia hanya untuk 1 g; Pegadaian tidak menampilkan buyback batangan (D-07); Galeri24 menampilkan buyback semua gramasi.</span>
-<a href="Bandingkan.dc.html" style="font-weight:600;text-decoration:none">Semua gramasi &amp; sumber →</a>
+<div style="display:flex;align-items:center;gap:8px;border-top:1px solid var(--line);padding:10px 24px;font-size:12px;color:var(--muted)">
+<span aria-hidden="true" style="width:20px;height:14px;flex:none;border-radius:4px;border:1px solid var(--goldline);background:var(--goldsoft)"></span>
+<span><b style="font-weight:600;color:var(--gold-strong)">{{bestLabel}}</b> di tiap gramasi</span>
+</div>
+<div style="padding:14px 24px;border-top:1px solid var(--line);display:flex;flex-wrap:wrap;align-items:flex-start;justify-content:space-between;gap:10px 16px;font-size:14px">
+<details class="pop top"><summary aria-label="Catatan tabel"><svg width="13" height="13" viewBox="0 0 24 24" aria-hidden="true" style="fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;flex:none"><circle cx="12" cy="12" r="9"></circle><path d="M12 11v6M12 7.5v.5"></path></svg><span>Catatan</span></summary>
+<div class="pop-p" role="note"><ul style="margin:0;padding-left:16px;display:flex;flex-direction:column;gap:4px;color:var(--text)"><li>— berarti sumber tidak menampilkan harga tersebut.</li><li>Buyback Logam Mulia satu harga per gram untuk semua ukuran keping: buyback selain 1 g = buyback 1 g × berat.</li><li>Pegadaian tidak menampilkan harga buyback untuk emas batangan; Galeri24 menampilkan buyback semua gramasi.</li></ul></div></details>
+<a href="Bandingkan.dc.html" style="font-weight:600;text-decoration:none;white-space:nowrap">Semua gramasi &amp; sumber →</a>
 </div>
 </div>
 </section>
@@ -291,6 +303,7 @@ html{background:var(--bg)}
 <div style="position:relative;height:22px">
 <sc-for list="{{xTicks}}" as="t" hint-placeholder-count="6"><span style="position:absolute;left:{{t.left}}%;top:6px;transform:translateX(-50%);font-size:12px;color:var(--faint);white-space:nowrap">{{t.label}}</span></sc-for>
 </div>
+<p style="margin:6px 0 0;font-size:12px;color:var(--faint)">Area berarsir = hari tanpa data dari sumber.</p>
 </div>
 </div>
 <div class="stats5">
@@ -322,7 +335,7 @@ html{background:var(--bg)}
 <p style="margin:6px 0 0;font-size:14px;line-height:1.55;color:var(--muted)">Harga yang dibayar penerbit bila Anda menjual kembali kepingnya.</p>
 </div>
 <div style="background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px">
-<div style="font-weight:600;font-size:14px">Selisih jual-beli (spread)</div>
+<div style="font-weight:600;font-size:14px">Spread (selisih jual-beli)</div>
 <p style="margin:6px 0 0;font-size:14px;line-height:1.55;color:var(--muted)">Kerugian bila dibeli lalu langsung dijual lagi. Makin kecil, makin cepat balik modal.</p>
 </div>
 <div style="background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px">
@@ -477,15 +490,15 @@ renderVals() {
   const theme = st.theme || this.props.tema || 'light';
   const N = 365;
   const brands = [
-    { id: 'antam', brand: 'Antam', source: 'Logam Mulia', color: 'var(--antam)', unit: '1 g', sell: this.walk(11, N, 2512000, 0.0062, 0.00075).map(v => this.round(v, 1000)), buy1: 2358000, buyOnly1: true,
+    { id: 'antam', brand: 'Antam', source: 'Logam Mulia', color: 'var(--antam)', unit: 'Harga dasar · keping 1 g', sell: this.walk(11, N, 2512000, 0.0062, 0.00075).map(v => this.round(v, 1000)), buy1: 2358000, buyOnly1: true,
       alt: 'Harga dasar, belum termasuk PPh 0,25%. Di Pegadaian: Rp2.538.000.', src: 'logammulia.com · 30 Okt, 08.32 WIB' },
-    { id: 'ubs', brand: 'UBS', source: 'UBS Lifestyle', color: 'var(--ubs)', unit: '1 g', sell: this.walk(21, N, 2488800, 0.0056, 0.00074).map(v => this.round(v, 100)), buy1: 2291000,
+    { id: 'ubs', brand: 'UBS', source: 'UBS Lifestyle', color: 'var(--ubs)', unit: 'Harga jual · keping 1 g', sell: this.walk(21, N, 2488800, 0.0056, 0.00074).map(v => this.round(v, 100)), buy1: 2291000,
       alt: 'Buyback untuk tahun produksi 2026. Di Pegadaian: Rp2.501.000.', src: 'ubslifestyle.com · data 30 Okt (tanpa jam)' },
-    { id: 'g24', brand: 'Galeri24', source: 'Galeri24', color: 'var(--g24)', unit: '1 g', sell: this.walk(31, N, 2431000, 0.0056, 0.00074).map(v => this.round(v, 1000)), buy1: 2256000,
+    { id: 'g24', brand: 'Galeri24', source: 'Galeri24', color: 'var(--g24)', unit: 'Harga jual · keping 1 g', sell: this.walk(31, N, 2431000, 0.0056, 0.00074).map(v => this.round(v, 1000)), buy1: 2256000,
       alt: 'Harga dan buyback dari situs Galeri24. Di Pegadaian: Rp2.436.000 (tanpa buyback).', src: 'galeri24.co.id · harga terbit 30 Okt' },
-    { id: 'lotus', brand: 'Lotus Archi', source: 'Galeri24', color: 'var(--lotus)', unit: '1 g', sell: this.walk(71, N, 2405000, 0.0056, 0.00074).map(v => this.round(v, 1000)), buy1: 2226000,
+    { id: 'lotus', brand: 'Lotus Archi', source: 'Galeri24', color: 'var(--lotus)', unit: 'Harga jual · keping 1 g', sell: this.walk(71, N, 2405000, 0.0056, 0.00074).map(v => this.round(v, 1000)), buy1: 2226000,
       alt: 'Harga dan buyback dari situs Galeri24. Di Pegadaian: Rp2.410.000 (tanpa buyback).', src: 'galeri24.co.id · harga terbit 30 Okt' },
-    { id: 'tab', brand: 'Tabungan Emas', source: 'Pegadaian', color: 'var(--tab)', unit: 'per gram', sell: this.walk(61, N, 2385000, 0.0054, 0.00074).map(v => this.round(v, 100)), buy1: 2289000, linear: true,
+    { id: 'tab', brand: 'Tabungan Emas', source: 'Pegadaian', color: 'var(--tab)', unit: 'Harga jual · per gram', sell: this.walk(61, N, 2385000, 0.0054, 0.00074).map(v => this.round(v, 100)), buy1: 2289000, linear: true,
       alt: 'Tidak berbentuk keping; harga linear terhadap berat (dicatat per 0,01 g).', src: 'pegadaian.co.id · 30 Okt, 18.32 WIB' }
   ];
 
@@ -518,12 +531,20 @@ renderVals() {
     { brand: 'Galeri24', source: 'Galeri24', color: 'var(--g24)', base: brands[2].sell[N - 1], buy1: 2256000 },
     { brand: 'Lotus Archi', source: 'Galeri24', color: 'var(--lotus)', base: brands[3].sell[N - 1], buy1: 2226000 }
   ];
-  const ws = [0.5, 1, 2, 5, 10, 25, 50, 100];
+  const ws = [0.05, 0.1, 0.25, 0.5, 1, 2, 3, 4, 5, 10, 25, 50, 100, 250, 500, 1000];
+  const hasW = [
+    [0.5, 1, 2, 3, 5, 10, 25, 50, 100, 250, 500, 1000],
+    [0.5, 1, 2, 3, 5, 10, 25, 50, 100, 250, 500, 1000],
+    [0.05, 0.1, 0.25, 0.5, 1, 2, 3, 4, 5, 10, 25, 50, 100],
+    [0.5, 1, 2, 5, 10, 25, 50, 100],
+    [0.5, 1, 2, 5, 10, 25, 50, 100]
+  ];
   const perGram = st.unit === 'gram';
   const matrix = ws.map(w => {
-    const vals = mcols.map(c => {
+    const vals = mcols.map((c, ci) => {
+      if (hasW[ci].indexOf(w) < 0) return null;
       const sell = this.round(c.base * this.mult(w) * w, 1000);
-      const buy = c.buy1 && (!c.buyOnly1 || w === 1) ? this.round(c.buy1 * w * (w === 1 ? 1 : 0.998), 1000) : null;
+      const buy = c.buy1 ?this.round(c.buy1 * w * (w === 1 ? 1 : 0.998), 1000) : null;
       const div = perGram ? w : 1;
       if (st.mode === 'jual') return sell / div;
       if (st.mode === 'buyback') return buy === null ? null : buy / div;
@@ -532,7 +553,7 @@ renderVals() {
     const avail = vals.filter(v => v !== null);
     const best = avail.length < 2 ? null : (st.mode === 'buyback' ? Math.max.apply(null, avail) : Math.min.apply(null, avail));
     return {
-      w: String(w).replace('.', ',') + ' g',
+      w: (w >= 1000 ? '1.000' : String(w).replace('.', ',')) + ' g',
       cells: vals.map(v => {
         const isBest = v !== null && v === best;
         return {
@@ -545,7 +566,7 @@ renderVals() {
       })
     };
   });
-  const hints = { jual: 'Harga jual termurah di tiap gramasi ditandai.', buyback: 'Buyback tertinggi di tiap gramasi ditandai.', spread: 'Selisih jual-beli terkecil di tiap gramasi ditandai.' };
+  const hints = { jual: 'Harga jual termurah di tiap gramasi ditandai.', buyback: 'Buyback tertinggi di tiap gramasi ditandai.', spread: 'Spread terkecil di tiap gramasi ditandai.' };
 
   // Tren
   const n = st.period;
@@ -588,7 +609,7 @@ renderVals() {
     tabCards: cards.filter(c => c.linear),
     spotUsd: 'US$' + this.num(spotUsd, 2), fx: 'Rp' + this.num(fx, 0), spotGram: this.rp(spotGram),
     premi: this.pct((2512000 / spotGram - 1) * 100, 1),
-    modes: this.pills([['jual', 'Harga jual'], ['buyback', 'Buyback'], ['spread', 'Selisih']], st.mode, v => this.setState({ mode: v })),
+    modes: this.pills([['jual', 'Harga jual'], ['buyback', 'Buyback'], ['spread', 'Spread']], st.mode, v => this.setState({ mode: v })),
     units: this.pills([['keping', 'Per keping'], ['gram', 'Per gram']], st.unit, v => this.setState({ unit: v })),
     cols: mcols, matrix: matrix, matrixHint: hints[st.mode],
     bestLabel: st.mode === 'jual' ? 'termurah' : st.mode === 'buyback' ? 'tertinggi' : 'terkecil',

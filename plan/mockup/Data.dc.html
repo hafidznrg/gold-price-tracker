@@ -90,6 +90,12 @@ html{background:var(--bg)}
 .bn-sw::after{content:"";position:absolute;top:2px;left:2px;width:20px;height:20px;border-radius:50%;background:var(--surface);box-shadow:0 1px 2px rgba(0,0,0,.3)}
 .t-dark .bn-sw{background:var(--gold)}
 .t-dark .bn-sw::after{transform:translateX(16px)}
+.dl{position:relative;display:inline-block}
+.dl>summary{list-style:none;display:inline-flex;align-items:center;gap:8px;min-height:40px;padding:0 16px;border-radius:10px;background:var(--btn);color:var(--btntext);font-size:14px;font-weight:600;cursor:pointer}
+.dl>summary::-webkit-details-marker{display:none}
+.dl-p{position:absolute;z-index:30;right:0;bottom:calc(100% + 6px);width:min(260px,calc(100vw - 72px));box-sizing:border-box;display:flex;flex-direction:column;gap:6px;border:1px solid var(--line);border-radius:12px;background:var(--surface);padding:12px;box-shadow:0 12px 32px rgba(0,0,0,.18);font-size:12px;color:var(--muted)}
+.dl-p a{display:flex;flex-direction:column;gap:2px;min-height:44px;justify-content:center;padding:0 12px;border-radius:10px;border:1px solid var(--line);color:var(--text);font-size:14px;font-weight:600;text-decoration:none}
+.dl-p a span{font-size:12px;font-weight:400;color:var(--muted)}
 </style>
 </helmet>
 <div class="root {{themeClass}}">
@@ -151,11 +157,9 @@ html{background:var(--bg)}
 <div class="num" style="font-size:12px;color:var(--muted);line-height:1.5">{{d.value}}</div>
 </div>
 <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-top:auto">
-<span class="num" style="font-size:12px;color:var(--faint)">{{d.range}}</span>
-<div style="display:flex;gap:6px">
-<a href="#" style="min-height:40px;padding:0 14px;border-radius:10px;background:var(--btn);color:var(--btntext);font-size:14px;font-weight:600;text-decoration:none;display:inline-flex;align-items:center">CSV</a>
-<a href="#" style="min-height:40px;padding:0 14px;border-radius:10px;border:1px solid var(--line);color:var(--text);font-size:14px;font-weight:600;text-decoration:none;display:inline-flex;align-items:center">JSON</a>
-</div>
+<span class="num" style="font-size:12px;color:var(--faint)">{{d.range}} · <span style="color:var(--muted)">{{d.rows}} baris</span></span>
+<details class="dl"><summary aria-label="{{d.dlLabel}}"><svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true" style="fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"></path></svg>Unduh data</summary>
+<div class="dl-p"><a href="#">CSV<span>Untuk Excel atau Google Sheets</span></a><a href="#">JSON<span>Untuk program atau skrip</span></a></div></details>
 </div>
 </article>
 </sc-for>
@@ -183,11 +187,9 @@ html{background:var(--bg)}
 <div class="num" style="font-size:12px;color:var(--muted);line-height:1.5">{{d.value}}</div>
 </div>
 <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-top:auto">
-<span class="num" style="font-size:12px;color:var(--faint)">{{d.range}}</span>
-<div style="display:flex;gap:6px">
-<a href="#" style="min-height:40px;padding:0 14px;border-radius:10px;background:var(--btn);color:var(--btntext);font-size:14px;font-weight:600;text-decoration:none;display:inline-flex;align-items:center">CSV</a>
-<a href="#" style="min-height:40px;padding:0 14px;border-radius:10px;border:1px solid var(--line);color:var(--text);font-size:14px;font-weight:600;text-decoration:none;display:inline-flex;align-items:center">JSON</a>
-</div>
+<span class="num" style="font-size:12px;color:var(--faint)">{{d.range}} · <span style="color:var(--muted)">{{d.rows}} baris</span></span>
+<details class="dl"><summary aria-label="{{d.dlLabel}}"><svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true" style="fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"></path></svg>Unduh data</summary>
+<div class="dl-p"><a href="#">CSV<span>Untuk Excel atau Google Sheets</span></a><a href="#">JSON<span>Untuk program atau skrip</span></a></div></details>
 </div>
 </article>
 </sc-for>
@@ -391,7 +393,9 @@ renderVals() {
     { name: 'USD/IDR ECB', desc: 'Dihitung dari EUR/IDR ÷ EUR/USD, 2 desimal', color: 'var(--muted)', when: '30 Okt 2026', value: 'Rp18.086,45 per US$', age: 'hari ini', dot: ok, range: 'Sejak 4 Jan 1999' },
     { name: 'USD/IDR tahunan', desc: 'World Bank WDI, rata-rata tahunan resmi untuk 1996–1998', color: 'var(--muted)', when: '1998 · seri statis', value: 'Rp10.013,62 per US$', age: 'tidak diperbarui', dot: still, range: '1996–1998' }
   ];
-  return Object.assign(base, { retail: retail, macro: macro });
+  const meta = { 'Antam · Logam Mulia': ['1 Jan 2010 – 30 Okt 2026', '5.350'], 'UBS · UBS Lifestyle': ['1 Nov 2023 – 30 Okt 2026', '9.480'], 'Emas batangan · Galeri24': ['1 Feb 2024 – 30 Okt 2026', '47.600'], 'Antam non-Pegadaian · Galeri24': ['1 Feb 2024 – 30 Okt 2026', '1.020'], 'Emas batangan · Pegadaian': ['26 Okt 2026 – 30 Okt 2026', '1.240'], 'Tabungan Emas · Pegadaian': ['5 Nov 2025 – 30 Okt 2026', '360'], 'Emas dunia XAU/USD': ['1 Jan 1996 – 29 Okt 2026', '11.020'], 'USD/IDR JISDOR': ['20 Mei 2013 – 30 Okt 2026', '3.300'], 'USD/IDR ECB': ['4 Jan 1999 – 30 Okt 2026', '7.100'], 'USD/IDR tahunan': ['1996 – 1998', '3'] };
+  const fin = a => a.map(d => Object.assign({}, d, { range: meta[d.name][0], rows: meta[d.name][1], dlLabel: 'Unduh data ' + d.name }));
+  return Object.assign(base, { retail: fin(retail), macro: fin(macro) });
 }
 }
 </script>

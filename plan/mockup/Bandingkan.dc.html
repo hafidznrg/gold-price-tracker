@@ -139,7 +139,18 @@ html{background:var(--bg)}
 <section class="wrap" style="padding-bottom:22px">
 <div style="background:var(--surface);border:1px solid var(--line);border-radius:22px;padding:24px">
 <div style="display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px;margin-bottom:22px">
-<div><h2 style="margin:0;font-size:20px;font-weight:600">{{chartTitle}}</h2><p class="num" style="margin:6px 0 0;font-size:14px;color:var(--muted)">31 Okt 2025 – 30 Okt 2026 · garis putus-putus = harga di Pegadaian</p></div>
+<div><h2 style="margin:0;font-size:20px;font-weight:600">{{chartTitle}}</h2><p class="num" style="margin:6px 0 0;font-size:14px;color:var(--muted)">{{subRange}} · garis putus-putus = harga di Pegadaian</p></div>
+<div style="display:flex;flex-wrap:wrap;align-items:center;gap:10px">
+<div role="group" aria-label="Rentang waktu" style="display:flex;flex-wrap:wrap;gap:4px;padding:4px;border:1px solid var(--line);border-radius:12px">
+<sc-for list="{{ranges}}" as="r" hint-placeholder-count="7"><button type="button" aria-pressed="{{r.pressed}}" onClick="{{r.pick}}" style="min-height:36px;min-width:44px;padding:0 12px;border-radius:10px;border:none;background:{{r.bg}};color:{{r.fg}};font-size:14px;font-weight:600;cursor:pointer">{{r.label}}</button></sc-for>
+</div>
+<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+<label for="bfrom" style="font-size:12px;color:var(--muted)">Kustom</label>
+<input id="bfrom" type="date" class="fld" value="{{fromIso}}" style="width:150px" aria-label="Tanggal awal">
+<span style="color:var(--faint)">–</span>
+<input id="bto" type="date" class="fld" value="2026-10-30" style="width:150px" aria-label="Tanggal akhir">
+</div>
+</div>
 </div>
 <div style="position:relative;height:360px;margin-left:72px;margin-right:130px">
 <svg viewBox="0 0 1000 360" preserveAspectRatio="none" style="position:absolute;left:0;top:0;width:100%;height:100%" aria-hidden="true">
@@ -178,9 +189,20 @@ html{background:var(--bg)}
 <span role="cell" class="num" style="font-weight:700;color:{{r.diffColor}}">{{r.diff}}</span>
 </div>
 </sc-for>
-<div role="row" style="padding:12px 24px;border-top:1px solid var(--line);font-size:12px;color:var(--muted)">Tabungan emas tidak berbentuk keping: harganya linear terhadap berat (dicatat sumber per 0,01 g). Mencetaknya menjadi emas fisik dikenai biaya cetak terpisah.</div>
-<div role="row" style="padding:0 24px 14px;font-size:12px;color:var(--muted)">Harga Logam Mulia = Harga Dasar, belum termasuk PPh 0,25%; buyback Logam Mulia hanya untuk 1 g. Galeri24 menampilkan buyback semua gramasi (Antam di Galeri24 punya dua harga buyback, lihat Spread).</div>
 </div></div>
+<details style="border-top:1px solid var(--line);padding:0 24px">
+<summary style="display:flex;align-items:center;gap:8px;min-height:48px;cursor:pointer;font-size:14px;font-weight:600;color:var(--text)"><svg width="13" height="13" viewBox="0 0 24 24" aria-hidden="true" style="fill:none;stroke:var(--faint);stroke-width:2;stroke-linecap:round;flex:none"><circle cx="12" cy="12" r="9"></circle><path d="M12 11v6M12 7.5v.5"></path></svg>Sumber &amp; catatan</summary>
+<ul style="margin:0 0 14px;padding-left:18px;display:flex;flex-direction:column;gap:4px;font-size:12px;line-height:1.55;color:var(--muted)">
+<li>Tabungan emas tidak berbentuk keping: harganya naik lurus mengikuti berat (dicatat sumber per 0,01 g). Mencetaknya jadi emas fisik dikenai biaya cetak terpisah.</li>
+<li>Harga Logam Mulia adalah Harga Dasar, belum termasuk PPh 0,25%.</li>
+<li>Buyback Logam Mulia satu harga per gram untuk semua ukuran keping: buyback selain 1 g = buyback 1 g × berat.</li>
+<li>Galeri24 menampilkan buyback semua gramasi (Antam di Galeri24 punya dua harga buyback, lihat Spread).</li>
+</ul>
+<p style="margin:0 0 4px;font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--faint)">Sumber</p>
+<ul style="margin:0 0 16px;padding:0;list-style:none;display:flex;flex-direction:column;gap:2px;font-size:12px;color:var(--faint)">
+<li>logammulia.com · Data 30 Okt 2026 · 08.32 WIB</li><li>ubslifestyle.com · Data 30 Okt 2026</li><li>galeri24.co.id · Harga terbit 30 Okt 2026</li><li>pegadaian.co.id · Harga terbit 30 Okt 2026 · 18.32 WIB</li>
+</ul>
+</details>
 </div>
 </section>
 
@@ -190,7 +212,8 @@ html{background:var(--bg)}
 <div style="max-width:640px">
 <p class="eyebrow" style="margin:0 0 10px">Premi Antam vs spot</p>
 <h2 class="serif" style="margin:0;font-size:38px;line-height:1.1">Berapa mahal emas ritel dibanding harga dunia</h2>
-<p style="margin:12px 0 0;font-size:14px;line-height:1.6;color:var(--muted)">Premi = harga Antam 1 g ÷ (XAU/USD × USD/IDR ÷ 31,1035) − 1. Memakai spot penutupan hari sebelumnya, karena Antam menetapkan harga pagi berdasarkan penutupan itu.</p>
+<p style="margin:12px 0 0;font-size:14px;line-height:1.6;color:var(--muted)">Premi menunjukkan seberapa mahal emas Antam 1 gram dibanding harga emas dunia. Premi 10% berarti Antam dijual 10% di atas nilai 1 gram emas di pasar dunia. Harga dunia (US$ per troy ons) diubah ke rupiah per gram: dikali kurs USD/IDR, lalu dibagi 31,1035 (jumlah gram dalam 1 troy ons).</p>
+<p style="margin:8px 0 0;font-size:14px;line-height:1.6;color:var(--muted)">Harga dunia yang dipakai adalah penutupan hari sebelumnya, karena harga pagi Antam ditetapkan dari penutupan itu. Sebelum November 2021 harga dunia harian belum tersedia, jadi premi bulanan masa itu dihitung dari rata-rata bulanan.</p>
 </div>
 <div style="display:flex;gap:28px;flex-wrap:wrap">
 <div><div style="font-size:12px;color:var(--faint)">Hari ini</div><div class="num" style="font-size:30px;font-weight:600;color:var(--gold);margin-top:4px">{{premNow}}</div></div>
@@ -208,11 +231,12 @@ html{background:var(--bg)}
 <sc-for list="{{pxt}}" as="t" hint-placeholder-count="9"><span style="position:absolute;top:100%;margin-top:10px;left:{{t.left}}%;transform:translateX(-50%);font-size:12px;color:var(--faint)">{{t.label}}</span></sc-for>
 </div>
 <div style="height:40px"></div>
+<div role="note" style="border:1px solid var(--goldline);border-radius:14px;background:var(--goldsoft);padding:16px;font-size:14px;line-height:1.6;color:var(--text);margin-bottom:12px"><strong style="font-weight:600">Spot dunia bersifat indikatif, premi hanya estimasi.</strong> Riwayat XAU/USD dari xaus.com berasal dari kontrak berjangka emas COMEX (GC=F), bukan harga spot LBMA; selisihnya biasanya di bawah 1%, dan di sini dipakai karena tersedia gratis dan harian. Karena itu angka premi dipakai untuk melihat tren dan perbandingan antarwaktu, bukan sebagai valuasi atau patokan harga wajar.</div>
 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px">
 <div style="padding:16px;border-radius:12px;background:var(--surface2)"><div style="font-size:14px;font-weight:600">Ongkos cetak &amp; sertifikat</div><div style="font-size:12px;line-height:1.55;color:var(--muted);margin-top:6px">Biaya produksi per keping, terasa lebih besar di pecahan kecil.</div></div>
 <div style="padding:16px;border-radius:12px;background:var(--surface2)"><div style="font-size:14px;font-weight:600">Margin distribusi</div><div style="font-size:12px;line-height:1.55;color:var(--muted);margin-top:6px">Selisih yang diambil penerbit dan jaringan penjualnya.</div></div>
-<div style="padding:16px;border-radius:12px;background:var(--surface2)"><div style="font-size:14px;font-weight:600">Pajak</div><div style="font-size:12px;line-height:1.55;color:var(--muted);margin-top:6px">Pajak yang melekat pada transaksi emas batangan sesuai ketentuan berlaku.</div></div>
-<div style="padding:16px;border-radius:12px;background:var(--surface2)"><div style="font-size:14px;font-weight:600">Estimasi, bukan valuasi</div><div style="font-size:12px;line-height:1.55;color:var(--muted);margin-top:6px">Spot xaus bersifat indikatif; premi dipakai untuk melihat tren.</div></div>
+<div style="padding:16px;border-radius:12px;background:var(--surface2)"><div style="font-size:14px;font-weight:600">Pajak</div><div style="font-size:12px;line-height:1.55;color:var(--muted);margin-top:6px">Pajak yang melekat pada transaksi emas batangan sesuai ketentuan berlaku. Harga Logam Mulia di sini adalah Harga Dasar, belum termasuk PPh 0,25%.</div></div>
+<div style="padding:16px;border-radius:12px;background:var(--surface2)"><div style="font-size:14px;font-weight:600">Estimasi, bukan valuasi</div><div style="font-size:12px;line-height:1.55;color:var(--muted);margin-top:6px">Spot xaus bersifat indikatif (futures COMEX GC=F); premi dipakai untuk melihat tren.</div></div>
 </div>
 </div>
 </section>
@@ -397,11 +421,13 @@ pills(keys, cur, onPick) {
     bg: k === cur ? 'var(--btn)' : 'transparent', fg: k === cur ? 'var(--btntext)' : 'var(--muted)' }));
 }
 
-state = { w: 1, mode: 'Per gram' };
+state = { w: 1, mode: 'Per gram', range: '1T' };
 renderVals() {
   const base = this.common();
-  const st = Object.assign({ w: 1, mode: 'Per gram' }, this.state || {});
-  const N = 365; const ds = this.dates(N); const w = st.w;
+  const st = Object.assign({ w: 1, mode: 'Per gram', range: '1T' }, this.state || {});
+  const N = 365; const ds0 = this.dates(N); const w = st.w;
+  const nDays = { '7H': 7, '1B': 30, '3B': 91, '6B': 182, 'YTD': 303, '1T': 365, 'Semua': 365 }[st.range];
+  const ds = ds0.slice(N - nDays);
   const lm = this.lm(N); const tb = this.tabung(N);
   const defs = [
     { brand: 'Antam', source: 'Logam Mulia', color: 'var(--antam)', dash: '0', s: lm.sell, buy1: 2358000, buyOnly1: true },
@@ -415,17 +441,17 @@ renderVals() {
   const avail = d => !(d.only1 && w !== 1);
   const vals = defs.map(d => {
     if (!avail(d)) return d.s.map(() => null);
-    const per = d.s.map(v => v * (d.linear ? 1 : this.mult(w)));
+    const per = d.s.slice(N - nDays).map(v => v * (d.linear ? 1 : this.mult(w)));
     if (st.mode === 'Indeks') return per.map(v => v / per[0] * 100);
     return per;
   });
   const e = this.padExt(this.ext(vals), 0.08); const tk = this.ticks(e[0], e[1], 5);
   const fmt = st.mode === 'Indeks' ? (x => this.num(x, 0)) : (x => this.rpShort(x));
   const pth = defs.map((d, i) => ({ d: this.line(vals[i], e[0], e[1], 1000, 360), color: d.color, dash: d.dash }));
-  const ends = defs.map((d, i) => { const v = vals[i][N - 1]; return v === null ? null : { top: ((1 - (v - e[0]) / (e[1] - e[0])) * 100).toFixed(2), color: d.color, label: st.mode === 'Indeks' ? this.num(v, 1) : this.rpShort(v) }; }).filter(x => x);
+  const ends = defs.map((d, i) => { const v = vals[i][nDays - 1]; return v === null ? null : { top: ((1 - (v - e[0]) / (e[1] - e[0])) * 100).toFixed(2), color: d.color, label: st.mode === 'Indeks' ? this.num(v, 1) : this.rpShort(v) }; }).filter(x => x);
   const today = defs.filter(avail).map(d => {
     const sell = d.linear ? Math.round(d.s[N - 1] * w) : this.round(d.s[N - 1] * this.mult(w) * w, w < 1 ? 100 : 1000);
-    const buy = d.buy1 && (!d.buyOnly1 || w === 1) ? (d.linear ? Math.round(d.buy1 * w) : this.round(d.buy1 * w, 100)) : null;
+    const buy = d.buy1 ?(d.linear ? Math.round(d.buy1 * w) : this.round(d.buy1 * w, 100)) : null;
     return { d: d, sell: sell, per: sell / w, buy: buy };
   }).sort((a, b) => a.per - b.per);
   const min = today[0].per;
@@ -443,7 +469,9 @@ renderVals() {
   const pLine = this.line(pr, pe[0], pe[1], 1000, 260);
   const pxt = []; for (let y = 2010; y <= 2026; y += 2) pxt.push({ left: (((y - 2010) * 12) / (months - 1) * 100).toFixed(2), label: String(y) });
   return Object.assign(base, {
-    grams: [0.5, 1, 2, 5, 10, 25, 50, 100].map(g => ({ text: this.wLabel(g), pressed: String(g === w), pick: () => this.setState({ w: g }), bg: g === w ? 'var(--btn)' : 'var(--surface)', fg: g === w ? 'var(--btntext)' : 'var(--muted)' })),
+    ranges: this.pills(['7H', '1B', '3B', '6B', 'YTD', '1T', 'Semua'], st.range, v => this.setState({ range: v })),
+    fromIso: ds[0].toISOString().slice(0, 10), subRange: this.dLabel(ds[0]) + ' – ' + this.dLabel(ds[nDays - 1]),
+    grams: [0.5, 1, 2, 3, 5, 10, 25, 50, 100, 250, 500, 1000].map(g => ({ text: this.wLabel(g), pressed: String(g === w), pick: () => this.setState({ w: g }), bg: g === w ? 'var(--btn)' : 'var(--surface)', fg: g === w ? 'var(--btntext)' : 'var(--muted)' })),
     modes: this.pills(['Per gram', 'Indeks'], st.mode, v => this.setState({ mode: v })),
     chartTitle: (st.mode === 'Indeks' ? 'Indeks harga jual (=100 setahun lalu)' : 'Harga jual per gram') + ' · ' + this.wLabel(w) + ' (keping fisik atau saldo tabungan)',
     grid: this.gridPath(tk, e[0], e[1], 1000, 360), yt: this.yTicks(tk, e[0], e[1], fmt), xt: this.monthTicks(ds),
