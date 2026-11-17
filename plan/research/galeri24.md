@@ -4,7 +4,7 @@
 | --- | --- |
 | **Status** | Riset awal 16 Nov 2026. Implementasi: [phases/fase-6-galeri24-lotus-archi.md](../phases/fase-6-galeri24-lotus-archi.md) |
 | **Menjawab** | Q-1 / P5-06: sumber buyback Antam, UBS, dan Galeri24. Q-7 disetujui 17 Nov 2026 |
-| **Metode** | Browser biasa (payload Nuxt, log jaringan, `fetch` same-origin). Akses dari runner GitHub **belum diuji** (P6-01) |
+| **Metode** | Browser biasa (payload Nuxt, log jaringan, `fetch` same-origin). Runner GitHub (AS) **lolos** 17 Nov 2026 (P6-01) |
 
 ## 1. Ringkasan
 

@@ -4,7 +4,7 @@
 | --- | --- |
 | **Status** | Riset awal 17 Nov 2026. Implementasi: [phases/fase-6-galeri24-lotus-archi.md](../phases/fase-6-galeri24-lotus-archi.md) (P6-07–P6-10) |
 | **Brand** | `lotusarchi` (baru). Emas batangan swasta 24K, 0,1–100 g, dijual di gerai Galeri24/Pegadaian dan toko resmi lotusarchi.com |
-| **Metode** | Browser biasa + fixture Pegadaian di repo. Akses dari runner GitHub **belum diuji** (P6-01) |
+| **Metode** | Browser biasa + fixture Pegadaian di repo. Runner GitHub (AS) **lolos** 17 Nov 2026 (P6-01) |
 
 ## 1. Tiga kanal, tiga harga
 
@@ -36,7 +36,7 @@ Alasannya: Lotus Archi tidak boleh mengganggu sumber yang sudah hijau berminggu-
 
 ## 3. lotusarchi.com
 
-- WordPress 6.8 (tema Flatsome/UX Builder) di belakang **Cloudflare** (`server: cloudflare`, `cf-cache-status: DYNAMIC`). Tidak ada tantangan saat dibuka dari browser biasa. Dari IP datacenter GitHub **belum diketahui**.
+- WordPress 6.8 (tema Flatsome/UX Builder) di belakang **Cloudflare** (`server: cloudflare`, `cf-cache-status: DYNAMIC`). Tidak ada tantangan saat dibuka dari browser biasa. **Runner GitHub (AS, colo MSP) lolos** pada probe 17 Nov 2026 08.58 WIB: HTTP 200, tanpa tantangan, 10 baris gramasi, tanggal 16 Nov 2026 (P6-01).
 - `/pricing/` (±175 KB HTML, server-rendered):
   - Tabel `QTY (GR) | HARGA JUAL`: 0.1 gr 341.000 · 0.2 gr 630.000 · 0.5 gr 1.346.000 · 0.5 gr (WB) · 1 gr 2.591.000 · 2 gr 5.097.000 · 5 gr 12.592.000 · 10 gr 25.130.000 · 25 gr 62.625.000 · 50 gr 125.221.000 · 100 gr 250.265.000 · Paper Gold 0.1/0.2/0.5/1 gr · Paper Gold 1 gr FIFA.
   - Baris bertanggal: `16 NOVEMBER 2026 || Gold Price /gram : Rp 2.406.000 || Buyback Price : Rp 2.258.000` (format persis dicek dari fixture P6-01).
