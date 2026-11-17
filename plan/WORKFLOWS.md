@@ -344,6 +344,7 @@ Implementasi (P1-13):
 - **Ringkasan** memakai `notify --deliver false`: hanya step summary, tanpa Telegram/Issue, agar backfill tidak membuka atau menutup Issue sumber harian.
 - **Commit:** `data: backfill {job} · {pesan merge}`.
 - **Job lokal** (`localOnly`, mis. `logammulia-archive`, D-29, dan `pegadaian-raw-brand`, P6-08) membaca file dari `--input` dan tidak muncul sebagai pilihan di YAML. Dijalankan dari terminal: `backfill --job … --input … --out …`, lalu `merge --origin backfill --dry-run true` untuk meninjau, baru merge sungguhan dan commit.
+- **`galeri24-history`** (P6-11) berjalan dua langkah: perintah `galeri24-download --out <dir>` menelusuri `GET /api/gold-prices` (jeda 5 detik, hanya vendor tabel Prinsip, satu `page-NNN.json` per halaman + `manifest.json`), lalu `backfill --job galeri24-history --input <dir> --out <artifacts>/galeri24`. Tidak ada di backfill.yml. Jalankan di luar jam terbit; bila `count_first` ≠ `count_last` di manifest, ulangi. Tinjau dengan `merge --in <folder induk artifact> --origin backfill --dry-run true`.
 
 ### 3.5 `quarantine.yml`
 

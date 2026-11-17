@@ -117,9 +117,25 @@ Actions → **backfill** → pilih `job`, opsional `from`/`to` (`YYYY-MM-DD`). S
 | `logammulia-archive` | Harga dasar + buyback 1 g Antam sejak 2010, dari arsip lokal (`--input`, hanya dari terminal, D-29) | Sudah diimpor 31 Okt 2026 |
 | `pegadaian-savings` | Tabungan Emas Pegadaian (jual + buyback per 0,01 g), 360 hari terakhir dari grafik (D-30); bisa diulang untuk menambal hari terlewat | Sudah dijalankan 31 Okt 2026 |
 | `pegadaian-raw-brand` | Histori Lotus Archi (jual) dari arsip raw Pegadaian sejak Okt 2026, di-parse ulang dengan `pegadaian@1.2.0` (`--input data/raw/pegadaian`, hanya dari terminal, P6-08) | Sudah diimpor 17 Nov 2026 (138 baris, 23 tanggal 25 Okt–17 Nov) |
+| `galeri24-history` | Histori Galeri24 (jual + buyback Antam/UBS/Galeri24/Lotus Archi/Antam non-Pegadaian) sejak Feb 2024 dari `/api/gold-prices`; dua langkah lokal: `galeri24-download` lalu `backfill --input` (hanya dari terminal, P6-11) | Belum dijalankan |
 | `worldbank`, `xaus`, `ecb`, `jisdor`, `annual-fx` | Seri makro | Fase 2 |
 
 Backfill tidak menimpa nilai yang sama, mencatat nilai yang berbeda sebagai revisi `source_changed`, dan tidak mengubah `status.json`.
+
+#### Histori Galeri24 (dua langkah, lokal)
+
+Jalankan di luar jam terbit Galeri24 (±10.14, ±17.50, ±21.40 WIB) supaya halaman tidak bergeser. Unduhan memakai jeda 5 detik per halaman (±18 halaman) dan hanya menyimpan vendor di tabel Prinsip. Bila `manifest.json` menunjukkan `count_first` ≠ `count_last`, ulangi unduhan.
+
+```sh
+# 1. unduh ke folder lokal (satu file per halaman + manifest.json)
+corepack pnpm --filter scraper start galeri24-download --out <dir>
+# 2. hasilkan artifact backfill dari folder itu
+corepack pnpm --filter scraper start backfill --job galeri24-history --root <repo> --input <dir> --out <artifacts>/galeri24
+# 3. tinjau dulu (dry run); --in adalah folder INDUK yang berisi satu subfolder per artifact
+corepack pnpm --filter scraper start merge --root <repo> --in <artifacts> --origin backfill --dry-run true
+```
+
+Semua path absolut. Setelah diff benar, ulangi langkah 3 tanpa `--dry-run`, lalu commit.
 
 ### Menambah sumber baru
 

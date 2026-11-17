@@ -33,6 +33,7 @@ import { describeRun, scrape } from './pipeline/scrape';
 import { formatWatchdog, watchdog, WATCHDOG_SCHEDULES } from './pipeline/watchdog';
 import { readMacro } from './pipeline/store';
 import { DEFAULT_USER_AGENT } from './probe/http';
+import { downloadGaleri24History } from './backfill/galeri24-download';
 import { BACKFILL_JOB_IDS, BACKFILL_TASKS, getBackfillJob } from './backfill';
 import { formatReport, runProbe, writeStepSummary } from './probe/run';
 import { PROBE_TARGETS } from './probe/targets';
@@ -335,6 +336,39 @@ const COMMANDS: Record<string, Command> = {
       });
       console.log(describeBackfill(run, from, to));
       return run.exit_code;
+    },
+  },
+  'galeri24-download': {
+    summary: 'Unduh histori Galeri24 (vendor di tabel Prinsip) ke folder lokal --out (P6-11)',
+    task: 'P6-11',
+    options: {
+      out: { type: 'string' },
+      take: { type: 'string' },
+      'pause-ms': { type: 'string' },
+      'max-pages': { type: 'string' },
+    },
+    run: async (values) => {
+      const intOption = (v: unknown, flag: string, fallback: number, min: number): number => {
+        if (v === undefined) return fallback;
+        const n = Number(v);
+        if (!Number.isInteger(n) || n < min) {
+          throw new UsageError(`${flag} harus integer ≥ ${min}: ${str(v)}`);
+        }
+        return n;
+      };
+      const { manifest, warnings } = await downloadGaleri24History({
+        out: requireAbsolute(values.out, '--out'),
+        take: intOption(values.take, '--take', 10_000, 1),
+        pauseMs: intOption(values['pause-ms'], '--pause-ms', 5_000, 0),
+        maxPages: intOption(values['max-pages'], '--max-pages', 40, 1),
+        userAgent: process.env.SCRAPER_USER_AGENT || DEFAULT_USER_AGENT,
+        log: (msg) => console.log(msg),
+      });
+      console.log(
+        `selesai: ${manifest.pages} halaman, ${manifest.kept_rows} entri vendor Prinsip, count ${manifest.count_first} → ${manifest.count_last}`,
+      );
+      for (const w of warnings) console.warn(`PERINGATAN: ${w}`);
+      return EXIT.OK;
     },
   },
   quarantine: {

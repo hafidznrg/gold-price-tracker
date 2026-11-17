@@ -1,5 +1,6 @@
 import { annualFx } from './annual-fx';
 import { ecb } from './ecb';
+import { galeri24History } from './galeri24-history';
 import { jisdor } from './jisdor';
 import { logammuliaArchive } from './logammulia-archive';
 import { pegadaianRawBrand } from './pegadaian-raw-brand';
@@ -23,6 +24,7 @@ export const BACKFILL_JOB_IDS = [
   'logammulia-archive',
   'pegadaian-savings',
   'pegadaian-raw-brand',
+  'galeri24-history',
 ] as const;
 export type BackfillJobId = (typeof BACKFILL_JOB_IDS)[number];
 
@@ -37,6 +39,7 @@ export const BACKFILL_TASKS: Record<BackfillJobId, string> = {
   'logammulia-archive': 'D-29',
   'pegadaian-savings': 'D-30',
   'pegadaian-raw-brand': 'P6-08',
+  'galeri24-history': 'P6-11',
 };
 
 /** Modul job yang sudah diimplementasikan. */
@@ -50,6 +53,7 @@ const registry: Partial<Record<BackfillJobId, BackfillJob>> = {
   'logammulia-archive': logammuliaArchive,
   'pegadaian-savings': pegadaianSavings,
   'pegadaian-raw-brand': pegadaianRawBrand,
+  'galeri24-history': galeri24History,
 };
 
 export function getBackfillJob(id: BackfillJobId): BackfillJob | undefined {
