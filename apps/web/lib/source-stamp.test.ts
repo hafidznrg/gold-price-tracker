@@ -29,6 +29,17 @@ describe('sourceStampText', () => {
   });
 });
 
+describe('lotusarchi (D-65)', () => {
+  it('tanpa jam terbit → tanggal saja, walau `at` diberikan', () => {
+    expect(sourceStampText('lotusarchi', '2026-11-17', null)).toBe(
+      'Sumber: lotusarchi.com · data 17 Nov 2026',
+    );
+    expect(sourceStampText('lotusarchi', '2026-11-17', '2026-11-17T15:00:00+07:00')).toBe(
+      'Sumber: lotusarchi.com · data 17 Nov 2026',
+    );
+  });
+});
+
 describe('sourceStampParts', () => {
   it('memisahkan domain dan keterangan waktu', () => {
     expect(sourceStampParts('logammulia', '2026-10-30', '2026-10-30T08:32:00+07:00')).toEqual({

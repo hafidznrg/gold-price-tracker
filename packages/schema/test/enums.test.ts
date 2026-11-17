@@ -8,10 +8,10 @@ describe('enum Fase 6', () => {
     expect(PriceSource.safeParse('galeri24').success).toBe(true);
   });
 
-  it('lotusarchi adalah brand; belum menjadi sumber/modul (P6-09)', () => {
+  it('lotusarchi adalah brand, sumber harga, dan modul scraper (P6-09)', () => {
     expect(Brand.safeParse('lotusarchi').success).toBe(true);
-    expect(PriceSource.safeParse('lotusarchi').success).toBe(false);
-    expect(ScraperId.safeParse('lotusarchi').success).toBe(false);
+    expect(PriceSource.safeParse('lotusarchi').success).toBe(true);
+    expect(ScraperId.safeParse('lotusarchi').success).toBe(true);
   });
 
   it('PRICE_FORMULA adalah alasan karantina (V-12)', () => {

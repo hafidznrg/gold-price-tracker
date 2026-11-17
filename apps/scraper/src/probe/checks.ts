@@ -470,41 +470,69 @@ export function checkGaleri24(
   return { checks: c.list, dataDate };
 }
 
-// ── Lotus Archi (TECH-SPEC §5.8, P6-01) ─────────────────────────────────────
+// ── Lotus Archi (TECH-SPEC §5.8, P6-01, P6-09) ──────────────────────────────
 
-const BULAN_LOTUS: Record<string, number> = {
-  JANUARI: 1, JANUARY: 1, FEBRUARI: 2, FEBRUARY: 2, MARET: 3, MARCH: 3, APRIL: 4,
-  MEI: 5, MAY: 5, JUNI: 6, JUNE: 6, JULI: 7, JULY: 7, AGUSTUS: 8, AUGUST: 8,
-  SEPTEMBER: 9, OKTOBER: 10, OCTOBER: 10, NOVEMBER: 11, DESEMBER: 12, DECEMBER: 12,
-}; // prettier-ignore
-
-export function checkLotusArchi(html: Buffer | string, today: string): CheckResult {
+/**
+ * Dua endpoint JSON yang mengisi /pricing/: `harga-display` (harga keping, tanpa tanggal) dan
+ * `harga-gold` (harga dasar + buyback per gram per tanggal). Tabel HTML statis basi (D-65).
+ */
+export function checkLotusArchi(
+  display: Buffer | string,
+  gold: Buffer | string,
+  today: string,
+): CheckResult {
   const c = new Checks();
-  const body = text(html);
+  const d = text(display);
+  const g = text(gold);
   // `challenge-platform/scripts/jsd` ikut disuntik di halaman normal; tantangan asli memakai `/h/`.
   c.add(
     'bukan halaman tantangan Cloudflare',
-    !/Just a moment|cf-chl|challenge-platform\/h\//i.test(body),
+    !/Just a moment|cf-chl|challenge-platform\/h\//i.test(d + g),
   );
-  c.add('header "QTY (GR)"', body.includes('QTY (GR)'));
-  c.add('header "HARGA JUAL"', body.includes('HARGA JUAL'));
-  // Baris tabel: sel gramasi (`1 gr`, `0.1 gr`) lalu sel harga `2.591.000`.
-  const priced = [
-    ...body.matchAll(
-      /<td[^>]*>\s*(?:<strong>)?\s*(\d+(?:[.,]\d+)?) gr\s*(?:<\/strong>)?\s*<\/td>\s*<td[^>]*>\s*([\d.]{4,})\s*<\/td>/gi,
-    ),
-  ];
-  c.add('≥ 8 baris gramasi + harga', priced.length >= 8, `${priced.length} baris`);
-  const dates: string[] = [];
-  const re =
-    /(\d{1,2}) ([A-Za-z]+) (\d{4}) \|\| Gold Price \/gram : Rp ([\d.]+) \|\| Buyback Price : Rp ([\d.]+)/g;
-  for (const m of body.matchAll(re)) {
-    const month = BULAN_LOTUS[m[2]!.toUpperCase()];
-    const iso = month ? `${m[3]}-${String(month).padStart(2, '0')}-${m[1]!.padStart(2, '0')}` : '';
-    if (isIsoDate(iso)) dates.push(iso);
+  const parsed = <T>(name: string, s: string): T | undefined =>
+    c.try(name, () => JSON.parse(s) as T);
+  const dj = parsed<{ data?: { produk?: string; type?: string; harga?: number }[] }>(
+    'harga-display JSON',
+    d,
+  );
+  const gj = parsed<{
+    data?: { harga_id?: number; harga_emas?: number; buyback_emas?: number; tanggal?: string }[];
+  }>('harga-gold JSON', g);
+  const weights = (dj?.data ?? []).filter(
+    (r) => r.type === 'gold' && /^\d+(,\d+)? gr$/.test(r.produk ?? '') && Number(r.harga) > 0,
+  );
+  c.add('≥ 8 baris gramasi + harga', weights.length >= 8, `${weights.length} baris`);
+  const oneGram = weights.find((r) => r.produk === '1 gr')?.harga ?? null;
+  c.add('baris "1 gr"', oneGram !== null, String(oneGram));
+  const rows = (gj?.data ?? []).filter(
+    (r) =>
+      Number.isSafeInteger(r.harga_id) &&
+      Number(r.harga_emas) > 0 &&
+      Number(r.buyback_emas) > 0 &&
+      isIsoDate(r.tanggal ?? ''),
+  );
+  c.add(
+    'baris harga-gold (harga_emas, buyback_emas, tanggal)',
+    rows.length >= 1,
+    `${rows.length} baris`,
+  );
+  const newest = [...rows].sort((a, b) =>
+    a.tanggal === b.tanggal ? b.harga_id! - a.harga_id! : a.tanggal! < b.tanggal! ? 1 : -1,
+  )[0];
+  const dataDate = newest?.tanggal ?? null;
+  if (newest && oneGram !== null) {
+    const match = rows.find((r) => r.harga_emas === oneGram);
+    // Informatif: display tertinggal satu hari bukan kegagalan akses.
+    c.add(
+      'harga-display sinkron dengan harga-gold (informatif)',
+      true,
+      match
+        ? match.tanggal === dataDate
+          ? `sinkron ${dataDate}`
+          : `display masih ${match.tanggal}, gold sudah ${dataDate}`
+        : `tidak cocok: 1 gr ${oneGram} vs ${newest.harga_emas} (${dataDate})`,
+    );
   }
-  c.add('baris bertanggal (Gold Price / Buyback Price)', dates.length >= 1, dates.join(', '));
-  const dataDate = [...dates].sort().at(-1) ?? null;
-  freshness(c, 'tanggal halaman', dataDate, today, 3);
+  freshness(c, 'tanggal data', dataDate, today, 3);
   return { checks: c.list, dataDate };
 }

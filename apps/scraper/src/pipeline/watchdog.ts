@@ -57,6 +57,9 @@ export function watchdog(input: {
     (s) =>
       s.enabled &&
       isExpectedDay(s.update_calendar, date, config.holidays) &&
+      // Sumber ritel yang `stale` bukan error (mis. lotusarchi selama observasi jam terbit, P6-09)
+      // tidak ikut diperiksa: tanpa jam terbit yang pasti, alarm "belum masuk" hanya akan palsu.
+      (s.kind === 'macro' || s.stale_is_error_on_expected_day) &&
       (scope === 'all' || (s.workflow === 'scrape-retail' && s.schedule_window === scope)),
   );
   const overdue: Overdue[] = [];

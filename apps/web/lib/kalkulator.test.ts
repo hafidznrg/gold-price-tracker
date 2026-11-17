@@ -420,6 +420,8 @@ describe('D-61: total harga beli dan berat lain', () => {
   });
   it('w desimal diterima untuk Logam Mulia dan Tabungan Emas, dibulatkan 2 desimal', () => {
     expect(supportsCustomWeight(def('lm-antam'))).toBe(true);
+    expect(supportsCustomWeight(def('la-lotus'))).toBe(true); // buyback per gram (D-65)
+    expect(supportsCustomWeight(def('g24-lotus'))).toBe(false);
     expect(supportsCustomWeight(def('tab'))).toBe(true);
     expect(supportsCustomWeight(def('pg-antam'))).toBe(false);
     expect(decodeState({ w: '1.5' }, CTX).w).toBe(1.5);

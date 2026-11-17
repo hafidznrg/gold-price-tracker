@@ -282,6 +282,17 @@ Hasil riset P0-10 (25 Okt 2026, fixture di `apps/scraper/test/fixtures/{frankfur
 - **Validasi khusus:** V-04 ≥ 5 gramasi per brand wajib (`variant = `), V-12 rumus harga jual, tanggal sama antar brand wajib.
 - **Histori (P6-11, Q-7):** `GET /api/gold-prices?take=10000&page=N`, urut `date` menurun, 18 halaman sejak 1 Feb 2024.
 
+### 5.8 Lotus Archi (`lotusarchi.ts`)
+
+- **Endpoint (D-65):** dua `GET` JSON yang mengisi halaman /pricing/, project User-Agent saja (tanpa Origin/Referer), jeda `pauseMs` (5 detik) di antaranya: `https://api.lotusarchi.com/harga-display` → `{data:[{id, produk, type, harga}]}` (harga jual per keping, **tanpa tanggal**) dan `https://lotusarchi.com/wp-json/la/v1/harga-gold` → `{data:[{harga_id, harga_emas, buyback_emas, tanggal}]}` (harga dasar + buyback per gram per tanggal, histori sejak 27 Feb 2025). Tabel HTML statis di `/pricing/` tersembunyi dan basi, jadi tidak dipakai. Dua request per run adalah penyimpangan dari NFR-12 yang disetujui pemilik. Probe runner GitHub lolos 17 Nov 2026 (P6-01). `403`/`429`/`503` berisi tantangan, atau HTTP 200 berisi tantangan (`Just a moment`, `cf-chl`, `challenge-platform/h/`) → `BLOCKED`, tanpa penyamaran (D-24); respons 200 bukan JSON → `PARSE_ERROR`.
+- **Raw (D-22):** `{ display: <harga-display utuh>, gold: <harga-gold, 10 baris terbaru> }` (±1 KB), `application/json`.
+- **Parse:** baris emas dari `display` dengan `type = gold` dan `produk` cocok `^\d+(,\d+)? gr$` (0,1–100 g); `0,5 gr WB`, `Paper Gold …`, dan perak dilewati. `harga-gold`: satu baris per `tanggal` (`harga_id` terbesar menang untuk revisi). Bentuk tak dikenal (data kosong, tanggal/angka tidak valid, "1 gr" hilang) → `PARSE_ERROR`.
+- **Aturan sinkronisasi** (`display` tak bertanggal): `display` "1 gr" harus sama dengan `harga_emas` tanggal terbaru → `dataDate` = tanggal itu. Bila sama dengan tanggal yang lebih lama, `display` belum diperbarui: dipakai tanggal lama itu dan hasil ditandai `stale` (V-06). Bila tidak cocok dengan tanggal mana pun → `PARSE_ERROR` ("tidak cocok dengan harga_emas tanggal mana pun").
+- **Pemetaan:** `source = brand = lotusarchi`, `product = gold_bar`, `variant = ''`, `sell_price` = harga keping. `buyback_price` **hanya baris 1 g** = `buyback_emas` tanggal itu (per gram, pola Logam Mulia, D-26, D-39); gramasi lain tidak dikalikan. `harga_emas` (harga dasar) hanya di raw. `source_updated_at = null` (tanpa jam terbit); web menampilkan tanggal saja seperti UBS (D-19).
+- **Validasi:** V-04 ≥ 8 gramasi (`MIN_ROWS.lotusarchi`), V-03 pada baris 1 g, V-06 dari `dataDate`; V-02 dari katalog `lotusarchi × lotusarchi` (0,1–100 g, `active_from` 2026-11-17).
+- **Jadwal:** `schedule_window: afternoon`, `update_calendar: daily`, `accept_previous_day: true`, `stale_is_error_on_expected_day: false` selama observasi jam terbit (final ±21 Nov 2026). Watchdog melewati sumber ritel dengan `stale_is_error_on_expected_day: false` agar tidak ada alarm palsu.
+- **Probe:** `checkLotusArchi(display, gold, today)` memeriksa kedua endpoint (≥ 8 gramasi, "1 gr", baris `harga-gold`, sinkron informatif, tanggal ≤ 3 hari).
+
 ## 6. Pipeline
 
 Ringkasan; YAML lengkap, kontrak antar job, logika slot, notifikasi, matriks kegagalan, kredensial, dan pengaturan Vercel ada di [WORKFLOWS.md](./WORKFLOWS.md).

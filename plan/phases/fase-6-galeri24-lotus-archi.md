@@ -175,21 +175,20 @@
 
 ### Gelombang F — Lotus Archi resmi (bersyarat)
 
-- [ ] **P6-09** *(bersyarat P6-01)* Scraper `lotusarchi` untuk lotusarchi.com (`lotusarchi@1.0.0`). — · M
+- [x] **P6-09** *(bersyarat P6-01)* Scraper `lotusarchi` untuk lotusarchi.com (`lotusarchi@1.0.0`). — · M
+  - *Selesai 17 Nov 2026 (aktif, `schedule_window: afternoon`, `stale_is_error_on_expected_day: false`). **Sisa observasi:** jam terbit dari probe `schedule:` (±21 Nov) menentukan `schedule_window`/`update_calendar` final dan apakah `stale_is_error_on_expected_day` jadi `true`; cabut `schedule:` sementara di `probe.yml`.*
+  - *Perubahan 17 Nov 2026: tabel HTML `/pricing/` basi; scraper memakai dua endpoint JSON (`harga-display` + `harga-gold`), dua request per run (D-65, TECH-SPEC §5.8). Probe `checkLotusArchi` ikut diganti. Histori `harga-gold` sejak Feb 2025 bisa dipakai untuk backfill buyback/harga dasar per gram (belum dikerjakan).*
   - Hanya bila probe dari runner lolos tanpa tantangan. Bila `403`/halaman tantangan muncul di run produksi → `BLOCKED`, tanpa retry agresif atau penyamaran.
   - Tambah `lotusarchi` ke `SCRAPER_IDS` + `PRICE_SOURCES`, beserta entri `Record` di web (sama dengan P6-02).
-  - `fetchRaw`: `GET https://lotusarchi.com/pricing/` (HTML, `fetch_method: http`). Raw = potongan relevan (tabel + baris bertanggal), seperti raw UBS (D-22), bukan halaman 175 KB penuh.
-  - `parse`:
-    - Tabel `QTY (GR) | HARGA JUAL`: hanya baris yang cocok `^\d+(\.\d+)? gr$` (0,1–100 g). Baris `(WB)` dan `Paper Gold …` diabaikan.
-    - Baris bertanggal: `(\d{1,2} <BULAN> \d{4}) || Gold Price /gram : Rp X || Buyback Price : Rp Y` → `dataDate`; bulan dalam bahasa Inggris/Indonesia huruf besar (cek di fixture).
-    - Baris: `source = lotusarchi`, `brand = lotusarchi`, `product = gold_bar`, `sell_price` = harga per keping, `buyback_price` **hanya untuk 1 g** = buyback per gram (pola Logam Mulia D-26). Jangan mengalikan per gram untuk gramasi lain.
-    - "Gold Price /gram" (harga dasar per gram) hanya di raw.
-    - Tidak ada jam terbit di halaman → `source_updated_at = null`.
-  - Tabel perak (`Kilobar Perak …`) diabaikan.
-  - V-04: ≥ 8 gramasi; V-06 dari baris bertanggal. `schedule_window` dan `update_calendar` dari observasi P6-01.
+  - `fetchRaw` *(diubah 17 Nov 2026)*: dua `GET` JSON, `harga-display` dan `harga-gold` (`fetch_method: api`). Raw = `{display, gold terpangkas 10 baris}`.
+  - `parse` *(diubah 17 Nov 2026)*:
+    - `harga-display`: hanya `type = gold` dengan `produk` cocok `^\d+(,\d+)? gr$` (0,1–100 g); `WB`, `Paper Gold …`, perak diabaikan. `sell_price` = `harga` per keping.
+    - `harga-gold`: `dataDate` = `tanggal` terbaru (`harga_id` terbesar bila ganda); `display` "1 gr" harus sama dengan `harga_emas` tanggal itu (aturan sinkronisasi: lebih lama → `stale`, tidak cocok → `PARSE_ERROR`).
+    - `buyback_price` **hanya baris 1 g** = `buyback_emas` (per gram, D-26); `harga_emas` hanya di raw; `source_updated_at = null`.
+  - V-04: ≥ 8 gramasi; V-06 dari `harga-gold`. `schedule_window` dan `update_calendar` dari observasi P6-01.
   - `catalog.yml`: `lotusarchi × lotusarchi` [0.1, 0.2, 0.5, 1, 2, 5, 10, 25, 50, 100].
   - Web: sumber dengan buyback per gram → `hasPerGramBuyback` seperti Logam Mulia (D-39/D-60/D-61).
-  - Uji dengan fixture P6-01 (+ satu fixture sintetis tanpa baris bertanggal → `PARSE_ERROR`).
+  - Uji dengan respons asli 17 Nov 2026 (+ kasus tanggal ganda, display tertinggal, tidak sinkron, tanpa "1 gr", tantangan → `BLOCKED`).
   - TECH-SPEC §5.8, PRD §6.
 
 ### Gelombang G — web

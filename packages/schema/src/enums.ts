@@ -11,11 +11,18 @@ export const SCRAPER_IDS = [
   'jisdor',
   'worldbank',
   'galeri24',
+  'lotusarchi',
 ] as const;
 export const ScraperId = z.enum(SCRAPER_IDS);
 export type ScraperId = z.infer<typeof ScraperId>;
 
-export const PRICE_SOURCES = ['logammulia', 'pegadaian', 'ubslifestyle', 'galeri24'] as const;
+export const PRICE_SOURCES = [
+  'logammulia',
+  'pegadaian',
+  'ubslifestyle',
+  'galeri24',
+  'lotusarchi',
+] as const;
 export const PriceSource = z.enum(PRICE_SOURCES);
 export type PriceSource = z.infer<typeof PriceSource>;
 

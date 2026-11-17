@@ -1,6 +1,6 @@
 # SOURCE + MACRO_SERIES (DATA-MODEL §3.5). Ditulis manusia lewat PR; state bot ada di data/meta/status.json.
 #
-# Aktif: ubslifestyle (P1-04), pegadaian (P1-07), logammulia (P1-06, D-26), xaus (P2-03),
+# Aktif: lotusarchi (P6-09), ubslifestyle (P1-04), pegadaian (P1-07), logammulia (P1-06, D-26), xaus (P2-03),
 # jisdor (P2-04), worldbank (P2-05, hanya dipilih `plan` bila rata-rata bulan lalu belum ada).
 # `probe` dan run manual yang menyebut sumber secara eksplisit tetap bisa menjalankan sumber nonaktif.
 # `parser_version` = versi modul parser (`parserVersion` di apps/scraper/src/sources/*).
@@ -60,6 +60,19 @@ sources:
     parser_version: 1.0.0
     enabled: true # P6-06, 17 Nov 2026
     notes: JSON server route Nuxt tanpa token; brand dari vendorCode (= idVendor Pegadaian, D-20). Fallback __NUXT_DATA__ dari /harga-emas.
+
+  - id: lotusarchi
+    kind: prices
+    url: https://api.lotusarchi.com/harga-display
+    fetch_method: api
+    workflow: scrape-retail
+    update_calendar: daily # sementara; final setelah observasi P6-01 (±21 Nov 2026)
+    schedule_window: afternoon # jam terbit belum diketahui; 17 Nov pagi halaman masih 16 Nov, jadi dijadwalkan sore
+    stale_is_error_on_expected_day: false # final setelah observasi P6-01 (±21 Nov 2026); sementara tanpa alarm palsu
+    accept_previous_day: true # halaman bisa tertinggal sehari (D-42)
+    parser_version: 1.0.0
+    enabled: true # P6-09, 17 Nov 2026
+    notes: Dua GET JSON yang mengisi /pricing/ (D-65), yaitu api.lotusarchi.com/harga-display (harga keping, tanpa tanggal) dan lotusarchi.com/wp-json/la/v1/harga-gold (harga dasar + buyback per gram per tanggal). Tabel HTML /pricing/ basi, tidak dipakai. Buyback hanya per gram → baris 1 g (D-26). Tanpa jam terbit.
 
   - id: logammulia
     kind: prices

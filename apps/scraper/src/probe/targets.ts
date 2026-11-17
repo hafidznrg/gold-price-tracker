@@ -301,9 +301,13 @@ export async function probeLotusArchi(ctx: ProbeContext): Promise<TargetOutput> 
   const raws: RawFile[] = [];
   const get = recorder(ctx, raws);
   // Tanpa ensureOk: tantangan Cloudflare (403/503) harus dilaporkan oleh pemeriksaan.
-  const res = await get('pricing.html', 'https://lotusarchi.com/pricing/');
-  const result = checkLotusArchi(res.body, ctx.today);
-  result.checks.unshift({ name: 'HTTP 200', ok: res.status === 200, detail: String(res.status) });
+  const display = await get('harga-display.json', 'https://api.lotusarchi.com/harga-display');
+  const gold = await get('harga-gold.json', 'https://lotusarchi.com/wp-json/la/v1/harga-gold');
+  const result = checkLotusArchi(display.body, gold.body, ctx.today);
+  result.checks.unshift(
+    { name: 'HTTP 200 harga-display', ok: display.status === 200, detail: String(display.status) },
+    { name: 'HTTP 200 harga-gold', ok: gold.status === 200, detail: String(gold.status) },
+  );
   return { raws, result };
 }
 

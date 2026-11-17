@@ -4,7 +4,7 @@
 
 Platform untuk melihat pergerakan historis harga emas batangan di Indonesia: **harga jual toko**, **harga buyback**, dan **spread** untuk Antam, UBS, dan Galeri24, dibandingkan dengan harga emas dunia (XAU/USD) dan kurs USD/IDR.
 
-Data dikumpulkan otomatis setiap hari oleh GitHub Actions dari logammulia.com, pegadaian.co.id, dan ubslifestyle.com, disimpan sebagai CSV di repository ini (*git-as-database*), lalu disajikan sebagai situs statis di Vercel.
+Data dikumpulkan otomatis setiap hari oleh GitHub Actions dari logammulia.com, pegadaian.co.id, ubslifestyle.com, galeri24.co.id, dan lotusarchi.com, disimpan sebagai CSV di repository ini (*git-as-database*), lalu disajikan sebagai situs statis di Vercel.
 
 > **Status:** Fase 1 (pipeline harga ritel). Ketiga sumber ritel dijalankan otomatis setiap hari; notifikasi, karantina, dan backfill sudah aktif; observasi 7 hari menuju gerbang G1 sedang berjalan. Rencana lengkap di [`plan/`](./plan/README.md).
 

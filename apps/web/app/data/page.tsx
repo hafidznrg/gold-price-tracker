@@ -20,6 +20,8 @@ const DESC: Record<string, string> = {
   'logammulia-antam':
     '12 gramasi 0,5–1.000 g, butik Jakarta. Harga jual = Harga Dasar (belum termasuk PPh 0,25%); buyback hanya 1 g',
   'ubslifestyle-ubs': '13 pecahan 0,05–100 g, semua tahun produksi',
+  'lotusarchi-lotusarchi':
+    '10 gramasi 0,1–100 g dari situs resmi. Harga jual per keping; buyback hanya 1 g (per gram), sekali sehari, tanpa jam terbit',
   'galeri24-fisik':
     'Antam, UBS, Galeri24, dan Lotus Archi (0,5–1.000 g); harga jual dan buyback, sekali sehari',
   'galeri24-antam-non-pegadaian':

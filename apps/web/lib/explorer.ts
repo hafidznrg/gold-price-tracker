@@ -27,7 +27,13 @@ import { findGaps } from './spread';
 export const MAX_SERIES = 8;
 const DAY_MS = 86_400_000;
 const PRICES: readonly PriceField[] = ['sell', 'buyback'];
-const SOURCES: readonly PriceSource[] = ['logammulia', 'pegadaian', 'ubslifestyle', 'galeri24'];
+const SOURCES: readonly PriceSource[] = [
+  'logammulia',
+  'pegadaian',
+  'ubslifestyle',
+  'galeri24',
+  'lotusarchi',
+];
 const BRANDS: readonly Brand[] = ['antam', 'ubs', 'galeri24', 'pegadaian', 'lotusarchi'];
 
 /** Varian yang menjadi series sendiri di Explorer (tidak digabung ke series biasa). */

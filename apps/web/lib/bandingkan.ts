@@ -101,6 +101,7 @@ export const ALL_DEFS: readonly CompareDef[] = [
   def('g24-g24', 'galeri24', 'galeri24', 'gold_bar', 'g24', false),
   def('pg-lotus', 'pegadaian', 'lotusarchi', 'gold_bar', 'lotus', false),
   def('g24-lotus', 'galeri24', 'lotusarchi', 'gold_bar', 'lotus', false),
+  def('la-lotus', 'lotusarchi', 'lotusarchi', 'gold_bar', 'lotus', false),
   def('tab', 'pegadaian', 'pegadaian', 'gold_savings', 'tab', false, true),
   def('g24-antam-np', 'galeri24', 'antam', 'gold_bar', 'antam', false, false, {
     variant: 'non_pegadaian',

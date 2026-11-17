@@ -123,6 +123,26 @@ describe('buildCards', () => {
     expect(l.buyback).toBe(2_240_000);
   });
 
+  it('Lotus Archi menyebut harga lotusarchi.com bila ada, dan tetap aman bila belum ada', () => {
+    const l = cards.find((c) => c.id === 'galeri24-lotusarchi')!;
+    expect(l.note).not.toContain('lotusarchi.com');
+    const withOfficial = buildCards({
+      ...latest,
+      highlights: [
+        ...latest.highlights,
+        hl({
+          file: 'lotusarchi-lotusarchi',
+          source: 'lotusarchi',
+          brand: 'lotusarchi',
+          sell: 2_591_000,
+        }),
+      ],
+    } as unknown as LatestFile);
+    const w = withOfficial.find((c) => c.id === 'galeri24-lotusarchi')!;
+    expect(w.note).toContain('Di lotusarchi.com: Rp2.591.000');
+    expect(withOfficial.map((c) => c.id)).not.toContain('lotusarchi-lotusarchi');
+  });
+
   it('Antam dan UBS mempertahankan catatan lama; hanya Tabungan Emas berdeskripsi', () => {
     expect(cards[0]!.note).toContain('PPh 0,25%');
     expect(cards[0]!.note).toContain('Di Pegadaian: Rp2.564.000');

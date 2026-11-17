@@ -31,6 +31,14 @@ const catalog: CatalogItem[] = expandCatalog({
       active_to: null,
     })),
     {
+      source: 'lotusarchi',
+      brand: 'lotusarchi',
+      product: 'gold_bar',
+      weights: [0.1, 0.2, 0.5, 1, 2, 5, 10, 25, 50, 100],
+      active_from: '2010-01-01',
+      active_to: null,
+    },
+    {
       source: 'logammulia',
       brand: 'antam',
       product: 'gold_bar',
@@ -294,6 +302,52 @@ describe('Logam Mulia: V-04 dan V-06', () => {
   it('tanggal data kemarin → stale', () => {
     const r = validate(lmInput(lmDay('2026-10-25'), '2026-10-25'));
     expect(r.outcome).toBe('stale');
+  });
+});
+
+describe('Lotus Archi: V-03, V-04 dan V-06', () => {
+  const LA_WEIGHTS = [0.1, 0.2, 0.5, 1, 2, 5, 10, 25, 50, 100];
+  const laDay = (date: string, weights = LA_WEIGHTS) =>
+    weights.map((weight_g) =>
+      candidate({
+        source: 'lotusarchi',
+        brand: 'lotusarchi',
+        variant: '',
+        weight_g,
+        date,
+        sell_price: 2_591_000 * weight_g,
+        buyback_price: weight_g === 1 ? 2_258_000 : null,
+      }),
+    );
+  const laInput = (rows: Candidate[], dataDate: string, over: Partial<ValidateInput> = {}) =>
+    input(rows, {
+      source: 'lotusarchi',
+      parsed: { rows, dataDate, sourceUpdatedAt: null, stale: null },
+      ...over,
+    });
+
+  it('10 gramasi hari ini → ok', () => {
+    expect(validate(laInput(laDay(TODAY), TODAY)).outcome).toBe('ok');
+  });
+
+  it('8 gramasi lolos, 7 gagal V-04', () => {
+    expect(validate(laInput(laDay(TODAY, LA_WEIGHTS.slice(2)), TODAY)).outcome).toBe('ok');
+    const r = validate(laInput(laDay(TODAY, LA_WEIGHTS.slice(3)), TODAY));
+    expect(r.outcome === 'failed' && r.error_message).toBe('V-04: 7 gramasi (minimal 8)');
+  });
+
+  it('buyback 1 g ≥ jual 1 g → gagal V-03', () => {
+    const rows = laDay(TODAY).map((r) =>
+      r.weight_g === 1 ? { ...r, buyback_price: 2_591_000 } : r,
+    );
+    expect(validate(laInput(rows, TODAY)).outcome).toBe('failed');
+  });
+
+  it('tanggal data kemarin → stale; dengan accept_previous_day → ok', () => {
+    expect(validate(laInput(laDay('2026-10-25'), '2026-10-25')).outcome).toBe('stale');
+    expect(
+      validate(laInput(laDay('2026-10-25'), '2026-10-25', { acceptPreviousDay: true })).outcome,
+    ).toBe('ok');
   });
 });
 

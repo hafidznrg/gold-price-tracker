@@ -300,7 +300,11 @@ export function SpreadBoard({
               <span className="mr-1 flex-none whitespace-nowrap text-xs text-faint">
                 Pasangan populer
               </span>
-              {POPULAR_PAIRS.map((p) => {
+              {POPULAR_PAIRS.filter(
+                (p) =>
+                  sellOptions.some((o) => o.id === p.sell) &&
+                  buybackOptions.some((o) => o.id === p.buyback),
+              ).map((p) => {
                 const on = p.sell === sellId && p.buyback === pairBuy?.id;
                 return (
                   <button

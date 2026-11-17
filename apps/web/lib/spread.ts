@@ -174,6 +174,15 @@ export function ubsYear(latest: LatestFile): string {
   return hit?.variant ?? String(new Date().getUTCFullYear());
 }
 
+const LA_FILE = 'lotusarchi-lotusarchi';
+
+/**
+ * Seri lotusarchi.com baru ada setelah scrape pertama (P6-09). Selama file series-nya belum ada,
+ * opsinya disembunyikan: memilihnya memicu 404 saat memuat file.
+ */
+const hasLotusArchi = (latest: LatestFile): boolean =>
+  latest.series.some((s) => s.file === LA_FILE);
+
 /** Pilihan harga jual ("beli di") dan buyback ("jual ke"). Batangan Pegadaian tanpa buyback (D-07). */
 export function buildOptions(latest: LatestFile): {
   sell: SpreadOption[];
@@ -190,6 +199,17 @@ export function buildOptions(latest: LatestFile): {
     1,
     'Logam Mulia · Antam · 1 g',
     'Logam Mulia',
+  );
+  const la = opt(
+    'la-lotus',
+    'lotusarchi-lotusarchi',
+    'lotusarchi',
+    'lotusarchi',
+    'gold_bar',
+    [''],
+    1,
+    'Lotus Archi · Lotus Archi · 1 g',
+    'Lotus Archi (situs resmi)',
   );
   const ubs = opt(
     'ubsl-ubs',
@@ -259,6 +279,7 @@ export function buildOptions(latest: LatestFile): {
       g24('g24-g24', 'galeri24', 'Galeri24'),
       pg('pg-lotus', 'lotusarchi', 'Lotus Archi'),
       g24('g24-lotus', 'lotusarchi', 'Lotus Archi'),
+      ...(hasLotusArchi(latest) ? [la] : []),
       tab,
     ],
     buyback: [
@@ -269,6 +290,7 @@ export function buildOptions(latest: LatestFile): {
       g24('g24-ubs', 'ubs', 'UBS'),
       g24('g24-g24', 'galeri24', 'Galeri24'),
       g24('g24-lotus', 'lotusarchi', 'Lotus Archi'),
+      ...(hasLotusArchi(latest) ? [la] : []),
       tab,
     ],
   };
@@ -320,6 +342,7 @@ export const POPULAR_PAIRS: { sell: string; buyback: string; label: string }[] =
     buyback: 'g24-antam-np',
     label: 'Antam: Logam Mulia → Galeri24 (non-Pegadaian)',
   },
+  { sell: 'la-lotus', buyback: 'la-lotus', label: 'Lotus Archi: lotusarchi.com → lotusarchi.com' },
   { sell: 'pg-ubs', buyback: 'ubsl-ubs', label: 'UBS: Pegadaian → UBS Lifestyle' },
   { sell: 'ubsl-ubs', buyback: 'ubsl-ubs', label: 'UBS: UBS Lifestyle → UBS Lifestyle' },
 ];
@@ -445,24 +468,27 @@ export function compareItems(latest: LatestFile): CompareItem[] {
     ['Antam 1 g', 'Pegadaian → Logam Mulia', 'pg-antam', 'lm-antam'],
     ['Galeri24 1 g', 'Galeri24 → Galeri24', 'g24-g24', 'g24-g24'],
     ['Lotus Archi 1 g', 'Galeri24 → Galeri24', 'g24-lotus', 'g24-lotus'],
+    ['Lotus Archi 1 g', 'lotusarchi.com → lotusarchi.com', 'la-lotus', 'la-lotus'],
     ['Antam 1 g', 'Pegadaian → Galeri24', 'pg-antam', 'g24-antam'],
     ['Antam 1 g', 'Logam Mulia → Galeri24 (non-Pegadaian)', 'lm-antam', 'g24-antam-np'],
   ];
-  return rows.map(([name, src, sid, bid]) => {
-    const s = get(sid, sell);
-    const t = todayPair(latest, s, get(bid, buyback));
-    return {
-      name,
-      src,
-      color: s.color,
-      sell: t.sell,
-      buyback: t.buyback,
-      pct: spreadPct(t.sell, t.buyback),
-      source: s.source,
-      date: t.sellDate,
-      at: t.sellAt,
-    };
-  });
+  return rows
+    .filter(([, , sid]) => sell.some((o) => o.id === sid))
+    .map(([name, src, sid, bid]) => {
+      const s = get(sid, sell);
+      const t = todayPair(latest, s, get(bid, buyback));
+      return {
+        name,
+        src,
+        color: s.color,
+        sell: t.sell,
+        buyback: t.buyback,
+        pct: spreadPct(t.sell, t.buyback),
+        source: s.source,
+        date: t.sellDate,
+        at: t.sellAt,
+      };
+    });
 }
 
 // ---------------------------------------------------------------------------
@@ -480,7 +506,7 @@ export interface BarSourceDef {
   rows: WeightBarRow[];
 }
 
-/** Enam sumber grafik spread per gramasi: UBS Lifestyle, Logam Mulia, dan empat dari Galeri24. */
+/** Tujuh sumber grafik spread per gramasi: UBS Lifestyle, Logam Mulia, empat dari Galeri24, dan Lotus Archi (situs resmi). */
 export function barSources(latest: LatestFile): BarSourceDef[] {
   const year = ubsYear(latest);
   const mk = (
@@ -551,6 +577,19 @@ export function barSources(latest: LatestFile): BarSourceDef[] {
       'galeri24-lotusarchi',
       '',
     ),
+    ...(hasLotusArchi(latest)
+      ? [
+          mk(
+            'la-lotus',
+            'Lotus Archi (situs resmi) · buyback per gram',
+            'Lotus Archi · lotusarchi.com. Buyback selain 1 g = buyback per gram × berat (berlaku untuk semua ukuran keping)',
+            'lotusarchi',
+            'lotusarchi',
+            LA_FILE,
+            '',
+          ),
+        ]
+      : []),
   ];
 }
 

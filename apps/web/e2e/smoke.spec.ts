@@ -265,6 +265,14 @@ test.describe('Spread', () => {
     await buyAt.selectOption('pg-lotus');
     await expect(sellTo).toHaveValue('g24-lotus');
     await expect(page.getByText(/Galeri24 membeli kembali Antam dengan dua harga/)).toBeVisible();
+    // lotusarchi.com (P6-09): opsi hanya muncul setelah ada data; jual dan buyback konsisten.
+    if ((await buyAt.locator('option[value="la-lotus"]').count()) === 1) {
+      await buyAt.selectOption('la-lotus');
+      await expect(sellTo).toHaveValue('g24-lotus'); // pasangan sah pertama; la-lotus tersedia di daftar
+      await expect(sellTo.locator('option[value="la-lotus"]')).toHaveText(
+        'Lotus Archi · Lotus Archi · 1 g',
+      );
+    }
     expect(errors).toEqual([]);
   });
 

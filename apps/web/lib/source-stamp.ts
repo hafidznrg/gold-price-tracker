@@ -6,6 +6,7 @@ import { formatDate, formatTimeWib } from './format';
  * - UBS Lifestyle: tanpa jam yang dapat dipercaya → tanggal saja (D-19), walau `at` diberikan.
  * - Pegadaian: `source_updated_at` = waktu entri harga diterbitkan (±10.00–10.30 WIB, dari `idHarga`
  *   / `id` epoch ms), bukan jam snapshot 18.32 (D-25) → ditulis "harga terbit", bukan "snapshot".
+ * - Lotus Archi (lotusarchi.com): halaman tanpa jam terbit → tanggal saja (D-65).
  * - Logam Mulia: "Terakhir diperbarui" dari situs (D-26).
  */
 const SOURCE_DOMAIN: Record<PriceSource, string> = {
@@ -13,6 +14,7 @@ const SOURCE_DOMAIN: Record<PriceSource, string> = {
   pegadaian: 'pegadaian.co.id',
   ubslifestyle: 'ubslifestyle.com',
   galeri24: 'galeri24.co.id',
+  lotusarchi: 'lotusarchi.com',
 };
 
 const SOURCE_VERB: Record<PriceSource, string> = {
@@ -20,6 +22,7 @@ const SOURCE_VERB: Record<PriceSource, string> = {
   pegadaian: 'harga terbit',
   ubslifestyle: 'data',
   galeri24: 'harga terbit',
+  lotusarchi: 'data',
 };
 
 /** Bagian-bagian atribusi untuk tata letak berkolom: domain dan keterangan waktu. */
@@ -29,7 +32,7 @@ export function sourceStampParts(
   at: string | null,
 ): { domain: string; when: string } {
   const time =
-    source === 'ubslifestyle' || !at
+    source === 'ubslifestyle' || source === 'lotusarchi' || !at
       ? formatDate(date)
       : `${formatDate(date)}, ${formatTimeWib(at)}`;
   return { domain: SOURCE_DOMAIN[source], when: `${SOURCE_VERB[source]} ${time}` };

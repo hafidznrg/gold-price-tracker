@@ -115,11 +115,14 @@ export function perGramPrice(price: number | null, w: number): number | null {
 }
 
 /**
- * File series yang buyback-nya satu harga per gram untuk semua ukuran keping (D-39): Logam Mulia
- * menetapkan satu harga buyback per gram, dan data hanya mencatat baris 1 g. Buyback berat lain
+ * File series yang buyback-nya satu harga per gram untuk semua ukuran keping (D-39): Logam Mulia dan
+ * Lotus Archi (lotusarchi.com, D-65) menetapkan satu harga buyback per gram, dan data hanya mencatat baris 1 g. Buyback berat lain
  * dihitung di web (buyback 1 g × berat), tidak ditulis ke CSV.
  */
-export const PER_GRAM_BUYBACK_FILES: ReadonlySet<string> = new Set(['logammulia-antam']);
+export const PER_GRAM_BUYBACK_FILES: ReadonlySet<string> = new Set([
+  'logammulia-antam',
+  'lotusarchi-lotusarchi',
+]);
 
 export function hasPerGramBuyback(file: string): boolean {
   return PER_GRAM_BUYBACK_FILES.has(file);
@@ -138,6 +141,7 @@ export const SOURCE_LABELS: Record<PriceSource, string> = {
   pegadaian: 'Pegadaian',
   ubslifestyle: 'UBS Lifestyle',
   galeri24: 'Galeri24',
+  lotusarchi: 'Lotus Archi',
 };
 
 /** Domain untuk atribusi "Sumber: …". */
@@ -146,6 +150,7 @@ export const SOURCE_DOMAINS: Record<PriceSource, string> = {
   pegadaian: 'pegadaian.co.id',
   ubslifestyle: 'ubslifestyle.com',
   galeri24: 'galeri24.co.id',
+  lotusarchi: 'lotusarchi.com',
 };
 
 export const BRAND_LABELS: Record<Brand, string> = {
@@ -196,6 +201,8 @@ export function variantLabel(variant: string): string {
 
 /** "Antam · Logam Mulia", "Tabungan Emas · Pegadaian". */
 export function seriesGroupLabel(ref: Pick<SeriesRef, 'source' | 'brand' | 'product'>): string {
+  // Lotus Archi di situs resminya: "Lotus Archi · Lotus Archi" menyesatkan, tulis domainnya.
+  if (ref.source === 'lotusarchi') return `${displayBrand(ref)} · ${SOURCE_DOMAINS[ref.source]}`;
   return `${displayBrand(ref)} · ${SOURCE_LABELS[ref.source]}`;
 }
 
@@ -289,6 +296,7 @@ export const SCRAPER_LABELS: Record<ScraperId, string> = {
   jisdor: 'JISDOR',
   worldbank: 'World Bank Pink Sheet',
   galeri24: 'Galeri24',
+  lotusarchi: 'Lotus Archi',
 };
 
 /** Urutan file series di kartu Hari ini dan halaman Data (mockup). */
@@ -297,6 +305,7 @@ export const FILE_ORDER: readonly string[] = [
   'ubslifestyle-ubs',
   'galeri24-galeri24',
   'galeri24-lotusarchi',
+  'lotusarchi-lotusarchi',
   'galeri24-antam',
   'galeri24-ubs',
   'pegadaian-galeri24',

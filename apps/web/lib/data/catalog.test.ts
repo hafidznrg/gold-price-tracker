@@ -3,6 +3,8 @@ import {
   colorToken,
   compareFileIds,
   displayBrand,
+  hasPerGramBuyback,
+  seriesGroupLabel,
   parsePriceSeriesKey,
   parseSeriesKey,
   perGramPrice,
@@ -23,6 +25,19 @@ const ubs: SeriesRef = {
   variant: '2026',
   w: 0.5,
 };
+
+describe('lotusarchi (P6-09)', () => {
+  it('buyback per gram seperti Logam Mulia; label kartu memakai domain', () => {
+    expect(hasPerGramBuyback('lotusarchi-lotusarchi')).toBe(true);
+    expect(hasPerGramBuyback('logammulia-antam')).toBe(true);
+    expect(hasPerGramBuyback('galeri24-lotusarchi')).toBe(false);
+    expect(
+      seriesGroupLabel({ source: 'lotusarchi', brand: 'lotusarchi', product: 'gold_bar' }),
+    ).toBe('Lotus Archi · lotusarchi.com');
+    expect(compareFileIds('galeri24-lotusarchi', 'lotusarchi-lotusarchi')).toBeLessThan(0);
+    expect(compareFileIds('lotusarchi-lotusarchi', 'galeri24-antam')).toBeLessThan(0);
+  });
+});
 
 describe('kunci series', () => {
   it('bolak-balik', () => {

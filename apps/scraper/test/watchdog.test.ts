@@ -175,6 +175,20 @@ describe('watchdog', () => {
     expect(r.checked.sort()).toEqual(['galeri24', 'logammulia', 'pegadaian']);
   });
 
+  it('sumber ritel dengan stale_is_error_on_expected_day: false tidak diperiksa (lotusarchi, P6-09)', () => {
+    expect(base.config.sources.find((s) => s.id === 'lotusarchi')).toMatchObject({
+      enabled: true,
+      stale_is_error_on_expected_day: false,
+    });
+    const r = watchdog({
+      ...base,
+      event: 'workflow_dispatch',
+      schedule: '',
+      now: new Date('2026-11-17T15:00:00Z'),
+    });
+    expect(r.checked).not.toContain('lotusarchi');
+  });
+
   it('formatWatchdog: null bila lengkap, daftar sumber bila terlambat', () => {
     const ok = watchdog({
       config,

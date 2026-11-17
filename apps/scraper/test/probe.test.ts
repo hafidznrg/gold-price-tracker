@@ -155,16 +155,37 @@ describe('probe Galeri24 & Lotus Archi (P6-01)', () => {
     expect(failed(r)).toContain('__NUXT_DATA__ ada di /harga-emas');
   });
 
-  it('Lotus Archi lolos; tanggal terbaru dipilih', () => {
-    const r = checkLotusArchi(gz('lotusarchi/pricing-2026-11-17.html.gz'), NOW);
+  it('Lotus Archi lolos dari dua endpoint JSON; tanggal terbaru dari harga-gold', () => {
+    const r = checkLotusArchi(
+      read('lotusarchi/harga-display-2026-11-17.json'),
+      read('lotusarchi/harga-gold-2026-11-17.json'),
+      '2026-11-17',
+    );
     expect(failed(r)).toEqual([]);
-    expect(r.dataDate).toBe('2026-11-16');
+    expect(r.dataDate).toBe('2026-11-17');
+    const sync = r.checks.find((x) => x.name.startsWith('harga-display sinkron'));
+    expect(sync!.detail).toBe('sinkron 2026-11-17');
     const rows = r.checks.find((x) => x.name.startsWith('≥ 8 baris'));
-    expect(Number.parseInt(rows!.detail)).toBeGreaterThanOrEqual(8);
+    expect(Number.parseInt(rows!.detail)).toBe(10);
+  });
+
+  it('Lotus Archi: display tertinggal tetap lolos (informatif); JSON rusak gagal', () => {
+    const display = read('lotusarchi/harga-display-2026-11-17.json')
+      .toString()
+      .replace('2397000', '2406000');
+    const lag = checkLotusArchi(display, read('lotusarchi/harga-gold-2026-11-17.json'), NOW);
+    expect(failed(lag)).not.toContain('baris "1 gr"');
+    expect(lag.checks.find((x) => x.name.startsWith('harga-display sinkron'))!.detail).toMatch(
+      /display masih 2026-11-16, gold sudah 2026-11-17/,
+    );
+    const bad = checkLotusArchi('<html>', '{}', NOW);
+    expect(failed(bad)).toEqual(
+      expect.arrayContaining(['harga-display JSON', '≥ 8 baris gramasi + harga']),
+    );
   });
 
   it('Lotus Archi: halaman tantangan Cloudflare gagal', () => {
-    const r = checkLotusArchi('<html><title>Just a moment...</title></html>', NOW);
+    const r = checkLotusArchi('<html><title>Just a moment...</title></html>', '{}', NOW);
     expect(failed(r)).toContain('bukan halaman tantangan Cloudflare');
   });
 });

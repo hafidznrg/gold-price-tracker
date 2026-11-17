@@ -301,14 +301,19 @@ describe('Galeri24 dan Lotus Archi (P6-10)', () => {
       'Antam: Pegadaian → Logam Mulia',
       'Galeri24: Galeri24 → Galeri24',
       'Antam: Logam Mulia → Galeri24 (non-Pegadaian)',
+      'Lotus Archi: lotusarchi.com → lotusarchi.com',
       'UBS: Pegadaian → UBS Lifestyle',
       'UBS: UBS Lifestyle → UBS Lifestyle',
     ]);
     expect(POPULAR_PAIRS.find((p) => p.label.includes('non-Pegadaian'))!.buyback).toBe(
       'g24-antam-np',
     );
+    const withLa = buildOptions({
+      series: [{ file: 'lotusarchi-lotusarchi', variant: '', w: 1, current: true }],
+      as_of: null,
+    } as unknown as LatestFile);
     for (const p of POPULAR_PAIRS) {
-      expect(compatible(find(sell, p.sell), find(buyback, p.buyback))).toBe(true);
+      expect(compatible(find(withLa.sell, p.sell), find(withLa.buyback, p.buyback))).toBe(true);
     }
   });
 
@@ -333,7 +338,7 @@ describe('Galeri24 dan Lotus Archi (P6-10)', () => {
     expect(p.buyback).toBe(2_178_000);
   });
 
-  it('barSources: enam sumber berurutan, warna brand, bukan emas', () => {
+  it('barSources: enam sumber berurutan (tujuh bila lotusarchi.com sudah ada), warna brand, bukan emas', () => {
     const bars = barSources(latest);
     expect(bars.map((b) => b.id)).toEqual([
       'ubsl',
@@ -363,5 +368,56 @@ describe('Galeri24 dan Lotus Archi (P6-10)', () => {
     expect(names).toContain('Galeri24 1 g · Galeri24 → Galeri24');
     expect(names).toContain('Lotus Archi 1 g · Galeri24 → Galeri24');
     expect(names).toContain('Antam 1 g · Logam Mulia → Galeri24 (non-Pegadaian)');
+  });
+
+  it('la-lotus disembunyikan selama file lotusarchi-lotusarchi belum ada (tanpa 404)', () => {
+    expect(sell.map((x) => x.id)).not.toContain('la-lotus');
+    expect(buyback.map((x) => x.id)).not.toContain('la-lotus');
+    expect(barSources(latest).map((b) => b.id)).not.toContain('la-lotus');
+    expect(compareItems(latest).map((c) => c.src)).not.toContain('lotusarchi.com → lotusarchi.com');
+  });
+
+  it('la-lotus (lotusarchi.com): jual dan buyback, buyback per gram', () => {
+    const withLa = {
+      series: [{ file: 'lotusarchi-lotusarchi', variant: '', w: 1, current: true }],
+      as_of: null,
+    } as unknown as LatestFile;
+    const { sell, buyback } = buildOptions(withLa);
+    const la = find(sell, 'la-lotus');
+    expect(find(buyback, 'la-lotus')).toMatchObject({ file: 'lotusarchi-lotusarchi', w: 1 });
+    expect(la).toMatchObject({
+      source: 'lotusarchi',
+      brand: 'lotusarchi',
+      label: 'Lotus Archi · Lotus Archi · 1 g',
+      color: 'lotus',
+    });
+    expect(buybackChoices(la, buyback).map((x) => x.id)).toEqual(['g24-lotus', 'la-lotus']);
+    expect(compareItems(withLa).map((c) => c.src)).toContain('lotusarchi.com → lotusarchi.com');
+    const bar = barSources(withLa).find((b) => b.id === 'la-lotus')!;
+    expect(bar).toMatchObject({
+      label: 'Lotus Archi (situs resmi) · buyback per gram',
+      source: 'lotusarchi',
+    });
+  });
+
+  it('weightSpreads lotusarchi: buyback 1 g × berat untuk keping lain (per gram, D-65)', () => {
+    const mk = (w: number, sellP: number, buyP: number | null) =>
+      ({
+        source: 'lotusarchi',
+        file: 'lotusarchi-lotusarchi',
+        variant: '',
+        w,
+        current: true,
+        date: '2026-11-17',
+        sell: sellP,
+        buyback: buyP,
+        source_updated_at: null,
+      }) as unknown as LatestSeries;
+    const L = {
+      series: [mk(1, 2_591_000, 2_249_000), mk(5, 12_592_000, null)],
+    } as unknown as LatestFile;
+    const rows = weightSpreads(L, 'lotusarchi-lotusarchi', '');
+    expect(rows[0]!.value).toBeCloseTo((342_000 / 2_591_000) * 100, 6);
+    expect(rows[1]!.value).toBeCloseTo(((12_592_000 - 5 * 2_249_000) / 12_592_000) * 100, 6);
   });
 });

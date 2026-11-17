@@ -273,7 +273,7 @@ Nilai `update_calendar` final per sumber ditetapkan dari observasi di Fase 0–1
 
 | Enum | Nilai |
 | --- | --- |
-| `source` (harga) | `logammulia`, `pegadaian`, `ubslifestyle`, `galeri24` |
+| `source` (harga) | `logammulia`, `pegadaian`, `ubslifestyle`, `galeri24`, `lotusarchi` (lotusarchi.com, D-65) |
 | `source` (makro) | `xaus`, `worldbank`, `bi`, `ecb`, `wdi` |
 | `brand` | `antam`, `ubs`, `galeri24`, `pegadaian` (Tabungan Emas, D-30), `lotusarchi` (Galeri24, Lotus Archi). Galeri24 juga menerbitkan Antam yang dibeli di luar Pegadaian: `brand = antam`, `variant = 'non_pegadaian'` |
 | `product` | `gold_bar` (default); varian lain ditambah lewat katalog, mis. `gold_bar_retro` |

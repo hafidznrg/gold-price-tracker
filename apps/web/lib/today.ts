@@ -54,7 +54,12 @@ function cardNote(h: Highlight, all: Highlight[]): string {
     return `Buyback untuk keping tahun produksi ${h.variant || '—'}${pg('ubs') ? ` ·${pg('ubs')}` : ''}`;
   if (h.source === 'galeri24') {
     const p = pg(h.brand);
-    return `Harga dan buyback dari situs Galeri24.${p ? `${p} (tanpa buyback).` : ''}`;
+    const official =
+      h.brand === 'lotusarchi'
+        ? all.find((o) => o.source === 'lotusarchi' && o.product === h.product)
+        : undefined;
+    const la = official?.sell != null ? ` Di lotusarchi.com: ${formatRupiah(official.sell)}.` : '';
+    return `Harga dan buyback dari situs Galeri24.${p ? `${p} (tanpa buyback).` : ''}${la}`;
   }
   return 'Pegadaian tidak menampilkan harga buyback untuk emas batangan.';
 }

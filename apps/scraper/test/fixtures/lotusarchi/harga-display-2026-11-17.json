@@ -1,0 +1,24 @@
+{
+  "data": [
+    { "id": 1, "produk": "0,1 gr", "type": "gold", "harga": 320000 },
+    { "id": 2, "produk": "0,2 gr", "type": "gold", "harga": 611000 },
+    { "id": 3, "produk": "0,5 gr", "type": "gold", "harga": 1254000 },
+    { "id": 4, "produk": "0,5 gr WB", "type": "gold", "harga": 1254000 },
+    { "id": 5, "produk": "1 gr", "type": "gold", "harga": 2397000 },
+    { "id": 6, "produk": "2 gr", "type": "gold", "harga": 4735000 },
+    { "id": 7, "produk": "5 gr", "type": "gold", "harga": 11718000 },
+    { "id": 8, "produk": "10 gr", "type": "gold", "harga": 23361000 },
+    { "id": 9, "produk": "25 gr", "type": "gold", "harga": 58229000 },
+    { "id": 10, "produk": "50 gr", "type": "gold", "harga": 116427000 },
+    { "id": 11, "produk": "100 gr", "type": "gold", "harga": 232677000 },
+    { "id": 12, "produk": "Paper Gold 0,1 gr", "type": "gold", "harga": 365000 },
+    { "id": 13, "produk": "Paper Gold 0,2 gr", "type": "gold", "harga": 613000 },
+    { "id": 14, "produk": "Paper Gold 0,5 gr", "type": "gold", "harga": 1381000 },
+    { "id": 15, "produk": "Paper Gold 1 gr", "type": "gold", "harga": 2510000 },
+    { "id": 16, "produk": "Silver 50 gr", "type": "silver", "harga": 2650000 },
+    { "id": 17, "produk": "Silver 100 gr", "type": "silver", "harga": 5200000 },
+    { "id": 18, "produk": "Silver 250 gr", "type": "silver", "harga": 12750000 },
+    { "id": 19, "produk": "Silver 500 gr", "type": "silver", "harga": 24500000 },
+    { "id": 20, "produk": "Silver 1000 gr", "type": "silver", "harga": 48000000 }
+  ]
+}

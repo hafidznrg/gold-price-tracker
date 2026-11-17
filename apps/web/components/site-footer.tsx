@@ -15,6 +15,7 @@ const SOURCES: { title: string; items: string[] }[] = [
     items: [
       'Logam Mulia (Antam)',
       'UBS Lifestyle',
+      'Lotus Archi (lotusarchi.com)',
       'Galeri24: Antam, UBS, Galeri24, Lotus Archi',
       'Pegadaian: Antam, UBS, Galeri24, Lotus Archi, Tabungan Emas',
     ],

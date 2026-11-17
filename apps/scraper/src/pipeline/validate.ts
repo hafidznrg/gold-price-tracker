@@ -33,7 +33,13 @@ export const MAX_PRICE_JUMP = 0.1;
 export const MAX_HISTORY_REVISIONS = 20;
 
 /** V-04: jumlah baris minimum per sumber. */
-export const MIN_ROWS = { ubslifestyle: 13, pegadaian: 5, logammulia: 12, galeri24: 5 } as const;
+export const MIN_ROWS = {
+  ubslifestyle: 13,
+  pegadaian: 5,
+  logammulia: 12,
+  galeri24: 5,
+  lotusarchi: 8,
+} as const;
 /** Brand yang wajib ada di Pegadaian (D-20). */
 export const PEGADAIAN_BRANDS = ['antam', 'ubs', 'galeri24'] as const;
 /** Brand wajib di Galeri24 (P6-05); Lotus Archi dan Antam non-Pegadaian opsional. */
@@ -138,6 +144,10 @@ function checkMinRows(
         ? null
         : `V-04: ${short.map(([b, n]) => `${b} ${n} gramasi`).join(', ')} (minimal ${MIN_ROWS.galeri24} per brand)`;
     }
+    case 'lotusarchi':
+      return rows.length >= MIN_ROWS.lotusarchi
+        ? null
+        : `V-04: ${rows.length} gramasi (minimal ${MIN_ROWS.lotusarchi})`;
     case 'logammulia':
       // `note` = fallback 1 g saat tabel gagal dibaca (FR-04): sengaja hanya satu baris 1 g.
       return (note && rows.length === 1 && rows[0]!.weight_g === 1) ||
