@@ -42,7 +42,7 @@ Proyek ini **non-komersial**, untuk kepentingan pribadi sekaligus **portofolio d
 - Akun pengguna, login, portofolio pribadi tersimpan di server.
 - Prediksi harga.
 - Monetisasi.
-- Brand lain di luar Antam, UBS, Galeri24 (arsitektur disiapkan agar mudah ditambah).
+- Brand lain di luar Antam, UBS, Galeri24, dan Lotus Archi (arsitektur disiapkan agar mudah ditambah; Lotus Archi masuk Fase 6, D-65).
 
 ## 5. Pengguna
 
@@ -59,6 +59,7 @@ Proyek ini **non-komersial**, untuk kepentingan pribadi sekaligus **portofolio d
 | --- | --- | --- | --- | --- |
 | ubslifestyle.com/harga-buyback-hari-ini | UBS Gold Bar 0,05–100 g: harga beli konsumen + buyback, per tahun produksi | Tabel HTML server-rendered + endpoint grafik `admin-ajax` untuk tanggal data (D-19) | ±10.00 WIB, Senin–Sabtu | Rendah |
 | pegadaian.co.id/harga-emas | Galeri24 (0,5–1.000 g), UBS (0,5–500 g), Antam (0,5–100 g): harga jual saja — buyback batangan tidak ditampilkan (Q-1) | `GET /gold/prices/table` (JSON, tanpa token; D-20) | ±10.30 WIB per 24 Okt 2026 (`idHarga`); tidak diperbarui Minggu | Rendah |
+| galeri24.co.id/harga-emas | Antam (0,5–100 g), UBS (0,5–500 g), Galeri24 (0,5–1.000 g): harga jual **dan buyback**; opsional Lotus Archi (1–100 g) dan buyback Antam non-Pegadaian (D-64, D-65) | `GET /api/gold-prices/page-data` (JSON server route Nuxt, tanpa token); fallback `__NUXT_DATA__` di `/harga-emas`; histori sejak 1 Feb 2024 dari `/api/gold-prices` (Q-7) | Harga D dibuat sore/malam D−1 (±17.50–21.40 WIB), revisi pagi D (±10.14 WIB); setiap hari | Rendah |
 | logammulia.com | Antam 1 g: histori jual (sejak 2010) dan buyback (sejak 2015); opsional tabel gramasi | Sesi browser + token CSRF → endpoint JSON grafik (belum terverifikasi: situs maintenance sejak 25 Okt 2026) | Setelah 08.30 WIB | Tinggi |
 | xaus.com API | XAU/USD harian (≤ 5 tahun) + spot | REST JSON tanpa key; histori = futures GC=F, spot = gold-api.com (indikatif) | Harian | Rendah |
 | World Bank Pink Sheet | XAU/USD rata-rata bulanan, histori panjang | XLSX bulanan; URL ber-hash dari tautan halaman Commodity Markets (D-21) | Bulanan (±tanggal 2) | Rendah |
@@ -180,7 +181,7 @@ Ringkasan; rincian dan alasannya di [DECISIONS.md](./DECISIONS.md).
 
 | ID | Pertanyaan | Kapan diputuskan |
 | --- | --- | --- |
-| Q-1 | Apakah Pegadaian menampilkan buyback per brand? Jika tidak, dari mana buyback Antam/Galeri24? | Setelah Fase 1 berjalan. **Temuan P0-08:** tidak — endpoint dan halaman hanya memuat harga jual emas batangan (`hargaBeli: null`); buyback hanya untuk Tabungan Emas. Sumber buyback Antam/Galeri24 masih terbuka (P5-06) |
+| Q-1 | Apakah Pegadaian menampilkan buyback per brand? Jika tidak, dari mana buyback Antam/Galeri24? | Setelah Fase 1 berjalan. **Temuan P0-08:** tidak — endpoint dan halaman hanya memuat harga jual emas batangan (`hargaBeli: null`); buyback hanya untuk Tabungan Emas. **Terjawab (17 Nov 2026):** buyback Antam, UBS, Galeri24 per gramasi dari galeri24.co.id (sumber `galeri24`, D-64, Fase 6) |
 | Q-2 | Apakah grafik histori UBS Lifestyle memuat endpoint JSON yang bisa dipakai untuk backfill? | **Terjawab (P0-07):** ya, tetapi hanya buyback 1 g sejak Nov 2023, bercelah, tahun produksi tidak diketahui — TECH-SPEC §5.1 |
 | Q-3 | Sumber kurs USD/IDR tahunan 1996–1998 yang terverifikasi | **Terjawab (P2-10, 1 Nov 2026):** World Bank WDI `PA.NUS.FCRF` (IMF IFS) lewat API — 2.342,30 / 2.909,38 / 10.013,62; dicek silang dengan OECD MEI dan rata-rata ECB 1999 (D-33) |
 | Q-4 | Perlukah *self-hosted runner* Indonesia? | **Terjawab (P0-11, 25 Okt 2026):** tidak untuk UBS Lifestyle, Pegadaian, xaus, JISDOR, World Bank, Frankfurter — semua lolos dari runner GitHub di AS. Logam Mulia belum dapat dinilai (situs maintenance untuk semua pengunjung) |

@@ -58,7 +58,7 @@ sources:
     stale_is_error_on_expected_day: true
     accept_previous_day: true # run terlambat lewat tengah malam tidak jadi alarm palsu (D-42)
     parser_version: 1.0.0
-    enabled: false # true setelah P6-04 + P6-05 lolos dan P6-01 hijau dari runner
+    enabled: true # P6-06, 17 Nov 2026
     notes: JSON server route Nuxt tanpa token; brand dari vendorCode (= idVendor Pegadaian, D-20). Fallback __NUXT_DATA__ dari /harga-emas.
 
   - id: logammulia

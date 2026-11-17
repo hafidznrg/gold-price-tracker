@@ -273,6 +273,15 @@ Hasil riset P0-10 (25 Okt 2026, fixture di `apps/scraper/test/fixtures/{frankfur
 - **World Bank Pink Sheet:** halaman https://www.worldbank.org/en/research/commodity-markets menautkan `https://thedocs.worldbank.org/en/doc/<hash>-<kode-rilis>/related/CMO-Historical-Data-Monthly.xlsx`; **hash berubah setiap rilis**, jadi scraper membaca halaman lalu mengambil tautan berakhiran `CMO-Historical-Data-Monthly.xlsx`. File ±590 KB, sheet `Monthly Prices`: baris judul ("Updated on October 02, 2026"), baris nama komoditas (kolom `Gold`, saat ini indeks 69 dari 89), baris satuan (`($/troy oz)`), lalu data dengan label periode `YYYYMmm` (1960M01 → bulan lalu). Nilai emas berupa **bilangan bulat** (dibulatkan World Bank). Parse berdasarkan nama kolom `Gold`, bukan posisi. Rilis bulanan ±tanggal 2 memuat bulan sebelumnya, sesuai aturan `plan` (tanggal ≥ 5).
 - **Pustaka XLSX:** SheetJS dipasang dari CDN resmi (`https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz`) karena paket `xlsx` di registri npm berhenti di 0.18.5 yang memiliki kerentanan yang sudah diketahui (D-21).
 
+### 5.7 Galeri24 (`galeri24.ts`)
+
+- **Endpoint:** `GET https://galeri24.co.id/api/gold-prices/page-data?take=1000&date=YYYY-MM-DD` → `{ count, results: GoldPrice[] }` (±111 baris, 19 vendor). Parameter `date` diabaikan server; respons selalu harga yang berlaku hari ini. Fallback: `GET /harga-emas` → `<script id="__NUXT_DATA__">` (devalue Nuxt 3, reviver identitas untuk `Reactive`/`Ref`/…) → `data.goldPrice`. Raw = `{ via: page-data | nuxt, body }`.
+- **Field:** `vendorCode`, `date`, `denomination`, `price`, `margin`, `sellingPrice`, `buybackPrice`, `status`, `updatedAt` — semua angka berupa string. `buybackPrice "0"` → kosong.
+- **Pemetaan:** vendor → brand/varian (D-64, D-65): Antam, UBS, Galeri24 wajib; Lotus Archi dan Antam non-Pegadaian (`variant = non_pegadaian`) opsional. `status ≠ 1` dan vendor lain diabaikan; duplikat kunci → `updatedAt` terbesar. `source_updated_at` = `updatedAt` (+07:00). `price`/`margin` hanya di raw (V-12).
+- **Waktu terbit:** harga tanggal D dibuat D−1 ±17.50–21.40 WIB, revisi pagi D (mis. Antam 10.14 WIB). Halaman tetap menampilkan D sampai tengah malam. Jendela `afternoon` (15.05/17.05 WIB); observasi probe P6-01 sampai ±21 Nov 2026 dapat menggeser jendela.
+- **Validasi khusus:** V-04 ≥ 5 gramasi per brand wajib (`variant = `), V-12 rumus harga jual, tanggal sama antar brand wajib.
+- **Histori (P6-11, Q-7):** `GET /api/gold-prices?take=10000&page=N`, urut `date` menurun, 18 halaman sejak 1 Feb 2024.
+
 ## 6. Pipeline
 
 Ringkasan; YAML lengkap, kontrak antar job, logika slot, notifikasi, matriks kegagalan, kredensial, dan pengaturan Vercel ada di [WORKFLOWS.md](./WORKFLOWS.md).

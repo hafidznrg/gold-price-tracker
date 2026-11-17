@@ -563,3 +563,24 @@ Log keputusan produk dan teknis (format ringkas ala ADR). Keputusan baru ditamba
 - Watchdog `afternoon` 18.05 WIB (`5 11 * * *`) memeriksa sumber ritel jendela `afternoon`; watchdog siang 13.05 WIB tidak lagi memeriksa UBS.
 - Jam baru masuk ke Cron Trigger yang sudah ada (`5 2,5,6,8,10,11,12,15,16 * * *`), jadi tetap 2 dari 5 Cron Trigger paket Free. Worker harus di-deploy ulang.
 **Konsekuensi:** UBS dicoba 15.05 dan 17.05 WIB plus cadangan GitHub; data UBS Sabtu kini diharapkan, sehingga stale Sabtu dicoba ulang, dialarmkan watchdog, dan tampil sebagai celah di grafik bila hilang. Minggu tetap bukan hari terbit. Harga 14 Nov hanya bisa ditambal buyback 1 g lewat `backfill.yml` (ubs-history); harga jual per gramasi hari itu hilang.
+
+
+### D-64 — Galeri24 sebagai sumber buyback Antam/UBS/Galeri24 (menjawab Q-1, Q-7)
+
+**Konteks:** Q-1/P5-06: Pegadaian tidak menampilkan buyback emas batangan. galeri24.co.id menampilkan harga jual + buyback per vendor dan gramasi lewat server route Nuxt `GET /api/gold-prices/page-data` tanpa token; `vendorCode` sama dengan `idVendor` Pegadaian. Probe dari runner GitHub (AS) lolos 17 Nov 2026 (P6-01). Server mengabaikan parameter `date`. Endpoint histori `GET /api/gold-prices` memuat ±178 ribu baris sejak 1 Feb 2024 (18 halaman `take=10000`); revisi intraday tetap berstatus 1.
+**Keputusan:**
+- Sumber baru `galeri24` (`galeri24@1.0.0`, `fetch_method: api`, jendela `afternoon`, kalender `daily`, `accept_previous_day`), fallback `__NUXT_DATA__` dari `/harga-emas` (devalue) hanya saat jalur utama gagal.
+- Brand dan varian dari `vendorCode`, `status = 1`. Brand wajib antam/ubs/galeri24 (V-04 ≥ 5 gramasi, tanggal sama). **Baris opsional**: Lotus Archi (D-65) dan Antam non-Pegadaian (`00005201905007` → `antam`, `variant = non_pegadaian`, buyback untuk keping yang dibeli di luar Pegadaian) — tidak dihitung di V-04, tidak ikut cek tanggal; tanggal beda atau V-03 → baris dibuang + `note`. Vendor lain diabaikan.
+- V-12 baru: `sellingPrice = ceil(price × (1 + margin/100) / 1000) × 1000`; pelanggaran → karantina `PRICE_FORMULA` lewat `ParseResult.suspect` (price/margin tidak masuk CSV).
+- Web: hanya varian `` dan tahun produksi yang digabung (`isYearVariant`); varian lain selalu series terpisah.
+- **Q-7 disetujui pemilik (17 Nov 2026):** histori dari `/api/gold-prices` boleh diambil sekali jalan (jeda ≥ 5 detik, hanya vendor target, per kunci `updatedAt` terbesar, `origin = backfill`, tanggal yang sudah di-scrape dibuang) — P6-11.
+**Konsekuensi:** buyback harian Antam, UBS, Galeri24 tersedia; Q-1 terjawab dan P5-06 selesai. Harga jual Antam/UBS/Galeri24 tercatat dua kali (`pegadaian` + `galeri24`) sebagai seri terpisah. Run yang terlambat lewat tengah malam tidak bisa mengambil harga kemarin.
+
+### D-65 — Brand Lotus Archi dari tiga kanal (mengubah D-30 untuk Pegadaian)
+
+**Konteks:** Lotus Archi (`00005202001009`) ada di tabel Galeri24 (jual + buyback) dan Pegadaian (jual), serta di toko resminya lotusarchi.com (harga keping + buyback per gram, di belakang Cloudflare; probe dari runner lolos 17 Nov 2026). Harga berbeda per kanal. `robots.txt` lotusarchi.com: `User-agent: *` → `Allow: /` dengan `Content-Signal ai-train=no`; proyek mengambil satu halaman per hari untuk arsip harga, bukan pelatihan AI.
+**Keputusan:**
+- Brand baru `lotusarchi`. Di `galeri24` dan `pegadaian` (`pegadaian@1.2.0`) ia brand **opsional** (aturan baris opsional D-64). Ini mengubah kalimat D-30 "vendor tambahan tidak diambil" khusus Lotus Archi.
+- Histori Pegadaian sejak 25 Okt 2026 dipulihkan dari `data/raw/pegadaian/` dengan job lokal `pegadaian-raw-brand` (P6-08; 138 baris, 23 tanggal).
+- Sumber `lotusarchi` (lotusarchi.com/pricing) dibuat di P6-09; bila Cloudflare menantang runner, ditandai tertahan tanpa stealth (D-24).
+**Konsekuensi:** hingga tiga seri Lotus Archi; spread Lotus Archi tersedia dari Galeri24. Buyback lotusarchi.com hanya disimpan di baris 1 g (pola D-26).

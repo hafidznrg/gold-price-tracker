@@ -114,7 +114,7 @@ describe('watchdog', () => {
     expect(r.overdue.map((o) => o.source)).toEqual(['logammulia']);
   });
 
-  it('cakupan afternoon (18.05 WIB): hanya UBS, termasuk hari Sabtu (D-63)', () => {
+  it('cakupan afternoon (18.05 WIB): UBS dan Galeri24, termasuk hari Sabtu (D-63, D-64)', () => {
     const r = watchdog({
       ...base,
       event: 'schedule',
@@ -122,8 +122,8 @@ describe('watchdog', () => {
       now: new Date('2026-11-14T11:05:00Z'), // Sabtu 18.05 WIB
     });
     expect(r).toMatchObject({ date: '2026-11-14', scope: 'afternoon' });
-    expect(r.checked).toEqual(['ubslifestyle']);
-    expect(r.overdue.map((o) => o.source)).toEqual(['ubslifestyle']);
+    expect(r.checked).toEqual(['ubslifestyle', 'galeri24']);
+    expect(r.overdue.map((o) => o.source)).toEqual(['ubslifestyle', 'galeri24']);
   });
 
   it('cakupan all: ritel butuh data bertanggal hari itu, makro cukup sukses hari itu', () => {
@@ -141,7 +141,7 @@ describe('watchdog', () => {
       now: new Date('2026-11-11T16:55:00Z'),
     });
     expect(r.scope).toBe('all');
-    expect(r.overdue.map((o) => o.source).sort()).toEqual(['jisdor', 'pegadaian']);
+    expect(r.overdue.map((o) => o.source).sort()).toEqual(['galeri24', 'jisdor', 'pegadaian']);
   });
 
   it('sukses makro dini hari = run kemarin yang terlambat, belum dihitung', () => {
@@ -165,14 +165,14 @@ describe('watchdog', () => {
     expect(r.date).toBe('2026-11-11');
   });
 
-  it('sumber yang tidak diharapkan hari itu tidak diperiksa (Minggu: UBS dan makro libur)', () => {
+  it('sumber yang tidak diharapkan hari itu tidak diperiksa (Minggu: UBS dan makro libur, Galeri24 harian)', () => {
     const r = watchdog({
       ...base,
       event: 'workflow_dispatch',
       schedule: '',
       now: new Date('2026-11-15T15:00:00Z'), // Minggu 22.00 WIB
     });
-    expect(r.checked.sort()).toEqual(['logammulia', 'pegadaian']);
+    expect(r.checked.sort()).toEqual(['galeri24', 'logammulia', 'pegadaian']);
   });
 
   it('formatWatchdog: null bila lengkap, daftar sumber bila terlambat', () => {
