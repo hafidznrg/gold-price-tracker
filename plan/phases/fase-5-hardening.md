@@ -26,6 +26,7 @@
 
 - [ ] **P5-05** Halaman **Kualitas data** (`/kualitas`) dari `quality.json`: heatmap kelengkapan per sumber per bulan (definisi DATA-MODEL §7), riwayat run, karantina terbuka, revisi terbaru, daftar insiden. — `FR-36` · M
 - [ ] **P5-06** Tindak lanjut **Q-1** (buyback Antam/Galeri24 di Pegadaian): putuskan sumber dan catat di DECISIONS.md; bila ada sumber baru, buat sebagai modul scraper baru. — `D-07` · S
+  - *17 Nov 2026:* sumber ditemukan (galeri24.co.id, jual + buyback per gramasi); dikerjakan sebagai [Fase 6](./fase-6-galeri24-lotus-archi.md). Centang saat D-64 tercatat.
 
 ### Dokumentasi dan portofolio
 
@@ -47,7 +48,7 @@
 
 ## Backlog setelah v1
 
-- Brand lain (Lotus Archi, King Halim, dll.) sebagai modul scraper baru.
+- Brand lain (King Halim, Hartadinata/EmasKu, BSI Gold, dll.) sebagai modul scraper baru. Lotus Archi dipindah ke [Fase 6](./fase-6-galeri24-lotus-archi.md).
 - Harga intraday bila sumber berubah lebih dari sekali sehari.
 - Alert harga (mis. spread di bawah ambang).
 - Migrasi CSV → DuckDB saat build bila query makin berat.

@@ -10,6 +10,7 @@ Folder ini adalah panduan implementasi proyek. Mulai dari PRD untuk memahami **a
 | [WORKFLOWS.md](./WORKFLOWS.md) | YAML GitHub Actions, kontrak antar job, notifikasi, matriks kegagalan, kredensial, Vercel |
 | [DECISIONS.md](./DECISIONS.md) | Log keputusan produk dan teknis |
 | [phases/](./phases/) | Satu file per fase: tujuan, tugas, kriteria selesai, gerbang keluar |
+| [research/](./research/) | Catatan riset sumber yang belum/baru masuk TECH-SPEC (Galeri24, Lotus Archi) |
 | [mockup/](./mockup/) | Mockup web semua halaman (acuan visual Fase 3–4): token desain, konvensi tampilan, pemetaan ke data nyata |
 
 ## Fase implementasi
@@ -22,6 +23,7 @@ flowchart LR
   F3[Fase 3<br/>Web MVP]
   F4[Fase 4<br/>Analitik & fleksibilitas]
   F5[Fase 5<br/>Hardening & portofolio]
+  F6[Fase 6<br/>Galeri24 & Lotus Archi]
   R((Rilis publik))
 
   F0 -->|G0| F1
@@ -30,6 +32,7 @@ flowchart LR
   F2 -->|G2| F4
   F3 --> R
   R --> F4 --> F5
+  F1 -->|G1| F6
 ```
 
 | Fase | Fokus | Bergantung pada | Gerbang keluar | Perkiraan usaha* |
@@ -40,6 +43,7 @@ flowchart LR
 | [3](./phases/fase-3-web-mvp.md) | Next.js, build-data, halaman Hari ini / Explorer / Spread / Data, deploy | G1 (pengembangan bisa mulai dengan fixture) | **G3** — rilis publik dengan data ≥ 14 hari | 5–7 hari |
 | [4](./phases/fase-4-analitik.md) | Bandingkan, Kalkulator, grafik kelipatan, premi, mode nilai & agregasi, API statis | G2, G3 | **G4** — semua FR P1 selesai | 5–7 hari |
 | [5](./phases/fase-5-hardening.md) | Reparse, halaman kualitas data, dokumentasi, studi kasus portofolio | G4 | **G5** — siap dipresentasikan | 3–5 hari |
+| [6](./phases/fase-6-galeri24-lotus-archi.md) | Sumber `galeri24` (buyback Antam/UBS/Galeri24, menutup Q-1), brand Lotus Archi dari Galeri24, Pegadaian, dan lotusarchi.com | G1 (paralel dengan Fase 5; menggantikan P5-06) | **G6** — 7 hari run `galeri24` hijau, histori Galeri24 terisi, seri Lotus Archi tampil di web | 5–7 hari |
 
 \* Perkiraan kasar untuk satu pengembang penuh waktu; sesuaikan dengan ritme sendiri.
 
@@ -62,6 +66,7 @@ flowchart LR
 | 3 | 11/12 selesai; situs tayang di <https://gold.hafidznrg.my.id> (P3-10, Q-5). Sisa P3-11: audit Lighthouse mobile. G3 menunggu data ritel ≥ 14 hari (±9 Nov) dan G1 | 1 Nov 2026 | |
 | 4 | 13/13 selesai; P4-13 Kalkulator total harga beli yang bisa diubah + berat lain (FR-37, D-61, 15 Nov 2026). (P4-04 sudah terpenuhi oleh Spread P3-07): Explorer mode nilai/agregasi/isi celah, `derived/*`, Bandingkan + premi Antam sejak 2010 (D-38), Kelipatan, Kalkulator (D-39), API statis di README, fallback 1 g Logam Mulia. G4 menunggu audit Lighthouse mobile ulang di situs live (NFR-08) | 7 Nov 2026 | |
 | 5 | Belum mulai | | |
+| 6 | Rencana siap (17 Nov 2026; Q-7 disetujui, P6-12 masuk); mulai dari P6-01 (probe dari runner) + P6-01b | | |
 
 ## Riwayat revisi
 
@@ -85,3 +90,4 @@ flowchart LR
 | 1 Nov 2026 | Gelombang 4: smoke test Playwright di CI (P3-11), audit atribusi (P3-09), metadata/OG/ikon (P3-12), LICENSE MIT |
 | 1 Nov 2026 | Situs tayang di gold.hafidznrg.my.id lewat Vercel (P3-10, Q-5 terjawab); README menautkan situs (P3-12). Perbaikan: celah grafik mengikuti kalender terbit sumber; `apps/web/lib/build` sebelumnya terabaikan `.gitignore` |
 | 5 Nov 2026 | Fase 2: `backfill/xaus.ts` (P2-07, belum dijalankan non-dry) dan `check-macro` (P2-12, D-37); evaluasi G2 di fase-2-data-makro.md |
+| 17 Nov 2026 | Rencana Fase 6: riset Galeri24 (`research/galeri24.md`) dan Lotus Archi (`research/lotusarchi.md`), `phases/fase-6-galeri24-lotus-archi.md`; Q-7 (backfill histori Galeri24) disetujui, P6-12 (Antam non-Pegadaian) masuk fase |

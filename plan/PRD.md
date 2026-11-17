@@ -186,6 +186,7 @@ Ringkasan; rincian dan alasannya di [DECISIONS.md](./DECISIONS.md).
 | Q-4 | Perlukah *self-hosted runner* Indonesia? | **Terjawab (P0-11, 25 Okt 2026):** tidak untuk UBS Lifestyle, Pegadaian, xaus, JISDOR, World Bank, Frankfurter — semua lolos dari runner GitHub di AS. Logam Mulia belum dapat dinilai (situs maintenance untuk semua pengunjung) |
 | Q-5 | Nama domain dan nama produk | **Terjawab (P3-10, 1 Nov 2026):** domain `gold.hafidznrg.my.id` (Vercel); nama tampilan "Harga Emas Historis", diganti "Momen Emas" dengan tagline *Temukan momen terbaik membeli emas* (13 Nov 2026, D-51) |
 | Q-6 | `update_calendar` tiap sumber (apakah UBS/Pegadaian/Logam Mulia update di akhir pekan dan hari libur) | Observasi 2 minggu di Fase 1. Temuan awal UBS: Senin–Sabtu, sebagian libur tetap update (TECH-SPEC §5.1). Pegadaian: harga Minggu ada, diterbitkan Sabtu malam sebagai periode I (TECH-SPEC §5.2) |
+| Q-7 | Bolehkah histori Galeri24 diambil dari endpoint `GET /api/gold-prices` (±178 ribu baris sejak ±Feb 2024, tidak ditautkan dari halaman harga; `robots.txt` tidak melarang `/api`)? | **Terjawab (17 Nov 2026):** boleh, sekali jalan dengan jeda ≥ 5 detik, hanya vendor target (P6-11, [research/galeri24.md §5](./research/galeri24.md#5-histori-get-apigold-prices-q-7-disetujui)) |
 
 ## 14. Rencana rilis
 
