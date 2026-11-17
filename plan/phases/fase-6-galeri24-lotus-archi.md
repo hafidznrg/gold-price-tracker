@@ -151,7 +151,7 @@
   - `probe/checks.ts` `PEGADAIAN_VENDORS` tidak diubah (Lotus Archi opsional).
   - Uji: fixture Pegadaian yang ada sudah memuat Lotus Archi (24 dan 25 Okt 2026). Ekspektasi jumlah baris di `pegadaian.test.ts` ikut naik; tambah kasus Lotus tanggal beda → dibuang, run tetap sukses.
   - Ini mengubah D-30 ("vendor tambahan … tidak diambil") → catat di D-65.
-- [ ] **P6-08** Histori Lotus Archi dari arsip raw Pegadaian. — `FR-14` (sebagian) · S
+- [x] **P6-08** Histori Lotus Archi dari arsip raw Pegadaian. — `FR-14` (sebagian) · S
   - Job backfill `pegadaian-raw-brand` (`apps/scraper/src/backfill/`, `localOnly: true`, `--input data/raw/pegadaian`): baca semua snapshot `*.gz` (sejak Okt 2026, raw lama "tabel saja" dan raw `{ table, savings }`), parse dengan `pegadaian@1.2.0`, tulis **hanya** baris `brand = lotusarchi`, `origin = backfill`. `select` membuang tanggal yang sudah ada dari run harian (pola D-28, `backfill/select.ts`).
   - Bila beberapa snapshot bertanggal sama, ambil yang `idHarga` (= `source_updated_at`) terbesar.
   - Daftarkan di `BACKFILL_JOB_IDS` + `BACKFILL_TASKS` (`P6-08`); job lokal tidak muncul di `backfill.yml`.
