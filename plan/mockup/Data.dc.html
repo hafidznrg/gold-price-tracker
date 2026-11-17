@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
 <meta charset="utf-8">
-<title>Data — Harga Emas Historis</title>
+<title>Data · Momen Emas</title>
 <script src="./support.js"></script>
 </head>
 <body>
@@ -11,8 +11,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&amp;family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
 <style>
 body{margin:0}
-.t-dark{--bg:#0E0F12;--surface:#16181D;--surface2:#1D2027;--line:#2A2E37;--text:#EDEAE3;--muted:#ABABA4;--faint:#8E9097;--gold:#DDB563;--goldsoft:rgba(221,181,99,.13);--goldline:rgba(221,181,99,.38);--up:#6CC59A;--down:#F28C6C;--antam:#DDB563;--ubs:#7EA8FF;--g24:#EE8A60;--tab:#5FD0B8;--grid:#22252D;--btn:#EDEAE3;--btntext:#0E0F12;color-scheme:dark}
-.t-light{--bg:#F4F4F1;--surface:#FFFFFF;--surface2:#F0EFEA;--line:#E1DFD8;--text:#15171C;--muted:#55575E;--faint:#686A71;--gold:#8A6618;--goldsoft:rgba(176,132,40,.12);--goldline:rgba(138,102,24,.35);--up:#1E7A4E;--down:#B4442A;--antam:#B8892B;--ubs:#2F64D6;--g24:#C4562E;--tab:#0F7F6C;--grid:#ECEAE4;--btn:#15171C;--btntext:#FFFFFF;color-scheme:light}
+.t-dark{--bg:#0F1A2B;--surface:#16233A;--surface2:#1D2C46;--hero:#14223A;--line:#2B3B57;--grid:#213049;--text:#EDEAE3;--muted:#ABB0B8;--faint:#8E96A3;--gold:#DDB563;--gold-strong:#DDB563;--gold-glint:#F0CF7E;--goldsoft:rgba(221,181,99,.13);--goldline:rgba(221,181,99,.38);--up:#6CC59A;--down:#F28C6C;--antam:#E6C27A;--ubs:#7EA8FF;--g24:#D8603C;--tab:#5FD0B8;--lotus:#C59BF0;--spot:#EDEAE3;--navy:#0F1A2B;--logo-bar-top:#F1D18A;--logo-bar-base:#D6AA52;--logo-arrow-start:#B4842E;--logo-arrow-end:#F0CF7E;--btn:#EDEAE3;--btntext:#0F1A2B;color-scheme:dark}
+.t-light{--bg:#F7F5F0;--surface:#FFFFFF;--surface2:#F0EFEA;--hero:#EFECE4;--line:#E1DFD8;--grid:#ECEAE4;--text:#15171C;--muted:#55575E;--faint:#686A71;--gold:#8A6618;--gold-strong:#7D5C14;--gold-glint:#A67C1E;--goldsoft:rgba(176,132,40,.12);--goldline:rgba(138,102,24,.35);--up:#1E7A4E;--down:#B4442A;--antam:#A67C1E;--ubs:#2F64D6;--g24:#9C3220;--tab:#0F7F6C;--lotus:#7A4BB5;--spot:#15171C;--navy:#0F1A2B;--logo-bar-top:#A67C1E;--logo-bar-base:#A67C1E;--logo-arrow-start:#7A5A14;--logo-arrow-end:#7A5A14;--btn:#15171C;--btntext:#FFFFFF;color-scheme:light}
 .root{background:var(--bg);color:var(--text);font-family:Inter,system-ui,sans-serif;min-height:100vh;font-feature-settings:"tnum" 1}
 .wrap{max-width:1240px;margin-left:auto;margin-right:auto;padding-left:32px;padding-right:32px;box-sizing:border-box}
 @media (max-width:640px){.wrap{padding-left:18px;padding-right:18px}}
@@ -22,31 +22,100 @@ body{margin:0}
 button{font-family:inherit}
 a{color:var(--gold)}a:hover{color:var(--text)}
 :focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+
+/* Momen Emas (D-50…D-62): header, menu bawah, footer, tipografi */
+html{background:var(--bg)}
+.root{-webkit-font-smoothing:antialiased}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.eyebrow{font-size:12px;letter-spacing:.16em;text-transform:uppercase;font-weight:600;color:var(--gold)}
+.page-title{font-size:46px;line-height:1.05}
+.sec-title{font-size:32px;line-height:1.15}
+.hd{border-bottom:1px solid var(--line)}
+.hd-in{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:4px 20px;padding-top:10px;padding-bottom:10px}
+.hd-brand{display:flex;align-items:center;gap:10px;min-width:0;text-decoration:none;color:var(--text)}
+.hd-brand:hover{color:var(--text)}
+.hd-logo{height:26px;width:44px;flex:none}
+.hd-word{font-size:20px;line-height:1.1;white-space:nowrap}
+.hd-sub{display:none;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--faint);line-height:1.2}
+.hd-nav{order:3;width:100%;display:flex;gap:2px;overflow-x:auto;padding:0 4px;margin:0 -4px;scrollbar-width:none}
+.hd-nav::-webkit-scrollbar{display:none}
+.hd-nav a{display:inline-flex;align-items:center;flex:none;min-height:40px;padding:0 12px;border-radius:999px;font-size:14px;white-space:nowrap;text-decoration:none;color:var(--muted)}
+.hd-nav a:hover{color:var(--text)}
+.hd-nav a[aria-current="page"]{background:var(--goldsoft);color:var(--gold-strong);font-weight:600}
+.hd-right{display:flex;align-items:center;gap:8px}
+.hd-chip{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:999px;padding:7px 12px;font-size:12px;line-height:1.5;white-space:nowrap;color:var(--muted)}
+.hd-dot{width:7px;height:7px;border-radius:50%;background:var(--up);flex:none}
+.hd-theme{width:40px;height:40px;flex:none;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:var(--text);display:grid;place-items:center;cursor:pointer;padding:0}
+.t-light .ic-sun,.t-dark .ic-moon{display:none}
+@media (min-width:1280px){.hd-in{flex-wrap:nowrap}.hd-nav{order:0;width:auto}.hd-nav a{min-height:36px;padding:0 14px}.hd-theme{width:36px;height:36px}}
+@media (min-width:1536px){.hd-sub{display:block}}
+.bn{display:none}
+.ft{margin-top:40px;border-top:1px solid var(--line);background:var(--surface)}
+.ft-grid{display:grid;grid-template-columns:minmax(0,1fr);gap:32px 40px;padding-top:36px;padding-bottom:40px}
+.ft-h{margin:0;font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--faint)}
+.ft-links{margin:0;padding:0;list-style:none;display:grid;grid-template-columns:1fr 1fr;gap:4px 24px}
+.ft-links a{display:inline-flex;align-items:center;min-height:32px;font-size:14px;color:var(--muted);text-decoration:none}
+.ft-links a:hover{color:var(--gold)}
+.ft-list{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:4px;font-size:14px;line-height:1.4;color:var(--muted)}
+.ft-list li{display:flex;gap:8px}
+.ft-list li::before{content:"";flex:none;width:4px;height:4px;border-radius:50%;background:var(--goldline);margin-top:8px}
+.ft-repo{display:inline-flex;align-items:center;gap:8px;width:fit-content;min-height:40px;padding:0 14px;border-radius:12px;border:1px solid var(--line);background:var(--surface2);color:var(--text);font-size:14px;font-weight:600;text-decoration:none}
+.ft-repo:hover{border-color:var(--goldline);color:var(--gold)}
+@media (min-width:640px){.ft-grid{grid-template-columns:repeat(2,minmax(0,1fr));padding-top:48px}}
+@media (min-width:1024px){.ft-grid{grid-template-columns:minmax(0,1.25fr) minmax(0,.6fr) minmax(0,1fr) minmax(0,1.15fr);gap:36px 48px}.ft-links{grid-template-columns:1fr}}
+@media (max-width:639px){
+.page-title{font-size:38px}
+.sec-title{font-size:26px}
+.root{padding-bottom:calc(64px + env(safe-area-inset-bottom))}
+.hd-in{flex-wrap:nowrap;min-height:55px;padding-top:0;padding-bottom:0}
+.hd-logo{height:22px;width:37px}
+.hd-word{font-size:18px}
+.hd-nav,.hd-theme,.hd-time{display:none}
+.hd-lbl{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.hd-chip{padding:7px 10px}
+.bn{display:block;position:fixed;left:0;right:0;bottom:0;z-index:40;background:var(--surface);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom)}
+}
+.bn-row{display:flex;align-items:stretch;gap:2px;height:64px;padding:6px;box-sizing:border-box}
+.bn-tab{flex:1 1 0;min-width:0;min-height:44px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;border-radius:12px;font-size:11px;font-weight:500;letter-spacing:-.01em;text-decoration:none;color:var(--muted);background:transparent;border:0;cursor:pointer;font-family:inherit;padding:0;list-style:none}
+.bn-tab::-webkit-details-marker{display:none}
+.bn-tab span{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bn-tab[aria-current="page"],.bn-more[data-active="true"]>.bn-tab{background:var(--goldsoft);color:var(--gold-strong);font-weight:600}
+.bn-more{flex:1 1 0;min-width:0;display:flex}
+.bn-more>.bn-tab{flex:1 1 auto}
+.bn-more[open]>.bn-tab{background:var(--goldsoft);color:var(--gold-strong);font-weight:600}
+.bn-panel{position:absolute;left:12px;right:12px;bottom:calc(100% + 8px);display:flex;flex-direction:column;gap:2px;padding:8px;border:1px solid var(--line);border-radius:18px;background:var(--surface);box-shadow:0 12px 32px rgba(0,0,0,.18)}
+.bn-panel a,.bn-panel button{display:flex;align-items:center;gap:12px;min-height:44px;padding:0 12px;border-radius:12px;border:0;background:transparent;font-family:inherit;font-size:14px;color:var(--text);text-decoration:none;text-align:left;cursor:pointer;width:100%;box-sizing:border-box}
+.bn-panel a[aria-current="page"]{background:var(--goldsoft);color:var(--gold-strong);font-weight:600}
+.bn-sw{position:relative;margin-left:auto;width:40px;height:24px;border-radius:999px;background:var(--line);flex:none}
+.bn-sw::after{content:"";position:absolute;top:2px;left:2px;width:20px;height:20px;border-radius:50%;background:var(--surface);box-shadow:0 1px 2px rgba(0,0,0,.3)}
+.t-dark .bn-sw{background:var(--gold)}
+.t-dark .bn-sw::after{transform:translateX(16px)}
 </style>
 </helmet>
 <div class="root {{themeClass}}">
-<header style="border-bottom:1px solid var(--line)">
-<div class="wrap" style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:14px 28px;padding-top:18px;padding-bottom:18px">
-<a href="Main.dc.html" style="display:flex;align-items:center;gap:12px;text-decoration:none;color:var(--text)">
-<svg width="36" height="36" viewBox="0 0 36 36" aria-hidden="true"><rect x="0.5" y="0.5" width="35" height="35" rx="10" style="fill:var(--goldsoft);stroke:var(--goldline)"></rect><path d="M9.5 23.5 L13 12.5 H23 L26.5 23.5 Z" style="fill:none;stroke:var(--gold);stroke-width:1.6;stroke-linejoin:round"></path><path d="M14.5 18 H21.5" style="stroke:var(--gold);stroke-width:1.3"></path></svg>
-<span style="display:flex;flex-direction:column;line-height:1.15">
-<span class="serif" style="font-size:23px">Harga Emas Historis</span>
-<span style="font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--faint)">Antam · UBS · Galeri24</span>
+<header class="hd">
+<div class="wrap hd-in">
+<a class="hd-brand" href="Main-v2.dc.html">
+<svg class="hd-logo" viewBox="18 88 248 148" aria-hidden="true" style="flex:none"><defs><clipPath id="me-logo-h-u"><path d="M-10 212 L22 232 L114 160 L146 188 L202 143 L262 96 L270 96 L270 -10 L-10 -10 Z"></path></clipPath><clipPath id="me-logo-h-l"><path d="M-10 212 L22 232 L114 160 L146 188 L202 143 L262 96 L270 96 L270 270 L-10 270 Z"></path></clipPath><linearGradient id="me-logo-h-t" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:var(--logo-bar-top)"></stop><stop offset="1" style="stop-color:var(--logo-bar-base)"></stop></linearGradient><linearGradient id="me-logo-h-g" x1="0" y1="1" x2="1" y2="0"><stop offset="0" style="stop-color:var(--logo-arrow-start)"></stop><stop offset="1" style="stop-color:var(--logo-arrow-end)"></stop></linearGradient></defs><g stroke-linejoin="round"><path d="M46 212 L78 92 L178 92 L210 212 Z" fill="url(#me-logo-h-t)" stroke="url(#me-logo-h-t)" stroke-width="8" clip-path="url(#me-logo-h-u)"></path><path d="M22 232 L113.85 165.47 L145.82 195.48 L233.43 130.78 Q230.4 146.27 235.2 155.55 L262 96 L197.92 108.54 Q205.85 115.32 221.62 115.9 L146.18 180.52 L114.15 154.53 L22 232 Z" style="fill:var(--bg);stroke:var(--bg)" stroke-width="14"></path><path d="M46 212 L78 92 L178 92 L210 212 Z" fill="url(#me-logo-h-g)" stroke="url(#me-logo-h-g)" stroke-width="8" clip-path="url(#me-logo-h-l)"></path><path d="M22 232 L113.85 165.47 L145.82 195.48 L233.43 130.78 Q230.4 146.27 235.2 155.55 L262 96 L197.92 108.54 Q205.85 115.32 221.62 115.9 L146.18 180.52 L114.15 154.53 L22 232 Z" fill="url(#me-logo-h-g)" stroke="url(#me-logo-h-g)" stroke-width="2"></path></g></svg>
+<span style="display:flex;flex-direction:column;min-width:0">
+<span class="serif hd-word">Momen <em style="color:var(--gold)">Emas</em></span>
+<span class="hd-sub">Antam · UBS · Galeri24</span>
 </span>
 </a>
-<nav aria-label="Navigasi utama" style="display:flex;flex-wrap:wrap;gap:2px">
-<a href="Main.dc.html" style="padding:10px 15px;border-radius:999px;font-size:14px;text-decoration:none;color:var(--muted)">Hari ini</a>
-<a href="Explorer.dc.html" style="padding:10px 15px;border-radius:999px;font-size:14px;text-decoration:none;color:var(--muted)">Explorer</a>
-<a href="Spread.dc.html" style="padding:10px 15px;border-radius:999px;font-size:14px;text-decoration:none;color:var(--muted)">Spread</a>
-<a href="Bandingkan.dc.html" style="padding:10px 15px;border-radius:999px;font-size:14px;text-decoration:none;color:var(--muted)">Bandingkan</a>
-<a href="Kalkulator.dc.html" style="padding:10px 15px;border-radius:999px;font-size:14px;text-decoration:none;color:var(--muted)">Kalkulator</a>
-<a href="Kelipatan.dc.html" style="padding:10px 15px;border-radius:999px;font-size:14px;text-decoration:none;color:var(--muted)">Kelipatan</a>
-<a href="Data.dc.html" aria-current="page" style="padding:10px 15px;border-radius:999px;font-size:14px;text-decoration:none;background:var(--goldsoft);color:var(--gold);font-weight:600">Data</a>
+<nav class="hd-nav" aria-label="Navigasi utama">
+<a href="Main-v2.dc.html">Hari ini</a>
+<a href="Explorer.dc.html">Riwayat harga</a>
+<a href="Spread.dc.html">Spread</a>
+<a href="Bandingkan.dc.html">Bandingkan</a>
+<a href="Kalkulator.dc.html">Kalkulator</a>
+<a href="Kelipatan.dc.html">Kelipatan</a>
+<a href="Data.dc.html" aria-current="page">Data</a>
 </nav>
-<div style="display:flex;align-items:center;gap:10px">
-<span style="display:inline-flex;align-items:center;gap:8px;font-size:12.5px;color:var(--muted);padding:9px 13px;border:1px solid var(--line);border-radius:999px;white-space:nowrap"><span style="width:7px;height:7px;border-radius:50%;background:var(--up)"></span>Data 30 Okt 2026 · 21.10 WIB</span>
-<button type="button" onClick="{{toggleTheme}}" aria-label="Ganti tema terang atau gelap" style="width:44px;height:44px;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:var(--text);display:grid;place-items:center;cursor:pointer">
-<svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" style="fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round"><circle cx="12" cy="12" r="4.2"></circle><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6"></path></svg>
+<div class="hd-right">
+<span class="hd-chip"><span class="hd-dot"></span><span class="hd-lbl">Data</span> 30 Okt 2026<span class="hd-time"> · 21.10 WIB</span></span>
+<button class="hd-theme" type="button" role="switch" aria-checked="{{isDark}}" aria-label="Mode gelap" title="Ganti tema terang atau gelap" onClick="{{toggleTheme}}">
+<svg class="ic-moon" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" style="fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round"><path d="M20.5 14.2A8.5 8.5 0 0 1 9.8 3.5a8.5 8.5 0 1 0 10.7 10.7Z"></path></svg>
+<svg class="ic-sun" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" style="fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round"><circle cx="12" cy="12" r="4.2"></circle><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6"></path></svg>
 </button>
 </div>
 </div>
@@ -54,38 +123,38 @@ a{color:var(--gold)}a:hover{color:var(--text)}
 <main>
 <section class="wrap" style="padding-top:48px;padding-bottom:30px;display:flex;flex-wrap:wrap;gap:24px;align-items:flex-end;justify-content:space-between">
 <div style="flex:1 1 560px;min-width:0">
-<p style="margin:0 0 14px;font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--gold);font-weight:600">Data terbuka</p>
-<h1 class="serif" style="margin:0;font-size:56px;line-height:1.04">Unduh <em style="color:var(--gold)">setiap seri</em></h1>
-<p style="margin:16px 0 0;max-width:620px;font-size:15.5px;line-height:1.65;color:var(--muted)">Data mentah yang sama dengan yang dipakai grafik di situs ini, diperbarui otomatis setiap hari. Bebas dipakai untuk analisis pribadi.</p>
+<p class="eyebrow" style="margin:0 0 14px">Data terbuka</p>
+<h1 class="serif page-title" style="margin:0">Unduh <span style="color:var(--gold)">setiap seri</span></h1>
+<p style="margin:16px 0 0;max-width:620px;font-size:16px;line-height:1.65;color:var(--muted)">Data mentah yang sama dengan yang dipakai grafik di situs ini, diperbarui otomatis setiap hari. Bebas dipakai untuk analisis pribadi.</p>
 </div>
-<span style="font-size:12.5px;color:var(--muted);padding:9px 13px;border:1px solid var(--line);border-radius:999px">CSV UTF-8 · koma · tanggal Asia/Jakarta</span>
+<span style="font-size:12px;color:var(--muted);padding:9px 13px;border:1px solid var(--line);border-radius:999px">CSV UTF-8 · koma · tanggal Asia/Jakarta</span>
 </section>
 
 <section class="wrap" style="padding-bottom:30px">
 <div style="display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:12px;margin-bottom:16px">
-<h2 class="serif" style="margin:0;font-size:32px">Harga ritel</h2>
-<span style="font-size:12.5px;color:var(--muted)">Emas batangan dan tabungan emas</span>
+<h2 class="serif sec-title" style="margin:0">Harga ritel</h2>
+<span style="font-size:12px;color:var(--muted)">Emas batangan dan tabungan emas</span>
 </div>
 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:14px">
-<sc-for list="{{retail}}" as="d" hint-placeholder-count="4">
+<sc-for list="{{retail}}" as="d" hint-placeholder-count="6">
 <article style="background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:20px;display:flex;flex-direction:column;gap:14px">
 <div style="display:flex;align-items:flex-start;gap:10px">
 <span style="width:10px;height:10px;border-radius:3px;background:{{d.color}};margin-top:5px;flex:none"></span>
-<div><h3 style="margin:0;font-size:15.5px;font-weight:600">{{d.name}}</h3><div style="font-size:12.5px;color:var(--muted);margin-top:4px;line-height:1.45">{{d.desc}}</div></div>
+<div><h3 style="margin:0;font-size:16px;font-weight:600">{{d.name}}</h3><div style="font-size:12px;color:var(--muted);margin-top:4px;line-height:1.45">{{d.desc}}</div></div>
 </div>
-<div style="padding:14px;border-radius:14px;background:var(--surface2);display:flex;flex-direction:column;gap:8px">
+<div style="padding:14px;border-radius:12px;background:var(--surface2);display:flex;flex-direction:column;gap:8px">
 <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
 <span style="font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--faint);font-weight:600">Data terakhir</span>
 <span style="display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)"><span style="width:7px;height:7px;border-radius:50%;background:{{d.dot}}"></span>{{d.age}}</span>
 </div>
 <div class="num" style="font-size:16px;font-weight:600">{{d.when}}</div>
-<div class="num" style="font-size:12.5px;color:var(--muted);line-height:1.5">{{d.value}}</div>
+<div class="num" style="font-size:12px;color:var(--muted);line-height:1.5">{{d.value}}</div>
 </div>
 <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-top:auto">
-<span class="num" style="font-size:12.5px;color:var(--faint)">{{d.range}}</span>
+<span class="num" style="font-size:12px;color:var(--faint)">{{d.range}}</span>
 <div style="display:flex;gap:6px">
-<a href="#" style="min-height:40px;padding:0 14px;border-radius:10px;background:var(--btn);color:var(--btntext);font-size:13px;font-weight:600;text-decoration:none;display:inline-flex;align-items:center">CSV</a>
-<a href="#" style="min-height:40px;padding:0 14px;border-radius:10px;border:1px solid var(--line);color:var(--text);font-size:13px;font-weight:600;text-decoration:none;display:inline-flex;align-items:center">JSON</a>
+<a href="#" style="min-height:40px;padding:0 14px;border-radius:10px;background:var(--btn);color:var(--btntext);font-size:14px;font-weight:600;text-decoration:none;display:inline-flex;align-items:center">CSV</a>
+<a href="#" style="min-height:40px;padding:0 14px;border-radius:10px;border:1px solid var(--line);color:var(--text);font-size:14px;font-weight:600;text-decoration:none;display:inline-flex;align-items:center">JSON</a>
 </div>
 </div>
 </article>
@@ -95,29 +164,29 @@ a{color:var(--gold)}a:hover{color:var(--text)}
 
 <section class="wrap" style="padding-bottom:64px">
 <div style="display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:12px;margin-bottom:16px">
-<h2 class="serif" style="margin:0;font-size:32px">Pembanding dunia</h2>
-<span style="font-size:12.5px;color:var(--muted)">Harga emas dunia dan kurs USD/IDR</span>
+<h2 class="serif sec-title" style="margin:0">Pembanding dunia</h2>
+<span style="font-size:12px;color:var(--muted)">Harga emas dunia dan kurs USD/IDR</span>
 </div>
 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:14px">
 <sc-for list="{{macro}}" as="d" hint-placeholder-count="4">
 <article style="background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:20px;display:flex;flex-direction:column;gap:14px">
 <div style="display:flex;align-items:flex-start;gap:10px">
 <span style="width:10px;height:10px;border-radius:3px;background:{{d.color}};margin-top:5px;flex:none"></span>
-<div><h3 style="margin:0;font-size:15.5px;font-weight:600">{{d.name}}</h3><div style="font-size:12.5px;color:var(--muted);margin-top:4px;line-height:1.45">{{d.desc}}</div></div>
+<div><h3 style="margin:0;font-size:16px;font-weight:600">{{d.name}}</h3><div style="font-size:12px;color:var(--muted);margin-top:4px;line-height:1.45">{{d.desc}}</div></div>
 </div>
-<div style="padding:14px;border-radius:14px;background:var(--surface2);display:flex;flex-direction:column;gap:8px">
+<div style="padding:14px;border-radius:12px;background:var(--surface2);display:flex;flex-direction:column;gap:8px">
 <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
 <span style="font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--faint);font-weight:600">Data terakhir</span>
 <span style="display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)"><span style="width:7px;height:7px;border-radius:50%;background:{{d.dot}}"></span>{{d.age}}</span>
 </div>
 <div class="num" style="font-size:16px;font-weight:600">{{d.when}}</div>
-<div class="num" style="font-size:12.5px;color:var(--muted);line-height:1.5">{{d.value}}</div>
+<div class="num" style="font-size:12px;color:var(--muted);line-height:1.5">{{d.value}}</div>
 </div>
 <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-top:auto">
-<span class="num" style="font-size:12.5px;color:var(--faint)">{{d.range}}</span>
+<span class="num" style="font-size:12px;color:var(--faint)">{{d.range}}</span>
 <div style="display:flex;gap:6px">
-<a href="#" style="min-height:40px;padding:0 14px;border-radius:10px;background:var(--btn);color:var(--btntext);font-size:13px;font-weight:600;text-decoration:none;display:inline-flex;align-items:center">CSV</a>
-<a href="#" style="min-height:40px;padding:0 14px;border-radius:10px;border:1px solid var(--line);color:var(--text);font-size:13px;font-weight:600;text-decoration:none;display:inline-flex;align-items:center">JSON</a>
+<a href="#" style="min-height:40px;padding:0 14px;border-radius:10px;background:var(--btn);color:var(--btntext);font-size:14px;font-weight:600;text-decoration:none;display:inline-flex;align-items:center">CSV</a>
+<a href="#" style="min-height:40px;padding:0 14px;border-radius:10px;border:1px solid var(--line);color:var(--text);font-size:14px;font-weight:600;text-decoration:none;display:inline-flex;align-items:center">JSON</a>
 </div>
 </div>
 </article>
@@ -125,39 +194,99 @@ a{color:var(--gold)}a:hover{color:var(--text)}
 </div>
 </section>
 </main>
-<footer style="border-top:1px solid var(--line);margin-top:24px">
-<div class="wrap" style="padding-top:44px;padding-bottom:40px;display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:32px 40px">
-<div style="display:flex;flex-direction:column;gap:12px">
-<span class="serif" style="font-size:22px">Harga Emas Historis</span>
-<p style="margin:0;font-size:13.5px;line-height:1.65;color:var(--muted)">Proyek non-komersial. Data dikumpulkan otomatis setiap hari oleh GitHub Actions, divalidasi, dan disimpan sebagai CSV di repositori publik.</p>
-<a href="https://github.com/hafidznrg/gold-price-tracker" style="font-size:13.5px">github.com/hafidznrg/gold-price-tracker</a>
+<footer class="ft">
+<div class="wrap ft-grid">
+<div style="display:flex;flex-direction:column;gap:14px;min-width:0">
+<a href="Main-v2.dc.html" aria-label="Momen Emas, ke beranda" style="display:flex;align-items:center;gap:10px;width:fit-content;text-decoration:none;color:var(--text)">
+<svg class="hd-logo" viewBox="18 88 248 148" aria-hidden="true" style="flex:none"><defs><clipPath id="me-logo-f-u"><path d="M-10 212 L22 232 L114 160 L146 188 L202 143 L262 96 L270 96 L270 -10 L-10 -10 Z"></path></clipPath><clipPath id="me-logo-f-l"><path d="M-10 212 L22 232 L114 160 L146 188 L202 143 L262 96 L270 96 L270 270 L-10 270 Z"></path></clipPath><linearGradient id="me-logo-f-t" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color:var(--logo-bar-top)"></stop><stop offset="1" style="stop-color:var(--logo-bar-base)"></stop></linearGradient><linearGradient id="me-logo-f-g" x1="0" y1="1" x2="1" y2="0"><stop offset="0" style="stop-color:var(--logo-arrow-start)"></stop><stop offset="1" style="stop-color:var(--logo-arrow-end)"></stop></linearGradient></defs><g stroke-linejoin="round"><path d="M46 212 L78 92 L178 92 L210 212 Z" fill="url(#me-logo-f-t)" stroke="url(#me-logo-f-t)" stroke-width="8" clip-path="url(#me-logo-f-u)"></path><path d="M22 232 L113.85 165.47 L145.82 195.48 L233.43 130.78 Q230.4 146.27 235.2 155.55 L262 96 L197.92 108.54 Q205.85 115.32 221.62 115.9 L146.18 180.52 L114.15 154.53 L22 232 Z" style="fill:var(--bg);stroke:var(--bg)" stroke-width="14"></path><path d="M46 212 L78 92 L178 92 L210 212 Z" fill="url(#me-logo-f-g)" stroke="url(#me-logo-f-g)" stroke-width="8" clip-path="url(#me-logo-f-l)"></path><path d="M22 232 L113.85 165.47 L145.82 195.48 L233.43 130.78 Q230.4 146.27 235.2 155.55 L262 96 L197.92 108.54 Q205.85 115.32 221.62 115.9 L146.18 180.52 L114.15 154.53 L22 232 Z" fill="url(#me-logo-f-g)" stroke="url(#me-logo-f-g)" stroke-width="2"></path></g></svg>
+<span class="serif" style="font-size:22px;white-space:nowrap">Momen <em style="color:var(--gold)">Emas</em></span>
+</a>
+<p class="serif" style="margin:0;font-size:18px;line-height:1.4;font-style:italic;color:var(--gold)">Temukan momen terbaik membeli emas</p>
+<p style="margin:0;max-width:44ch;font-size:14px;line-height:1.65;color:var(--muted)">Proyek non-komersial. Data dikumpulkan otomatis setiap hari oleh GitHub Actions, divalidasi, dan disimpan sebagai CSV di repositori publik.</p>
+<a class="ft-repo" href="https://github.com/hafidznrg/gold-price-tracker"><svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true" style="flex:none"><path fill="currentColor" d="M12 .5a11.5 11.5 0 0 0-3.64 22.41c.58.1.79-.25.79-.56v-2c-3.2.7-3.88-1.37-3.88-1.37-.52-1.33-1.28-1.69-1.28-1.69-1.05-.71.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.55-.29-5.24-1.28-5.24-5.69 0-1.26.45-2.29 1.19-3.1-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.17 1.18a11 11 0 0 1 5.77 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.81 1.19 1.84 1.19 3.1 0 4.42-2.7 5.4-5.26 5.68.41.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 12 .5Z"></path></svg>hafidznrg/gold-price-tracker</a>
 </div>
-<div style="display:flex;flex-direction:column;gap:10px">
-<span style="font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint);font-weight:600">Sumber data</span>
-<span style="font-size:13.5px;line-height:1.5;color:var(--muted)">Logam Mulia (Antam) · UBS Lifestyle · Pegadaian (Antam, UBS, Galeri24, Tabungan Emas)</span>
-<span style="font-size:13.5px;line-height:1.5;color:var(--muted)">xaus.com (futures GC=F, spot gold-api.com) · Bank Indonesia JISDOR · ECB via Frankfurter · World Bank Pink Sheet · World Bank WDI</span>
+<nav aria-label="Halaman" style="display:flex;flex-direction:column;gap:12px;min-width:0">
+<h2 class="ft-h">Jelajahi</h2>
+<ul class="ft-links">
+<li><a href="Main-v2.dc.html">Hari ini</a></li>
+<li><a href="Explorer.dc.html">Riwayat harga</a></li>
+<li><a href="Spread.dc.html">Spread</a></li>
+<li><a href="Bandingkan.dc.html">Bandingkan</a></li>
+<li><a href="Kalkulator.dc.html">Kalkulator</a></li>
+<li><a href="Kelipatan.dc.html">Kelipatan</a></li>
+<li><a href="Data.dc.html">Data</a></li>
+</ul>
+</nav>
+<div style="display:flex;flex-direction:column;gap:12px;min-width:0">
+<h2 class="ft-h">Sumber data</h2>
+<div style="display:flex;flex-direction:column;gap:6px">
+<h3 style="margin:0;font-size:12px;font-weight:600">Harga emas Indonesia</h3>
+<ul class="ft-list">
+<li>Logam Mulia (Antam)</li>
+<li>UBS Lifestyle</li>
+<li>Galeri24: Antam, UBS, Galeri24, Lotus Archi</li>
+<li>Pegadaian: Antam, UBS, Galeri24, Lotus Archi, Tabungan Emas</li>
+</ul>
 </div>
-<div style="display:flex;flex-direction:column;gap:10px">
-<span style="font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint);font-weight:600">Catatan</span>
-<p style="margin:0;font-size:13.5px;line-height:1.6;color:var(--muted)">Bukan rekomendasi investasi. Harga buyback belum memperhitungkan PPh 22 yang dapat dipotong saat menjual kembali sesuai ketentuan pajak yang berlaku. Harga jual Logam Mulia adalah Harga Dasar, belum termasuk PPh 0,25%. Harga emas dunia bersifat indikatif, bukan patokan LBMA.</p>
+<div style="display:flex;flex-direction:column;gap:6px">
+<h3 style="margin:0;font-size:12px;font-weight:600">Pembanding dunia dan kurs</h3>
+<ul class="ft-list">
+<li>xaus.com (futures GC=F, spot gold-api.com)</li>
+<li>Bank Indonesia JISDOR</li>
+<li>ECB via Frankfurter</li>
+<li>World Bank Pink Sheet dan WDI</li>
+</ul>
 </div>
 </div>
-<div class="wrap" style="padding-bottom:32px;display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;font-size:12px;color:var(--faint)">
-<span>Kode MIT · Data milik masing-masing penerbit</span>
+<div style="display:flex;flex-direction:column;gap:12px;min-width:0">
+<h2 class="ft-h">Catatan</h2>
+<div style="border:1px solid var(--line);border-radius:22px;background:var(--surface2);padding:16px">
+<ul style="margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:8px;font-size:14px;line-height:1.55;color:var(--muted)">
+<li style="font-weight:600;color:var(--text)">Bukan rekomendasi investasi.</li>
+<li>Harga buyback belum memperhitungkan PPh 22 yang dapat dipotong saat menjual kembali sesuai ketentuan pajak yang berlaku.</li>
+<li>Harga jual Logam Mulia adalah Harga Dasar, belum termasuk PPh 0,25%.</li>
+<li>Harga emas dunia bersifat indikatif, bukan patokan LBMA.</li>
+</ul>
+</div>
+</div>
+</div>
+<div style="border-top:1px solid var(--line)">
+<div class="wrap" style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:6px 24px;padding-top:20px;padding-bottom:20px;font-size:12px;color:var(--faint)">
+<span>© 2026 Momen Emas · Kode MIT · Data milik masing-masing penerbit</span>
 <span class="num">Build 30 Okt 2026 16.52 WIB · skema v1.0.0</span>
 </div>
+</div>
 </footer>
+<nav class="bn" aria-label="Navigasi utama">
+<div class="bn-row">
+<a class="bn-tab" href="Main-v2.dc.html"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" style="fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"></path><path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg><span>Hari ini</span></a>
+<a class="bn-tab" href="Explorer.dc.html"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" style="fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none"><path d="M3 3v16a2 2 0 0 0 2 2h16"></path><path d="m19 9-5 5-4-4-3 3"></path></svg><span>Riwayat</span></a>
+<a class="bn-tab" href="Spread.dc.html"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" style="fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none"><path d="M8 3 4 7l4 4"></path><path d="M4 7h16"></path><path d="m16 21 4-4-4-4"></path><path d="M20 17H4"></path></svg><span>Spread</span></a>
+<a class="bn-tab" href="Bandingkan.dc.html"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" style="fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none"><path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"></path><path d="m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"></path><path d="M7 21h10"></path><path d="M12 3v18"></path><path d="M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2"></path></svg><span>Bandingkan</span></a>
+<details class="bn-more" data-active="true">
+<summary class="bn-tab" aria-label="Lainnya"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" style="fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none"><circle cx="12" cy="12" r="1"></circle><circle cx="19" cy="12" r="1"></circle><circle cx="5" cy="12" r="1"></circle></svg><span>Lainnya</span></summary>
+<div class="bn-panel">
+<a href="Kalkulator.dc.html"><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" style="fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none"><rect width="16" height="20" x="4" y="2" rx="2"></rect><path d="M8 6h8"></path><path d="M16 14v4"></path><path d="M16 10h.01M12 10h.01M8 10h.01M12 14h.01M8 14h.01M12 18h.01M8 18h.01"></path></svg>Kalkulator</a>
+<a href="Kelipatan.dc.html"><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" style="fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none"><path d="M12 16v5"></path><path d="M16 14v7"></path><path d="M20 10v11"></path><path d="m22 3-8.646 8.646a.5.5 0 0 1-.708 0L9.354 8.354a.5.5 0 0 0-.707 0L2 15"></path><path d="M4 18v3"></path><path d="M8 14v7"></path></svg>Kelipatan</a>
+<a href="Data.dc.html" aria-current="page"><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" style="fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M3 5V19A9 3 0 0 0 21 19V5"></path><path d="M3 12A9 3 0 0 0 21 12"></path></svg>Data</a>
+<div style="border-top:1px solid var(--line);margin:4px 0"></div>
+<button type="button" role="switch" aria-checked="{{isDark}}" onClick="{{toggleTheme}}"><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" style="fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;flex:none"><path d="M20.5 14.2A8.5 8.5 0 0 1 9.8 3.5a8.5 8.5 0 1 0 10.7 10.7Z"></path></svg><span>Mode gelap</span><span class="bn-sw" aria-hidden="true"></span></button>
+</div>
+</details>
+</div>
+</nav>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props='{"tema": {"editor": "enum", "options": ["dark", "light"], "default": "dark"}, "$preview": {"width": 1440, "height": 1560}}'>
+<script type="text/x-dc" data-dc-script data-props='{"tema": {"editor": "enum", "options": ["light", "dark"], "default": "light"}, "$preview": {"width": 1440, "height": 1560}}'>
 class Component extends DCLogic {
 
 M = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
 common() {
   const st = this.state || {};
-  const theme = st.theme || this.props.tema || 'dark';
+  const theme = st.theme || this.props.tema || 'light';
   return {
     themeClass: theme === 'light' ? 't-light' : 't-dark',
+    isDark: String(theme === 'dark'),
     toggleTheme: () => this.setState({ theme: theme === 'dark' ? 'light' : 'dark' })
   };
 }
@@ -251,13 +380,15 @@ renderVals() {
   const retail = [
     { name: 'Antam · Logam Mulia', desc: '12 gramasi 0,5–1.000 g, butik Jakarta. Harga jual = Harga Dasar (belum termasuk PPh 0,25%); buyback hanya 1 g', color: 'var(--antam)', when: '30 Okt 2026 · 08.32 WIB', value: '1 g: jual Rp2.512.000 · buyback Rp2.358.000', age: '13 jam lalu', dot: ok, range: '1 g sejak 2010 · gramasi lain sejak 26 Okt 2026' },
     { name: 'UBS · UBS Lifestyle', desc: '13 pecahan 0,05–100 g, semua tahun produksi', color: 'var(--ubs)', when: '30 Okt 2026 · sumber tanpa jam', value: '1 g produksi 2026: jual Rp2.488.800 · buyback Rp2.291.000', age: 'hari ini', dot: ok, range: 'Buyback 1 g sejak Nov 2023 · lainnya sejak 26 Okt 2026' },
-    { name: 'Emas batangan · Pegadaian', desc: 'Antam, UBS, dan Galeri24, 0,5–1.000 g; hanya harga jual', color: 'var(--g24)', when: '30 Okt 2026 · snapshot 18.32 WIB', value: 'Galeri24 1 g: jual Rp2.431.000 · buyback tidak ditampilkan', age: '3 jam lalu', dot: ok, range: 'Sejak 26 Okt 2026' },
+    { name: 'Emas batangan · Galeri24', desc: 'Antam, UBS, Galeri24, dan Lotus Archi (0,5–100 g); harga jual dan buyback, sekali sehari', color: 'var(--g24)', when: '30 Okt 2026 · harga terbit pagi', value: 'Galeri24 1 g: jual Rp2.431.000 · buyback Rp2.256.000 | Lotus Archi 1 g: jual Rp2.405.000 · buyback Rp2.226.000', age: 'hari ini', dot: ok, range: 'Sejak Feb 2024 · ada celah sumber' },
+    { name: 'Antam non-Pegadaian · Galeri24', desc: 'Buyback Antam untuk keping yang dibeli di luar Pegadaian/Galeri24; lebih rendah dari buyback normal, hanya buyback', color: 'var(--antam)', when: '30 Okt 2026 · harga terbit pagi', value: 'Antam 1 g: buyback Rp2.321.000 (normal Rp2.350.000)', age: 'hari ini', dot: ok, range: 'Sejak Feb 2024' },
+    { name: 'Emas batangan · Pegadaian', desc: 'Antam, UBS, Galeri24, dan Lotus Archi, 0,5–1.000 g; hanya harga jual', color: 'var(--g24)', when: '30 Okt 2026 · snapshot 18.32 WIB', value: 'Galeri24 1 g: jual Rp2.431.000 · buyback tidak ditampilkan', age: '3 jam lalu', dot: ok, range: 'Sejak 26 Okt 2026' },
     { name: 'Tabungan Emas · Pegadaian', desc: 'Harga jual dan buyback, dicatat per 0,01 g', color: 'var(--tab)', when: '30 Okt 2026 · snapshot 18.32 WIB', value: 'Per 0,01 g: jual Rp23.850 · buyback Rp22.890', age: '3 jam lalu', dot: ok, range: 'Sejak Nov 2025 (histori 360 hari)' }
   ];
   const macro = [
-    { name: 'Emas dunia XAU/USD', desc: 'Harian 5 tahun (futures GC=F via xaus) + rata-rata bulanan World Bank sejak 1996', color: 'var(--gold)', when: '29 Okt 2026 · penutupan', value: 'US$4.118,40 per troy ounce', age: '1 hari lalu', dot: ok, range: 'Sejak 1996' },
-    { name: 'USD/IDR JISDOR', desc: 'Kurs acuan Bank Indonesia, hari kerja', color: 'var(--ubs)', when: '30 Okt 2026 · 15.15 WIB', value: 'Rp18.069 per US$', age: '6 jam lalu', dot: ok, range: 'Sejak 20 Mei 2013' },
-    { name: 'USD/IDR ECB', desc: 'Dihitung dari EUR/IDR ÷ EUR/USD, 2 desimal', color: 'var(--g24)', when: '30 Okt 2026', value: 'Rp18.086,45 per US$', age: 'hari ini', dot: ok, range: 'Sejak 4 Jan 1999' },
+    { name: 'Emas dunia XAU/USD', desc: 'Harian 5 tahun (futures GC=F via xaus) + rata-rata bulanan World Bank sejak 1996', color: 'var(--spot)', when: '29 Okt 2026 · penutupan', value: 'US$4.118,40 per troy ounce', age: '1 hari lalu', dot: ok, range: 'Sejak 1996' },
+    { name: 'USD/IDR JISDOR', desc: 'Kurs acuan Bank Indonesia, hari kerja', color: 'var(--spot)', when: '30 Okt 2026 · 15.15 WIB', value: 'Rp18.069 per US$', age: '6 jam lalu', dot: ok, range: 'Sejak 20 Mei 2013' },
+    { name: 'USD/IDR ECB', desc: 'Dihitung dari EUR/IDR ÷ EUR/USD, 2 desimal', color: 'var(--muted)', when: '30 Okt 2026', value: 'Rp18.086,45 per US$', age: 'hari ini', dot: ok, range: 'Sejak 4 Jan 1999' },
     { name: 'USD/IDR tahunan', desc: 'World Bank WDI, rata-rata tahunan resmi untuk 1996–1998', color: 'var(--muted)', when: '1998 · seri statis', value: 'Rp10.013,62 per US$', age: 'tidak diperbarui', dot: still, range: '1996–1998' }
   ];
   return Object.assign(base, { retail: retail, macro: macro });
