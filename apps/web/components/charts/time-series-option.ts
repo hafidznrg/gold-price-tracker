@@ -45,7 +45,7 @@ export type SeriesPoint = [isoDate: string, value: number | null];
 export interface TimeSeries {
   id: string;
   label: string;
-  /** Nama token CSS ("antam", "ubs", "g24", "tab", "gold", "muted"), `var(--x)`, atau warna literal. */
+  /** Nama token CSS ("antam", "ubs", "g24", "lotus", "tab", "gold", "muted"), `var(--x)`, atau warna literal. */
   color: string;
   /** Garis putus-putus — konvensi: buyback (Explorer) / harga di Pegadaian (Bandingkan). */
   dashed?: boolean;

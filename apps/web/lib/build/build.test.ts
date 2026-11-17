@@ -729,3 +729,67 @@ describe('pickHighlightSeries: variant non-tahun', () => {
     expect(hit?.fallback?.ref.variant).toBe('');
   });
 });
+
+describe('sumber galeri24: Lotus Archi dan Antam non-Pegadaian', () => {
+  const g = (over: Partial<PriceRow> & Pick<PriceRow, 'date'>) =>
+    price({ source: 'galeri24', location: '', scraped_at: '2026-11-17T09:00:00Z', ...over });
+  const date = '2026-11-17';
+  const galeri = [
+    g({ date, brand: 'antam', sell_price: 2_560_000, buyback_price: 2_286_000 }),
+    g({
+      date,
+      brand: 'antam',
+      variant: 'non_pegadaian',
+      sell_price: null,
+      buyback_price: 2_178_000,
+    }),
+    g({ date, brand: 'galeri24', sell_price: 2_540_000, buyback_price: 2_260_000 }),
+    g({ date, brand: 'lotusarchi', sell_price: 2_520_000, buyback_price: 2_240_000 }),
+    g({ date, brand: 'ubs', sell_price: 2_550_000, buyback_price: 2_270_000 }),
+    price({
+      date,
+      source: 'pegadaian',
+      brand: 'lotusarchi',
+      location: '',
+      sell_price: 2_530_000,
+      buyback_price: null,
+    }),
+  ];
+  const { files, latest, meta } = buildOutputs(input({ prices: [...prices, ...galeri] }));
+
+  it('menulis file series galeri24-*', () => {
+    const paths = files.map((f) => f.path);
+    for (const f of [
+      'galeri24-antam',
+      'galeri24-galeri24',
+      'galeri24-lotusarchi',
+      'galeri24-ubs',
+    ]) {
+      expect(paths.some((p) => p.endsWith(`/${f}.json`))).toBe(true);
+    }
+    expect(paths.some((p) => p.endsWith('/pegadaian-lotusarchi.json'))).toBe(true);
+  });
+
+  it('highlight galeri24-antam = series biasa, non_pegadaian tetap series sendiri', () => {
+    const hl = latest.highlights.find((h) => h.file === 'galeri24-antam')!;
+    expect(hl.variant).toBe('');
+    expect(hl.sell).toBe(2_560_000);
+    const np = latest.series.find((s) => s.key === 'galeri24:antam:gold_bar:non_pegadaian:1')!;
+    expect(np.buyback).toBe(2_178_000);
+    expect(np.sell).toBeNull();
+  });
+
+  it('kartu unduhan: Galeri24 (angka utama Galeri24) dan Antam non-Pegadaian terpisah', () => {
+    const ids = meta.downloads.map((d) => d.id);
+    expect(ids.indexOf('galeri24-fisik')).toBeGreaterThan(-1);
+    expect(ids.indexOf('galeri24-antam-non-pegadaian')).toBe(ids.indexOf('galeri24-fisik') + 1);
+    const g24 = meta.downloads.find((d) => d.id === 'galeri24-fisik')!;
+    expect(g24.label).toBe('Emas batangan · Galeri24');
+    expect(g24.files.map((f) => f.label)).toEqual(['Galeri24', 'Lotus Archi', 'Antam', 'UBS']);
+    expect(g24.last).toMatchObject({ brand: 'galeri24', sell: 2_540_000, buyback: 2_260_000 });
+    const np = meta.downloads.find((d) => d.id === 'galeri24-antam-non-pegadaian')!;
+    expect(np.label).toBe('Antam non-Pegadaian · Galeri24');
+    expect(np.rows).toBe(1);
+    expect(np.last).toMatchObject({ variant: 'non_pegadaian', buyback: 2_178_000 });
+  });
+});

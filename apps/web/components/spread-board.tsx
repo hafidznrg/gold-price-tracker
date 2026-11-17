@@ -61,6 +61,7 @@ const BG: Record<ColorToken, string> = {
   antam: 'bg-antam',
   ubs: 'bg-ubs',
   g24: 'bg-g24',
+  lotus: 'bg-lotus',
   tab: 'bg-tab',
   spot: 'bg-spot',
   gold: 'bg-gold',

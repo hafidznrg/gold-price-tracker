@@ -1,8 +1,9 @@
+import { isYearVariant } from '@gold/schema';
 import type { Metadata } from 'next';
 import { DataAge } from '@/components/data-age';
 import { PageIntro } from '@/components/page-intro';
 import { DownloadDialog } from '@/components/download-dialog';
-import type { ColorToken, DownloadEntry } from '@/lib/data';
+import { variantLabel, type ColorToken, type DownloadEntry } from '@/lib/data';
 import { readMeta } from '@/lib/data/load-fs';
 import { formatDate, formatNumber, formatRupiah, formatTimeWib, formatWeight } from '@/lib/format';
 import { cn } from '@/lib/utils';
@@ -19,7 +20,11 @@ const DESC: Record<string, string> = {
   'logammulia-antam':
     '12 gramasi 0,5–1.000 g, butik Jakarta. Harga jual = Harga Dasar (belum termasuk PPh 0,25%); buyback hanya 1 g',
   'ubslifestyle-ubs': '13 pecahan 0,05–100 g, semua tahun produksi',
-  'pegadaian-fisik': 'Antam, UBS, dan Galeri24, 0,5–1.000 g; hanya harga jual',
+  'galeri24-fisik':
+    'Antam, UBS, Galeri24, dan Lotus Archi (0,5–1.000 g); harga jual dan buyback, sekali sehari',
+  'galeri24-antam-non-pegadaian':
+    'Buyback Antam untuk keping yang dibeli di luar Pegadaian/Galeri24; lebih rendah dari buyback normal, hanya buyback',
+  'pegadaian-fisik': 'Antam, UBS, Galeri24, dan Lotus Archi, 0,5–1.000 g; hanya harga jual',
   'pegadaian-pegadaian': 'Harga jual dan buyback, dicatat per 0,01 g',
   xau_usd_oz: 'Harian 5 tahun (futures GC=F via xaus) + rata-rata bulanan World Bank sejak 1996',
   usd_idr_jisdor: 'Kurs acuan Bank Indonesia, hari kerja',
@@ -31,6 +36,7 @@ const DOT: Record<ColorToken, string> = {
   antam: 'bg-antam',
   ubs: 'bg-ubs',
   g24: 'bg-g24',
+  lotus: 'bg-lotus',
   tab: 'bg-tab',
   spot: 'bg-spot',
   gold: 'bg-gold',
@@ -51,7 +57,8 @@ function whenText(d: DownloadEntry): string {
   if (d.last?.kind === 'macro' && d.last.frequency === 'A')
     return `Tahun ${d.last.date.slice(0, 4)} · seri statis`;
   if (d.last_updated_at) {
-    const verb = d.id.startsWith('pegadaian') ? 'terbit ' : '';
+    const verb =
+      d.id.startsWith('pegadaian') || d.id.startsWith('galeri24') ? 'terbit ' : '';
     return `${formatDate(d.last_date)} · ${verb}${formatTimeWib(d.last_updated_at)}`;
   }
   return formatDate(d.last_date);
@@ -70,10 +77,17 @@ function valueParts(d: DownloadEntry): { main: string; caption: string } | null 
         };
   }
   const brand = BRAND_NAME[l.brand];
+  // Varian non-tahun (non_pegadaian): hanya buyback, bukan "produksi non_pegadaian".
+  if (l.variant && !isYearVariant(l.variant)) {
+    return {
+      main: formatRupiah(l.buyback),
+      caption: `Buyback ${brand ? `${brand} ` : ''}${formatWeight(l.w)} (non-Pegadaian)`,
+    };
+  }
   const what =
     l.product === 'gold_savings'
       ? `per ${formatWeight(l.w)}`
-      : `${brand ? `${brand} ` : ''}${formatWeight(l.w)}${l.variant ? ` produksi ${l.variant}` : ''}`;
+      : `${brand ? `${brand} ` : ''}${formatWeight(l.w)}${l.variant ? ` ${variantLabel(l.variant)}` : ''}`;
   const buyback = l.buyback === null ? '' : ` · buyback ${formatRupiah(l.buyback)}`;
   return { main: formatRupiah(l.sell), caption: `Harga jual ${what}${buyback}` };
 }

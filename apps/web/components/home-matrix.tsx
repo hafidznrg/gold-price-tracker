@@ -42,7 +42,7 @@ const UNITS: { value: MatrixUnit; label: ReactNode }[] = [
 /** Padding tombol toggle dirapatkan di HP agar dua grup muat satu baris. */
 const TIGHT = 'max-sm:[&>button]:px-2';
 
-const GRID = 'grid grid-cols-[110px_repeat(4,minmax(0,1fr))] items-center px-6';
+const GRID = 'grid grid-cols-[110px_repeat(5,minmax(0,1fr))] items-center px-6';
 /** Kolom gramasi menempel di kiri saat tabel digeser di HP (D-54); latar menutup padding baris. */
 const STICKY = 'sticky left-0 z-[1] -ml-6 self-stretch flex items-center bg-surface pl-6';
 
@@ -87,7 +87,7 @@ export function HomeMatrix({ cells }: { cells: TodayCells }) {
           role="region"
           aria-label="Tabel per gramasi, geser ke samping untuk kolom lain"
         >
-          <div role="table" aria-label="Perbandingan harga per gramasi" className="min-w-[720px]">
+          <div role="table" aria-label="Perbandingan harga per gramasi" className="min-w-[900px]">
             <div
               role="row"
               className={cn(GRID, 'border-t border-line py-2.5 text-xs font-semibold text-faint')}
@@ -176,7 +176,10 @@ export function HomeMatrix({ cells }: { cells: TodayCells }) {
                 Buyback Logam Mulia satu harga per gram untuk semua ukuran keping: buyback selain
                 1&nbsp;g = buyback 1&nbsp;g × berat.
               </li>
-              <li>Pegadaian tidak menampilkan harga buyback untuk emas batangan.</li>
+              <li>
+                Pegadaian tidak menampilkan harga buyback untuk emas batangan; Galeri24 menampilkan
+                buyback semua gramasi.
+              </li>
             </ul>
           </InfoPopover>
           <Link

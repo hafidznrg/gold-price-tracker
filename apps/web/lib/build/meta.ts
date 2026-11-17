@@ -158,6 +158,58 @@ export function buildMetaMacro(rows: readonly MacroRow[], sources: SourcesFile):
 }
 
 /**
+ * Varian non-tahun (`non_pegadaian`, D-64) menjadi kartu unduhan sendiri: ia hanya buyback untuk
+ * keping yang dibeli di luar Pegadaian/Galeri24 dan tidak boleh tampak sebagai bagian seri
+ * biasa. Berkasnya tetap file brand yang sama (kolom `variant` membedakannya).
+ */
+function nonPegadaianEntries(
+  f: MetaSeriesFile,
+  latest: LatestFile,
+  series: readonly MetaSeries[],
+): DownloadEntry[] {
+  const np = series.filter((s) => s.file === f.file && s.variant === 'non_pegadaian');
+  if (np.length === 0) return [];
+  const dates = np.flatMap((s) => [s.first_date, s.last_date]).sort();
+  const mine = latest.series
+    .filter((s) => s.file === f.file && s.variant === 'non_pegadaian')
+    .sort((a, b) => a.w - b.w);
+  const pick = mine.find((s) => s.w === 1) ?? mine[0];
+  return [
+    {
+      id: `${f.file}-non-pegadaian`,
+      group: 'retail',
+      label: `${BRAND_LABELS[f.brand]} non-Pegadaian · ${SOURCE_LABELS[f.source]}`,
+      color: colorToken(f),
+      files: [
+        {
+          label: `${BRAND_LABELS[f.brand]} (semua varian)`,
+          json: f.json,
+          csv: f.csv,
+          rows: f.rows,
+        },
+      ],
+      rows: np.reduce((n, s) => n + s.rows, 0),
+      first_date: dates[0] ?? null,
+      last_date: dates.at(-1) ?? null,
+      last_updated_at: pick?.source_updated_at ?? null,
+      static: false,
+      last: pick
+        ? {
+            kind: 'retail',
+            brand: pick.brand,
+            product: pick.product,
+            variant: pick.variant,
+            w: pick.w,
+            date: pick.date,
+            sell: pick.sell,
+            buyback: pick.buyback,
+          }
+        : null,
+    },
+  ];
+}
+
+/**
  * Kartu unduhan halaman Data. Ritel: satu kartu per sumber × jenis produk (mockup: "Emas
  * batangan · Pegadaian" menggabungkan tiga brand), file per brand. Makro: satu kartu per seri
  * yang punya data.
@@ -167,6 +219,7 @@ export function buildDownloads(
   latest: LatestFile,
   macro: readonly MetaMacroSeries[],
   macroRows: readonly MacroRow[],
+  series: readonly MetaSeries[] = [],
 ): DownloadEntry[] {
   const out: DownloadEntry[] = [];
   const groups = new Map<string, MetaSeriesFile[]>();
@@ -179,12 +232,9 @@ export function buildDownloads(
     const source: PriceSource = first.source;
     const kind: ProductKind = first.kind;
     const single = list.length === 1;
-    // Brand utama kartu: satu-satunya, atau brand yang hanya ada di sumber ini (Galeri24).
-    const head =
-      (single
-        ? first
-        : list.find((f) => !files.some((o) => o.source !== source && o.brand === f.brand))) ??
-      first;
+    // Brand utama kartu: file pertama menurut `FILE_ORDER` (Galeri24 untuk sumber Pegadaian dan
+    // Galeri24, karena ia punya buyback dan angka terakhirnya paling informatif).
+    const head = first;
     const hl = latest.highlights.find((h) => h.file === head.file);
     const ls = hl && latest.series.find((s) => s.key === hl.series_key);
     const dates = list.flatMap((f) => [f.first_date, f.last_date]).sort();
@@ -219,6 +269,7 @@ export function buildDownloads(
           }
         : null,
     });
+    for (const f of list) out.push(...nonPegadaianEntries(f, latest, series));
   }
   for (const m of macro) {
     if (m.rows === 0 || !m.json || !m.csv) continue;
@@ -271,6 +322,7 @@ export function buildMeta(input: MetaInput): MetaFile {
   const today = jakartaDate(input.builtAt);
   const files = buildMetaFiles(input.groups);
   const macro = buildMetaMacro(input.macroRows, input.sources);
+  const series = buildMetaSeries(input.groups);
   return {
     schema_version: SCHEMA_VERSION,
     built_at: utcIso(input.builtAt),
@@ -278,10 +330,10 @@ export function buildMeta(input: MetaInput): MetaFile {
     sources: buildMetaSources(input.sources, input.status, input.latest, today),
     catalog: buildMetaCatalog(input.catalog, today),
     files,
-    series: buildMetaSeries(input.groups),
+    series,
     macro,
     events: [...input.events].sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0)),
-    downloads: buildDownloads(files, input.latest, macro, input.macroRows),
+    downloads: buildDownloads(files, input.latest, macro, input.macroRows, series),
     holidays: [...new Set(input.holidays ?? [])].sort(),
   };
 }

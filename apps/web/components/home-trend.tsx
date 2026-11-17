@@ -20,7 +20,7 @@ import {
 import { cn } from '@/lib/utils';
 
 export interface HomeTrendProps {
-  /** Opsi katalog untuk keempat series (1 g dan Tabungan Emas). */
+  /** Opsi katalog untuk kelima series (1 g dan Tabungan Emas). */
   options: ExplorerOption[];
   asOf: string;
   calendar: DataCalendar;
@@ -105,7 +105,7 @@ export function HomeTrend({ options, asOf, calendar }: HomeTrendProps) {
               gapStyle="subtle"
               height={280}
               legend={false}
-              ariaLabel={`Grafik harga jual 1 gram, ${days} hari terakhir, untuk Antam, UBS, Galeri24, dan Tabungan Emas`}
+              ariaLabel={`Grafik harga jual 1 gram, ${days} hari terakhir, untuk Antam, UBS, Galeri24, Lotus Archi, dan Tabungan Emas`}
             />
             {gaps.length > 0 && (
               <p data-testid="trend-gap-note" className="m-0 text-xs text-faint">
@@ -115,7 +115,7 @@ export function HomeTrend({ options, asOf, calendar }: HomeTrendProps) {
           </div>
         )}
 
-        <div className="grid grid-cols-[repeat(auto-fit,minmax(min(220px,100%),1fr))] gap-3">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
           {TREND_DEFS.map((d) => {
             const line = lines?.find((l) => l.d.id === d.id)?.line;
             const s = line ? trendStats(line.points) : null;
@@ -141,13 +141,13 @@ export function HomeTrend({ options, asOf, calendar }: HomeTrendProps) {
                     {chg === null ? EMPTY : formatPct(chg, 1)}
                   </span>
                 </span>
-                <div className="num grid grid-cols-3 gap-1.5 text-xs">
+                <div className="num flex flex-col gap-1 text-xs">
                   {[
                     ['Tertinggi', s?.hi],
                     ['Terendah', s?.lo],
                     ['Rata-rata', s?.avg],
                   ].map(([label, v]) => (
-                    <span key={label as string} className="flex min-w-0 flex-col gap-0.5">
+                    <span key={label as string} className="flex justify-between gap-2">
                       <span className="text-faint">{label}</span>
                       <span>{typeof v === 'number' ? formatRupiah(v) : EMPTY}</span>
                     </span>

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   colorToken,
+  compareFileIds,
   displayBrand,
   parsePriceSeriesKey,
   parseSeriesKey,
@@ -11,6 +12,7 @@ import {
   seriesInFile,
   seriesKey,
   unitLabel,
+  variantLabel,
 } from './catalog';
 import type { SeriesRef } from './types';
 
@@ -103,5 +105,48 @@ describe('label dan warna', () => {
     );
     expect(colorToken({ brand: 'galeri24', product: 'gold_bar' })).toBe('g24');
     expect(colorToken({ brand: 'pegadaian', product: 'gold_savings' })).toBe('tab');
+    expect(colorToken({ brand: 'lotusarchi', product: 'gold_bar' })).toBe('lotus');
+    expect(displayBrand({ brand: 'lotusarchi', product: 'gold_bar' })).toBe('Lotus Archi');
+  });
+
+  it('variantLabel: produksi hanya untuk tahun, non_pegadaian berlabel sendiri', () => {
+    expect(variantLabel('')).toBe('');
+    expect(variantLabel('2026')).toBe('produksi 2026');
+    expect(variantLabel('non_pegadaian')).toBe('non-Pegadaian');
+  });
+
+  it('urutan file: galeri24 sebelum pegadaian, lotusarchi setelah galeri24', () => {
+    const ids = [
+      'pegadaian-pegadaian',
+      'pegadaian-lotusarchi',
+      'galeri24-ubs',
+      'galeri24-lotusarchi',
+      'pegadaian-galeri24',
+      'galeri24-galeri24',
+      'ubslifestyle-ubs',
+      'logammulia-antam',
+      'galeri24-antam',
+    ];
+    expect(ids.sort(compareFileIds)).toEqual([
+      'logammulia-antam',
+      'ubslifestyle-ubs',
+      'galeri24-galeri24',
+      'galeri24-lotusarchi',
+      'galeri24-antam',
+      'galeri24-ubs',
+      'pegadaian-galeri24',
+      'pegadaian-lotusarchi',
+      'pegadaian-pegadaian',
+    ]);
+  });
+
+  it('kunci series sumber galeri24 dan brand lotusarchi dapat di-parse', () => {
+    expect(parseSeriesKey('galeri24:lotusarchi:gold_bar::1')).toMatchObject({
+      source: 'galeri24',
+      brand: 'lotusarchi',
+    });
+    expect(parseSeriesKey('galeri24:antam:gold_bar:non_pegadaian:1')?.variant).toBe(
+      'non_pegadaian',
+    );
   });
 });

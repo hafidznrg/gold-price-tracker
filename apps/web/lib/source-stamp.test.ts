@@ -17,6 +17,11 @@ describe('sourceStampText', () => {
       'Sumber: pegadaian.co.id · harga terbit 31 Okt 2026, 10.27 WIB',
     );
   });
+  it('Galeri24: harga terbit', () => {
+    expect(sourceStampText('galeri24', '2026-11-17', '2026-11-17T09:30:00+07:00')).toBe(
+      'Sumber: galeri24.co.id · harga terbit 17 Nov 2026, 09.30 WIB',
+    );
+  });
   it('tanpa jam → tanggal saja', () => {
     expect(sourceStampText('pegadaian', '2026-10-31', null)).toBe(
       'Sumber: pegadaian.co.id · harga terbit 31 Okt 2026',

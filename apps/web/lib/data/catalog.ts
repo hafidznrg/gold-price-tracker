@@ -10,8 +10,13 @@ import type {
 
 // Katalog series, label, dan warna. Hanya `import type` dari @gold/schema agar aman di klien.
 
-const PRICE_SOURCE_IDS: readonly PriceSource[] = ['logammulia', 'pegadaian', 'ubslifestyle'];
-const BRAND_IDS: readonly Brand[] = ['antam', 'ubs', 'galeri24', 'pegadaian'];
+const PRICE_SOURCE_IDS: readonly PriceSource[] = [
+  'logammulia',
+  'pegadaian',
+  'ubslifestyle',
+  'galeri24',
+];
+const BRAND_IDS: readonly Brand[] = ['antam', 'ubs', 'galeri24', 'pegadaian', 'lotusarchi'];
 
 /** Bentuk kanonik berat (`0.5`, `1`, `1000`, `0.01`), sama dengan `canonicalWeight` schema. */
 export function weightKey(w: number): string {
@@ -177,6 +182,18 @@ export function displayBrand(ref: Pick<SeriesRef, 'brand' | 'product'>): string 
   return ref.product === 'gold_savings' ? 'Tabungan Emas' : BRAND_LABELS[ref.brand];
 }
 
+/**
+ * Keterangan varian untuk label: "produksi YYYY" hanya untuk variant tahun (4 digit, sama dengan
+ * `isYearVariant` schema), `non_pegadaian` = "non-Pegadaian" (buyback keping yang dibeli di luar
+ * Pegadaian/Galeri24), `''` tanpa keterangan. Varian lain tidak pernah ditulis "produksi …".
+ */
+export function variantLabel(variant: string): string {
+  if (variant === '') return '';
+  if (/^\d{4}$/.test(variant)) return `produksi ${variant}`;
+  if (variant === 'non_pegadaian') return 'non-Pegadaian';
+  return variant.replace(/_/g, ' ');
+}
+
 /** "Antam · Logam Mulia", "Tabungan Emas · Pegadaian". */
 export function seriesGroupLabel(ref: Pick<SeriesRef, 'source' | 'brand' | 'product'>): string {
   return `${displayBrand(ref)} · ${SOURCE_LABELS[ref.source]}`;
@@ -231,7 +248,7 @@ export function colorToken(ref: Pick<SeriesRef, 'brand' | 'product'>): ColorToke
     case 'pegadaian':
       return 'tab';
     case 'lotusarchi':
-      return 'gold'; // sementara; warna khusus di P6-10
+      return 'lotus';
   }
 }
 
@@ -253,6 +270,7 @@ export const COLOR_CLASSES: Record<ColorToken, { text: string; bg: string; borde
   antam: { text: 'text-antam', bg: 'bg-antam', border: 'border-antam' },
   ubs: { text: 'text-ubs', bg: 'bg-ubs', border: 'border-ubs' },
   g24: { text: 'text-g24', bg: 'bg-g24', border: 'border-g24' },
+  lotus: { text: 'text-lotus', bg: 'bg-lotus', border: 'border-lotus' },
   tab: { text: 'text-tab', bg: 'bg-tab', border: 'border-tab' },
   spot: { text: 'text-spot', bg: 'bg-spot', border: 'border-spot' },
   gold: { text: 'text-gold', bg: 'bg-gold', border: 'border-gold' },
@@ -277,9 +295,14 @@ export const SCRAPER_LABELS: Record<ScraperId, string> = {
 export const FILE_ORDER: readonly string[] = [
   'logammulia-antam',
   'ubslifestyle-ubs',
+  'galeri24-galeri24',
+  'galeri24-lotusarchi',
+  'galeri24-antam',
+  'galeri24-ubs',
   'pegadaian-galeri24',
   'pegadaian-antam',
   'pegadaian-ubs',
+  'pegadaian-lotusarchi',
   'pegadaian-pegadaian',
 ];
 

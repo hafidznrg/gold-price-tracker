@@ -75,13 +75,15 @@ function def(
   };
 }
 
-/** Enam series, urut mockup. */
+/** Series yang dibandingkan, urut mockup. */
 export const COMPARE_DEFS: readonly CompareDef[] = [
   def('lm-antam', 'logammulia', 'antam', 'gold_bar', 'antam', false),
   def('pg-antam', 'pegadaian', 'antam', 'gold_bar', 'antam', true),
   def('ubsl-ubs', 'ubslifestyle', 'ubs', 'gold_bar', 'ubs', false),
   def('pg-ubs', 'pegadaian', 'ubs', 'gold_bar', 'ubs', true),
+  def('g24-g24', 'galeri24', 'galeri24', 'gold_bar', 'g24', false),
   def('pg-g24', 'pegadaian', 'galeri24', 'gold_bar', 'g24', false),
+  def('g24-lotus', 'galeri24', 'lotusarchi', 'gold_bar', 'lotus', false),
   def('tab', 'pegadaian', 'pegadaian', 'gold_savings', 'tab', false, true),
 ];
 

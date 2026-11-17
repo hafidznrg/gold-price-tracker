@@ -33,6 +33,8 @@ export interface CardModel {
   buySpark: (number | null)[] | null;
   /** Keterangan kaki kartu. */
   note: string;
+  /** Deskripsi singkat di bawah judul (hanya kartu lebar Tabungan Emas); null = tanpa. */
+  description: string | null;
   noBuyback: string;
 }
 
@@ -50,10 +52,28 @@ function cardNote(h: Highlight, all: Highlight[]): string {
   if (h.source === 'logammulia') return `Harga dasar belum termasuk PPh 0,25%.${pg('antam')}`;
   if (h.source === 'ubslifestyle')
     return `Buyback untuk keping tahun produksi ${h.variant || '—'}${pg('ubs') ? ` ·${pg('ubs')}` : ''}`;
-  if (h.brand === 'galeri24')
-    return 'Galeri24 hanya dijual lewat Pegadaian. Harga buyback-nya belum tersedia.';
+  if (h.source === 'galeri24') {
+    const p = pg(h.brand);
+    return `Harga dan buyback dari situs Galeri24.${p ? `${p} (tanpa buyback).` : ''}`;
+  }
   return 'Pegadaian tidak menampilkan harga buyback untuk emas batangan.';
 }
+
+const TABUNGAN_DESC =
+  'Produk lain dari emas batangan: saldo emas di Pegadaian, dibeli dan dijual per gram (mulai 0,01 g).';
+
+/**
+ * File yang tampil sebagai kartu Hari ini, urut mockup. Harga batangan Pegadaian
+ * (`pegadaian-*`) dan seri Galeri24 untuk Antam/UBS (`galeri24-antam`, `galeri24-ubs`) tidak jadi
+ * kartu; harga Pegadaian disebut di catatan kartu, Antam/UBS Galeri24 muncul di Spread/Bandingkan.
+ */
+export const CARD_FILES: readonly string[] = [
+  'logammulia-antam',
+  'ubslifestyle-ubs',
+  'galeri24-galeri24',
+  'galeri24-lotusarchi',
+  'pegadaian-pegadaian',
+];
 
 function sparkOf(s: Spark): { sell: (number | null)[]; buy: (number | null)[] | null } {
   return { sell: s.sell, buy: s.buyback };
@@ -62,9 +82,7 @@ function sparkOf(s: Spark): { sell: (number | null)[]; buy: (number | null)[] | 
 export function buildCards(latest: LatestFile): CardModel[] {
   return [...latest.highlights]
     .sort((a, b) => compareFileIds(a.file, b.file))
-    .filter(
-      (h) => h.source !== 'pegadaian' || h.product === 'gold_savings' || h.brand === 'galeri24',
-    )
+    .filter((h) => CARD_FILES.includes(h.file))
     .map((h) => {
       const sp = sparkOf(h.spark);
       return {
@@ -84,6 +102,7 @@ export function buildCards(latest: LatestFile): CardModel[] {
         sellSpark: sp.sell,
         buySpark: h.buyback === null ? null : sp.buy,
         note: cardNote(h, latest.highlights),
+        description: h.product === 'gold_savings' ? TABUNGAN_DESC : null,
         noBuyback: 'Tidak ditampilkan sumber',
       };
     });

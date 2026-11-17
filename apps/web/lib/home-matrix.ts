@@ -11,12 +11,16 @@ function pick(ids: readonly string[]): CompareDef[] {
   return ids.flatMap((id) => COMPARE_DEFS.filter((d) => d.id === id));
 }
 
-/** Kolom matriks (urut mockup): Antam LM, Antam Pegadaian, UBS, Galeri24. */
+/**
+ * Kolom matriks (urut mockup): Antam LM, Antam Pegadaian, UBS, Galeri24 dan Lotus Archi (keduanya
+ * dari sumber Galeri24, dengan buyback semua gramasi).
+ */
 export const MATRIX_COLS: readonly CompareDef[] = pick([
   'lm-antam',
   'pg-antam',
   'ubsl-ubs',
-  'pg-g24',
+  'g24-g24',
+  'g24-lotus',
 ]);
 
 export const BEST_LABEL: Record<MatrixMode, string> = {
@@ -117,4 +121,10 @@ export function trendStats(
 }
 
 /** Series tren: jual 1 g per brand + Tabungan Emas per gram. */
-export const TREND_DEFS: readonly CompareDef[] = pick(['lm-antam', 'ubsl-ubs', 'pg-g24', 'tab']);
+export const TREND_DEFS: readonly CompareDef[] = pick([
+  'lm-antam',
+  'ubsl-ubs',
+  'g24-g24',
+  'g24-lotus',
+  'tab',
+]);

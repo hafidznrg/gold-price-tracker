@@ -20,15 +20,15 @@ const TERMS = [
 const FAQ = [
   {
     q: 'Kapan harga diperbarui?',
-    a: 'Logam Mulia dan UBS dicek setiap pagi; Pegadaian di empat slot sepanjang hari. Jam pembaruan tiap sumber terlihat di tombol "Diperbarui" di atas.',
+    a: 'Logam Mulia, UBS, dan Galeri24 dicek setiap pagi (Galeri24 menerbitkan harga sekali sehari); Pegadaian di empat slot sepanjang hari. Jam pembaruan tiap sumber terlihat di tombol "Diperbarui" di atas.',
   },
   {
     q: 'Kenapa harga Antam di Logam Mulia dan Pegadaian berbeda?',
     a: 'Harga Logam Mulia adalah harga dasar sebelum PPh 0,25%, sedangkan Pegadaian menjual dengan harganya sendiri.',
   },
   {
-    q: 'Kenapa buyback Galeri24 kosong?',
-    a: 'Pegadaian tidak menampilkan harga buyback Galeri24, jadi kami tidak mengisinya dengan perkiraan.',
+    q: 'Kenapa Antam punya dua harga buyback di Galeri24?',
+    a: 'Galeri24 membeli kembali keping Antam yang dibeli di Pegadaian atau Galeri24 dengan harga buyback normal. Keping dari tempat lain dihargai lebih rendah (non-Pegadaian), sekitar 1–1,5% di bawahnya. Keduanya kami simpan sebagai seri terpisah.',
   },
   {
     q: 'Apakah situs ini menjual emas?',

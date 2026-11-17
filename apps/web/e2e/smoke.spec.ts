@@ -62,6 +62,44 @@ for (const p of PAGES) {
 }
 
 test.describe('Beranda', () => {
+  test('kartu: Antam, UBS, Galeri24, Lotus Archi, Tabungan Emas; tanpa kartu ganda', async ({
+    page,
+  }) => {
+    const errors = collectErrors(page);
+    await page.goto('/');
+    const bars = page.getByRole('list', { name: 'Emas batangan' });
+    const titles = bars.getByRole('heading', { level: 2 });
+    await expect(titles).toHaveText(['Antam', 'UBS', 'Galeri24', 'Lotus Archi']);
+    await expect(page.getByRole('article', { name: 'Tabungan Emas' })).toContainText(
+      'Produk lain dari emas batangan',
+    );
+    await expect(
+      page.getByRole('heading', { level: 2, name: 'Galeri24', exact: true }),
+    ).toHaveCount(1);
+    // Galeri24 dan Lotus Archi punya buyback (bukan "tidak ditampilkan").
+    for (const name of ['Galeri24', 'Lotus Archi']) {
+      const card = bars.locator('article').filter({ has: page.getByRole('heading', { name }) });
+      await expect(card).toContainText(/Buyback\s*Rp/);
+      await expect(card).not.toContainText('tidak ditampilkan');
+    }
+    // Catatan kartu memuat harga Pegadaian dan atribusi Galeri24.
+    await page.getByRole('button', { name: 'Keterangan Galeri24' }).click();
+    await expect(page.getByRole('note')).toContainText('Di Pegadaian: Rp');
+    await expect(page.getByRole('note')).toContainText('galeri24.co.id');
+    expect(errors).toEqual([]);
+  });
+
+  test('matriks memuat kolom Galeri24 dan Lotus Archi; FAQ dua buyback Antam', async ({ page }) => {
+    await page.goto('/');
+    const table = page.getByRole('table', { name: 'Perbandingan harga per gramasi' });
+    await expect(table.getByRole('columnheader', { name: /Lotus Archi/ })).toBeVisible();
+    await expect(
+      table.getByRole('columnheader', { name: 'Galeri24 Galeri24', exact: true }),
+    ).toBeVisible();
+    await expect(page.getByText('Kenapa Antam punya dua harga buyback di Galeri24?')).toBeVisible();
+    await expect(page.getByText('Kenapa buyback Galeri24 kosong?')).toHaveCount(0);
+  });
+
   test('matriks gramasi: ganti mode menandai sel terbaik dan memperbarui hint', async ({
     page,
   }) => {
@@ -90,7 +128,7 @@ test.describe('Beranda', () => {
     const errors = collectErrors(page);
     await page.goto('/');
     await expect(page.getByRole('heading', { name: 'Tren harga jual 1 gram' })).toBeVisible();
-    await expect(page.getByTestId('trend-stat')).toHaveCount(4);
+    await expect(page.getByTestId('trend-stat')).toHaveCount(5);
     await expect(page.getByTestId('trend-stat').first()).toContainText('Tertinggi');
     await page.getByRole('radio', { name: '90H', exact: true }).click();
     await expect(page.getByRole('radio', { name: '90H', exact: true })).toBeChecked();
@@ -264,6 +302,15 @@ test.describe('Kelipatan', () => {
 });
 
 test.describe('Data', () => {
+  test('kartu Galeri24 dan Antam non-Pegadaian tampil sendiri', async ({ page }) => {
+    await page.goto('/data');
+    const main = page.locator('main');
+    await expect(main).toContainText('Emas batangan · Galeri24');
+    await expect(main).toContainText('Antam non-Pegadaian · Galeri24');
+    await expect(main).toContainText('Lotus Archi');
+    await expect(main).not.toContainText('produksi non_pegadaian');
+  });
+
   test('tombol unduh membuka pop-up konfirmasi, tidak langsung mengunduh', async ({ page }) => {
     await page.goto('/data');
     await expect(page.locator('main')).not.toContainText('sumber tanpa jam');

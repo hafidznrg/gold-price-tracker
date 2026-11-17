@@ -87,7 +87,7 @@ function SpotStrip({ spot }: { spot: LatestSpot | null }) {
 function whenOf(source: string, date: string | null, at: string | null): string {
   if (!date) return EMPTY;
   if (source === 'ubslifestyle' || !at) return `data ${formatDate(date, false)}`;
-  const verb = source === 'pegadaian' ? 'harga terbit' : '';
+  const verb = source === 'pegadaian' || source === 'galeri24' ? 'harga terbit' : '';
   return `${formatDate(date, false)} · ${verb} ${formatTimeWib(at)}`.replace('  ', ' ');
 }
 
@@ -99,6 +99,8 @@ export default function HomePage() {
   const latest = readLatest();
   const meta = readMeta();
   const cards = buildCards(latest);
+  const bars = cards.filter((c) => c.kind === 'fisik');
+  const savings = cards.filter((c) => c.kind === 'tabungan');
   const cells = todayCells(latest);
   const trendOptions = compareOptions(explorerOptions(meta)).filter((o) =>
     TREND_DEFS.some(
@@ -160,10 +162,26 @@ export default function HomePage() {
             <Freshness items={freshItems} latestLabel={latestLabel} builtAt={meta.built_at} />
           </div>
 
-          {/* HP 1 kolom, tablet 2 kolom, desktop lebar 4 kolom. */}
-          <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 xl:grid-cols-4">
-            {cards.map((c) => (
-              <PriceCard key={c.id} c={c} />
+          {/* Emas batangan: HP 1 kolom, tablet 2 kolom, desktop (≥ 1024 px) 4 kolom. Tabungan Emas
+              (bukan keping) memakai kartu lebar di bawahnya. */}
+          <div className="flex flex-col gap-3.5">
+            <div
+              role="list"
+              aria-label="Emas batangan"
+              className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 lg:grid-cols-4"
+            >
+              {bars.map((c) => (
+                <div
+                  key={c.id}
+                  role="listitem"
+                  className="flex min-w-0 flex-col [&>article]:flex-1"
+                >
+                  <PriceCard c={c} />
+                </div>
+              ))}
+            </div>
+            {savings.map((c) => (
+              <PriceCard key={c.id} c={c} wide />
             ))}
           </div>
 
