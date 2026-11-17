@@ -10,11 +10,12 @@ export const SCRAPER_IDS = [
   'xaus',
   'jisdor',
   'worldbank',
+  'galeri24',
 ] as const;
 export const ScraperId = z.enum(SCRAPER_IDS);
 export type ScraperId = z.infer<typeof ScraperId>;
 
-export const PRICE_SOURCES = ['logammulia', 'pegadaian', 'ubslifestyle'] as const;
+export const PRICE_SOURCES = ['logammulia', 'pegadaian', 'ubslifestyle', 'galeri24'] as const;
 export const PriceSource = z.enum(PRICE_SOURCES);
 export type PriceSource = z.infer<typeof PriceSource>;
 
@@ -24,7 +25,7 @@ export const MacroSource = z.enum(MACRO_SOURCES);
 export type MacroSource = z.infer<typeof MacroSource>;
 
 /** `pegadaian` = produk milik Pegadaian sendiri (Tabungan Emas, D-30). */
-export const BRANDS = ['antam', 'ubs', 'galeri24', 'pegadaian'] as const;
+export const BRANDS = ['antam', 'ubs', 'galeri24', 'pegadaian', 'lotusarchi'] as const;
 export const Brand = z.enum(BRANDS);
 export type Brand = z.infer<typeof Brand>;
 
@@ -67,7 +68,12 @@ export const ErrorCode = z.enum(ERROR_CODES);
 export type ErrorCode = z.infer<typeof ErrorCode>;
 
 /** Alasan karantina (TECH-SPEC §7). */
-export const QUARANTINE_REASONS = ['UNKNOWN_ITEM', 'PRICE_JUMP', 'MASS_REVISION'] as const;
+export const QUARANTINE_REASONS = [
+  'UNKNOWN_ITEM',
+  'PRICE_JUMP',
+  'MASS_REVISION',
+  'PRICE_FORMULA',
+] as const;
 export const QuarantineReason = z.enum(QUARANTINE_REASONS);
 export type QuarantineReason = z.infer<typeof QuarantineReason>;
 

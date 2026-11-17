@@ -12,12 +12,14 @@ const SOURCE_DOMAIN: Record<PriceSource, string> = {
   logammulia: 'logammulia.com',
   pegadaian: 'pegadaian.co.id',
   ubslifestyle: 'ubslifestyle.com',
+  galeri24: 'galeri24.co.id',
 };
 
 const SOURCE_VERB: Record<PriceSource, string> = {
   logammulia: 'terakhir diperbarui',
   pegadaian: 'harga terbit',
   ubslifestyle: 'data',
+  galeri24: 'harga terbit',
 };
 
 /** Bagian-bagian atribusi untuk tata letak berkolom: domain dan keterangan waktu. */

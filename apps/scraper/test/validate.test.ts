@@ -1,4 +1,4 @@
-import { expandCatalog, type CatalogItem } from '@gold/schema';
+import { expandCatalog, priceRowKey, type CatalogItem } from '@gold/schema';
 import { describe, expect, it } from 'vitest';
 import { validate, type ValidateInput } from '../src/pipeline/validate';
 import type { Candidate } from '../src/pipeline/upsert';
@@ -16,6 +16,14 @@ const catalog: CatalogItem[] = expandCatalog({
     },
     ...(['antam', 'ubs', 'galeri24'] as const).map((brand) => ({
       source: 'pegadaian' as const,
+      brand,
+      product: 'gold_bar',
+      weights: [0.5, 1, 2, 5, 10, 25],
+      active_from: '2010-01-01',
+      active_to: null,
+    })),
+    ...(['antam', 'ubs', 'galeri24', 'lotusarchi'] as const).map((brand) => ({
+      source: 'galeri24' as const,
       brand,
       product: 'gold_bar',
       weights: [0.5, 1, 2, 5, 10, 25],
@@ -325,5 +333,77 @@ describe('V-11 revisi histori massal', () => {
       }),
     );
     expect(r.outcome === 'ok' && r.held).toEqual([]);
+  });
+});
+
+// P6-05 — Galeri24: V-04 hanya brand wajib `variant = ''`, V-12 lewat `ParseResult.suspect`.
+describe('galeri24 (P6-05)', () => {
+  const g24Day = (
+    brands = ['antam', 'ubs', 'galeri24'] as const,
+    n = 5,
+    extra: Partial<Candidate> = {},
+  ) =>
+    brands.flatMap((brand) =>
+      [0.5, 1, 2, 5, 10, 25].slice(0, n).map((w) =>
+        candidate({
+          source: 'galeri24',
+          brand,
+          variant: '',
+          weight_g: w,
+          sell_price: Math.round(2_500_000 * w),
+          buyback_price: Math.round(2_300_000 * w),
+          source_updated_at: '2026-10-26T10:18:00+07:00',
+          ...extra,
+        }),
+      ),
+    );
+
+  it('V-04: 5 gramasi per brand lolos; 4 untuk satu brand → VALIDATION_FAILED', () => {
+    expect(validate(input(g24Day(), { source: 'galeri24' })).outcome).toBe('ok');
+    const r = validate(
+      input([...g24Day(['antam', 'ubs'] as never), ...g24Day(['galeri24'] as never, 4)], {
+        source: 'galeri24',
+      }),
+    );
+    expect(r).toMatchObject({ outcome: 'failed', error_code: 'VALIDATION_FAILED' });
+    expect(r.outcome === 'failed' && r.error_message).toMatch(/^V-04: galeri24 4 gramasi/);
+  });
+
+  it('V-04: lotusarchi dan non_pegadaian tidak dihitung', () => {
+    // antam hanya 4 baris `variant = ''` + 5 non_pegadaian → tetap gagal.
+    const rows = [
+      ...g24Day(['ubs', 'galeri24'] as never),
+      ...g24Day(['antam'] as never, 4),
+      ...g24Day(['antam'] as never, 5, { variant: 'non_pegadaian' }),
+      ...g24Day(['lotusarchi'] as never),
+    ];
+    const r = validate(input(rows, { source: 'galeri24' }));
+    expect(r).toMatchObject({ outcome: 'failed', error_code: 'VALIDATION_FAILED' });
+    expect(r.outcome === 'failed' && r.error_message).toMatch(/antam 4 gramasi/);
+    // brand opsional saja yang lengkap tanpa lotus → tetap lolos.
+    const ok = validate(
+      input([...g24Day(), ...g24Day(['antam'] as never, 5, { variant: 'non_pegadaian' })], {
+        source: 'galeri24',
+      }),
+    );
+    expect(ok.outcome).toBe('ok');
+  });
+
+  it('V-12: baris di parsed.suspect → karantina PRICE_FORMULA, sisanya lolos', () => {
+    const rows = g24Day();
+    const key = priceRowKey(rows[3]!);
+    const parsed = {
+      rows,
+      dataDate: TODAY,
+      sourceUpdatedAt: null,
+      stale: null,
+      suspect: [{ key, reason: 'PRICE_FORMULA' as const, detail: 'x' }],
+    };
+    const r = validate(input(rows, { source: 'galeri24', parsed }));
+    expect(r.outcome).toBe('ok');
+    if (r.outcome === 'ok') {
+      expect(r.rows).toHaveLength(14);
+      expect(r.held).toEqual([{ reason_code: 'PRICE_FORMULA', rows: [rows[3]] }]);
+    }
   });
 });

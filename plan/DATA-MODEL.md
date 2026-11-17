@@ -273,14 +273,15 @@ Nilai `update_calendar` final per sumber ditetapkan dari observasi di Fase 0–1
 
 | Enum | Nilai |
 | --- | --- |
-| `source` (harga) | `logammulia`, `pegadaian`, `ubslifestyle` |
+| `source` (harga) | `logammulia`, `pegadaian`, `ubslifestyle`, `galeri24` |
 | `source` (makro) | `xaus`, `worldbank`, `bi`, `ecb`, `wdi` |
-| `brand` | `antam`, `ubs`, `galeri24`, `pegadaian` (Tabungan Emas, D-30) |
+| `brand` | `antam`, `ubs`, `galeri24`, `pegadaian` (Tabungan Emas, D-30), `lotusarchi` (Galeri24, Lotus Archi). Galeri24 juga menerbitkan Antam yang dibeli di luar Pegadaian: `brand = antam`, `variant = 'non_pegadaian'` |
 | `product` | `gold_bar` (default); varian lain ditambah lewat katalog, mis. `gold_bar_retro` |
 | `series` | `xau_usd_oz`, `usd_idr_jisdor`, `usd_idr_ecb`, `usd_idr_annual` |
 | `origin` | `scrape`, `backfill`, `manual` |
 | `RUN.status` | `success` (semua baris ditulis/tak berubah) · `partial` (sebagian ditahan) · `stale` (sumber belum update) · `failed` · `skipped` (tidak perlu dijalankan) |
 | `RUN.error_code` | `FETCH_HTTP`, `FETCH_TIMEOUT`, `BLOCKED`, `TOKEN_MISSING`, `PARSE_ERROR`, `SCHEMA_INVALID`, `VALIDATION_FAILED`, `STALE_SOURCE`, `UNKNOWN` |
+| `QUARANTINE.reason_code` | `UNKNOWN_ITEM`, `PRICE_JUMP`, `MASS_REVISION`, `PRICE_FORMULA` (V-12: `sellingPrice` Galeri24 tidak cocok dengan `price` × margin) |
 
 ## 4. Format dan normalisasi
 

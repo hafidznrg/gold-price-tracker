@@ -34,7 +34,7 @@ describe('cli', () => {
 
   it('check memvalidasi config repo', async () => {
     expect(await main(['check', '--root', ROOT])).toBe(EXIT.OK);
-    expect(log.mock.calls.join('\n')).toMatch(/sources:\s+6/);
+    expect(log.mock.calls.join('\n')).toMatch(/sources:\s+7 \(6 aktif\)/);
   });
 
   it('plan/scrape/merge memvalidasi argumen wajib', async () => {

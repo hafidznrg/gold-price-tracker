@@ -74,14 +74,14 @@
 
 ### Gelombang B — skema dan konfigurasi
 
-- [ ] **P6-02** Skema `@gold/schema` (`packages/schema/src/enums.ts`) + penyesuaian tipe di web. — · S
+- [x] **P6-02** Skema `@gold/schema` (`packages/schema/src/enums.ts`) + penyesuaian tipe di web. — · S
   - `SCRAPER_IDS` + `PRICE_SOURCES`: tambah `galeri24` (dan `lotusarchi` di P6-09, bukan sekarang).
   - `BRANDS`: tambah `lotusarchi`.
   - `QUARANTINE_REASONS`: tambah `PRICE_FORMULA` (V-12).
   - **Web ikut berubah di commit yang sama**, karena `SOURCE_LABELS`, `SOURCE_DOMAINS`, `BRAND_LABELS`, `SCRAPER_LABELS` (`apps/web/lib/data/catalog.ts`) dan `SOURCE_DOMAIN`, `SOURCE_VERB` (`apps/web/lib/source-stamp.ts`) bertipe `Record<PriceSource | Brand | ScraperId, …>`. Tanpa entri baru, `pnpm typecheck` gagal. Isi label/domain minimal di sini; UI-nya di P6-10.
   - Uji `packages/schema/test/*` untuk enum baru; DATA-MODEL §3.6 diperbarui.
   - Nilai enum baru bukan perubahan kolom → `SCHEMA_VERSION` tetap (DATA-MODEL §8).
-- [ ] **P6-03** Konfigurasi. — · S
+- [x] **P6-03** Konfigurasi. — · S
   - `config/sources.yml`: entri `galeri24`. Usulan awal (sesuaikan dengan hasil P6-01):
 
     ```yaml
@@ -106,7 +106,7 @@
 
 ### Gelombang C — scraper Galeri24
 
-- [ ] **P6-04** `apps/scraper/src/sources/galeri24.ts` (`galeri24@1.0.0`), daftarkan di `sources/index.ts`. — `FR-02` (perluasan), `FR-10` · M
+- [x] **P6-04** `apps/scraper/src/sources/galeri24.ts` (`galeri24@1.0.0`), daftarkan di `sources/index.ts`. — `FR-02` (perluasan), `FR-10` · M
   - `fetchRaw`: `GET /api/gold-prices/page-data?take=1000&date={ctx.date ?? hari ini WIB}`, `Accept: application/json`. Bila respons bukan JSON valid atau status ≥ 400: jeda `pauseMs`, lalu `GET /harga-emas` dan ambil isi `<script id="__NUXT_DATA__">`. Raw = `{ via: 'page-data' | 'nuxt', body }` (JSON), agar parser tahu bentuknya. Fallback dicatat di `note`.
   - `parse` (murni):
     - `page-data` → `results`; `nuxt` → `devalue.parse(body).data.goldPrice` (tambah dependensi `devalue` ke `apps/scraper`; payload memakai format devalue Nuxt 3, root = `[["Reactive",1], { data, state, … }, …]`).
@@ -126,7 +126,7 @@
     - tanggal campur di brand wajib → `VALIDATION_FAILED`; baris opsional tanggal lain → dibuang + note;
     - jalur `nuxt` = jalur `page-data` untuk snapshot yang sama;
     - respons rusak → `PARSE_ERROR`.
-- [ ] **P6-05** Validasi untuk `galeri24` di `apps/scraper/src/pipeline/validate.ts`. — `FR-10` · S
+- [x] **P6-05** Validasi untuk `galeri24` di `apps/scraper/src/pipeline/validate.ts`. — `FR-10` · S
   - V-04: `MIN_ROWS.galeri24 = 5` per brand wajib (`GALERI24_BRANDS = ['antam', 'ubs', 'galeri24']`), hanya `variant = ''`. Lotus Archi dan non-Pegadaian tidak dihitung.
   - **V-12 (baru, tingkat baris → karantina `PRICE_FORMULA`)**: `sellingPrice === ceil(price × (1 + margin/100) / 1000) × 1000`. Rumus ini cocok untuk 1 g dan 100 g Antam, UBS, Galeri24, Lotus Archi pada 16 Nov 2026; tujuannya menangkap salah baca kolom.
     - Mekanisme: field opsional baru `ParseResult.suspect?: { key: string; reason: QuarantineReason; detail: string }[]` (`sources/types.ts`). `key` = `priceRowKey`. Parser mengisinya, `validate()` memindahkan baris itu ke karantina `PRICE_FORMULA`. Tidak ada kolom CSV baru, dan parser tetap murni.

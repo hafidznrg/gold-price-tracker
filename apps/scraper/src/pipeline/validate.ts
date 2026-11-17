@@ -26,15 +26,18 @@ import {
 
 // TECH-SPEC §7 — gerbang kualitas harga ritel. Tingkat run (V-01, V-03, V-04) menggagalkan
 // seluruh sumber; V-06 menandai `stale`; tingkat baris (V-02, V-05) menahan baris ke karantina;
-// V-11 menahan seluruh batch (D-15). Bagian makro (V-08–V-10) ada di bawah. Fungsi murni.
+// V-11 menahan seluruh batch (D-15). V-12 (Galeri24, karantina `PRICE_FORMULA`) memakai
+// `ParseResult.suspect` dari parser karena `price`/`margin` tidak ikut CSV. Bagian makro (V-08–V-10) ada di bawah. Fungsi murni.
 
 export const MAX_PRICE_JUMP = 0.1;
 export const MAX_HISTORY_REVISIONS = 20;
 
 /** V-04: jumlah baris minimum per sumber. */
-export const MIN_ROWS = { ubslifestyle: 13, pegadaian: 5, logammulia: 12 } as const;
+export const MIN_ROWS = { ubslifestyle: 13, pegadaian: 5, logammulia: 12, galeri24: 5 } as const;
 /** Brand yang wajib ada di Pegadaian (D-20). */
 export const PEGADAIAN_BRANDS = ['antam', 'ubs', 'galeri24'] as const;
+/** Brand wajib di Galeri24 (P6-05); Lotus Archi dan Antam non-Pegadaian opsional. */
+export const GALERI24_BRANDS = ['antam', 'ubs', 'galeri24'] as const;
 
 export interface ValidateInput {
   source: PriceSource;
@@ -126,6 +129,15 @@ function checkMinRows(
         ? null
         : `V-04: ${short.map(([b, n]) => `${b} ${n} gramasi`).join(', ')} (minimal ${MIN_ROWS.pegadaian} per brand)`;
     }
+    case 'galeri24': {
+      // Hanya `variant = ''`: baris opsional (lotusarchi, non_pegadaian) tidak dihitung.
+      const short = GALERI24_BRANDS.map(
+        (b) => [b, rows.filter((r) => r.brand === b && r.variant === '').length] as const,
+      ).filter(([, n]) => n < MIN_ROWS.galeri24);
+      return short.length === 0
+        ? null
+        : `V-04: ${short.map(([b, n]) => `${b} ${n} gramasi`).join(', ')} (minimal ${MIN_ROWS.galeri24} per brand)`;
+    }
     case 'logammulia':
       // `note` = fallback 1 g saat tabel gagal dibaca (FR-04): sengaja hanya satu baris 1 g.
       return (note && rows.length === 1 && rows[0]!.weight_g === 1) ||
@@ -182,12 +194,18 @@ export function validate(input: ValidateInput): ValidateResult {
   if (stale) return { outcome: 'stale', reason: stale };
 
   const previous = lastValues(existing);
+  const suspect = new Map((parsed.suspect ?? []).map((s) => [s.key, s]));
   const unknown: Candidate[] = [];
+  const formula: Candidate[] = [];
   const jumps: Candidate[] = [];
   const passed: Candidate[] = [];
   for (const row of rows) {
     if (!isInCatalog(catalog, row)) {
       unknown.push(row); // V-02
+      continue;
+    }
+    if (suspect.has(priceRowKey(row))) {
+      formula.push(row); // V-12
       continue;
     }
     const prev = previous(row);
@@ -203,6 +221,7 @@ export function validate(input: ValidateInput): ValidateResult {
 
   const held: HeldBatch[] = [];
   if (unknown.length > 0) held.push({ reason_code: 'UNKNOWN_ITEM', rows: unknown });
+  if (formula.length > 0) held.push({ reason_code: 'PRICE_FORMULA', rows: formula });
   if (jumps.length > 0) held.push({ reason_code: 'PRICE_JUMP', rows: jumps });
 
   // V-11: revisi histori (tanggal < kemarin) dalam jumlah besar → tahan seluruh batch.
@@ -225,6 +244,8 @@ export function validate(input: ValidateInput): ValidateResult {
  * Validasi ulang baris karantina sebelum `approve` (WORKFLOWS §3.5): aturan baris dan V-03
  * diperiksa lagi terhadap data sekarang, kecuali aturan yang memicu karantina itu. V-02 tetap
  * berlaku untuk `UNKNOWN_ITEM`: tambahkan item ke `config/catalog.yml` dulu, lalu setujui.
+ * `PRICE_FORMULA` (V-12) tidak bisa dicek ulang di sini (`price`/`margin` tidak ada di baris);
+ * pemeriksaan lainnya tetap berjalan.
  * Mengembalikan daftar pelanggaran (kosong = boleh disetujui).
  */
 export function revalidateHeld(

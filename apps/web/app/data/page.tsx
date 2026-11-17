@@ -37,7 +37,13 @@ const DOT: Record<ColorToken, string> = {
   muted: 'bg-muted',
 };
 
-const BRAND_NAME = { antam: 'Antam', ubs: 'UBS', galeri24: 'Galeri24', pegadaian: '' } as const;
+const BRAND_NAME = {
+  antam: 'Antam',
+  ubs: 'UBS',
+  galeri24: 'Galeri24',
+  pegadaian: '',
+  lotusarchi: 'Lotus Archi',
+} as const;
 
 /** Baris "kapan": tanggal + jam bila sumber mencatat jam; Pegadaian = jam harga terbit. */
 function whenText(d: DownloadEntry): string {

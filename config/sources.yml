@@ -48,6 +48,19 @@ sources:
     enabled: true
     notes: JSON tanpa token; brand dari idVendor (D-20). Tabungan Emas dari /gold/prices (D-30). Fallback Playwright (DOM) belum dibuat (D-23).
 
+  - id: galeri24
+    kind: prices
+    url: https://galeri24.co.id/api/gold-prices/page-data
+    fetch_method: api
+    workflow: scrape-retail
+    update_calendar: daily # harga Minggu ada (15 & 16 Nov 2026); final setelah observasi (Q-6)
+    schedule_window: afternoon # revisi pagi sudah final; harga D+1 dibuat ±17.50 WIB tetapi halaman tetap D sampai tengah malam
+    stale_is_error_on_expected_day: true
+    accept_previous_day: true # run terlambat lewat tengah malam tidak jadi alarm palsu (D-42)
+    parser_version: 1.0.0
+    enabled: false # true setelah P6-04 + P6-05 lolos dan P6-01 hijau dari runner
+    notes: JSON server route Nuxt tanpa token; brand dari vendorCode (= idVendor Pegadaian, D-20). Fallback __NUXT_DATA__ dari /harga-emas.
+
   - id: logammulia
     kind: prices
     url: https://logammulia.com/harga-emas

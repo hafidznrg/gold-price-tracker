@@ -435,7 +435,18 @@ export function checkGaleri24(
   if (pageDataYesterday !== null) {
     c.try('parameter date dipakai? (informatif)', () => {
       const identical = text(pageData) === text(pageDataYesterday);
-      const set = (b: Buffer | string) => [...new Set(galeri24Rows(b).map((r) => r.date))].sort();
+      const targetCodes = new Set<string>([
+        ...Object.keys(GALERI24_VENDORS),
+        ...Object.keys(GALERI24_OPTIONAL_VENDORS),
+      ]);
+      const set = (b: Buffer | string) =>
+        [
+          ...new Set(
+            galeri24Rows(b)
+              .filter((r) => targetCodes.has(r.vendorCode))
+              .map((r) => r.date),
+          ),
+        ].sort();
       const a = set(pageData);
       const b = set(pageDataYesterday);
       const same = identical || a.join() === b.join();

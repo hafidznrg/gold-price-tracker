@@ -132,6 +132,7 @@ export const SOURCE_LABELS: Record<PriceSource, string> = {
   logammulia: 'Logam Mulia',
   pegadaian: 'Pegadaian',
   ubslifestyle: 'UBS Lifestyle',
+  galeri24: 'Galeri24',
 };
 
 /** Domain untuk atribusi "Sumber: …". */
@@ -139,6 +140,7 @@ export const SOURCE_DOMAINS: Record<PriceSource, string> = {
   logammulia: 'logammulia.com',
   pegadaian: 'pegadaian.co.id',
   ubslifestyle: 'ubslifestyle.com',
+  galeri24: 'galeri24.co.id',
 };
 
 export const BRAND_LABELS: Record<Brand, string> = {
@@ -146,6 +148,7 @@ export const BRAND_LABELS: Record<Brand, string> = {
   ubs: 'UBS',
   galeri24: 'Galeri24',
   pegadaian: 'Pegadaian',
+  lotusarchi: 'Lotus Archi',
 };
 
 export const PRODUCT_LABELS: Record<string, string> = {
@@ -227,6 +230,8 @@ export function colorToken(ref: Pick<SeriesRef, 'brand' | 'product'>): ColorToke
       return 'g24';
     case 'pegadaian':
       return 'tab';
+    case 'lotusarchi':
+      return 'gold'; // sementara; warna khusus di P6-10
   }
 }
 
@@ -265,6 +270,7 @@ export const SCRAPER_LABELS: Record<ScraperId, string> = {
   xaus: 'XAU/USD',
   jisdor: 'JISDOR',
   worldbank: 'World Bank Pink Sheet',
+  galeri24: 'Galeri24',
 };
 
 /** Urutan file series di kartu Hari ini dan halaman Data (mockup). */

@@ -294,14 +294,15 @@ Tingkat **run** = seluruh hasil sumber itu tidak ditulis (`failed`). Tingkat **b
 | --- | --- | --- | --- | --- |
 | V-01 | Lolos skema `zod` (tipe, kolom wajib, enum, minimal satu harga terisi) | Semua | Run | `SCHEMA_INVALID` |
 | V-02 | `source × brand × product × weight_g` ada di `config/catalog.yml` dan aktif | Harga ritel | Baris | Karantina `UNKNOWN_ITEM` → tambahkan ke katalog lalu setujui |
-| V-03 | `buyback_price < sell_price` pada baris yang sama | Harga ritel | Run | `VALIDATION_FAILED` |
-| V-04 | Jumlah baris ≥ minimum (UBS ≥ 13 untuk tahun berjalan; Pegadaian ≥ 5 per brand; Logam Mulia ≥ 12, kecuali fallback satu baris 1 g dari grafik saat tabel gagal dibaca, P4-11) | Harga ritel | Run | `VALIDATION_FAILED` |
+| V-03 | `buyback_price < sell_price` pada baris yang sama. Galeri24: baris opsional (Lotus Archi, Antam non-Pegadaian) yang melanggar dibuang parser + `note`, bukan menggagalkan run; baris `sell_price = null` dilewati | Harga ritel | Run | `VALIDATION_FAILED` |
+| V-04 | Jumlah baris ≥ minimum (UBS ≥ 13 untuk tahun berjalan; Pegadaian ≥ 5 per brand; Galeri24 ≥ 5 per brand wajib (Antam, UBS, Galeri24; hanya `variant = ''`, Lotus Archi dan non-Pegadaian tidak dihitung); Logam Mulia ≥ 12, kecuali fallback satu baris 1 g dari grafik saat tabel gagal dibaca, P4-11) | Harga ritel | Run | `VALIDATION_FAILED` |
 | V-05 | Harga per gram berubah ≤ ±10% dari nilai terakhir seri yang sama | Harga ritel | Baris | Karantina `PRICE_JUMP` |
 | V-06 | Tanggal data = hari ini. UBS: titik terakhir grafik yang cocok dengan buyback 1 g tabel (D-19); Pegadaian: `tglBerlaku` (D-20) | UBS, Pegadaian | Run | `stale`; gagal hanya pada hari yang diharapkan |
 | ~~V-07~~ | ~~Titik terakhir ≤ 3 hari; jumlah titik histori ≥ `status.history_points`~~ — dihapus (D-26), Logam Mulia memakai V-06 | — | — | — |
 | V-08 | Kurs berubah ≤ ±5% per hari | USD/IDR | Baris | Karantina `PRICE_JUMP` |
 | V-09 | Emas berubah ≤ ±8% per hari | XAU/USD | Baris | Karantina `PRICE_JUMP` |
 | V-10 | Respons tidak basi: histori `data_state.status = "fresh"`, spot `stale = false` | xaus | Run | `STALE_SOURCE` |
+| V-12 | `sellingPrice = ceil(price × (1 + margin/100) / 1000) × 1000`; parser menandai baris menyimpang lewat `ParseResult.suspect`, baris `sell_price = null` tidak dicek | Galeri24 | Baris | Karantina `PRICE_FORMULA` |
 | V-11 | Revisi nilai histori (tanggal < kemarin) ≤ 20 baris per run | Semua | Run | Karantina seluruh batch `MASS_REVISION` |
 
 ## 8. Build web

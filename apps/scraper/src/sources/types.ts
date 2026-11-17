@@ -1,4 +1,4 @@
-import type { MacroRow, PriceRow, ScraperId, SourceConfig } from '@gold/schema';
+import type { MacroRow, PriceRow, QuarantineReason, ScraperId, SourceConfig } from '@gold/schema';
 
 // TECH-SPEC §3 — kontrak setiap modul sumber.
 
@@ -46,6 +46,11 @@ export interface ParseResult<Row> {
   historyPoints?: number;
   /** Spot emas (hanya xaus); pipeline menambahkan kurs USD/IDR terakhir menjadi `spot.json`. */
   spot?: { xau_usd_oz: number; fetched_at: string; stale: boolean };
+  /**
+   * Baris yang mencurigakan menurut parser (V-12 Galeri24); `key` = `priceRowKey`. Baris tetap
+   * ada di `rows`; `validate()` memindahkannya ke karantina dengan `reason`.
+   */
+  suspect?: { key: string; reason: QuarantineReason; detail: string }[];
   /** Catatan non-fatal untuk `RUN.error_message` pada run yang tetap berhasil (mis. fallback). */
   note?: string;
 }
