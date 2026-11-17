@@ -1,9 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import type { LatestFile, LatestSeries, SeriesRowTuple } from './data';
 import {
+  POPULAR_PAIRS,
+  barSources,
   breakEvenPct,
+  buildOptions,
   buybackChoices,
   buybackPoints,
+  compareItems,
   compatible,
   findGaps,
   joinDays,
@@ -14,6 +18,7 @@ import {
   sliceDays,
   todayPair,
   ubsYear,
+  weightBarItems,
   spreadPct,
   spreadStats,
   weightSpreads,
@@ -230,5 +235,133 @@ describe('weightSpreads', () => {
       '',
     );
     expect(rows[1]!.value).toBeNull();
+  });
+});
+
+describe('Galeri24 dan Lotus Archi (P6-10)', () => {
+  const latest = { series: [], as_of: null } as unknown as LatestFile;
+  const { sell, buyback } = buildOptions(latest);
+  const find = (list: SpreadOption[], id: string) => list.find((x) => x.id === id)!;
+
+  it('opsi jual dan buyback baru', () => {
+    const sellIds = sell.map((x) => x.id);
+    for (const id of ['g24-antam', 'g24-ubs', 'g24-g24', 'g24-lotus', 'pg-lotus']) {
+      expect(sellIds).toContain(id);
+    }
+    const buyIds = buyback.map((x) => x.id);
+    for (const id of ['g24-antam', 'g24-ubs', 'g24-g24', 'g24-lotus', 'g24-antam-np']) {
+      expect(buyIds).toContain(id);
+    }
+    expect(buyIds).not.toContain('pg-lotus');
+    expect(sellIds).not.toContain('g24-antam-np');
+  });
+
+  it('g24-antam-np: buyback saja, varian non_pegadaian, label sesuai', () => {
+    const np = find(buyback, 'g24-antam-np');
+    expect(np.variants).toEqual(['non_pegadaian']);
+    expect(np.file).toBe('galeri24-antam');
+    expect(np.label).toBe('Galeri24 · Antam (dibeli di luar Pegadaian) · 1 g');
+    // Opsi biasa tidak ikut varian non_pegadaian.
+    expect(find(buyback, 'g24-antam').variants).toEqual(['']);
+  });
+
+  it('np hanya sah untuk pembelian Antam', () => {
+    const np = find(buyback, 'g24-antam-np');
+    for (const id of ['lm-antam', 'pg-antam', 'g24-antam']) {
+      expect(compatible(find(sell, id), np)).toBe(true);
+    }
+    for (const id of ['ubsl-ubs', 'pg-ubs', 'g24-g24', 'g24-lotus', 'tab']) {
+      expect(compatible(find(sell, id), np)).toBe(false);
+    }
+  });
+
+  it('pg-g24 dan pg-lotus kini punya pasangan buyback Galeri24', () => {
+    expect(resolveBuyback(find(sell, 'pg-g24'), buyback, null)?.id).toBe('g24-g24');
+    expect(resolveBuyback(find(sell, 'pg-lotus'), buyback, null)?.id).toBe('g24-lotus');
+    expect(buybackChoices(find(sell, 'pg-antam'), buyback).map((x) => x.id)).toEqual([
+      'lm-antam',
+      'g24-antam',
+      'g24-antam-np',
+    ]);
+    expect(buybackChoices(find(sell, 'pg-ubs'), buyback).map((x) => x.id)).toEqual([
+      'ubsl-ubs',
+      'g24-ubs',
+    ]);
+  });
+
+  it('semua pilihan sell punya buyback kecuali tidak ada brand pasangan', () => {
+    for (const s of sell) expect(buybackChoices(s, buyback).length).toBeGreaterThan(0);
+  });
+
+  it('POPULAR_PAIRS berurutan dan semuanya pasangan sah', () => {
+    expect(POPULAR_PAIRS.map((p) => p.label)).toEqual([
+      'Antam: Logam Mulia → Logam Mulia',
+      'Tabungan Emas: Pegadaian → Pegadaian',
+      'Antam: Pegadaian → Galeri24',
+      'Antam: Pegadaian → Logam Mulia',
+      'Galeri24: Galeri24 → Galeri24',
+      'Antam: Logam Mulia → Galeri24 (non-Pegadaian)',
+      'UBS: Pegadaian → UBS Lifestyle',
+      'UBS: UBS Lifestyle → UBS Lifestyle',
+    ]);
+    expect(POPULAR_PAIRS.find((p) => p.label.includes('non-Pegadaian'))!.buyback).toBe(
+      'g24-antam-np',
+    );
+    for (const p of POPULAR_PAIRS) {
+      expect(compatible(find(sell, p.sell), find(buyback, p.buyback))).toBe(true);
+    }
+  });
+
+  it('todayPair: np membaca series non_pegadaian, bukan series biasa', () => {
+    const mk = (variant: string, sellP: number, buyP: number) =>
+      ({
+        source: 'galeri24',
+        file: 'galeri24-antam',
+        variant,
+        w: 1,
+        current: true,
+        date: '2026-11-17',
+        sell: sellP,
+        buyback: buyP,
+        source_updated_at: null,
+      }) as unknown as LatestSeries;
+    const L = {
+      series: [mk('', 2_560_000, 2_286_000), mk('non_pegadaian', 2_464_000, 2_178_000)],
+    } as unknown as LatestFile;
+    const p = todayPair(L, find(sell, 'g24-antam'), find(buyback, 'g24-antam-np'));
+    expect(p.sell).toBe(2_560_000);
+    expect(p.buyback).toBe(2_178_000);
+  });
+
+  it('barSources: enam sumber berurutan, warna brand, bukan emas', () => {
+    const bars = barSources(latest);
+    expect(bars.map((b) => b.id)).toEqual([
+      'ubsl',
+      'lm',
+      'g24-antam',
+      'g24-ubs',
+      'g24-g24',
+      'g24-lotus',
+    ]);
+    expect(bars.map((b) => b.color)).toEqual(['ubs', 'antam', 'antam', 'ubs', 'g24', 'lotus']);
+    expect(bars.map((b) => b.color)).not.toContain('gold');
+    expect(bars[2]!.label).toBe('Galeri24 · Antam (buyback biasa)');
+    expect(bars[0]!.label).toBe('UBS Lifestyle · UBS (tahun produksi berjalan)');
+  });
+
+  it('hanya 1 g yang disorot', () => {
+    const items = weightBarItems([
+      { label: '0,5 g', w: 0.5, value: 8 },
+      { label: '1 g', w: 1, value: 7 },
+    ]);
+    expect(items.map((i) => i.highlight)).toEqual([false, true]);
+  });
+
+  it('compareItems memuat Galeri24 1 g dan Lotus Archi 1 g', () => {
+    const items = compareItems(latest);
+    const names = items.map((c) => `${c.name} · ${c.src}`);
+    expect(names).toContain('Galeri24 1 g · Galeri24 → Galeri24');
+    expect(names).toContain('Lotus Archi 1 g · Galeri24 → Galeri24');
+    expect(names).toContain('Antam 1 g · Logam Mulia → Galeri24 (non-Pegadaian)');
   });
 });

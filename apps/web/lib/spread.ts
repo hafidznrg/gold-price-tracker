@@ -214,6 +214,27 @@ export function buildOptions(latest: LatestFile): {
     'Pegadaian · Tabungan Emas · per gram',
     'Tabungan Emas',
   );
+  const g24 = (id: string, brand: Brand, name: string, variants: string[] = ['']) =>
+    opt(
+      id,
+      `galeri24-${brand}`,
+      'galeri24',
+      brand,
+      'gold_bar',
+      variants,
+      1,
+      `Galeri24 · ${name} · 1 g`,
+      `Galeri24 ${name}`,
+    );
+  /**
+   * Buyback Antam non-Pegadaian (keping yang dibeli di luar Pegadaian/Galeri24, lebih rendah):
+   * varian sendiri, tidak pernah digabung ke seri Antam biasa dan tanpa harga jual.
+   */
+  const g24AntamNp: SpreadOption = {
+    ...g24('g24-antam-np', 'antam', 'Antam', ['non_pegadaian']),
+    label: 'Galeri24 · Antam (dibeli di luar Pegadaian) · 1 g',
+    short: 'Galeri24 Antam (non-Pegadaian)',
+  };
   const pg = (id: string, brand: Brand, name: string) =>
     opt(
       id,
@@ -230,12 +251,26 @@ export function buildOptions(latest: LatestFile): {
     sell: [
       lm,
       pg('pg-antam', 'antam', 'Antam'),
+      g24('g24-antam', 'antam', 'Antam'),
       pg('pg-ubs', 'ubs', 'UBS'),
       ubs,
+      g24('g24-ubs', 'ubs', 'UBS'),
       pg('pg-g24', 'galeri24', 'Galeri24'),
+      g24('g24-g24', 'galeri24', 'Galeri24'),
+      pg('pg-lotus', 'lotusarchi', 'Lotus Archi'),
+      g24('g24-lotus', 'lotusarchi', 'Lotus Archi'),
       tab,
     ],
-    buyback: [lm, ubsBuy, tab],
+    buyback: [
+      lm,
+      g24('g24-antam', 'antam', 'Antam'),
+      g24AntamNp,
+      ubsBuy,
+      g24('g24-ubs', 'ubs', 'UBS'),
+      g24('g24-g24', 'galeri24', 'Galeri24'),
+      g24('g24-lotus', 'lotusarchi', 'Lotus Archi'),
+      tab,
+    ],
   };
 }
 
@@ -277,7 +312,14 @@ export function pairProblem(sell: SpreadOption, buyback: SpreadOption | null): s
 export const POPULAR_PAIRS: { sell: string; buyback: string; label: string }[] = [
   { sell: 'lm-antam', buyback: 'lm-antam', label: 'Antam: Logam Mulia → Logam Mulia' },
   { sell: 'tab', buyback: 'tab', label: 'Tabungan Emas: Pegadaian → Pegadaian' },
+  { sell: 'pg-antam', buyback: 'g24-antam', label: 'Antam: Pegadaian → Galeri24' },
   { sell: 'pg-antam', buyback: 'lm-antam', label: 'Antam: Pegadaian → Logam Mulia' },
+  { sell: 'g24-g24', buyback: 'g24-g24', label: 'Galeri24: Galeri24 → Galeri24' },
+  {
+    sell: 'lm-antam',
+    buyback: 'g24-antam-np',
+    label: 'Antam: Logam Mulia → Galeri24 (non-Pegadaian)',
+  },
   { sell: 'pg-ubs', buyback: 'ubsl-ubs', label: 'UBS: Pegadaian → UBS Lifestyle' },
   { sell: 'ubsl-ubs', buyback: 'ubsl-ubs', label: 'UBS: UBS Lifestyle → UBS Lifestyle' },
 ];
@@ -401,6 +443,10 @@ export function compareItems(latest: LatestFile): CompareItem[] {
     ['UBS 1 g', 'UBS Lifestyle', 'ubsl-ubs', 'ubsl-ubs'],
     ['UBS 1 g', 'Pegadaian → UBS Lifestyle', 'pg-ubs', 'ubsl-ubs'],
     ['Antam 1 g', 'Pegadaian → Logam Mulia', 'pg-antam', 'lm-antam'],
+    ['Galeri24 1 g', 'Galeri24 → Galeri24', 'g24-g24', 'g24-g24'],
+    ['Lotus Archi 1 g', 'Galeri24 → Galeri24', 'g24-lotus', 'g24-lotus'],
+    ['Antam 1 g', 'Pegadaian → Galeri24', 'pg-antam', 'g24-antam'],
+    ['Antam 1 g', 'Logam Mulia → Galeri24 (non-Pegadaian)', 'lm-antam', 'g24-antam-np'],
   ];
   return rows.map(([name, src, sid, bid]) => {
     const s = get(sid, sell);
@@ -417,4 +463,100 @@ export function compareItems(latest: LatestFile): CompareItem[] {
       at: t.sellAt,
     };
   });
+}
+
+// ---------------------------------------------------------------------------
+// Spread % per gramasi hari ini: pilihan sumber
+
+export interface BarSourceDef {
+  id: string;
+  label: string;
+  note: string;
+  source: PriceSource;
+  /** Warna brand sumber (D-52); bukan emas. */
+  color: ColorToken;
+  date: string | null;
+  at: string | null;
+  rows: WeightBarRow[];
+}
+
+/** Enam sumber grafik spread per gramasi: UBS Lifestyle, Logam Mulia, dan empat dari Galeri24. */
+export function barSources(latest: LatestFile): BarSourceDef[] {
+  const year = ubsYear(latest);
+  const mk = (
+    id: string,
+    label: string,
+    note: string,
+    source: PriceSource,
+    brand: Brand,
+    file: string,
+    variant: string,
+  ): BarSourceDef => {
+    const hit = latest.series.find((r) => r.file === file && r.variant === variant && r.current);
+    return {
+      id,
+      label,
+      note,
+      source,
+      color: colorToken({ brand, product: 'gold_bar' }),
+      date: hit?.date ?? null,
+      at: hit?.source_updated_at ?? null,
+      rows: weightSpreads(latest, file, variant),
+    };
+  };
+  return [
+    mk(
+      'ubsl',
+      'UBS Lifestyle · UBS (tahun produksi berjalan)',
+      `UBS Lifestyle · tahun produksi ${year}`,
+      'ubslifestyle',
+      'ubs',
+      'ubslifestyle-ubs',
+      year,
+    ),
+    mk(
+      'lm',
+      'Logam Mulia · Antam (buyback per gram)',
+      'Logam Mulia · Antam. Buyback selain 1 g = buyback per gram × berat (berlaku untuk semua ukuran keping)',
+      'logammulia',
+      'antam',
+      'logammulia-antam',
+      '',
+    ),
+    mk(
+      'g24-antam',
+      'Galeri24 · Antam (buyback biasa)',
+      'Galeri24 · Antam, buyback biasa (keping yang dibeli di Pegadaian atau Galeri24)',
+      'galeri24',
+      'antam',
+      'galeri24-antam',
+      '',
+    ),
+    mk('g24-ubs', 'Galeri24 · UBS', 'Galeri24 · UBS', 'galeri24', 'ubs', 'galeri24-ubs', ''),
+    mk(
+      'g24-g24',
+      'Galeri24 · Galeri24',
+      'Galeri24 · Galeri24',
+      'galeri24',
+      'galeri24',
+      'galeri24-galeri24',
+      '',
+    ),
+    mk(
+      'g24-lotus',
+      'Galeri24 · Lotus Archi',
+      'Galeri24 · Lotus Archi',
+      'galeri24',
+      'lotusarchi',
+      'galeri24-lotusarchi',
+      '',
+    ),
+  ];
+}
+
+/** Item batang: 1 g jadi gramasi acuan (sorotan penuh, lainnya memudar); tanpa warna emas (D-52). */
+export function weightBarItems(
+  rows: readonly WeightBarRow[],
+): { label: string; value: number | null; highlight: boolean }[] {
+  return rows.map((r) => ({ label: r.label, value: r.value, highlight: r.w === 1 }));
 }

@@ -3,7 +3,7 @@ export interface BarItem {
   value: number | null;
   /** Warna batang (token/warna); menimpa warna default. */
   color?: string;
-  /** Sorot (mis. 1 g) — memakai --gold seperti mockup. */
+  /** Sorot (mis. 1 g): warna penuh dan teks tebal; batang lain memudar (~0,45). Bukan emas (D-52). */
   highlight?: boolean;
 }
 

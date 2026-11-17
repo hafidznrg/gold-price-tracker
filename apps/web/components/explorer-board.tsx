@@ -1,6 +1,6 @@
 'use client';
 
-import type { Brand, PriceSource } from '@gold/schema';
+import type { PriceSource } from '@gold/schema';
 import { debounce, parseAsString, useQueryStates } from 'nuqs';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { TimeSeriesChart, type TimeSeries } from '@/components/charts/time-series-chart';
@@ -11,7 +11,6 @@ import { SourceStamp } from '@/components/source-stamp';
 import { useSeriesFiles } from '@/components/use-series-files';
 import {
   colorVar,
-  displayBrand,
   PRODUCT_KIND_LABELS,
   SOURCE_LABELS,
   type PriceField,
@@ -43,6 +42,8 @@ import {
   gramDivisor,
   MAX_SERIES,
   mergeGaps,
+  optionBrandKey,
+  optionBrandName,
   optionColor,
   rangeStats,
   resolvePick,
@@ -108,7 +109,7 @@ const SUM_PRIMARY = 'text-[15px] font-semibold leading-snug @min-[580px]:text-sm
 
 function seriesParts(o: ExplorerOption, price: PriceField): { title: string; meta: string } {
   return {
-    title: [displayBrand(o), SOURCE_LABELS[o.source]].join(' · '),
+    title: [optionBrandName(o), SOURCE_LABELS[o.source]].join(' · '),
     meta: [o.kind === 'fisik' ? formatWeight(o.w) : null, PRICE_LABEL[price]]
       .filter(Boolean)
       .join(' · '),
@@ -151,7 +152,7 @@ function chartTitle(mode: ValueMode, agg: Aggregation): string {
 
 /** Judul ringkas di panel: brand + gramasi (sumber dan jenis harga ditampilkan terpisah). */
 function seriesTitle(o: ExplorerOption): string {
-  return [displayBrand(o), o.kind === 'fisik' ? formatWeight(o.w) : null]
+  return [optionBrandName(o), o.kind === 'fisik' ? formatWeight(o.w) : null]
     .filter(Boolean)
     .join(' · ');
 }
@@ -189,6 +190,7 @@ function seriesMeta(o: ExplorerOption, price: PriceField, perGram = false): stri
     o.kind === 'fisik' && !perGram ? 'per keping' : 'per gram',
     o.source === 'logammulia' && price === 'sell' ? 'harga dasar' : null,
     price === 'buyback' && o.buybackFromGram ? 'buyback 1 g × berat' : null,
+    o.variant ? 'keping dibeli di luar Pegadaian' : null,
     first ? `sejak ${formatDate(first)}` : null,
   ]
     .filter(Boolean)
@@ -232,6 +234,13 @@ function Hint({ children }: { children: React.ReactNode }) {
 
 function uniq<T>(xs: T[]): T[] {
   return [...new Set(xs)];
+}
+
+/** Elemen pertama untuk tiap kunci, urutan asli dipertahankan. */
+function uniqBy<T>(xs: T[], key: (x: T) => string): T[] {
+  const seen = new Map<string, T>();
+  for (const x of xs) if (!seen.has(key(x))) seen.set(key(x), x);
+  return [...seen.values()];
 }
 
 export function ExplorerBoard({ options, asOf, stamps, calendar }: ExplorerBoardProps) {
@@ -379,25 +388,35 @@ export function ExplorerBoard({ options, asOf, stamps, calendar }: ExplorerBoard
 
   // --- Pemilih series -----------------------------------------------------
   const [kind, setKind] = useState<ProductKind>('fisik');
-  const [brandSel, setBrandSel] = useState<Brand>('antam');
+  const [brandSel, setBrandSel] = useState('antam');
   const [sourceSel, setSourceSel] = useState<PriceSource>('logammulia');
   const [wSel, setWSel] = useState('1');
   const [priceSel, setPriceSel] = useState<PriceField>('sell');
 
   const ofKind = options.filter((o) => o.kind === kind);
-  const brands = uniq(ofKind.map((o) => o.brand));
+  // Antam non-Pegadaian (`antam_np`) tampil sebagai brand sendiri dan tidak digabung ke Antam.
+  const brandOpts = uniqBy(ofKind, optionBrandKey);
+  const brands = brandOpts.map(optionBrandKey);
   const brand = brands.includes(brandSel) ? brandSel : brands[0];
-  const sources = uniq(ofKind.filter((o) => o.brand === brand).map((o) => o.source));
+  const sources = uniq(ofKind.filter((o) => optionBrandKey(o) === brand).map((o) => o.source));
   const source = sources.includes(sourceSel) ? sourceSel : sources[0];
   const weights = ofKind
-    .filter((o) => o.brand === brand && o.source === source)
+    .filter((o) => optionBrandKey(o) === brand && o.source === source)
     .sort((a, b) => a.w - b.w);
   const opt =
     weights.find((o) => String(o.w) === wSel) ?? weights.find((o) => o.w === 1) ?? weights[0];
   const prices = (['sell', 'buyback'] as const).filter((p) => opt?.first[p] != null);
   const price = prices.includes(priceSel) ? priceSel : prices[0];
   const candidate: SeriesPick | null =
-    opt && price ? { source: opt.source, brand: opt.brand, w: opt.w, price } : null;
+    opt && price
+      ? {
+          source: opt.source,
+          brand: opt.brand,
+          w: opt.w,
+          price,
+          ...(opt.variant ? { variant: opt.variant } : {}),
+        }
+      : null;
   const duplicate = candidate ? active.some((a) => a.id === encodePick(candidate)) : false;
   const full = active.length >= MAX_SERIES;
   const addNote = duplicate
@@ -566,7 +585,7 @@ export function ExplorerBoard({ options, asOf, stamps, calendar }: ExplorerBoard
                 <SourceStamp key={src} source={src} date={date || asOf} at={st?.at ?? null} bare>
                   {active
                     .filter((a) => a.opt.source === src)
-                    .map((a) => displayBrand(a.opt))
+                    .map((a) => optionBrandName(a.opt))
                     .filter((v, i, arr) => arr.indexOf(v) === i)
                     .join(', ')}
                 </SourceStamp>
@@ -807,14 +826,11 @@ export function ExplorerBoard({ options, asOf, stamps, calendar }: ExplorerBoard
                 <select
                   className={FIELD}
                   value={brand}
-                  onChange={(e) => setBrandSel(e.target.value as Brand)}
+                  onChange={(e) => setBrandSel(e.target.value)}
                 >
-                  {brands.map((b) => (
-                    <option key={b} value={b}>
-                      {displayBrand({
-                        brand: b,
-                        product: kind === 'tabungan' ? 'gold_savings' : 'gold_bar',
-                      })}
+                  {brandOpts.map((o) => (
+                    <option key={optionBrandKey(o)} value={optionBrandKey(o)}>
+                      {optionBrandName(o)}
                     </option>
                   ))}
                 </select>

@@ -1,6 +1,6 @@
 import * as schema from '@gold/schema';
 import { describe, expect, it } from 'vitest';
-import { COMPARE_DEFS } from './bandingkan';
+import { ALL_DEFS } from './bandingkan';
 import type { SeriesPoint } from './data';
 import type { ExplorerOption } from './explorer';
 import {
@@ -279,7 +279,7 @@ describe('model grafik', () => {
 });
 
 describe('pilihan sumber dari katalog', () => {
-  const def = (id: string) => COMPARE_DEFS.find((d) => d.id === id)!;
+  const def = (id: string) => ALL_DEFS.find((d) => d.id === id)!;
   it('sumber beli = yang punya harga jual; gramasi per sumber', () => {
     expect(buyDefs(OPTIONS).map((d) => d.id)).toEqual([
       'lm-antam',
@@ -294,7 +294,12 @@ describe('pilihan sumber dari katalog', () => {
     expect(weightsFor(def('tab'), OPTIONS)).toEqual([1, 5]);
   });
   it('sumber jual: brand sama; hanya yang punya buyback untuk berat itu', () => {
-    expect(sellCandidates(def('lm-antam')).map((d) => d.id)).toEqual(['lm-antam', 'pg-antam']);
+    expect(sellCandidates(def('lm-antam')).map((d) => d.id)).toEqual([
+      'lm-antam',
+      'pg-antam',
+      'g24-antam',
+      'g24-antam-np',
+    ]);
     expect(sellAvailable(def('lm-antam'), 1, OPTIONS)).toBe(true);
     // D-39: buyback Logam Mulia per gram berlaku untuk semua ukuran keping.
     expect(sellAvailable(def('lm-antam'), 5, OPTIONS)).toBe(true);
@@ -395,7 +400,7 @@ describe('keadaan di URL', () => {
 });
 
 describe('D-61: total harga beli dan berat lain', () => {
-  const def = (id: string) => COMPARE_DEFS.find((d) => d.id === id)!;
+  const def = (id: string) => ALL_DEFS.find((d) => d.id === id)!;
 
   it('p valid dibawa pulang-pergi sebagai bilangan bulat rupiah', () => {
     const s = decodeState({ p: '2750000', q: '2' }, CTX);
@@ -499,5 +504,95 @@ describe('kursor isian rupiah', () => {
     expect(caretAfterDigits('20.500.000', 2)).toBe(2);
     expect(caretAfterDigits('20.500.000', 0)).toBe(0);
     expect(caretAfterDigits('20.500.000', 99)).toBe(10);
+  });
+});
+
+describe('Galeri24 dan Lotus Archi (P6-10)', () => {
+  const G = { source: 'galeri24', file: 'galeri24-antam' } as const;
+  const OPTS: ExplorerOption[] = [
+    ...OPTIONS,
+    opt({ ...G, w: 1, first: { sell: '2024-02-01', buyback: '2024-02-01' } }),
+    opt({ ...G, w: 5, first: { sell: '2024-02-01', buyback: '2024-02-01' } }),
+    opt({
+      ...G,
+      w: 1,
+      variants: ['non_pegadaian'],
+      variant: 'non_pegadaian',
+      first: { sell: null, buyback: '2026-11-10' },
+    }),
+    opt({
+      source: 'galeri24',
+      brand: 'galeri24',
+      file: 'galeri24-galeri24',
+      w: 1,
+      first: { sell: '2024-02-01', buyback: '2024-02-01' },
+    }),
+    opt({
+      source: 'galeri24',
+      brand: 'lotusarchi',
+      file: 'galeri24-lotusarchi',
+      w: 1,
+      first: { sell: '2024-02-01', buyback: '2024-02-01' },
+    }),
+    opt({
+      source: 'pegadaian',
+      brand: 'lotusarchi',
+      file: 'pegadaian-lotusarchi',
+      w: 1,
+      first: { sell: '2026-10-25', buyback: null },
+    }),
+  ];
+  const def = (id: string) => ALL_DEFS.find((d) => d.id === id)!;
+
+  it('"Dibeli di" memuat Galeri24 dan Pegadaian Lotus Archi; np tidak bisa dibeli', () => {
+    const ids = buyDefs(OPTS).map((d) => d.id);
+    for (const id of ['g24-antam', 'g24-g24', 'g24-lotus', 'pg-lotus']) expect(ids).toContain(id);
+    expect(ids).not.toContain('g24-antam-np');
+  });
+
+  it('"Dijual ke" Antam: Logam Mulia, Galeri24 biasa, dan non-Pegadaian (bila gramasi ada)', () => {
+    const ids = (buy: string, w: number) => sellChoices(def(buy), w, OPTS).map((d) => d.id);
+    expect(ids('pg-antam', 1)).toEqual(['lm-antam', 'g24-antam', 'g24-antam-np']);
+    expect(ids('g24-antam', 1)).toEqual(['lm-antam', 'g24-antam', 'g24-antam-np']);
+    // 5 g: np tidak punya buyback 5 g → hanya yang punya.
+    expect(ids('g24-antam', 5)).toEqual(['lm-antam', 'g24-antam']);
+    expect(def('g24-antam-np').sellLabel).toBe('Galeri24 · Antam (dibeli di luar Pegadaian)');
+  });
+
+  it('np hanya untuk pembelian Antam; Pegadaian Lotus/Galeri24 pasangkan ke Galeri24', () => {
+    for (const buy of ['ubsl-ubs', 'pg-ubs', 'g24-g24', 'g24-lotus', 'pg-g24', 'tab']) {
+      expect(sellCandidates(def(buy)).map((d) => d.id)).not.toContain('g24-antam-np');
+    }
+    expect(sellChoices(def('pg-lotus'), 1, OPTS).map((d) => d.id)).toEqual(['g24-lotus']);
+    expect(sellChoices(def('pg-g24'), 1, OPTS).map((d) => d.id)).toEqual(['g24-g24']);
+    expect(pairableWeights(def('pg-lotus'), OPTS)).toEqual([1]);
+  });
+
+  it('np dan Galeri24 biasa tidak tertukar saat mencari opsi', () => {
+    expect(sellOption(def('g24-antam-np'), 1, OPTS)?.option.variant).toBe('non_pegadaian');
+    expect(sellOption(def('g24-antam'), 1, OPTS)?.option.variant).toBeUndefined();
+    expect(weightsFor(def('g24-antam'), OPTS)).toEqual([1, 5]);
+    expect(weightsFor(def('g24-antam-np'), OPTS)).toEqual([]);
+  });
+
+  it('berat lain tidak ditawarkan untuk buyback per keping Galeri24', () => {
+    expect(supportsCustomWeight(def('g24-antam'))).toBe(false);
+    expect(supportsCustomWeight(def('g24-g24'))).toBe(false);
+    expect(supportsCustomWeight(def('lm-antam'))).toBe(true);
+    expect(supportsCustomWeight(def('tab'))).toBe(true);
+  });
+
+  it('keadaan URL: b=g24-antam&s=g24-antam-np sah; pembelian bukan Antam jatuh ke pilihan sah', () => {
+    const s = decodeState(
+      { b: 'g24-antam', w: '1', s: 'g24-antam-np' },
+      { options: OPTS, asOf: '2026-11-17' },
+    );
+    expect(s.buyId).toBe('g24-antam');
+    expect(s.sellId).toBe('g24-antam-np');
+    const t = decodeState(
+      { b: 'g24-g24', w: '1', s: 'g24-antam-np' },
+      { options: OPTS, asOf: '2026-11-17' },
+    );
+    expect(t.sellId).toBe('g24-g24');
   });
 });

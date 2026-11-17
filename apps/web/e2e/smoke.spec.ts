@@ -139,6 +139,33 @@ test.describe('Beranda', () => {
 });
 
 test.describe('Explorer', () => {
+  test('judul Riwayat harga dan seri Galeri24 / Antam non-Pegadaian dari URL', async ({ page }) => {
+    const errors = collectErrors(page);
+    await page.goto(
+      '/explorer?s=galeri24-lotusarchi-1-buyback,galeri24-antam_np-1-buyback,galeri24-antam-1-buyback',
+    );
+    await expect(page).toHaveTitle('Riwayat harga · Momen Emas');
+    await expect(page.getByText('Riwayat harga', { exact: true }).first()).toBeVisible();
+    await expect(page.getByText('3 dari maks.')).toBeVisible();
+    await expect(
+      page.getByRole('button', { name: /^Hapus series Antam non-Pegadaian/ }),
+    ).toHaveCount(1);
+    await expect(page.getByRole('button', { name: /^Hapus series Lotus Archi/ })).toHaveCount(1);
+    // Form tambah: brand Lotus Archi, sumber Galeri24, dan Antam non-Pegadaian terpisah.
+    const brand = page.getByLabel('Brand');
+    await expect(brand.locator('option', { hasText: 'Lotus Archi' })).toHaveCount(1);
+    await expect(brand.locator('option', { hasText: 'Antam non-Pegadaian' })).toHaveCount(1);
+    await brand.selectOption({ label: 'Antam non-Pegadaian' });
+    await expect(
+      page
+        .locator('label')
+        .filter({ hasText: /^Sumber/ })
+        .locator('option'),
+    ).toHaveText(['Galeri24']);
+    await expect(page.getByLabel('Jenis harga').locator('option')).toHaveText(['Buyback']);
+    expect(errors).toEqual([]);
+  });
+
   const START = '/explorer?s=logammulia-antam-1-sell,pegadaian-pegadaian-0.01-buyback&r=3B';
 
   async function expectState(page: Page) {
@@ -206,6 +233,60 @@ test.describe('Explorer', () => {
   });
 });
 
+test.describe('Spread', () => {
+  test('opsi Galeri24 dan Lotus Archi; pasangan populer mengisi jual dan buyback', async ({
+    page,
+  }) => {
+    const errors = collectErrors(page);
+    await page.goto('/spread');
+    const buyAt = page.locator('#buyAt');
+    const sellTo = page.locator('#sellTo');
+    for (const v of ['g24-antam', 'g24-ubs', 'g24-g24', 'g24-lotus', 'pg-lotus']) {
+      await expect(buyAt.locator(`option[value="${v}"]`)).toHaveCount(1);
+    }
+    await expect(buyAt.locator('option[value="g24-antam-np"]')).toHaveCount(0);
+
+    await page.getByRole('button', { name: 'Galeri24: Galeri24 → Galeri24' }).click();
+    await expect(buyAt).toHaveValue('g24-g24');
+    await expect(sellTo).toHaveValue('g24-g24');
+
+    await page
+      .getByRole('button', { name: 'Antam: Logam Mulia → Galeri24 (non-Pegadaian)' })
+      .click();
+    await expect(buyAt).toHaveValue('lm-antam');
+    await expect(sellTo).toHaveValue('g24-antam-np');
+    await expect(sellTo.locator('option[value="g24-antam-np"]')).toHaveText(
+      'Galeri24 · Antam (dibeli di luar Pegadaian) · 1 g',
+    );
+    // Hanya pembelian Antam yang bisa dijual ke np.
+    await buyAt.selectOption('g24-lotus');
+    await expect(sellTo.locator('option[value="g24-antam-np"]')).toHaveCount(0);
+    await expect(sellTo).toHaveValue('g24-lotus');
+    await buyAt.selectOption('pg-lotus');
+    await expect(sellTo).toHaveValue('g24-lotus');
+    await expect(page.getByText(/Galeri24 membeli kembali Antam dengan dua harga/)).toBeVisible();
+    expect(errors).toEqual([]);
+  });
+
+  test('spread per gramasi: enam sumber, ganti sumber, gramasi 1 g disorot', async ({ page }) => {
+    await page.goto('/spread');
+    const src = page.locator('#barSrc');
+    await expect(src.locator('option')).toHaveText([
+      'UBS Lifestyle · UBS (tahun produksi berjalan)',
+      'Logam Mulia · Antam (buyback per gram)',
+      'Galeri24 · Antam (buyback biasa)',
+      'Galeri24 · UBS',
+      'Galeri24 · Galeri24',
+      'Galeri24 · Lotus Archi',
+    ]);
+    await src.selectOption({ label: 'Galeri24 · Lotus Archi' });
+    const list = page.getByRole('list', { name: 'Spread persen per gramasi' });
+    await expect(list.getByRole('listitem')).toHaveCount(6);
+    await expect(list.getByRole('listitem').filter({ hasText: '1 g' }).first()).toBeVisible();
+    await expect(page.getByText(/1 g = gramasi acuan/)).toBeVisible();
+  });
+});
+
 test.describe('Bandingkan', () => {
   const START = '/bandingkan?w=5&m=idx&r=6B';
 
@@ -238,6 +319,22 @@ test.describe('Bandingkan', () => {
     await page.getByRole('radio', { name: '1 g', exact: true }).click();
     await page.getByRole('radio', { name: 'Per gram', exact: true }).click();
     await expect(page).not.toHaveURL(/[?&](w|m)=/);
+  });
+
+  test('baris Lotus Archi dan Galeri24 punya buyback; catatan dua harga Antam', async ({
+    page,
+  }) => {
+    await page.goto('/bandingkan');
+    const table = page.getByRole('table', { name: 'Perbandingan hari ini' });
+    const lotus = table.getByRole('row').filter({ hasText: 'Lotus Archi' });
+    await expect(lotus).toHaveCount(1);
+    await expect(lotus).toContainText('Galeri24');
+    await expect(lotus.getByRole('cell').nth(3)).toContainText(/Rp\s?\d/);
+    await expect(
+      table.getByRole('row').filter({ hasText: 'Pegadaian' }).filter({ hasText: 'Galeri24 ·' }),
+    ).toHaveCount(0);
+    await page.getByRole('button', { name: 'Sumber & catatan' }).click();
+    await expect(page.getByText(/Antam di Galeri24 punya dua harga buyback/)).toBeVisible();
   });
 
   test('premi Antam memuat penjelasan dan peringatan spot indikatif', async ({ page }) => {
@@ -361,6 +458,28 @@ test.describe('Kalkulator', () => {
     await expect(page.getByLabel('Dibeli di')).toHaveValue('lm-antam');
     await expect(page.getByTestId('kalk-profit')).toContainText(/[▲▼]|Rp0/);
   }
+
+  test('beli di Galeri24 Antam: jual ke Galeri24 biasa dan non-Pegadaian', async ({ page }) => {
+    const errors = collectErrors(page);
+    await page.goto('/kalkulator?b=g24-antam&d=2026-11-10');
+    await expect(page.getByLabel('Dibeli di')).toHaveValue('g24-antam');
+    const sell = page.locator('#kalk-sell');
+    await expect(sell.locator('option[value="lm-antam"]')).toHaveCount(1);
+    await expect(sell.locator('option[value="g24-antam"]')).toContainText(
+      'Galeri24 · Antam (biasa)',
+    );
+    await expect(sell.locator('option[value="g24-antam-np"]')).toContainText(
+      'Galeri24 · Antam (dibeli di luar Pegadaian)',
+    );
+    await sell.selectOption('g24-antam-np');
+    await expect(page).toHaveURL(/[?&]s=g24-antam-np(&|$)/);
+    await expect(page.getByTestId('kalk-profit')).toContainText(/[▲▼]|Rp0/);
+    // Pembelian bukan Antam tidak menawarkan np; Lotus Archi punya buyback Galeri24.
+    await page.getByLabel('Dibeli di').selectOption('pg-lotus');
+    await expect(sell.locator('option[value="g24-antam-np"]')).toHaveCount(0);
+    await expect(sell).toHaveValue('g24-lotus');
+    expect(errors).toEqual([]);
+  });
 
   test('tanggal dan jumlah dipulihkan saat reload', async ({ page }) => {
     const errors = collectErrors(page);

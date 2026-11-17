@@ -29,6 +29,8 @@ import {
   encodeRange,
   explorerOptions,
   mergeGaps,
+  optionBrandKey,
+  optionBrandName,
   rangeStats,
   resolvePick,
   seriesPoints,
@@ -118,7 +120,7 @@ describe('explorerOptions', () => {
     expect(opts[0]?.first).toEqual({ sell: '2026-10-26', buyback: '2023-11-20' });
   });
 
-  it("Galeri24: variant non_pegadaian bukan 'tahun'; opsi tetap [''] (D-P6-10)", () => {
+  it("Galeri24: non_pegadaian bukan 'tahun'; opsi biasa tetap [''] dan np jadi opsi sendiri", () => {
     const g24 = { source: 'galeri24', brand: 'antam', file: 'galeri24-antam' } as const;
     const opts = explorerOptions(
       meta([
@@ -126,9 +128,10 @@ describe('explorerOptions', () => {
         { ...g24, variant: 'non_pegadaian', first_sell_date: '2026-01-01' },
       ]),
     );
-    expect(opts).toHaveLength(1);
+    expect(opts).toHaveLength(2);
     expect(opts[0]?.variants).toEqual(['']);
     expect(opts[0]?.first.sell).toBe('2026-11-17');
+    expect(opts[1]?.variants).toEqual(['non_pegadaian']);
   });
 
   it('D-39: keping Logam Mulia tanpa buyback memakai buyback 1 g; sumber lain tidak', () => {
@@ -500,5 +503,96 @@ describe('batas rentang dan celah (risiko Fase 4)', () => {
     ]);
     expect(viewGaps([{ from: '2026-10-05', to: '2026-10-10' }], 'w')).toEqual([]);
     expect(viewGaps([{ from: '2026-10-06', to: '2026-10-12' }], 'w')).toEqual([]);
+  });
+});
+
+describe('Galeri24, Lotus Archi, dan Antam non-Pegadaian (P6-10)', () => {
+  it('kunci URL galeri24 dan lotusarchi bisa dibaca bolak-balik', () => {
+    const g = { source: 'galeri24', brand: 'galeri24', w: 1, price: 'buyback' } as const;
+    expect(encodePick(g)).toBe('galeri24-galeri24-1-buyback');
+    expect(decodePick('galeri24-galeri24-1-buyback')).toEqual(g);
+    expect(decodePick('galeri24-lotusarchi-5-sell')).toEqual({
+      source: 'galeri24',
+      brand: 'lotusarchi',
+      w: 5,
+      price: 'sell',
+    });
+    expect(decodePick('pegadaian-lotusarchi-1-sell')?.brand).toBe('lotusarchi');
+  });
+
+  it('kunci non_pegadaian memakai akhiran _np dan bolak-balik', () => {
+    const p = decodePick('galeri24-antam_np-1-buyback');
+    expect(p).toEqual({
+      source: 'galeri24',
+      brand: 'antam',
+      w: 1,
+      price: 'buyback',
+      variant: 'non_pegadaian',
+    });
+    expect(encodePick(p!)).toBe('galeri24-antam_np-1-buyback');
+    // Tanpa akhiran = series Antam biasa.
+    expect(decodePick('galeri24-antam-1-buyback')?.variant).toBeUndefined();
+    expect(decodePick('galeri24-foo_np-1-buyback')).toBeNull();
+    expect(decodePicks('galeri24-antam_np-1-buyback,galeri24-antam-1-buyback')).toHaveLength(2);
+  });
+
+  const g24 = { source: 'galeri24', brand: 'antam', file: 'galeri24-antam' } as const;
+  const opts = explorerOptions(
+    meta([
+      { ...g24, variant: '', first_sell_date: '2024-02-01', first_buyback_date: '2024-02-01' },
+      {
+        ...g24,
+        variant: 'non_pegadaian',
+        first_sell_date: '2026-11-17',
+        first_buyback_date: '2026-11-10',
+      },
+      {
+        source: 'galeri24',
+        brand: 'lotusarchi',
+        file: 'galeri24-lotusarchi',
+        first_sell_date: '2024-02-01',
+        first_buyback_date: '2024-02-01',
+      },
+    ]),
+  );
+
+  it('non_pegadaian = opsi sendiri, hanya buyback, tidak menggabung ke Antam biasa', () => {
+    expect(opts).toHaveLength(3);
+    const base = opts.find((o) => o.brand === 'antam' && !o.variant)!;
+    const np = opts.find((o) => o.variant === 'non_pegadaian')!;
+    expect(base.variants).toEqual(['']);
+    expect(base.first.buyback).toBe('2024-02-01');
+    expect(np.id).toBe('galeri24-antam_np-1');
+    expect(np.variants).toEqual(['non_pegadaian']);
+    expect(np.first).toEqual({ sell: null, buyback: '2026-11-10' });
+    expect(optionBrandName(np)).toBe('Antam non-Pegadaian');
+    expect(optionBrandKey(np)).toBe('antam_np');
+    expect(optionBrandKey(base)).toBe('antam');
+  });
+
+  it('resolvePick: np hanya buyback; Lotus Archi dikenali', () => {
+    expect(resolvePick(decodePick('galeri24-antam_np-1-buyback')!, opts)?.variant).toBe(
+      'non_pegadaian',
+    );
+    expect(resolvePick(decodePick('galeri24-antam_np-1-sell')!, opts)).toBeNull();
+    expect(resolvePick(decodePick('galeri24-antam-1-sell')!, opts)?.variant).toBeUndefined();
+    expect(resolvePick(decodePick('galeri24-lotusarchi-1-buyback')!, opts)?.brand).toBe(
+      'lotusarchi',
+    );
+  });
+
+  it('seriesPoints np membaca hanya baris non_pegadaian', () => {
+    const np = opts.find((o) => o.variant === 'non_pegadaian')!;
+    const rows: SeriesRowTuple[] = [
+      ['2026-11-17', '', 1, 2_560_000, 2_286_000],
+      ['2026-11-17', 'non_pegadaian', 1, 2_464_000, 2_178_000],
+    ];
+    expect(seriesPoints({ rows }, np, 'buyback')).toEqual([
+      { date: '2026-11-17', value: 2_178_000 },
+    ]);
+    const base = opts.find((o) => o.brand === 'antam' && !o.variant)!;
+    expect(seriesPoints({ rows }, base, 'buyback')).toEqual([
+      { date: '2026-11-17', value: 2_286_000 },
+    ]);
   });
 });

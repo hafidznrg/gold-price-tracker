@@ -119,3 +119,11 @@ Semua angka di mockup **ilustrasi**. Saat membangun, pakai data dan ID dari DATA
 | Kurs dan Rp/gram spot di Hari ini | Mockup: JISDOR 18.069 → spot ±Rp2.396.500/g, premi Antam ±4,8%. Contoh `spot.json` di DATA-MODEL §3.3 (16.310) hanya ilustrasi format |
 | Spot dunia | Histori xaus = futures GC=F, spot = gold-api.com; keduanya diberi label indikatif (D-21) |
 | Tab dan kolom tabel Hari ini | Dari `config/catalog.yml`; jangan hardcode daftar gramasi |
+
+## Penyimpangan dari mockup (P6-10, Galeri24 dan Lotus Archi)
+
+- **Spread, "Emas fisik vs tabungan emas":** ditambah satu baris "Lotus Archi 1 g · Galeri24 → Galeri24" di luar mockup; label "Tersempit" tidak ditampilkan (sama seperti situs sebelumnya).
+- **Spread, "Spread % per gramasi hari ini":** daftar sumber dan data dihitung dari `latest.json` (bukan angka ilustrasi); warna batang = token brand sumber (`BarSourceDef.color`), tanpa `--gold`.
+- **Bandingkan:** baris dan garis "Galeri24 · Pegadaian" dibuang seperti mockup; `pg-g24` dan `pg-lotus` hanya ada di daftar Kalkulator (`ALL_DEFS`), bukan `COMPARE_DEFS`.
+- **Explorer (Riwayat harga):** Antam non-Pegadaian ditampilkan sebagai pilihan Brand sendiri ("Antam non-Pegadaian", hanya buyback, sumber Galeri24) dan kunci URL `galeri24-antam_np-1-buyback`; mockup tidak menampilkannya. Rute tetap `/explorer`.
+- **Kalkulator:** label "Dijual ke" mengikuti mockup ("Galeri24 · Antam (biasa)") ditambah "Galeri24 · Antam (dibeli di luar Pegadaian)" untuk varian non-Pegadaian; harga terbaru tetap ditulis di akhir label seperti sebelumnya.

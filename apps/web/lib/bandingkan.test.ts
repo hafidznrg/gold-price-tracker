@@ -268,3 +268,57 @@ describe('premiumMonthlyLine', () => {
     expect(line[0]!.basis).toBe('monthly');
   });
 });
+
+describe('Galeri24 dan Lotus Archi (P6-10)', () => {
+  it('series: Galeri24 dan Lotus Archi dari sumber galeri24, garis penuh; tanpa Pegadaian Galeri24', () => {
+    expect(COMPARE_DEFS.map((d) => d.id)).toEqual([
+      'lm-antam',
+      'pg-antam',
+      'ubsl-ubs',
+      'pg-ubs',
+      'g24-g24',
+      'g24-lotus',
+      'tab',
+    ]);
+    for (const id of ['g24-g24', 'g24-lotus']) {
+      expect(def(id)).toMatchObject({ source: 'galeri24', dashed: false });
+    }
+    expect(def('g24-lotus')).toMatchObject({ file: 'galeri24-lotusarchi', color: 'lotus' });
+    // Garis putus-putus hanya untuk harga di Pegadaian.
+    expect(COMPARE_DEFS.filter((d) => d.dashed).map((d) => d.source)).toEqual([
+      'pegadaian',
+      'pegadaian',
+    ]);
+  });
+
+  it('tabel hari ini: baris Galeri24 dan Lotus Archi punya buyback dan spread', () => {
+    const g = { source: 'galeri24' } as const;
+    const c = todayCells(
+      latest([
+        ls({
+          ...g,
+          brand: 'galeri24',
+          file: 'galeri24-galeri24',
+          w: 1,
+          sell: 2_431_000,
+          buyback: 2_256_000,
+        }),
+        ls({
+          ...g,
+          brand: 'lotusarchi',
+          file: 'galeri24-lotusarchi',
+          w: 1,
+          sell: 2_405_000,
+          buyback: 2_226_000,
+        }),
+      ]),
+    );
+    const rows = todayRows(c, 1);
+    const lotus = rows.find((r) => r.def.id === 'g24-lotus')!;
+    expect(lotus.def.brandName).toBe('Lotus Archi');
+    expect(lotus.buyback).toBe(2_226_000);
+    expect(lotus.spreadPct).toBeCloseTo((179_000 / 2_405_000) * 100, 6);
+    expect(rows.find((r) => r.def.id === 'g24-g24')!.buyback).toBe(2_256_000);
+    expect(lotus.cheapest).toBe(true);
+  });
+});

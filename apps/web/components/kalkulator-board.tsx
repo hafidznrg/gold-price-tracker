@@ -54,7 +54,7 @@ import {
 import { cn } from '@/lib/utils';
 
 export interface KalkulatorBoardProps {
-  /** Opsi katalog hanya untuk enam sumber yang dipakai (`compareOptions`). */
+  /** Opsi katalog hanya untuk sumber yang dipakai (`compareOptions`). */
   options: ExplorerOption[];
   /** Tanggal data terbaru. */
   asOf: string;
@@ -71,6 +71,8 @@ const CUSTOM_W = '__custom';
 const LINK_BTN = 'cursor-pointer border-0 bg-transparent p-0 text-xs text-gold underline';
 
 const sourceLabel = (d: CompareDef) => `${d.sourceName} · ${d.brandName}`;
+/** Tempat jual: Antam di Galeri24 punya dua buyback, jadi labelnya dibedakan (D-64). */
+const sellName = (d: CompareDef) => d.sellLabel ?? sourceLabel(d);
 const unitWord = (d: CompareDef) => (d.linear ? 'porsi' : 'keping');
 
 function Hint({ children }: { children: React.ReactNode }) {
@@ -300,7 +302,7 @@ export function KalkulatorBoard({ options, asOf, calendar }: KalkulatorBoardProp
     status = `${buyLabel} tidak punya harga resmi di data. Isi total harga beli untuk menghitung.`;
   else if (needPaid && quote && !quote.ok)
     status = `${missingText(quote, buyLabel, state.date)} Atau isi total harga beli.`;
-  else if (buyEff && !sellNow) status = `Belum ada data buyback ${sourceLabel(sellDef)} ${wText}.`;
+  else if (buyEff && !sellNow) status = `Belum ada data buyback ${sellName(sellDef)} ${wText}.`;
   else if (buyEff && sellNow && !result) {
     status = `Data buyback terakhir (${formatDate(sellNow.date)}) lebih awal dari tanggal harga beli (${formatDate(buyEff.date)}).`;
   }
@@ -589,7 +591,7 @@ export function KalkulatorBoard({ options, asOf, calendar }: KalkulatorBoardProp
                 const last = p ? latestPoint(p) : null;
                 return (
                   <option key={d.id} value={d.id}>
-                    {sourceLabel(d)}
+                    {sellName(d)}
                     {last ? ` · ${formatRupiah(last.value)}${d.linear ? `/${wText}` : ''}` : ''}
                   </option>
                 );
@@ -696,7 +698,7 @@ export function KalkulatorBoard({ options, asOf, calendar }: KalkulatorBoardProp
               ) : null}
               {result.be.truncated && result.be.firstDate ? (
                 <p className="m-0 text-xs text-muted" role="note">
-                  Data buyback {sellDef ? sourceLabel(sellDef) : ''} baru ada sejak{' '}
+                  Data buyback {sellDef ? sellName(sellDef) : ''} baru ada sejak{' '}
                   {formatDate(result.be.firstDate)}; titik impas dan grafik sebelum tanggal itu
                   tidak diketahui.
                 </p>
@@ -710,7 +712,7 @@ export function KalkulatorBoard({ options, asOf, calendar }: KalkulatorBoardProp
               ) : null}
               {sellDef ? (
                 <SourceStamp source={sellDef.source} date={sellNow?.date ?? asOf}>
-                  buyback {sourceLabel(sellDef)}
+                  buyback {sellName(sellDef)}
                   {sell?.perGram
                     ? ` · harga buyback per gram (baris 1 g) × ${formatWeight(state.w)}, berlaku untuk semua ukuran keping`
                     : ''}
@@ -743,7 +745,7 @@ export function KalkulatorBoard({ options, asOf, calendar }: KalkulatorBoardProp
           </h2>
           <p className="num m-0 mt-1.5 mb-3 text-sm text-muted">
             {buyLabel}
-            {sellDef ? ` · dijual ke ${sourceLabel(sellDef)}` : ''}
+            {sellDef ? ` · dijual ke ${sellName(sellDef)}` : ''}
             {chart?.first && chart.last
               ? ` · ${formatDate(chart.first)} – ${formatDate(chart.last)}`
               : ''}
@@ -772,7 +774,7 @@ export function KalkulatorBoard({ options, asOf, calendar }: KalkulatorBoardProp
           )}
           {sellOpt && sellOpt.first.buyback && !loading ? (
             <p className="m-0 mt-3 text-xs text-faint" role="note">
-              Garis hanya digambar di tanggal ada buyback (data {sourceLabel(sellDef!)} mulai{' '}
+              Garis hanya digambar di tanggal ada buyback (data {sellName(sellDef!)} mulai{' '}
               {formatDate(sellOpt.first.buyback)}); hari tanpa data berupa celah, bukan garis
               tersambung.
             </p>

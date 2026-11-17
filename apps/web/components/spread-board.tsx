@@ -1,6 +1,5 @@
 'use client';
 
-import type { PriceSource } from '@gold/schema';
 import { useMemo, useState } from 'react';
 import { BarChart, type BarItem } from '@/components/charts/bar-chart';
 import { SpreadBandChart } from '@/components/charts/spread-band-chart';
@@ -18,28 +17,21 @@ import {
   pairProblem,
   sliceDays,
   spreadStats,
+  type BarSourceDef,
   type CompareItem,
   type SpreadDay,
   type SpreadOption,
   type TodayPair,
-  type WeightBarRow,
   POPULAR_PAIRS,
   buybackChoices,
   resolveBuyback,
+  weightBarItems,
 } from '@/lib/spread';
 import { cn } from '@/lib/utils';
 import { expectedFor, labelGaps, type DataCalendar } from '@/lib/calendar';
 import { useChartHeight } from '@/components/use-chart-height';
 
-export interface BarSource {
-  id: string;
-  label: string;
-  note: string;
-  source: PriceSource;
-  date: string | null;
-  at: string | null;
-  rows: WeightBarRow[];
-}
+export type BarSource = BarSourceDef;
 
 export interface SpreadBoardProps {
   sellOptions: SpreadOption[];
@@ -218,16 +210,18 @@ export function SpreadBoard({
   }, [lmDays, tabDays, lmStats]);
 
   const bar = bars.find((b) => b.id === barId) ?? bars[0];
-  const barItems: BarItem[] = (bar?.rows ?? []).map((r) => ({
-    label: r.label,
-    value: r.value,
-    highlight: r.w === 1,
-  }));
+  const barItems: BarItem[] = weightBarItems(bar?.rows ?? []);
+  const barColor: ColorToken = bar?.color ?? 'ubs';
   const barMissing = (bar?.rows ?? []).filter((r) => r.value === null).length;
 
   const pairToday = problem ? null : (today[`${sellId}|${buyId}`] ?? null);
   const stampNote = [
     sell.source === buy.source ? '' : `buyback: ${buy.short}`,
+    buy.id === 'g24-antam-np'
+      ? 'buyback non-Pegadaian: untuk keping Antam yang dibeli di luar Pegadaian atau Galeri24 (lebih rendah dari buyback biasa)'
+      : buy.id === 'g24-antam'
+        ? 'buyback biasa: untuk keping Antam yang dibeli di Pegadaian atau Galeri24'
+        : '',
     allDays && allDays.length > 0 && allDays.length < 30
       ? `baru ${allDays.length} hari memiliki jual dan buyback sekaligus`
       : '',
@@ -302,7 +296,7 @@ export function SpreadBoard({
             </div>
           </div>
           <div className="flex min-w-0">
-            <div className="flex min-w-0 flex-1 items-center gap-2 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            <div className="flex min-w-0 flex-1 items-center gap-2 overflow-x-auto [scrollbar-width:none] sm:flex-wrap sm:overflow-x-visible [&::-webkit-scrollbar]:hidden">
               <span className="mr-1 flex-none whitespace-nowrap text-xs text-faint">
                 Pasangan populer
               </span>
@@ -330,6 +324,13 @@ export function SpreadBoard({
               })}
             </div>
           </div>
+          <p className="m-0 max-w-[720px] text-xs leading-normal text-muted">
+            Galeri24 membeli kembali Antam dengan dua harga:{' '}
+            <strong className="font-semibold text-text">biasa</strong> untuk keping yang dibeli di
+            Pegadaian atau Galeri24, dan{' '}
+            <strong className="font-semibold text-text">non-Pegadaian</strong> (lebih rendah) untuk
+            keping dari tempat lain. Pegadaian sendiri tidak memasang harga buyback emas batangan.
+          </p>
         </div>
       </section>
 
@@ -483,7 +484,12 @@ export function SpreadBoard({
             </div>
           </div>
           {barItems.length > 0 ? (
-            <BarChart items={barItems} ariaLabel="Spread persen per gramasi" decimals={1} />
+            <BarChart
+              items={barItems}
+              color={barColor}
+              ariaLabel="Spread persen per gramasi"
+              decimals={1}
+            />
           ) : (
             <Hint>Belum ada data.</Hint>
           )}
@@ -492,9 +498,20 @@ export function SpreadBoard({
               {EMPTY} = sumber tidak menampilkan buyback untuk gramasi ini ({barMissing} gramasi).
             </p>
           ) : null}
+          {barItems.length > 0 ? (
+            <p className="m-0 mt-3.5 flex items-center gap-2 text-xs text-faint">
+              <span
+                aria-hidden="true"
+                className={cn('h-2.5 w-[18px] flex-none rounded-[3px]', BG[barColor])}
+              />
+              1 g = gramasi acuan yang dipakai grafik di atas. Gramasi lain tampil lebih pudar.
+            </p>
+          ) : null}
           {bar ? (
             <InfoPopover label="Sumber" ariaLabel="Sumber data" side="top" className="mt-3">
-              <SourceStamp source={bar.source} date={bar.date ?? asOf} at={bar.at} bare />
+              <SourceStamp source={bar.source} date={bar.date ?? asOf} at={bar.at} bare>
+                {bar.note}
+              </SourceStamp>
             </InfoPopover>
           ) : null}
         </div>
@@ -546,7 +563,7 @@ export function SpreadBoard({
                 at={compare[0].at}
                 bare
               >
-                Logam Mulia, UBS Lifestyle
+                Logam Mulia, UBS Lifestyle, Galeri24, Pegadaian
               </SourceStamp>
             </InfoPopover>
           ) : null}

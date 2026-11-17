@@ -194,7 +194,7 @@
 
 ### Gelombang G — web
 
-- [ ] **P6-10** Sumber `galeri24` (+ `lotusarchi` bila P6-09 jadi), brand `lotusarchi`, dan varian Antam non-Pegadaian di `apps/web`. — `FR-20`–`FR-23`, `FR-30` · M
+- [x] **P6-10** Sumber `galeri24` (+ `lotusarchi` bila P6-09 jadi), brand `lotusarchi`, dan varian Antam non-Pegadaian di `apps/web`. — `FR-20`–`FR-23`, `FR-30` · M
   - `lib/data/catalog.ts`:
     - `PRICE_SOURCE_IDS`, `SOURCE_LABELS` (`Galeri24`, `Lotus Archi`), `SOURCE_DOMAINS` (`galeri24.co.id`, `lotusarchi.com`), `SCRAPER_LABELS` (sudah diisi minimal di P6-02);
     - `BRAND_IDS`, `BRAND_LABELS` (`lotusarchi: 'Lotus Archi'`);

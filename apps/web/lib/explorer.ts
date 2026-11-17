@@ -3,6 +3,7 @@ import { isYearVariant } from '@gold/schema';
 import {
   buybackFromGram,
   colorToken,
+  displayBrand,
   hasPerGramBuyback,
   perGramPrice,
   productKind,
@@ -14,6 +15,7 @@ import {
   type ProductKind,
   type SeriesFile,
   type SeriesPoint,
+  variantLabel,
 } from './data';
 import { RANGE_PRESETS, rangeToDates, type RangeValue } from './range';
 import { forwardFill } from './forward-fill';
@@ -25,13 +27,19 @@ import { findGaps } from './spread';
 export const MAX_SERIES = 8;
 const DAY_MS = 86_400_000;
 const PRICES: readonly PriceField[] = ['sell', 'buyback'];
-const SOURCES: readonly PriceSource[] = ['logammulia', 'pegadaian', 'ubslifestyle'];
-const BRANDS: readonly Brand[] = ['antam', 'ubs', 'galeri24', 'pegadaian'];
+const SOURCES: readonly PriceSource[] = ['logammulia', 'pegadaian', 'ubslifestyle', 'galeri24'];
+const BRANDS: readonly Brand[] = ['antam', 'ubs', 'galeri24', 'pegadaian', 'lotusarchi'];
+
+/** Varian yang menjadi series sendiri di Explorer (tidak digabung ke series biasa). */
+export const NON_PEGADAIAN = 'non_pegadaian';
+/** Akhiran segmen brand di URL untuk varian non-Pegadaian: `galeri24-antam_np-1-buyback`. */
+const NP_SUFFIX = '_np';
 
 // ---------------------------------------------------------------------------
 // Kunci di URL
 //
 //   ?s=logammulia-antam-1-sell,pegadaian-pegadaian-0.01-sell&r=1T
+//   ?s=galeri24-antam_np-1-buyback     (Antam non-Pegadaian: buyback varian terpisah)
 //   ?r=2026-01-01..2026-10-31          (rentang kustom)
 //
 // Satu series = `{source}-{brand}-{berat}-{sell|buyback}`. Produk dan variant (tahun produksi
@@ -43,6 +51,8 @@ export interface SeriesPick {
   brand: Brand;
   w: number;
   price: PriceField;
+  /** Hanya `non_pegadaian` (Antam di Galeri24): series buyback terpisah, tidak digabung. */
+  variant?: typeof NON_PEGADAIAN;
 }
 
 export const DEFAULT_PICKS: SeriesPick[] = [
@@ -55,13 +65,15 @@ export const DEFAULT_PICKS: SeriesPick[] = [
 export const DEFAULT_RANGE: RangeValue = '1T';
 
 export function encodePick(p: SeriesPick): string {
-  return `${p.source}-${p.brand}-${weightKey(p.w)}-${p.price}`;
+  return `${p.source}-${p.brand}${p.variant ? NP_SUFFIX : ''}-${weightKey(p.w)}-${p.price}`;
 }
 
 export function decodePick(key: string): SeriesPick | null {
   const parts = key.split('-');
   if (parts.length !== 4) return null;
-  const [source, brand, w, price] = parts as [string, string, string, string];
+  const [source, brandKey, w, price] = parts as [string, string, string, string];
+  const np = brandKey.endsWith(NP_SUFFIX);
+  const brand = np ? brandKey.slice(0, -NP_SUFFIX.length) : brandKey;
   if (!SOURCES.includes(source as PriceSource) || !BRANDS.includes(brand as Brand)) return null;
   if (!PRICES.includes(price as PriceField)) return null;
   const weight = Number(w);
@@ -71,6 +83,7 @@ export function decodePick(key: string): SeriesPick | null {
     brand: brand as Brand,
     w: weight,
     price: price as PriceField,
+    ...(np ? { variant: NON_PEGADAIAN } : {}),
   };
 }
 
@@ -139,16 +152,31 @@ export interface ExplorerOption {
   first: Record<PriceField, string | null>;
   /** `true` = buyback dihitung dari buyback 1 g × berat (D-39); sumber tidak mencatatnya. */
   buybackFromGram?: boolean;
+  /** `non_pegadaian` = series buyback sendiri (keping dibeli di luar Pegadaian); tidak ada harga jual. */
+  variant?: typeof NON_PEGADAIAN;
 }
 
-export function optionId(o: Pick<SeriesPick, 'source' | 'brand' | 'w'>): string {
-  return `${o.source}-${o.brand}-${weightKey(o.w)}`;
+export function optionId(o: Pick<SeriesPick, 'source' | 'brand' | 'w' | 'variant'>): string {
+  return `${o.source}-${o.brand}${o.variant ? NP_SUFFIX : ''}-${weightKey(o.w)}`;
+}
+
+/** Kunci brand di pemilih: `antam` atau `antam_np` (Antam non-Pegadaian terpisah dari Antam). */
+export function optionBrandKey(o: Pick<ExplorerOption, 'brand' | 'variant'>): string {
+  return o.variant ? `${o.brand}${NP_SUFFIX}` : o.brand;
+}
+
+/** Nama brand di pemilih dan label series; "Antam non-Pegadaian" untuk varian terpisah. */
+export function optionBrandName(o: Pick<ExplorerOption, 'brand' | 'product' | 'variant'>): string {
+  const base = displayBrand(o);
+  return o.variant ? `${base} ${variantLabel(o.variant)}` : base;
 }
 
 export function explorerOptions(meta: Pick<MetaFile, 'series'>): ExplorerOption[] {
   const groups = new Map<string, MetaFile['series']>();
   for (const s of meta.series) {
-    const k = optionId(s) + `-${s.product}`;
+    const k =
+      optionId({ ...s, variant: s.variant === NON_PEGADAIAN ? NON_PEGADAIAN : undefined }) +
+      `-${s.product}`;
     groups.set(k, [...(groups.get(k) ?? []), s]);
   }
   const min = (xs: (string | null)[]) =>
@@ -156,6 +184,22 @@ export function explorerOptions(meta: Pick<MetaFile, 'series'>): ExplorerOption[
   const out: ExplorerOption[] = [];
   for (const rows of groups.values()) {
     const r0 = rows[0]!;
+    if (r0.variant === NON_PEGADAIAN) {
+      // Hanya buyback: baris jualnya tidak dipakai, dan tidak pernah digabung ke Antam biasa.
+      out.push({
+        id: optionId({ ...r0, variant: NON_PEGADAIAN }),
+        source: r0.source,
+        brand: r0.brand,
+        product: r0.product,
+        kind: productKind(r0.product),
+        file: r0.file,
+        w: r0.w,
+        variants: [NON_PEGADAIAN],
+        first: { sell: null, buyback: min(rows.map((r) => r.first_buyback_date)) },
+        variant: NON_PEGADAIAN,
+      });
+      continue;
+    }
     const year = rows
       .map((r) => r.variant)
       .filter(isYearVariant)
@@ -164,7 +208,7 @@ export function explorerOptions(meta: Pick<MetaFile, 'series'>): ExplorerOption[
     const variants = (year ? [year, ''] : ['']).filter((v) => rows.some((r) => r.variant === v));
     const used = rows.filter((r) => variants.includes(r.variant));
     out.push({
-      id: optionId(r0),
+      id: optionId({ source: r0.source, brand: r0.brand, w: r0.w }),
       source: r0.source,
       brand: r0.brand,
       product: r0.product,

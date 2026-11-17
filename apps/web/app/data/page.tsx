@@ -57,8 +57,7 @@ function whenText(d: DownloadEntry): string {
   if (d.last?.kind === 'macro' && d.last.frequency === 'A')
     return `Tahun ${d.last.date.slice(0, 4)} · seri statis`;
   if (d.last_updated_at) {
-    const verb =
-      d.id.startsWith('pegadaian') || d.id.startsWith('galeri24') ? 'terbit ' : '';
+    const verb = d.id.startsWith('pegadaian') || d.id.startsWith('galeri24') ? 'terbit ' : '';
     return `${formatDate(d.last_date)} · ${verb}${formatTimeWib(d.last_updated_at)}`;
   }
   return formatDate(d.last_date);

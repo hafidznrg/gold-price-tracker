@@ -1,4 +1,4 @@
-import { COMPARE_DEFS, findOption, type CompareDef } from './bandingkan';
+import { ALL_DEFS, findOption, type CompareDef } from './bandingkan';
 import { hasPerGramBuyback, type SeriesPoint } from './data';
 import { chartPoints, type ExplorerOption } from './explorer';
 import { asOf as asOfPoint, type Point } from './forward-fill';
@@ -45,7 +45,7 @@ export function yearAgo(date: string): string {
 }
 
 export function defById(id: string | null | undefined): CompareDef | null {
-  return COMPARE_DEFS.find((d) => d.id === id) ?? null;
+  return ALL_DEFS.find((d) => d.id === id) ?? null;
 }
 
 // ---------------------------------------------------------------------------
@@ -54,10 +54,15 @@ export function defById(id: string | null | undefined): CompareDef | null {
 /** Berat emas fisik yang dijual (ada harga jual) oleh sedikitnya satu sumber, urut naik. */
 function physicalWeights(options: readonly ExplorerOption[]): number[] {
   const set = new Set<number>();
-  for (const d of COMPARE_DEFS) {
+  for (const d of ALL_DEFS) {
     if (d.linear) continue;
     for (const o of options) {
-      if (o.source === d.source && o.brand === d.brand && o.product === d.product) {
+      if (
+        o.source === d.source &&
+        o.brand === d.brand &&
+        o.product === d.product &&
+        (o.variant ?? null) === (d.variant ?? null)
+      ) {
         if (o.first.sell !== null) set.add(o.w);
       }
     }
@@ -70,7 +75,12 @@ export function weightsFor(d: CompareDef, options: readonly ExplorerOption[]): n
   if (d.linear) return findOption(d, 1, options)?.first.sell ? physicalWeights(options) : [];
   const set = new Set<number>();
   for (const o of options) {
-    if (o.source === d.source && o.brand === d.brand && o.product === d.product) {
+    if (
+      o.source === d.source &&
+      o.brand === d.brand &&
+      o.product === d.product &&
+      (o.variant ?? null) === (d.variant ?? null)
+    ) {
       if (o.first.sell !== null) set.add(o.w);
     }
   }
@@ -100,15 +110,15 @@ export function parsePaid(v: number | null | undefined): number | null {
 
 /** Sumber yang punya harga jual (bisa dipilih sebagai tempat beli). */
 export function buyDefs(options: readonly ExplorerOption[]): CompareDef[] {
-  return COMPARE_DEFS.filter((d) => weightsFor(d, options).length > 0);
+  return ALL_DEFS.filter((d) => weightsFor(d, options).length > 0);
 }
 
 /**
  * Tempat menjual kembali: brand dan produk yang sama dengan tempat beli (emas Antam hanya dibeli
- * kembali sebagai Antam, tabungan sebagai tabungan). Urut mengikuti `COMPARE_DEFS`.
+ * kembali sebagai Antam, tabungan sebagai tabungan). Urut mengikuti `ALL_DEFS`.
  */
 export function sellCandidates(buy: CompareDef): CompareDef[] {
-  return COMPARE_DEFS.filter((d) => d.brand === buy.brand && d.product === buy.product);
+  return ALL_DEFS.filter((d) => d.brand === buy.brand && d.product === buy.product);
 }
 
 export interface SellOption {

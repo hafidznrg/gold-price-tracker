@@ -9,10 +9,10 @@ import { calendarFromMeta } from '@/lib/calendar';
 import { explorerOptions } from '@/lib/explorer';
 
 export const metadata: Metadata = {
-  title: 'Explorer',
+  title: 'Riwayat harga',
   description:
     'Telusuri dan bandingkan seri harga emas batangan: gabungkan brand, sumber, gramasi, dan jenis harga dalam satu grafik yang bisa dibagikan lewat URL.',
-  openGraph: { title: 'Explorer' },
+  openGraph: { title: 'Riwayat harga' },
 };
 
 export default function ExplorerPage() {
@@ -26,7 +26,7 @@ export default function ExplorerPage() {
   return (
     <>
       <PageIntro
-        eyebrow="Explorer"
+        eyebrow="Riwayat harga"
         title="Telusuri setiap seri harga"
         lead="Gabungkan brand, sumber, gramasi, dan jenis harga dalam satu grafik. Setiap pengaturan tersimpan di URL sehingga bisa dibagikan apa adanya."
       />
@@ -35,7 +35,7 @@ export default function ExplorerPage() {
           fallback={
             // Tinggi dipesan (≈ papan Explorer) agar footer tidak melompat saat papan menggantikan fallback.
             <div className="min-h-[1500px] sm:min-h-[1000px]">
-              <p className="wrap py-10 text-sm text-muted">Memuat Explorer…</p>
+              <p className="wrap py-10 text-sm text-muted">Memuat Riwayat harga…</p>
             </div>
           }
         >

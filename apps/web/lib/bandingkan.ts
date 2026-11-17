@@ -47,6 +47,13 @@ export interface CompareDef {
   dashed: boolean;
   /** Harganya linear terhadap berat (Tabungan Emas): satu series melayani semua gramasi. */
   linear: boolean;
+  /**
+   * `non_pegadaian` = series buyback Antam di Galeri24 untuk keping dari luar Pegadaian; series
+   * sendiri, tidak digabung ke `g24-antam`. Hanya dipakai sebagai tempat jual (Kalkulator).
+   */
+  variant?: 'non_pegadaian';
+  /** Label khusus di daftar "Dijual ke" (Kalkulator) bila beda dari "{sumber} · {brand}". */
+  sellLabel?: string;
 }
 
 function def(
@@ -57,6 +64,7 @@ function def(
   color: ColorToken,
   dashed: boolean,
   linear = false,
+  extra: Pick<CompareDef, 'variant' | 'sellLabel'> = {},
 ): CompareDef {
   const brandName = displayBrand({ brand, product });
   const sourceName = SOURCE_LABELS[source];
@@ -72,20 +80,51 @@ function def(
     color,
     dashed,
     linear,
+    ...extra,
   };
 }
 
-/** Series yang dibandingkan, urut mockup. */
-export const COMPARE_DEFS: readonly CompareDef[] = [
+/**
+ * Semua series ritel yang dikenal Kalkulator (tempat beli dan tempat jual), urut mockup. Galeri24
+ * dan Lotus Archi memakai sumber galeri24 (buyback tersedia); `g24-antam-np` hanya buyback.
+ */
+export const ALL_DEFS: readonly CompareDef[] = [
   def('lm-antam', 'logammulia', 'antam', 'gold_bar', 'antam', false),
   def('pg-antam', 'pegadaian', 'antam', 'gold_bar', 'antam', true),
+  def('g24-antam', 'galeri24', 'antam', 'gold_bar', 'antam', false, false, {
+    sellLabel: 'Galeri24 · Antam (biasa)',
+  }),
   def('ubsl-ubs', 'ubslifestyle', 'ubs', 'gold_bar', 'ubs', false),
   def('pg-ubs', 'pegadaian', 'ubs', 'gold_bar', 'ubs', true),
-  def('g24-g24', 'galeri24', 'galeri24', 'gold_bar', 'g24', false),
+  def('g24-ubs', 'galeri24', 'ubs', 'gold_bar', 'ubs', false),
   def('pg-g24', 'pegadaian', 'galeri24', 'gold_bar', 'g24', false),
+  def('g24-g24', 'galeri24', 'galeri24', 'gold_bar', 'g24', false),
+  def('pg-lotus', 'pegadaian', 'lotusarchi', 'gold_bar', 'lotus', false),
   def('g24-lotus', 'galeri24', 'lotusarchi', 'gold_bar', 'lotus', false),
   def('tab', 'pegadaian', 'pegadaian', 'gold_savings', 'tab', false, true),
+  def('g24-antam-np', 'galeri24', 'antam', 'gold_bar', 'antam', false, false, {
+    variant: 'non_pegadaian',
+    sellLabel: 'Galeri24 · Antam (dibeli di luar Pegadaian)',
+  }),
 ];
+
+/**
+ * Series halaman Bandingkan dan beranda, urut mockup: Antam LM, Antam dan UBS Pegadaian (garis
+ * putus-putus), UBS Lifestyle, Galeri24 dan Lotus Archi dari Galeri24 (garis penuh, ada buyback),
+ * Tabungan Emas. Harga Galeri24/Lotus di Pegadaian tidak digambar (lihat `ALL_DEFS`).
+ */
+const COMPARE_IDS: readonly string[] = [
+  'lm-antam',
+  'pg-antam',
+  'ubsl-ubs',
+  'pg-ubs',
+  'g24-g24',
+  'g24-lotus',
+  'tab',
+];
+export const COMPARE_DEFS: readonly CompareDef[] = ALL_DEFS.filter((d) =>
+  COMPARE_IDS.includes(d.id),
+).sort((a, b) => COMPARE_IDS.indexOf(a.id) - COMPARE_IDS.indexOf(b.id));
 
 export const DEFAULT_WEIGHT = 1;
 export type CompareMode = 'gram' | 'index';
@@ -103,6 +142,7 @@ export function findOption(
         o.source === d.source &&
         o.brand === d.brand &&
         o.product === d.product &&
+        (o.variant ?? null) === (d.variant ?? null) &&
         (d.linear || o.w === w),
     ) ?? null
   );
@@ -111,8 +151,12 @@ export function findOption(
 /** Hanya opsi yang dipakai halaman ini (mengurangi muatan props). */
 export function compareOptions(options: readonly ExplorerOption[]): ExplorerOption[] {
   return options.filter((o) =>
-    COMPARE_DEFS.some(
-      (d) => d.source === o.source && d.brand === o.brand && d.product === o.product,
+    ALL_DEFS.some(
+      (d) =>
+        d.source === o.source &&
+        d.brand === o.brand &&
+        d.product === o.product &&
+        (o.variant ?? null) === (d.variant ?? null),
     ),
   );
 }
@@ -126,7 +170,7 @@ export function compareWeights(options: readonly ExplorerOption[]): number[] {
   for (const d of COMPARE_DEFS) {
     if (d.linear) continue;
     for (const o of options) {
-      if (o.source === d.source && o.brand === d.brand && o.product === d.product) {
+      if (o.source === d.source && o.brand === d.brand && o.product === d.product && !o.variant) {
         count.set(o.w, (count.get(o.w) ?? 0) + 1);
       }
     }

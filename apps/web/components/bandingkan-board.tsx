@@ -36,7 +36,7 @@ import { cn } from '@/lib/utils';
 import { useChartHeight } from '@/components/use-chart-height';
 
 export interface BandingkanBoardProps {
-  /** Opsi katalog hanya untuk enam series yang dibandingkan. */
+  /** Opsi katalog hanya untuk series yang dibandingkan yang dibandingkan. */
   options: ExplorerOption[];
   /** Gramasi yang bisa dipilih (dijual sedikitnya dua series). */
   weights: number[];
@@ -224,7 +224,7 @@ export function BandingkanBoard({ options, weights, today, asOf, calendar }: Ban
               valueFormat={mode === 'index' ? 'number' : 'rupiah'}
               gaps={gaps}
               height={chartHeight}
-              ariaLabel={`Perbandingan harga jual ${wText} Antam, UBS, Galeri24, dan Tabungan Emas`}
+              ariaLabel={`Perbandingan harga jual ${wText} Antam, UBS, Galeri24, Lotus Archi, dan Tabungan Emas`}
             />
           )}
           {!loading && lines && empty.length > 0 ? (
@@ -331,6 +331,10 @@ export function BandingkanBoard({ options, weights, today, asOf, calendar }: Ban
                 <li>
                   Buyback Logam Mulia satu harga per gram untuk semua ukuran keping: buyback selain
                   1 g = buyback 1 g × berat.
+                </li>
+                <li>
+                  Galeri24 menampilkan buyback semua gramasi (Antam di Galeri24 punya dua harga
+                  buyback, lihat Spread).
                 </li>
               </ul>
               <InfoHeading className="mt-2 border-t border-line pt-2.5">Sumber</InfoHeading>

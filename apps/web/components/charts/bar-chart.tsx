@@ -14,7 +14,7 @@ export interface BarChartProps {
   max?: number;
   /** 'horizontal' (default, seperti mockup Spread) atau 'vertical'. */
   orientation?: 'horizontal' | 'vertical';
-  /** Warna default batang (token/warna). Default `ubs`; item `highlight` memakai `gold`. */
+  /** Warna default batang (token/warna). Default `ubs`. Item `highlight` tetap berwarna ini, batang lain memudar (D-52). */
   color?: string;
   /** Tinggi area batang untuk orientasi vertikal (px). Default 180. */
   height?: number;
@@ -42,7 +42,10 @@ export function BarChart({
       ? (v: number | null) => formatPercent(v, decimals)
       : valueFormatters(valueFormat).tooltip;
   const rows = barLayout(items, max);
-  const fill = (it: BarItem) => cssColor(it.color ?? (it.highlight ? 'gold' : color));
+  const fill = (it: BarItem) => cssColor(it.color ?? color);
+  // Ada sorotan → batang lain memudar; tanpa sorotan semua penuh.
+  const hasHighlight = items.some((it) => it.highlight);
+  const fade = (it: BarItem) => (hasHighlight && !it.highlight ? 0.45 : 1);
 
   if (orientation === 'vertical') {
     return (
@@ -59,7 +62,11 @@ export function BarChart({
             >
               <div
                 className="w-full rounded-[5px]"
-                style={{ height: `${r.ratio * 100}%`, background: fill(r.item) }}
+                style={{
+                  height: `${r.ratio * 100}%`,
+                  background: fill(r.item),
+                  opacity: fade(r.item),
+                }}
               />
             </div>
             <span className="truncate text-muted">{r.item.label}</span>
@@ -80,16 +87,28 @@ export function BarChart({
           className="grid items-center gap-3 text-sm"
           style={{ gridTemplateColumns: '62px minmax(0,1fr) 64px' }}
         >
-          <span className="truncate text-right text-muted">{r.item.label}</span>
+          <span
+            className={cn(
+              'truncate text-right',
+              r.item.highlight ? 'font-bold text-text' : 'text-muted',
+            )}
+          >
+            {r.item.label}
+          </span>
           <div className="h-4 overflow-hidden rounded-[5px] bg-surface2">
             <div
               className="h-full rounded-[5px]"
-              style={{ width: `${r.ratio * 100}%`, background: fill(r.item) }}
+              style={{
+                width: `${r.ratio * 100}%`,
+                background: fill(r.item),
+                opacity: fade(r.item),
+              }}
             />
           </div>
           <span
             className={cn(
-              'font-semibold tabular-nums',
+              'tabular-nums',
+              r.item.highlight ? 'font-bold' : 'font-semibold',
               r.item.value === null && 'font-normal text-faint',
             )}
           >
