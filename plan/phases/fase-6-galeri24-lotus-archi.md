@@ -160,7 +160,7 @@
 
 ### Gelombang E — histori Galeri24 (Q-7 disetujui)
 
-- [ ] **P6-11** Backfill histori Galeri24 dari `GET /api/gold-prices`. — `FR-08`-style · M
+- [x] **P6-11** Backfill histori Galeri24 dari `GET /api/gold-prices`. — `FR-08`-style · M
   - Desain final mengikuti hasil P6-01b. Kerangka:
   - **Dua langkah, pola `logammulia-archive` (job lokal):**
     1. Skrip unduh (`apps/scraper/src/backfill/galeri24-download.ts` atau perintah CLI) dijalankan sekali dari terminal: menelusuri semua halaman, jeda ≥ 5 detik, berhenti di tanggal tertua. Hanya baris dengan lima kode vendor di tabel Prinsip yang disimpan, apa adanya per baris, ke folder lokal (satu file per halaman). Total raw diperkirakan ±70 MB tanpa filter → filter wajib agar arsip raw di repo tetap kecil.

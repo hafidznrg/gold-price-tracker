@@ -115,3 +115,11 @@ Pertimbangan: endpoint ini tidak ditautkan dari halaman harga, meski `robots.txt
 > **Konteks:** Q-1/P5-06. galeri24.co.id menampilkan jual + buyback per vendor dan gramasi lewat `GET /api/gold-prices/page-data` tanpa token; `vendorCode` sama dengan `idVendor` Pegadaian.
 > **Keputusan:** sumber baru `galeri24` (`fetch_method: api`, fallback `__NUXT_DATA__`), jendela [hasil P6-01], brand dari `vendorCode`, `status = 1`, brand wajib antam/ubs/galeri24, Lotus Archi opsional, vendor lain diabaikan. Varian `antam/non_pegadaian` dari kode 00005201905007 (opsional). Backfill dari `/api/gold-prices` disetujui pemilik 17 Nov 2026 (Q-7).
 > **Konsekuensi:** buyback harian tersedia untuk ketiga brand; Q-1 terjawab. Harga jual Antam/UBS/Galeri24 tercatat dua kali (pegadaian + galeri24) sebagai seri terpisah.
+
+## 8. Hasil backfill P6-11 (17 Nov 2026)
+
+- Unduhan 04.27–04.30 UTC: 18 halaman `take=10000`, `count` 178.370 tetap selama penelusuran, 84.116 entri vendor target.
+- Hasil: 47.569 baris baru (`origin = backfill`), 1.012 tanggal 1 Feb 2024–16 Nov 2026; 45 baris 17 Nov dibuang karena sudah di-scrape. Tidak ada karantina.
+- Celah > 3 hari di semua brand: 9→13 Mar 2024 dan 25→29 Apr 2024. Antam saja: 25 Jun→1 Agt 2025 (±5 minggu tanpa entri status 1). Antam non-Pegadaian mulai 2 Feb 2024 dengan celah tambahan di Feb 2024.
+- Gramasi historis yang ditambahkan ke katalog (dengan `active_to`): Antam 250/500/1.000 g (s.d. 29 Okt 2026), UBS 3 g (satu hari, 18 Mei 2024), Lotus Archi 4 g (s.d. 19 Jul 2024), 2,5 g (s.d. 28 Jan 2026), 2,13 g (13 Jun–4 Jul 2025).
+- Raw (hanya vendor target dan field yang dipakai) 3,0 MB gzip di `data/raw/galeri24/2026-11/`.
