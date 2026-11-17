@@ -44,7 +44,7 @@ sources:
     schedule_window: any # snapshot biasanya terbit ±18.17–21.27 WIB, sekali 00.05 WIB (D-25, D-42)
     stale_is_error_on_expected_day: true
     accept_previous_day: true # slot siang menambal snapshot kemarin (D-42)
-    parser_version: 1.1.0
+    parser_version: 1.2.0
     enabled: true
     notes: JSON tanpa token; brand dari idVendor (D-20). Tabungan Emas dari /gold/prices (D-30). Fallback Playwright (DOM) belum dibuat (D-23).
 

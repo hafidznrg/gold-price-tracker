@@ -143,7 +143,7 @@
 
 ### Gelombang D — Lotus Archi di Pegadaian
 
-- [ ] **P6-07** Lotus Archi di modul Pegadaian (`pegadaian@1.2.0`, harga jual saja). — · S
+- [x] **P6-07** Lotus Archi di modul Pegadaian (`pegadaian@1.2.0`, harga jual saja). — · S
   - `VENDOR_BRAND` + `00005202001009 → lotusarchi`; `PEGADAIAN_BRANDS` (V-04) **tetap** tiga brand. Non-Pegadaian **tidak** diambil dari Pegadaian.
   - Cek "tglBerlaku sama" (`dates.size > 1` di `parse`) dibatasi ke brand wajib; Lotus Archi dengan tanggal lain dibuang + note.
   - `catalog.yml`: `pegadaian × lotusarchi` (gramasi dari fixture, perkiraan [1, 5, 10, 25, 50, 100]), `active_from: '2026-10-01'` agar P6-08 lolos V-02. **Commit yang sama** dengan parser.

@@ -35,7 +35,12 @@ export const VENDOR_BRAND: Record<string, Brand> = {
   '00005201808001': 'antam',
   '00005201808002': 'ubs',
   '00005202003010': 'galeri24',
+  // Opsional (P6-07): tidak dihitung di V-04 dan tidak menggagalkan run bila tanggalnya beda.
+  '00005202001009': 'lotusarchi',
 };
+
+/** Brand wajib: dasar cek "tglBerlaku sama" dan `dataDate`. Brand lain di `VENDOR_BRAND` opsional. */
+export const PEGADAIAN_REQUIRED: ReadonlySet<Brand> = new Set<Brand>(['antam', 'ubs', 'galeri24']);
 
 interface Detail {
   berat: number;
@@ -140,16 +145,33 @@ function splitRaw(body: string): { table: string; savings: string | null } {
 export function parse(raw: RawPayload): ParseResult<PriceRow> {
   const parts = splitRaw(raw.body);
   const vendors = readBody(parts.table);
-  const targets = vendors.filter((v) => v.idVendor in VENDOR_BRAND);
-  const dates = new Set(targets.map((v) => v.tglBerlaku));
+  const notes: string[] = [];
+  const mapped = vendors.filter((v) => v.idVendor in VENDOR_BRAND);
+  const required = mapped.filter((v) => PEGADAIAN_REQUIRED.has(VENDOR_BRAND[v.idVendor]!));
+  const dates = new Set(required.map((v) => v.tglBerlaku));
   for (const d of dates) {
     if (typeof d !== 'string' || !isIsoDate(d)) throw parseError(`tglBerlaku tidak valid: ${d}`);
   }
   if (dates.size > 1) {
     // Slot primary bisa jatuh di tengah pembaruan periode antar vendor (TECH-SPEC §5.2).
-    const detail = targets.map((v) => `${VENDOR_BRAND[v.idVendor]} ${v.tglBerlaku}`).join(', ');
+    const detail = required.map((v) => `${VENDOR_BRAND[v.idVendor]} ${v.tglBerlaku}`).join(', ');
     throw new ScrapeError('VALIDATION_FAILED', `tglBerlaku berbeda antar brand: ${detail}`);
   }
+  const dataDate = [...dates][0] ?? null;
+  // Brand opsional: tanggal tidak valid/berbeda → dibuang + note, bukan gagal (P6-07).
+  const targets = mapped.filter((v) => {
+    const brand = VENDOR_BRAND[v.idVendor]!;
+    if (PEGADAIAN_REQUIRED.has(brand)) return true;
+    if (typeof v.tglBerlaku !== 'string' || !isIsoDate(v.tglBerlaku)) {
+      notes.push(`${brand}: tglBerlaku tidak valid ${JSON.stringify(v.tglBerlaku)}, dibuang`);
+      return false;
+    }
+    if (dataDate !== null && v.tglBerlaku !== dataDate) {
+      notes.push(`${brand}: tglBerlaku ${v.tglBerlaku} ≠ ${dataDate}, dibuang`);
+      return false;
+    }
+    return true;
+  });
 
   const rows: ParsedRow<PriceRow>[] = [];
   for (const v of targets) {
@@ -162,6 +184,12 @@ export function parse(raw: RawPayload): ParseResult<PriceRow> {
       if (sell === null) continue; // gramasi tidak dijual
       if (typeof d.berat !== 'number' || !(d.berat > 0))
         throw parseError(`${label}: berat tidak valid`);
+      const buyback = price(d.hargaBeli, label);
+      // V-03 untuk brand opsional: buang barisnya, jangan menggagalkan run.
+      if (!PEGADAIAN_REQUIRED.has(brand) && buyback !== null && !(buyback < sell)) {
+        notes.push(`${label}: buyback ${buyback} ≥ jual ${sell}, dibuang`);
+        continue;
+      }
       rows.push({
         date: v.tglBerlaku,
         source: 'pegadaian',
@@ -171,7 +199,7 @@ export function parse(raw: RawPayload): ParseResult<PriceRow> {
         weight_g: Number(canonicalWeight(d.berat)),
         location: '',
         sell_price: sell,
-        buyback_price: price(d.hargaBeli, label),
+        buyback_price: buyback,
         source_updated_at: updatedAt,
       });
     }
@@ -179,19 +207,20 @@ export function parse(raw: RawPayload): ParseResult<PriceRow> {
 
   if (parts.savings !== null) rows.push(parseSavings(parts.savings));
 
-  const updated = targets.map((v) => v.idHarga).sort((a, b) => a - b);
+  const updated = required.map((v) => v.idHarga).sort((a, b) => a - b);
   return {
     rows,
-    dataDate: [...dates][0] ?? null,
+    dataDate,
     sourceUpdatedAt: updated.length > 0 ? jakartaIso(updated.at(-1)!) : null,
     stale: null,
+    ...(notes.length > 0 ? { note: notes.join('; ') } : {}),
   };
 }
 
 export const pegadaian: SourceScraper<PriceRow> = {
   id: 'pegadaian',
   kind: 'prices',
-  parserVersion: 'pegadaian@1.1.0',
+  parserVersion: 'pegadaian@1.2.0',
   async fetchRaw(ctx) {
     const fetchedAt = utcIso();
     const headers = { Accept: 'application/json' };

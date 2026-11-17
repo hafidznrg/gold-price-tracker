@@ -32,6 +32,14 @@ items:
     weights: [0.5, 1, 2, 3, 5, 10, 25, 50, 100]
     active_from: '2010-01-01'
 
+  # Lotus Archi lewat Pegadaian (P6-07) — harga jual saja; gramasi dari fixture 24–25 Okt 2026
+  # dan seluruh arsip raw; `active_from` agar histori P6-08 lolos V-02.
+  - source: pegadaian
+    brand: lotusarchi
+    product: gold_bar
+    weights: [1, 5, 10, 25, 50, 100]
+    active_from: '2026-10-01'
+
   # Galeri24 (P6-03) — brand dari vendorCode; kunci katalog tidak memuat `variant`, jadi baris
   # Antam non-Pegadaian ikut tervalidasi oleh grup galeri24 × antam. Gramasi yang hanya ada di
   # masa lalu (dengan active_to) ditambahkan di P6-11 setelah hasil unduhan histori.

@@ -15,6 +15,8 @@ const DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), 'fixtures/pe
 const sunday = readFileSync(path.join(DIR, 'prices-table-2026-10-25-sunday.json'), 'utf8');
 const edge = readFileSync(path.join(DIR, 'prices-table-edge-synthetic.json'), 'utf8');
 
+const LOTUS = '00005202001009';
+
 const payload = (body: string): RawPayload => ({
   body,
   contentType: 'application/json',
@@ -34,10 +36,62 @@ const edit = (
 describe('parse', () => {
   const r = parse(payload(sunday));
 
-  it('tiga brand target lewat idVendor; vendor lain (Retro, Disney, Batik, …) diabaikan', () => {
+  it('tiga brand wajib + Lotus Archi lewat idVendor; vendor lain (Retro, Disney, Batik, …) diabaikan', () => {
     const count = (b: string) => r.rows.filter((x) => x.brand === b).length;
-    expect([count('galeri24'), count('antam'), count('ubs')]).toEqual([11, 9, 10]);
-    expect(r.rows).toHaveLength(30);
+    expect([count('galeri24'), count('antam'), count('ubs'), count('lotusarchi')]).toEqual([
+      11, 9, 10, 6,
+    ]);
+    expect(r.rows).toHaveLength(36);
+    expect(r.note).toBeUndefined();
+  });
+
+  it('Lotus Archi (P6-07): baris sendiri, harga jual saja, tanggal sama dengan brand wajib', () => {
+    const lotus = r.rows.filter((x) => x.brand === 'lotusarchi');
+    expect(lotus.map((x) => x.weight_g).sort((a, b) => a - b)).toEqual([1, 5, 10, 25, 50, 100]);
+    expect(lotus.every((x) => x.buyback_price === null && x.date === '2026-10-24')).toBe(true);
+    expect(lotus.every((x) => x.sell_price! > 0 && x.product === 'gold_bar')).toBe(true);
+  });
+
+  it('Lotus Archi tanggal beda → baris dibuang + note, run tetap sukses', () => {
+    const body = edit(sunday, (j) => {
+      j.data.find((v) => v.idVendor === LOTUS)!.tglBerlaku = '2026-10-23';
+    });
+    const m = parse(payload(body));
+    expect(m.rows.some((x) => x.brand === 'lotusarchi')).toBe(false);
+    expect(m.rows).toHaveLength(30);
+    expect(m.dataDate).toBe('2026-10-24');
+    expect(m.note).toContain('lotusarchi: tglBerlaku 2026-10-23 ≠ 2026-10-24');
+  });
+
+  it('Lotus Archi tglBerlaku tidak valid → dibuang + note (bukan PARSE_ERROR)', () => {
+    const body = edit(sunday, (j) => {
+      j.data.find((v) => v.idVendor === LOTUS)!.tglBerlaku = 'kemarin';
+    });
+    const m = parse(payload(body));
+    expect(m.rows).toHaveLength(30);
+    expect(m.note).toContain('tidak valid');
+  });
+
+  it('Lotus Archi dengan buyback ≥ jual (V-03) → baris itu dibuang + note', () => {
+    const body = edit(sunday, (j) => {
+      const lotus = j.data.find((v) => v.idVendor === LOTUS)!;
+      const d = (
+        lotus.hargaMuliaDetails as { berat: number; hargaJual: number; hargaBeli: unknown }[]
+      ).find((x) => x.berat === 1)!;
+      d.hargaBeli = d.hargaJual;
+    });
+    const m = parse(payload(body));
+    expect(m.rows.filter((x) => x.brand === 'lotusarchi')).toHaveLength(5);
+    expect(m.note).toContain('lotusarchi 1 g: buyback');
+  });
+
+  it('tanggal beda antar brand wajib tetap VALIDATION_FAILED walau Lotus ikut berbeda', () => {
+    const body = edit(sunday, (j) => {
+      j.data.find((v) => v.idVendor === '00005201808001')!.tglBerlaku = '2026-10-23';
+    });
+    expect(() => parse(payload(body))).toThrow(
+      expect.objectContaining({ code: 'VALIDATION_FAILED' }),
+    );
   });
 
   it('tglBerlaku → date dan data_date; hargaJual → sell; buyback kosong (Q-1)', () => {
@@ -90,7 +144,7 @@ describe('parse', () => {
     const m = parse(payload(monday));
     expect(m.dataDate).toBe('2026-10-25');
     expect(m.sourceUpdatedAt?.slice(0, 13)).toBe('2026-10-24T18');
-    expect(m.rows).toHaveLength(30);
+    expect(m.rows).toHaveLength(36);
     const oneGram = (x: typeof m) =>
       x.rows.filter((row) => row.weight_g === 1).map((row) => row.sell_price);
     expect(oneGram(m)).toEqual(oneGram(r));
@@ -149,10 +203,10 @@ describe('scrape pegadaian', () => {
       scraper: { ...pegadaian, fetchRaw: async () => payload(body) },
     });
 
-  it('Sabtu dengan data Sabtu → success, 30 baris', async () => {
+  it('Sabtu dengan data Sabtu → success, 36 baris', async () => {
     expect(await run(sunday, '2026-10-24T03:30:00Z')).toMatchObject({
       status: 'success',
-      rows_parsed: 30,
+      rows_parsed: 36,
       exit_code: SCRAPE_EXIT.OK,
     });
   });
@@ -174,6 +228,19 @@ describe('scrape pegadaian', () => {
     });
   });
 
+  it('V-04 tidak menghitung Lotus Archi: tiga brand wajib kurang gramasi tetap gagal', async () => {
+    const body = edit(sunday, (j) => {
+      const antam = j.data.find((v) => v.idVendor === '00005201808001')!;
+      antam.hargaMuliaDetails = (antam.hargaMuliaDetails as { berat: number }[]).filter(
+        (d) => d.berat <= 2,
+      );
+    });
+    const r = await run(body, '2026-10-24T03:30:00Z');
+    expect(r).toMatchObject({ status: 'failed', error_code: 'VALIDATION_FAILED' });
+    expect(r.error_message).toContain('antam');
+    expect(r.error_message).not.toContain('lotusarchi');
+  });
+
   it('fixture tepi (tanggal disamakan): Galeri 24 hanya 3 gramasi → V-04 gagal', async () => {
     const sameDate = edit(edge, (j) => {
       for (const v of j.data) v.tglBerlaku = '2026-10-24';
@@ -191,7 +258,7 @@ describe('scrape pegadaian', () => {
       )!.hargaJual = 2_600_000;
     });
     const r = await run(extra, '2026-10-24T03:30:00Z');
-    expect(r).toMatchObject({ status: 'partial', rows_parsed: 31, rows_held: 1, exit_code: 0 });
+    expect(r).toMatchObject({ status: 'partial', rows_parsed: 37, rows_held: 1, exit_code: 0 });
   });
 });
 
@@ -199,9 +266,9 @@ describe('Tabungan Emas (D-30)', () => {
   const savings = readFileSync(path.join(DIR, 'tabungan-2026-10-25.json'), 'utf8');
   const combined = (table: string, s = savings) => payload(JSON.stringify({ table, savings: s }));
 
-  it('raw gabungan: 30 baris emas batangan + 1 baris Tabungan Emas per 0,01 g', () => {
+  it('raw gabungan: 36 baris emas batangan + 1 baris Tabungan Emas per 0,01 g', () => {
     const r = parse(combined(sunday));
-    expect(r.rows).toHaveLength(31);
+    expect(r.rows).toHaveLength(37);
     expect(r.dataDate).toBe('2026-10-24'); // tetap dari tabel emas batangan
     expect(r.rows.at(-1)).toEqual({
       date: '2026-10-25', // tglBerlaku Tabungan Emas sendiri
@@ -263,7 +330,7 @@ describe('Tabungan Emas (D-30)', () => {
         retryDelayMs: 0,
       });
       expect(Object.keys(JSON.parse(raw.body))).toEqual(['table', 'savings']);
-      expect(parse(raw).rows).toHaveLength(31);
+      expect(parse(raw).rows).toHaveLength(37);
     } finally {
       globalThis.fetch = original;
     }

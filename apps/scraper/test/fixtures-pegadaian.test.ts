@@ -40,6 +40,7 @@ const VENDOR_BRAND = {
   '00005201808001': 'antam',
   '00005201808002': 'ubs',
   '00005202003010': 'galeri24',
+  '00005202001009': 'lotusarchi',
 } as const;
 
 describe('fixture Pegadaian /gold/prices/table', () => {
@@ -47,11 +48,12 @@ describe('fixture Pegadaian /gold/prices/table', () => {
     expect(table.responseCode).toBe('2000000100');
   });
 
-  it('ketiga vendor target ada, dikenali lewat idVendor', () => {
+  it('keempat vendor target ada (Lotus Archi opsional), dikenali lewat idVendor', () => {
     const byCode = new Map(table.data.map((v) => [v.idVendor, v.namaVendor]));
     expect(byCode.get('00005201808001')).toBe('ANTAM');
     expect(byCode.get('00005201808002')).toBe('UBS');
     expect(byCode.get('00005202003010')).toBe('GALERI 24');
+    expect(byCode.has('00005202001009')).toBe(true);
   });
 
   it('semua vendor memakai tglBerlaku yang sama (data Sabtu, diambil Minggu)', () => {
