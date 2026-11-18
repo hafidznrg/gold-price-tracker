@@ -50,7 +50,7 @@ const NP_SUFFIX = '_np';
 //
 // Satu series = `{source}-{brand}-{berat}-{sell|buyback}`. Produk dan variant (tahun produksi
 // UBS) tidak ditulis: keduanya ditentukan dari katalog. `s=-` = tanpa series;
-// `s` kosong = bawaan; `r` kosong = 1T.
+// `s` kosong = bawaan; `r` kosong = 1B.
 
 export interface SeriesPick {
   source: PriceSource;
@@ -68,7 +68,7 @@ export const DEFAULT_PICKS: SeriesPick[] = [
   { source: 'pegadaian', brand: 'galeri24', w: 1, price: 'sell' },
   { source: 'pegadaian', brand: 'pegadaian', w: 0.01, price: 'sell' },
 ];
-export const DEFAULT_RANGE: RangeValue = '1T';
+export const DEFAULT_RANGE: RangeValue = '1B';
 
 export function encodePick(p: SeriesPick): string {
   return `${p.source}-${p.brand}${p.variant ? NP_SUFFIX : ''}-${weightKey(p.w)}-${p.price}`;

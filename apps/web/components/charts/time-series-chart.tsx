@@ -3,6 +3,14 @@
 import type { EChartsType, ImagePatternObject } from 'echarts/core';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { cn } from '@/lib/utils';
+import {
+  DRAG_THRESHOLD_PX,
+  panWindow,
+  wheelPixels,
+  wheelZoomFactor,
+  type ZoomWindow,
+  zoomWindow,
+} from './chart-gestures';
 import { ChartLegend, type LegendItem } from './chart-legend';
 import {
   type ChartTokens,
@@ -286,6 +294,158 @@ export function TimeSeriesChart({
     compact,
     theme,
   ]);
+
+  // Gestur zoom/geser sendiri (pengganti interaksi bawaan dataZoom `inside` yang terlalu sensitif):
+  // gulir = zoom halus sebanding delta, gulir horizontal = geser, seret = geser (redam PAN_SPEED),
+  // cubit = zoom sebanding jarak jari. Sentuhan vertikal diteruskan ke scroll halaman.
+  useEffect(() => {
+    const el = elRef.current;
+    const chart = chartRef.current;
+    if (!ready || !chart || !el || !showZoom) return;
+
+    const current = (): { win: ZoomWindow; ext: [number, number] } | null => {
+      const ext = extentRef.current;
+      if (!ext || ext[1] <= ext[0]) return null;
+      return { win: zoomRef.current ?? { start: ext[0], end: ext[1] }, ext };
+    };
+    /** Batas piksel grid (x kiri, lebar) dari jendela terlihat saat ini. */
+    const gridBox = (win: ZoomWindow): { left: number; width: number } | null => {
+      const a = chart.convertToPixel({ xAxisIndex: 0 }, win.start) as number;
+      const b = chart.convertToPixel({ xAxisIndex: 0 }, win.end) as number;
+      return Number.isFinite(a) && Number.isFinite(b) && b > a ? { left: a, width: b - a } : null;
+    };
+    const local = (e: { clientX: number; clientY: number }): [number, number] => {
+      const r = el.getBoundingClientRect();
+      return [e.clientX - r.left, e.clientY - r.top];
+    };
+    const inGrid = (p: [number, number]) => chart.containPixel({ gridIndex: 0 }, p);
+
+    // Satu dispatch per frame; event di antaranya hanya memperbarui jendela tertunda.
+    let pending: ZoomWindow | null = null;
+    let raf = 0;
+    const apply = (w: ZoomWindow) => {
+      zoomRef.current = w;
+      pending = w;
+      if (raf) return;
+      raf = requestAnimationFrame(() => {
+        raf = 0;
+        if (!pending) return;
+        chart.dispatchAction({ type: 'dataZoom', startValue: pending.start, endValue: pending.end });
+        pending = null;
+      });
+    };
+
+    const onWheel = (e: WheelEvent) => {
+      const p = local(e);
+      if (!inGrid(p)) return;
+      const cur = current();
+      const box = cur && gridBox(cur.win);
+      if (!cur || !box) return;
+      e.preventDefault();
+      const dx = wheelPixels(e.shiftKey && !e.deltaX ? e.deltaY : e.deltaX, e.deltaMode);
+      const dy = e.shiftKey && !e.deltaX ? 0 : wheelPixels(e.deltaY, e.deltaMode);
+      let w = cur.win;
+      if (Math.abs(dy) >= Math.abs(dx) && dy !== 0) {
+        w = zoomWindow(w, cur.ext, wheelZoomFactor(dy, e.ctrlKey), (p[0] - box.left) / box.width);
+      } else if (dx !== 0) {
+        w = panWindow(w, cur.ext, -dx / box.width);
+      }
+      apply(w);
+    };
+
+    // Penunjuk aktif (mouse/pena/jari) untuk seret & cubit.
+    const pts = new Map<number, [number, number]>();
+    let drag: { x: number; y: number; win: ZoomWindow; width: number; active: boolean } | null =
+      null;
+    let pinch: { dist: number; win: ZoomWindow; anchor: number } | null = null;
+
+    const startPinch = () => {
+      const cur = current();
+      const box = cur && gridBox(cur.win);
+      const [a, b] = [...pts.values()] as [[number, number], [number, number]];
+      if (!cur || !box) return;
+      const dist = Math.hypot(a[0] - b[0], a[1] - b[1]);
+      if (dist < 10) return;
+      pinch = { dist, win: cur.win, anchor: ((a[0] + b[0]) / 2 - box.left) / box.width };
+      drag = null;
+    };
+
+    const onDown = (e: PointerEvent) => {
+      if (e.pointerType === 'mouse' && e.button !== 0) return;
+      const p = local(e);
+      if (pts.size === 0 && !inGrid(p)) return;
+      pts.set(e.pointerId, p);
+      if (pts.size === 2) {
+        startPinch();
+        return;
+      }
+      if (pts.size > 2) return;
+      const cur = current();
+      const box = cur && gridBox(cur.win);
+      if (!cur || !box) return;
+      drag = { x: p[0], y: p[1], win: cur.win, width: box.width, active: false };
+    };
+
+    const onMove = (e: PointerEvent) => {
+      if (!pts.has(e.pointerId)) return;
+      const p = local(e);
+      pts.set(e.pointerId, p);
+      const ext = extentRef.current;
+      if (!ext) return;
+      if (pinch && pts.size === 2) {
+        const [a, b] = [...pts.values()] as [[number, number], [number, number]];
+        const dist = Math.hypot(a[0] - b[0], a[1] - b[1]);
+        if (dist > 0) apply(zoomWindow(pinch.win, ext, pinch.dist / dist, pinch.anchor));
+        return;
+      }
+      if (!drag) return;
+      const dx = p[0] - drag.x;
+      const dy = p[1] - drag.y;
+      if (!drag.active) {
+        if (Math.hypot(dx, dy) < DRAG_THRESHOLD_PX) return;
+        // Sentuhan yang dominan vertikal = scroll halaman, bukan geser grafik.
+        if (e.pointerType !== 'mouse' && Math.abs(dy) > Math.abs(dx)) {
+          drag = null;
+          return;
+        }
+        drag.active = true;
+        el.setPointerCapture?.(e.pointerId);
+      }
+      apply(panWindow(drag.win, ext, dx / drag.width));
+    };
+
+    const onUp = (e: PointerEvent) => {
+      if (!pts.delete(e.pointerId)) return;
+      if (el.hasPointerCapture?.(e.pointerId)) el.releasePointerCapture(e.pointerId);
+      if (pts.size < 2) pinch = null;
+      if (pts.size === 0) drag = null;
+      else if (pts.size === 1 && !drag) {
+        // Satu jari tersisa setelah cubit: lanjut geser dari posisinya tanpa melompat.
+        const cur = current();
+        const box = cur && gridBox(cur.win);
+        const [q] = [...pts.values()] as [[number, number]];
+        if (cur && box) drag = { x: q[0], y: q[1], win: cur.win, width: box.width, active: true };
+      }
+    };
+
+    // pan-y: browser tetap menangani scroll vertikal; geser horizontal & cubit ke grafik.
+    const prevTouch = el.style.touchAction;
+    el.style.touchAction = 'pan-y';
+    el.addEventListener('wheel', onWheel, { passive: false });
+    el.addEventListener('pointerdown', onDown);
+    el.addEventListener('pointermove', onMove);
+    el.addEventListener('pointerup', onUp);
+    el.addEventListener('pointercancel', onUp);
+    return () => {
+      if (raf) cancelAnimationFrame(raf);
+      el.style.touchAction = prevTouch;
+      el.removeEventListener('wheel', onWheel);
+      el.removeEventListener('pointerdown', onDown);
+      el.removeEventListener('pointermove', onMove);
+      el.removeEventListener('pointerup', onUp);
+      el.removeEventListener('pointercancel', onUp);
+    };
+  }, [ready, showZoom]);
 
   // Rentang terkendali dari luar (mis. tombol 7H–Semua / URL).
   useEffect(() => {

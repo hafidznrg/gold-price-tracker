@@ -610,8 +610,10 @@ export function buildTimeSeriesOption(input: BuildInput): {
           xAxisIndex: 0,
           startValue: zoom?.start,
           endValue: zoom?.end,
-          zoomOnMouseWheel: true,
-          moveOnMouseMove: true,
+          // Interaksi bawaan (gulir ×1,1–1,4 & cubit ×1,1 per event) terlalu sensitif dan menahan
+          // scroll halaman di HP. Gestur ditangani sendiri di <TimeSeriesChart> (chart-gestures.ts);
+          // komponen ini tetap memegang jendela data.
+          disabled: true,
           minValueSpan: 3 * DAY_MS,
         },
       ]

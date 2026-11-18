@@ -78,13 +78,13 @@ describe('kunci series di URL', () => {
   });
 
   it('rentang: preset, kustom, rusak', () => {
-    expect(decodeRange(null)).toBe('1T');
+    expect(decodeRange(null)).toBe('1B');
     expect(decodeRange('6B')).toBe('6B');
     expect(decodeRange('2026-01-01..2026-10-31')).toEqual({ from: '2026-01-01', to: '2026-10-31' });
     expect(encodeRange({ from: '2026-01-01', to: '2026-10-31' })).toBe('2026-01-01..2026-10-31');
-    expect(decodeRange('2026-10-31..2026-01-01')).toBe('1T');
-    expect(decodeRange('2026-02-30..2026-03-01')).toBe('1T');
-    expect(decodeRange('10Y')).toBe('1T');
+    expect(decodeRange('2026-10-31..2026-01-01')).toBe('1B');
+    expect(decodeRange('2026-02-30..2026-03-01')).toBe('1B');
+    expect(decodeRange('10Y')).toBe('1B');
   });
 });
 

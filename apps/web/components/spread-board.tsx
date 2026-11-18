@@ -103,7 +103,7 @@ export function SpreadBoard({
 }: SpreadBoardProps) {
   const [sellId, setSellId] = useState('lm-antam');
   const [buyId, setBuyId] = useState('lm-antam');
-  const [range, setRange] = useState<RangeValue>('1T');
+  const [range, setRange] = useState<RangeValue>('1B');
   const [barId, setBarId] = useState(bars[0]?.id ?? '');
   const chartH = useChartHeight(280, 220);
 

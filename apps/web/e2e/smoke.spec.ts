@@ -227,9 +227,9 @@ test.describe('Explorer', () => {
 
   test('mengubah rentang memperbarui URL', async ({ page }) => {
     await page.goto(START);
-    await page.getByRole('radio', { name: '1B', exact: true }).click();
-    await expect(page).toHaveURL(/[?&]r=1B(&|$)/);
-    await expect(page.getByRole('radio', { name: '1B', exact: true })).toBeChecked();
+    await page.getByRole('radio', { name: '3B', exact: true }).click();
+    await expect(page).toHaveURL(/[?&]r=3B(&|$)/);
+    await expect(page.getByRole('radio', { name: '3B', exact: true })).toBeChecked();
   });
 });
 

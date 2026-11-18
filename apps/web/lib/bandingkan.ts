@@ -183,7 +183,7 @@ export function compareWeights(options: readonly ExplorerOption[]): number[] {
 }
 
 // ---------------------------------------------------------------------------
-// URL: ?w=5&m=idx&r=6B   (bawaan: 1 g, per gram, 1T tidak ditulis)
+// URL: ?w=5&m=idx&r=6B   (bawaan: 1 g, per gram, 1B tidak ditulis)
 
 export function decodeWeight(param: string | null | undefined, weights: readonly number[]): number {
   const w = Number(param);
