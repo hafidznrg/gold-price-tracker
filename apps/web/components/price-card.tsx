@@ -108,12 +108,21 @@ export function PriceCard({ c, wide = false }: { c: CardModel; wide?: boolean })
         <div className="num text-[30px] leading-tight font-semibold tracking-[-0.02em]">
           {formatRupiah(c.sell)}
         </div>
-        <div
-          className={cn('num mt-1 text-sm font-medium', TEXT_DIR[changeDirection(c.change?.abs)])}
-        >
-          {c.change ? `${formatChangeRupiah(c.change.abs)} (${formatPct(c.change.pct)})` : EMPTY}{' '}
-          <span className="font-normal text-faint">vs kemarin</span>
-        </div>
+        {c.carryOver ? (
+          <div className="mt-1 text-sm text-muted">
+            Belum ada harga baru{c.carrySince ? ` · berlaku sejak ${c.carrySince}` : ''}
+          </div>
+        ) : (
+          <div
+            className={cn('num mt-1 text-sm font-medium', TEXT_DIR[changeDirection(c.change?.abs)])}
+          >
+            {c.change ? `${formatChangeRupiah(c.change.abs)} (${formatPct(c.change.pct)})` : EMPTY}
+            {c.changeLabel ? (
+              <span className="font-normal text-faint"> {c.changeLabel}</span>
+            ) : null}
+          </div>
+        )}
+        {c.staleLabel ? <div className="mt-0.5 text-xs text-faint">{c.staleLabel}</div> : null}
       </div>
       {/* mt-auto: bagian bawah menempel ke dasar kartu sehingga meter sejajar antarkartu. */}
       <div

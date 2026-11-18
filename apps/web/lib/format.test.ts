@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   formatChange,
+  changeBasisLabel,
   formatChangeRupiah,
   formatDataAge,
   formatDataStamp,
@@ -10,6 +11,7 @@ import {
   formatPct,
   formatRupiah,
   formatRupiahShort,
+  formatStampShort,
   formatTimeWib,
   formatWeight,
 } from './format';
@@ -69,5 +71,20 @@ describe('format', () => {
     );
     expect(formatDataAge({ isStatic: true, date: '1998-01-01' }, now)).toBe('tidak diperbarui');
     expect(formatDataAge({}, now)).toBe('—');
+  });
+});
+
+describe('pembanding perubahan', () => {
+  it('hari berurutan → "vs kemarin"', () => {
+    expect(changeBasisLabel('2026-11-17', '2026-11-16')).toBe('vs kemarin');
+    expect(changeBasisLabel('2026-12-01', '2026-11-30')).toBe('vs kemarin');
+  });
+
+  it('selisih beberapa hari → hari dan tanggal sebenarnya', () => {
+    expect(changeBasisLabel('2026-11-16', '2026-11-13')).toBe('vs Jum, 13 Nov');
+  });
+
+  it('formatStampShort memakai jam Jakarta', () => {
+    expect(formatStampShort('2026-11-17T11:20:00Z')).toBe('17 Nov 18.20');
   });
 });

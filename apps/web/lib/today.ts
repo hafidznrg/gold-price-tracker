@@ -11,7 +11,7 @@ import {
   type ProductKind,
   type Spark,
 } from '@/lib/data';
-import { formatRupiah } from '@/lib/format';
+import { changeBasisLabel, formatDate, formatRupiah, formatStampShort } from '@/lib/format';
 
 // Model tampilan halaman Hari ini: bentuk datar yang aman diserialisasi ke komponen klien.
 
@@ -27,6 +27,14 @@ export interface CardModel {
   sell: number | null;
   buyback: number | null;
   change: Change | null;
+  /** Pembanding perubahan ("vs kemarin" / "vs Jum, 13 Nov"); null bila tanpa pembanding. */
+  changeLabel: string | null;
+  /** Harga masih carry-over (belum ada harga baru untuk `date`). */
+  carryOver: boolean;
+  /** "17 Nov 18.20" (jam sumber); null bila tanpa jam. */
+  carrySince: string | null;
+  /** "data 14 Nov" bila `date` lebih lama dari tanggal data terbaru semua sumber; selain itu null. */
+  staleLabel: string | null;
   spread: number | null;
   spreadPct: number | null;
   sellSpark: (number | null)[];
@@ -102,6 +110,13 @@ export function buildCards(latest: LatestFile): CardModel[] {
         sell: h.sell,
         buyback: h.buyback,
         change: h.change.sell,
+        changeLabel: h.prev ? changeBasisLabel(h.date, h.prev.date) : null,
+        carryOver: h.carry_over,
+        carrySince: h.source_updated_at ? formatStampShort(h.source_updated_at) : null,
+        staleLabel:
+          latest.as_of !== null && h.date < latest.as_of
+            ? `data ${formatDate(h.date, false)}`
+            : null,
         spread: h.spread,
         spreadPct: h.spread_pct,
         sellSpark: sp.sell,

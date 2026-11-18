@@ -2,6 +2,7 @@ import {
   PRICE_SOURCES,
   SCHEMA_VERSION,
   addDaysIso,
+  isCarryOver,
   goldIdrGram,
   goldIdrGramSeries,
   isYearVariant,
@@ -102,6 +103,7 @@ export function latestOfSeries(s: SeriesGroup, fileLastDate: string): LatestSeri
     },
     ...computeSpread(last.sell_price, last.buyback_price),
     current: last.date >= fileLastDate,
+    carry_over: isCarryOver(last),
     spark: buildSpark(s.rows, last.date),
   };
 }
@@ -200,6 +202,7 @@ export function buildHighlight(
     },
     spread: scale(ls.spread, factor),
     spread_pct: ls.spread_pct,
+    carry_over: ls.carry_over,
     spark: {
       start: spark.start,
       end: spark.end,

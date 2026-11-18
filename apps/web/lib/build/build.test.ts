@@ -793,3 +793,32 @@ describe('sumber galeri24: Lotus Archi dan Antam non-Pegadaian', () => {
     expect(np.last).toMatchObject({ variant: 'non_pegadaian', buyback: 2_178_000 });
   });
 });
+
+describe('carry_over (D-66)', () => {
+  const rows = [
+    price({ date: '2026-11-17', source_updated_at: '2026-11-17T10:05:00+07:00' }),
+    // Terbit malam sebelumnya, berlabel besok: harga kemarin yang diperpanjang.
+    price({ date: '2026-11-18', source_updated_at: '2026-11-17T18:20:00+07:00' }),
+  ];
+  const group = {
+    file: 'logammulia-antam',
+    source: 'logammulia',
+    brand: 'antam',
+    product: 'gold_bar',
+    location: 'jakarta',
+    rows,
+  } as const;
+
+  it('baris terakhir carry-over ditandai di series dan kartu; prev/change tetap dihitung', () => {
+    const { latest } = buildOutputs(input({ prices: rows }));
+    expect(latest.series.every((s) => s.carry_over)).toBe(true);
+    expect(latest.highlights.find((h) => h.file === 'logammulia-antam')!.carry_over).toBe(true);
+  });
+
+  it('harga baru (terbit di tanggalnya) bukan carry-over', () => {
+    const fresh = [rows[0]!, price({ date: '2026-11-18' })];
+    const { latest } = buildOutputs(input({ prices: fresh }));
+    expect(latest.series.some((s) => s.carry_over)).toBe(false);
+    expect(group.rows).toHaveLength(2);
+  });
+});

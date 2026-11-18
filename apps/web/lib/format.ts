@@ -35,6 +35,7 @@ export const MONTHS_LONG = [
   'November',
   'Desember',
 ] as const;
+export const WEEKDAYS_SHORT = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'] as const;
 export const WEEKDAYS = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'] as const;
 
 const JKT_PARTS = new Intl.DateTimeFormat('en-CA', {
@@ -172,6 +173,35 @@ export function formatDateLong(date: string): string {
   const [y, m, d] = splitIso(date);
   const wd = new Date(Date.UTC(y, m - 1, d)).getUTCDay();
   return `${WEEKDAYS[wd]}, ${d} ${MONTHS_LONG[m - 1]} ${y}`;
+}
+
+/** "Jum, 13 Nov" (tanpa tahun). */
+export function formatDateWeekdayShort(date: string): string {
+  const [y, m, d] = splitIso(date);
+  const wd = new Date(Date.UTC(y, m - 1, d)).getUTCDay();
+  return `${WEEKDAYS_SHORT[wd]}, ${d} ${MONTHS_SHORT[m - 1]}`;
+}
+
+/** Geser tanggal kalender `YYYY-MM-DD` (tanpa zod, aman untuk bundel klien). */
+export function shiftIsoDate(date: string, days: number): string {
+  const [y, m, d] = splitIso(date);
+  return new Date(Date.UTC(y, m - 1, d + days)).toISOString().slice(0, 10);
+}
+
+/**
+ * Pembanding perubahan: "vs kemarin" hanya bila `prevDate` tepat sehari sebelum `date`; selain itu
+ * hari dan tanggal sebenarnya ("vs Jum, 13 Nov", mis. sumber yang libur akhir pekan).
+ */
+export function changeBasisLabel(date: string, prevDate: string): string {
+  return prevDate === shiftIsoDate(date, -1)
+    ? 'vs kemarin'
+    : `vs ${formatDateWeekdayShort(prevDate)}`;
+}
+
+/** "17 Nov 18.20" dari timestamp (tanggal dan jam Jakarta, tanpa tahun). */
+export function formatStampShort(at: Date | string): string {
+  const p = jakartaParts(toDate(at));
+  return `${p.day} ${MONTHS_SHORT[p.month - 1]} ${p.hour}.${p.minute}`;
 }
 
 /** "Nov 2023" (cakupan histori). */

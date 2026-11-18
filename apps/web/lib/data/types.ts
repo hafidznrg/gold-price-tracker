@@ -118,7 +118,7 @@ export interface LatestSeries extends SeriesRef {
   sell: number | null;
   buyback: number | null;
   source_updated_at: string | null;
-  /** Observasi sebelumnya di series yang sama ("vs kemarin"); null bila baru satu titik. */
+  /** Observasi sebelumnya di series yang sama (bisa beberapa hari sebelumnya); null bila baru satu titik. */
   prev: PricePoint | null;
   change: { sell: Change | null; buyback: Change | null };
   /** `sell − buyback` dan persennya terhadap jual; null bila salah satu kosong. */
@@ -126,6 +126,8 @@ export interface LatestSeries extends SeriesRef {
   spread_pct: number | null;
   /** `false` bila series berhenti sebelum tanggal terakhir file (mis. UBS `variant=''`, D-28). */
   current: boolean;
+  /** Baris terakhir carry-over: harga hari sebelumnya yang diperpanjang, belum harga baru (D-66). */
+  carry_over: boolean;
   spark: Spark;
 }
 
@@ -152,6 +154,8 @@ export interface Highlight {
   change: { sell: Change | null; buyback: Change | null };
   spread: number | null;
   spread_pct: number | null;
+  /** Lihat `LatestSeries.carry_over`. */
+  carry_over: boolean;
   /**
    * Buyback spark UBS disambung dari seri backfill `variant=''` untuk hari tanpa seri tahun
    * produksi (D-28). `spliced_from` = variant penyambung, null bila tidak disambung.

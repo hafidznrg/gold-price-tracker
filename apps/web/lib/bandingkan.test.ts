@@ -151,6 +151,7 @@ function ls(over: Partial<LatestSeries>): LatestSeries {
     change: { sell: null, buyback: null },
     spread: null,
     spread_pct: null,
+    carry_over: false,
     current: true,
     spark: { start: '', end: '', sell: [], buyback: null },
     ...over,

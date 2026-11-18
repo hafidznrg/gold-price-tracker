@@ -18,6 +18,7 @@ function hl(over: Partial<Highlight> & Pick<Highlight, 'file' | 'source' | 'bran
     change: { sell: null, buyback: null },
     spread: null,
     spread_pct: null,
+    carry_over: false,
     spark: { start: '2026-10-19', end: '2026-11-17', sell: [], buyback: null, spliced_from: null },
     ...over,
   };
@@ -148,5 +149,35 @@ describe('buildCards', () => {
     expect(cards[0]!.note).toContain('Di Pegadaian: Rp2.564.000');
     expect(cards[1]!.note).toContain('tahun produksi 2026');
     expect(cards.filter((c) => c.description).map((c) => c.id)).toEqual(['pegadaian-pegadaian']);
+  });
+});
+
+describe('kartu: carry-over, pembanding, data lama', () => {
+  const mk = (over: Partial<Highlight>) =>
+    buildCards({
+      ...latest,
+      highlights: [hl({ file: 'logammulia-antam', source: 'logammulia', brand: 'antam', ...over })],
+    } as unknown as LatestFile)[0]!;
+
+  it('carry-over: tampilkan sejak kapan, bukan perubahan', () => {
+    const c = mk({
+      date: '2026-11-18',
+      carry_over: true,
+      source_updated_at: '2026-11-17T18:20:00+07:00',
+    });
+    expect(c.carryOver).toBe(true);
+    expect(c.carrySince).toBe('17 Nov 18.20');
+  });
+
+  it('prev bertanggal berurutan vs selisih hari', () => {
+    const prev = (date: string) => ({ date, sell: 1, buyback: null });
+    expect(mk({ prev: prev('2026-11-16') }).changeLabel).toBe('vs kemarin');
+    expect(mk({ date: '2026-11-16', prev: prev('2026-11-13') }).changeLabel).toBe('vs Jum, 13 Nov');
+    expect(mk({ prev: null }).changeLabel).toBeNull();
+  });
+
+  it('data lebih lama dari as_of diberi label', () => {
+    expect(mk({ date: '2026-11-14' }).staleLabel).toBe('data 14 Nov');
+    expect(mk({}).staleLabel).toBeNull();
   });
 });
