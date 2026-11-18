@@ -34,13 +34,13 @@
     "updated_at": "2026-11-18T08:07:09Z"
   },
   "pegadaian": {
-    "last_run_id": "44264048066-1",
+    "last_run_id": "44300643432-1",
     "last_status": "success",
-    "last_success_at": "2026-11-18T08:06:25Z",
+    "last_success_at": "2026-11-18T12:06:25Z",
     "last_data_date": "2026-11-18",
     "consecutive_failures": 0,
-    "carry_over": false,
-    "updated_at": "2026-11-18T08:07:09Z"
+    "updated_at": "2026-11-18T12:06:41Z",
+    "carry_over": false
   },
   "ubslifestyle": {
     "last_run_id": "44264048066-1",
