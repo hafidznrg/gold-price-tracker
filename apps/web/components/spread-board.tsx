@@ -310,6 +310,7 @@ export function SpreadBoard({
                   <button
                     key={p.label}
                     type="button"
+                    aria-label={p.label}
                     aria-pressed={on}
                     onClick={() => {
                       setSellId(p.sell);
