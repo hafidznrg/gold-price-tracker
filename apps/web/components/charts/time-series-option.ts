@@ -367,7 +367,7 @@ export function tooltipRows(
   }[],
   fmt: (v: number | null) => string,
 ): TooltipRow[] {
-  const rows: TooltipRow[] = [];
+  const rows: (TooltipRow & { raw: number | null })[] = [];
   for (const s of series) {
     const a = s.data[0];
     const b = s.data.at(-1);
@@ -388,9 +388,12 @@ export function tooltipRows(
       value: fmt(v),
       muted: v === null,
       ...(detail ? { detail } : {}),
+      raw: v,
     });
   }
-  return rows;
+  // Urut harga tertinggi → terendah (mengikuti posisi garis di grafik); "—" di bawah. Sort stabil.
+  rows.sort((x, y) => (y.raw ?? -Infinity) - (x.raw ?? -Infinity) || 0);
+  return rows.map(({ raw: _raw, ...row }) => row);
 }
 
 export const SLIDER_HEIGHT = 44;

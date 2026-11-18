@@ -157,6 +157,19 @@ describe('tooltipRows', () => {
       { label: 'B', color: '#b', value: '—', muted: true },
     ]);
   });
+  it('mengurutkan baris dari nilai tertinggi, "—" paling bawah', () => {
+    const at = T('2026-10-28');
+    const rows = tooltipRows(
+      at,
+      [
+        { label: 'rendah', color: '#a', data: [[at, 90]] },
+        { label: 'kosong', color: '#b', data: [[at - 1, 1], [at, null], [at + 1, 1]] },
+        { label: 'tinggi', color: '#c', data: [[at, 120]] },
+      ],
+      fmt,
+    );
+    expect(rows.map((r) => r.label)).toEqual(['tinggi', 'rendah', 'kosong']);
+  });
   it('catatan masuk ke `detail`, bukan ditempel ke nilai', () => {
     const at = s[0]!.data[0]![0];
     const [row] = tooltipRows(at, [{ ...s[0]!, notes: new Map([[at, 'rata-rata bulan']]) }], fmt);
