@@ -2,6 +2,7 @@ import { readdir, readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { gunzipSync } from 'node:zlib';
 import {
+  isCarryOver,
   jakartaDate,
   macroRowKey,
   MacroRow,
@@ -165,6 +166,7 @@ function nextStatus(
   run: RunRecord,
   historyPoints: number | undefined,
   now: string,
+  rows?: readonly { date: string; source_updated_at: string | null }[],
 ): SourceStatusEntry {
   const ok = run.status === 'success' || run.status === 'partial';
   const lastDataDate =
@@ -186,6 +188,13 @@ function nextStatus(
   };
   const points = ok && historyPoints !== undefined ? historyPoints : prev?.history_points;
   if (points !== undefined) entry.history_points = points;
+  if (rows !== undefined && ok) {
+    // Snapshot "carry-over": semua baris tanggal data hanya salinan harga hari sebelumnya.
+    const dated = rows.filter((r) => r.date === lastDataDate && r.source_updated_at !== null);
+    entry.carry_over = dated.length > 0 && dated.every((r) => isCarryOver(r));
+  } else if (prev?.carry_over !== undefined && !ok) {
+    entry.carry_over = prev.carry_over;
+  }
   return entry;
 }
 
@@ -406,7 +415,13 @@ export async function merge(opts: MergeOptions): Promise<MergeSummary> {
     rawPaths.forEach((p) => changed.add(p));
     // Backfill tidak menyentuh status harian sumber (kesegaran, consecutive_failures).
     if (run.slot !== 'backfill') {
-      status[run.source] = nextStatus(status[run.source], record, run.history_points, nowIso);
+      status[run.source] = nextStatus(
+        status[run.source],
+        record,
+        run.history_points,
+        nowIso,
+        artifact?.kind === 'prices' && writesData ? artifact.rows : undefined,
+      );
     }
 
     results.push({

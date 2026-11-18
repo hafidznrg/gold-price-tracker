@@ -54,10 +54,10 @@ sources:
     fetch_method: api
     workflow: scrape-retail
     update_calendar: daily # harga Minggu ada (15 & 16 Nov 2026); final setelah observasi (Q-6)
-    schedule_window: afternoon # revisi pagi sudah final; harga D+1 dibuat ±17.50 WIB tetapi halaman tetap D sampai tengah malam
+    schedule_window: afternoon # versi harga D terbit berulang: ±17.50 WIB D-1 (salinan harga D-1), lalu ±10.05–10.50 WIB hari D (harga sebenarnya); diambil dari API histori (versi updatedAt terbaru)
     stale_is_error_on_expected_day: true
     accept_previous_day: true # run terlambat lewat tengah malam tidak jadi alarm palsu (D-42)
-    parser_version: 1.0.0
+    parser_version: 1.1.0
     enabled: true # P6-06, 17 Nov 2026
     notes: JSON server route Nuxt tanpa token; brand dari vendorCode (= idVendor Pegadaian, D-20). Fallback __NUXT_DATA__ dari /harga-emas.
 

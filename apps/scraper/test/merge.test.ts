@@ -146,7 +146,30 @@ describe('merge — insert', () => {
       last_data_date: '2026-10-26',
       consecutive_failures: 0,
       updated_at: '2026-10-26T03:40:00Z',
+      carry_over: false,
     });
+  });
+
+  it('carry_over: true bila semua baris tanggal data berasal dari hari sebelumnya', async () => {
+    const rows = ubsDay('2026-10-26').map((r) => ({
+      ...r,
+      source_updated_at: '2026-10-25T18:32:00+07:00',
+    }));
+    await writeArtifact({ rows });
+    await merge(opts());
+    const status = JSON.parse(await read('data/meta/status.json'));
+    expect(status.ubslifestyle.carry_over).toBe(true);
+  });
+
+  it('carry_over: false bila ada baris yang diperbarui pada tanggal datanya', async () => {
+    const rows = ubsDay('2026-10-26').map((r, i) => ({
+      ...r,
+      source_updated_at: i === 0 ? '2026-10-26T10:05:00+07:00' : '2026-10-25T18:32:00+07:00',
+    }));
+    await writeArtifact({ rows });
+    await merge(opts());
+    const status = JSON.parse(await read('data/meta/status.json'));
+    expect(status.ubslifestyle.carry_over).toBe(false);
   });
 });
 

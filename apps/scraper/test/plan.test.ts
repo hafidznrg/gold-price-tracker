@@ -6,6 +6,7 @@ import { parse as parseYaml } from 'yaml';
 import { loadConfig, type ProjectConfig } from '../src/config';
 import { isExpectedDay } from '../src/pipeline/calendar';
 import {
+  doneToday,
   plan,
   PlanError,
   GITHUB_SCHEDULES,
@@ -105,6 +106,27 @@ describe('slotOf', () => {
       expect(crons).toEqual([...GITHUB_SCHEDULES[wf]!].sort());
       for (const c of crons) expect(SCHEDULES[wf]![c]?.slot).toBe('retry');
     }
+  });
+});
+
+describe('carry_over (snapshot salinan hari sebelumnya)', () => {
+  it('doneToday false bila carry_over true', () => {
+    expect(doneToday(entry({}), '2026-10-26')).toBe(true);
+    expect(doneToday(entry({ carry_over: false }), '2026-10-26')).toBe(true);
+    expect(doneToday(entry({ carry_over: true }), '2026-10-26')).toBe(false);
+  });
+
+  it('retry siang tidak melewati sumber accept_previous_day yang carry_over', () => {
+    const cfg = { config: anyWindow, schedule: '5 5 * * *', now: MONDAY_1340 };
+    const base = { last_data_date: '2026-10-25' };
+    const done = plan(input({ ...cfg, status: { pegadaian: entry(base) } }));
+    expect(done.skipped).toContainEqual({ source: 'pegadaian', reason: 'sudah sukses hari ini' });
+    const carry = plan(
+      input({ ...cfg, status: { pegadaian: entry({ ...base, carry_over: true }) } }),
+    );
+    expect(carry.sources).toContain('pegadaian');
+    const today = plan(input({ ...cfg, status: { pegadaian: entry({ carry_over: true }) } }));
+    expect(today.sources).toContain('pegadaian');
   });
 });
 

@@ -124,6 +124,11 @@ export const SourceStatusEntry = z.object({
   consecutive_failures: Count,
   /** Khusus Logam Mulia: jumlah titik histori untuk aturan V-07. */
   history_points: Count.optional(),
+  /**
+   * D-66: semua baris pada `last_data_date` masih carry-over (terbit sebelum tanggal itu), jadi
+   * harga baru hari itu belum tertangkap; slot retry tidak menganggapnya sukses hari ini.
+   */
+  carry_over: z.boolean().optional(),
   updated_at: IsoDateTimeUtc,
 });
 export type SourceStatusEntry = z.infer<typeof SourceStatusEntry>;

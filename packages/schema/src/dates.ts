@@ -35,6 +35,18 @@ function assertIsoDate(value: string): void {
   if (!isIsoDate(value)) throw new Error(`Tanggal tidak valid: "${value}"`);
 }
 
+/**
+ * Baris **carry-over** (D-66): harga berlabel `date` yang terbit sebelum tanggal itu (WIB), mis.
+ * Pegadaian `PER I` / Galeri24 versi malam = harga kemarin yang diperpanjang, bukan harga baru.
+ * `source_updated_at` null (UBS, Lotus Archi) atau tak terbaca → bukan carry-over.
+ */
+export function isCarryOver(row: { date: string; source_updated_at: string | null }): boolean {
+  if (row.source_updated_at === null) return false;
+  const ms = Date.parse(row.source_updated_at);
+  if (Number.isNaN(ms)) return false;
+  return jakartaDate(ms) < row.date;
+}
+
 /** Geser tanggal kalender `YYYY-MM-DD` sebanyak `days` hari. */
 export function addDaysIso(date: string, days: number): string {
   assertIsoDate(date);

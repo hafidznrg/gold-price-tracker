@@ -20,11 +20,12 @@ import type { ParsedRow, ParseResult, RawPayload, SourceScraper } from './types'
 // Semua angka datang sebagai string. Riset: plan/research/galeri24.md §2.
 
 export const PAGE_DATA_URL = 'https://galeri24.co.id/api/gold-prices/page-data';
+export const HISTORY_URL = 'https://galeri24.co.id/api/gold-prices';
 export const PAGE_URL = 'https://galeri24.co.id/harga-emas';
 
 /** Isi raw: jalur yang dipakai + isi respons apa adanya, agar parser tahu bentuknya. */
 export interface Galeri24Raw {
-  via: 'page-data' | 'nuxt';
+  via: 'history' | 'page-data' | 'nuxt';
   body: string;
 }
 
@@ -164,15 +165,27 @@ export function mapEntries(entries: readonly Entry[]): { mapped: MappedEntry[]; 
       }
     }
   }
-  const notes: string[] = [];
+  // Satu catatan ringkas: API histori memuat beberapa versi per kunci setiap hari (D-66), jadi
+  // catatan per kunci akan melewati batas 500 karakter `error_message` RUN.
+  const dup: string[] = [];
+  let maxCount = 0;
   const mapped: MappedEntry[] = [];
   for (const [key, { entry, count }] of best) {
     if (count > 1) {
-      notes.push(`duplikat ${key} (${count} entri status 1): dipakai updatedAt terbesar`);
+      dup.push(key);
+      maxCount = Math.max(maxCount, count);
     }
     const m = toRow(entry);
     if (m) mapped.push(m);
   }
+  const notes =
+    dup.length === 0
+      ? []
+      : [
+          dup.length === 1
+            ? `duplikat ${dup[0]} (${maxCount} entri status 1): dipakai updatedAt terbesar`
+            : `${dup.length} kunci punya beberapa versi (maks ${maxCount} entri status 1): dipakai updatedAt terbesar`,
+        ];
   return { mapped, notes };
 }
 
@@ -190,17 +203,21 @@ function readEntries(rawBody: string): { entries: Entry[]; via: Galeri24Raw['via
   } catch {
     throw parseError(`raw bukan JSON: ${rawBody.slice(0, 80)}`);
   }
-  if (!raw || (raw.via !== 'page-data' && raw.via !== 'nuxt') || typeof raw.body !== 'string') {
+  if (
+    !raw ||
+    (raw.via !== 'history' && raw.via !== 'page-data' && raw.via !== 'nuxt') ||
+    typeof raw.body !== 'string'
+  ) {
     throw parseError('raw tidak berbentuk { via, body }');
   }
   let list: unknown;
-  if (raw.via === 'page-data') {
+  if (raw.via === 'page-data' || raw.via === 'history') {
     try {
       list = (JSON.parse(raw.body) as { results?: unknown }).results;
     } catch {
-      throw parseError(`page-data bukan JSON: ${raw.body.slice(0, 80)}`);
+      throw parseError(`${raw.via} bukan JSON: ${raw.body.slice(0, 80)}`);
     }
-    if (!Array.isArray(list)) throw parseError('page-data: field results bukan array');
+    if (!Array.isArray(list)) throw parseError(`${raw.via}: field results bukan array`);
   } else {
     try {
       const root = devalueParse(raw.body, NUXT_REVIVERS) as {
@@ -278,22 +295,63 @@ function isUsablePageData(body: string): boolean {
   }
 }
 
+/**
+ * Entri API histori (terbaru dulu) → hanya tanggal sasaran, atau tanggal terbaru ≤ sasaran bila
+ * sasaran belum ada (jalur accept_previous_day/stale tetap jalan). Dedup per `id` karena halaman
+ * bergeser saat data terbit. Semua versi tanggal itu dipertahankan; `mapEntries` memilih versi
+ * status 1 dengan `updatedAt` terbesar per kunci. `null` = tidak ada entri ≤ sasaran.
+ */
+export function selectHistory(results: readonly unknown[], date: string): Entry[] | null {
+  const seen = new Set<string>();
+  const unique: Entry[] = [];
+  for (const e of results as Entry[]) {
+    if (!e || typeof e !== 'object') continue;
+    if (typeof e.id === 'string') {
+      if (seen.has(e.id)) continue;
+      seen.add(e.id);
+    }
+    unique.push(e);
+  }
+  const dates = unique
+    .map((e) => e.date)
+    .filter((d): d is string => typeof d === 'string' && isIsoDate(d) && d <= date)
+    .sort();
+  const pick = dates.at(-1);
+  return pick === undefined ? null : unique.filter((e) => e.date === pick);
+}
+
 export const galeri24: SourceScraper<PriceRow> = {
   id: 'galeri24',
   kind: 'prices',
-  parserVersion: 'galeri24@1.0.0',
+  parserVersion: 'galeri24@1.1.0',
   async fetchRaw(ctx) {
     const fetchedAt = utcIso();
     const date = ctx.date ?? jakartaToday(ctx.now);
     let raw: Galeri24Raw | null = null;
+    // Utama: API histori memuat semua versi harga; page-data pernah menyajikan versi lama.
     try {
-      const res = await fetchOk(ctx, `${PAGE_DATA_URL}?take=1000&date=${date}`, {
+      const res = await fetchOk(ctx, `${HISTORY_URL}?take=1000&page=1`, {
         headers: { Accept: 'application/json' },
       });
-      const body = res.body.toString('utf8');
-      if (isUsablePageData(body)) raw = { via: 'page-data', body };
+      const list = (JSON.parse(res.body.toString('utf8')) as { results?: unknown }).results;
+      const picked = Array.isArray(list) ? selectHistory(list, date) : null;
+      if (picked && picked.length > 0) {
+        raw = { via: 'history', body: JSON.stringify({ results: picked }) };
+      }
     } catch {
-      // jatuh ke fallback di bawah
+      // jatuh ke page-data
+    }
+    if (!raw) {
+      try {
+        await sleep(ctx.pauseMs ?? 2_000);
+        const res = await fetchOk(ctx, `${PAGE_DATA_URL}?take=1000&date=${date}`, {
+          headers: { Accept: 'application/json' },
+        });
+        const body = res.body.toString('utf8');
+        if (isUsablePageData(body)) raw = { via: 'page-data', body };
+      } catch {
+        // jatuh ke fallback di bawah
+      }
     }
     if (!raw) {
       await sleep(ctx.pauseMs ?? 2_000);

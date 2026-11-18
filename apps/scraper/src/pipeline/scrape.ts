@@ -201,7 +201,10 @@ export async function scrape(opts: ScrapeOptions): Promise<ScrapeRun> {
     finished_at: utcIso(opts.now ?? new Date()),
     status: runStatus,
     error_code: failure?.code ?? null,
-    error_message: failure?.message ?? staleReason ?? parsed?.note ?? null,
+    // Dipotong ke 500 karakter: catatan parser yang panjang tidak boleh menggagalkan merge.
+    error_message: ((m) => (m === null ? null : errorMessageOf(m)))(
+      failure?.message ?? staleReason ?? parsed?.note ?? null,
+    ),
     data_date: parsed?.dataDate ?? null,
     rows_parsed: rowsParsed,
     rows_held: rowsHeld,

@@ -78,7 +78,7 @@ Bila artifact `out-{source}` tidak ada (job scrape mati sebelum upload), `merge`
 | Cloudflare `5 10 * * *`; GitHub `15 2 * * *` (slot `retry`, jendela `afternoon`, D-63) | Seperti retry, untuk sumber jendela `afternoon`. Cron GitHub 09.15 WIB (tiba ±14–19 WIB) mencakup jendela `day` dan `afternoon` |
 | Cloudflare `5 12 * * *` (slot `primary`, jendela `evening`) | Seperti primary, untuk sumber `schedule_window: evening` (Pegadaian, D-25) |
 | Cloudflare `5 15 * * *`; GitHub `15 12 * * *` (slot `retry`, jendela `evening`) | Seperti retry, untuk sumber jendela `evening` |
-| Sumber `schedule_window: any` | Ikut semua slot di atas (Pegadaian, D-42). Di retry siang dilewati bila hari ini sudah sukses, karena snapshot siang selalu milik kemarin (D-46) |
+| Sumber `schedule_window: any` | Ikut semua slot di atas (Pegadaian, D-42). Di retry siang dilewati bila hari ini sudah sukses dan bukan carry-over (D-46, D-66) |
 | Jendela `day` sebelum 08.30 WIB pada tanggal sasarannya | Dilewati (`DAY_FROM`, D-46): cron GitHub 04.15 WIB yang tiba tepat waktu tidak mencatat `stale` |
 | Jendela `afternoon` sebelum 12.00 WIB pada tanggal sasarannya | Dilewati (`AFTERNOON_FROM`, D-63): cron GitHub 09.15 WIB yang tiba lebih awal tidak mencatat `stale` |
 | Manual | Input `sources` (kosong = semua, kecuali sumber `evening` sebelum 18.45 WIB, `afternoon` sebelum 12.00 WIB, dan `day` sebelum 08.30 WIB); `force: false` melewati sumber yang hari ini sudah sukses |

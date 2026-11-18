@@ -10,6 +10,7 @@ import {
   GALERI24_VENDOR,
   mapEntries,
   parse,
+  selectHistory,
   type Galeri24Raw,
 } from '../src/sources/galeri24';
 import type { RawPayload } from '../src/sources/types';
@@ -210,6 +211,14 @@ describe('parse — fixture sintetis dan kasus tepi', () => {
     expect(r.sourceUpdatedAt).toBe('2026-11-17T08:00:00+07:00');
   });
 
+  it('banyak kunci berversi ganda → satu catatan ringkas (< 500 karakter)', () => {
+    const r = parse(
+      edit((rs) => [...rs, ...rs.map((e) => ({ ...e, updatedAt: '2026-11-17T00:00:00.000Z' }))]),
+    );
+    expect(r.note).toMatch(/\d+ kunci punya beberapa versi \(maks 2 entri status 1\)/);
+    expect(r.note!.length).toBeLessThan(500);
+  });
+
   it('V-12: sellingPrice tidak cocok rumus → suspect, baris tetap ada', () => {
     const r = parse(
       edit((rs) =>
@@ -285,7 +294,7 @@ describe('parse — fixture sintetis dan kasus tepi', () => {
 
 describe('modul', () => {
   it('tabel vendor dan versi parser', () => {
-    expect(galeri24.parserVersion).toBe('galeri24@1.0.0');
+    expect(galeri24.parserVersion).toBe('galeri24@1.1.0');
     expect(Object.values(GALERI24_VENDOR).filter((v) => v.required)).toHaveLength(3);
     expect(GALERI24_VENDOR['00005201905007']).toEqual({
       brand: 'antam',
@@ -304,5 +313,49 @@ describe('modul', () => {
     expect(() => extractNuxtData('<html></html>')).toThrow(
       expect.objectContaining({ code: 'PARSE_ERROR' }),
     );
+  });
+});
+
+describe('jalur history — versi harga berulang (17 Nov 2026)', () => {
+  const ant = (id: string, sell: string, buy: string, updatedAt: string, date = '2026-11-17') =>
+    entry({
+      id,
+      vendorCode: '00005201808001',
+      vendorName: 'ANTAM',
+      denomination: '1',
+      date,
+      price: String(Math.round(Number(sell) / 1.02)),
+      margin: '2',
+      sellingPrice: sell,
+      buybackPrice: buy,
+      updatedAt,
+    });
+  const versions = [
+    ant('c', '2553000', '2281000', '2026-11-17T03:35:11.423Z'),
+    ant('b', '2560000', '2286000', '2026-11-17T03:03:01.783Z'),
+    ant('a', '2560000', '2286000', '2026-11-16T14:38:15.750Z'),
+    ant('c', '2553000', '2281000', '2026-11-17T03:35:11.423Z'), // duplikat id (halaman bergeser)
+    ant('old', '2500000', '2250000', '2026-11-16T03:00:00.000Z', '2026-11-16'),
+  ];
+  const viaHistory = (list: unknown[]) =>
+    payload({ via: 'history', body: JSON.stringify({ results: list }) });
+
+  it('selectHistory: hanya tanggal sasaran, dedup id', () => {
+    const picked = selectHistory(versions, '2026-11-17')!;
+    expect(picked.map((e) => e.id)).toEqual(['c', 'b', 'a']);
+  });
+
+  it('selectHistory: tanggal sasaran belum ada → tanggal terbaru sebelumnya; kosong → null', () => {
+    expect(selectHistory(versions, '2026-11-18')!.map((e) => e.id)).toEqual(['c', 'b', 'a']);
+    expect(selectHistory(versions, '2026-11-16')!.map((e) => e.id)).toEqual(['old']);
+    expect(selectHistory(versions, '2026-11-15')).toBeNull();
+  });
+
+  it('parse memilih versi updatedAt terbesar per kunci', () => {
+    const r = parse(viaHistory(selectHistory(versions, '2026-11-17')!));
+    const row = r.rows.find((x) => x.brand === 'antam' && x.weight_g === 1 && x.variant === '');
+    expect(row?.sell_price).toBe(2553000);
+    expect(row?.buyback_price).toBe(2281000);
+    expect(row?.date).toBe('2026-11-17');
   });
 });

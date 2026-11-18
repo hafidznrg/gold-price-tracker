@@ -114,6 +114,7 @@ export class PlanError extends Error {}
 export function doneToday(entry: SourceStatusEntry | undefined, today: string): boolean {
   return (
     entry !== undefined &&
+    entry.carry_over !== true &&
     (entry.last_status === 'success' || entry.last_status === 'partial') &&
     entry.last_data_date === today
   );
@@ -252,7 +253,10 @@ export function plan(input: PlanInput): PlanResult {
       // Sumber `accept_previous_day` (Pegadaian) di siang hari hanya bisa mendapat snapshot
       // kemarin; sekali sukses hari ini, retry siang berikutnya cuma menghasilkan commit `+0`.
       const caughtUp =
-        s.accept_previous_day && windows?.includes('day') === true && successToday(entry, today);
+        s.accept_previous_day &&
+        windows?.includes('day') === true &&
+        entry?.carry_over !== true &&
+        successToday(entry, today);
       if (
         doneToday(entry, today) ||
         caughtUp ||
