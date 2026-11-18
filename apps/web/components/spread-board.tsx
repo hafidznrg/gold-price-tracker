@@ -48,7 +48,8 @@ export interface SpreadBoardProps {
 
 const FIELD =
   'h-10 w-full rounded-field border border-line bg-surface2 px-3 text-sm text-text disabled:cursor-not-allowed disabled:text-muted';
-const PANEL = 'min-w-0 rounded-card border border-line bg-surface p-6 max-sm:p-4';
+const FIELD_LABEL = 'flex items-baseline gap-1.5 text-sm leading-tight';
+const PANEL ='min-w-0 rounded-card border border-line bg-surface p-6 max-sm:p-4';
 const BG: Record<ColorToken, string> = {
   antam: 'bg-antam',
   ubs: 'bg-ubs',
@@ -234,14 +235,12 @@ export function SpreadBoard({
   return (
     <>
       <section className="wrap pb-[18px]">
-        <div className="flex flex-col gap-3 rounded-card border border-line bg-surface p-4">
-          <div className="flex flex-wrap items-center gap-3">
-            <div className="flex min-w-0 flex-[1_1_300px] items-center gap-2.5">
-              <label
-                htmlFor="buyAt"
-                className="w-[82px] flex-none text-xs leading-tight text-muted"
-              >
-                Beli di (harga jual)
+        <div className="flex flex-col gap-4 rounded-card border border-line bg-surface p-5 max-sm:p-4">
+          <div className="grid gap-2 md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] md:items-end md:gap-3">
+            <div className="flex min-w-0 flex-col gap-1.5">
+              <label htmlFor="buyAt" className={FIELD_LABEL}>
+                <span className="font-medium text-text">Beli di</span>
+                <span className="text-xs text-faint">harga jual</span>
               </label>
               <select
                 id="buyAt"
@@ -259,25 +258,23 @@ export function SpreadBoard({
             </div>
             <div
               aria-hidden="true"
-              className="grid h-10 place-items-center text-gold max-md:hidden"
+              className="grid place-items-center text-gold max-md:-mb-1 max-md:h-5 md:h-10"
             >
               <svg
                 width="20"
                 height="20"
+                className="fill-none stroke-current stroke-[1.8] max-md:rotate-90"
                 viewBox="0 0 24 24"
-                className="fill-none stroke-current stroke-[1.8]"
                 strokeLinecap="round"
                 strokeLinejoin="round"
               >
                 <path d="M4 12h15M14 6l6 6-6 6" />
               </svg>
             </div>
-            <div className="flex min-w-0 flex-[1_1_300px] items-center gap-2.5">
-              <label
-                htmlFor="sellTo"
-                className="w-[82px] flex-none text-xs leading-tight text-muted"
-              >
-                Jual ke (harga buyback)
+            <div className="flex min-w-0 flex-col gap-1.5">
+              <label htmlFor="sellTo" className={FIELD_LABEL}>
+                <span className="font-medium text-text">Jual ke</span>
+                <span className="text-xs text-faint">harga buyback</span>
               </label>
               <select
                 id="sellTo"
@@ -295,17 +292,20 @@ export function SpreadBoard({
               </select>
             </div>
           </div>
-          <div className="flex min-w-0">
-            <div className="flex min-w-0 flex-1 items-center gap-2 overflow-x-auto [scrollbar-width:none] sm:flex-wrap sm:overflow-x-visible [&::-webkit-scrollbar]:hidden">
-              <span className="mr-1 flex-none whitespace-nowrap text-xs text-faint">
-                Pasangan populer
-              </span>
+          <div className="flex min-w-0 flex-col gap-2 border-t border-line pt-4">
+            <span className="text-xs font-medium uppercase tracking-wider text-faint">
+              Pasangan populer
+            </span>
+            <div className="-mx-4 flex min-w-0 gap-2 overflow-x-auto px-4 pb-0.5 [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:overflow-x-visible sm:px-0 [&::-webkit-scrollbar]:hidden">
               {POPULAR_PAIRS.filter(
                 (p) =>
                   sellOptions.some((o) => o.id === p.sell) &&
                   buybackOptions.some((o) => o.id === p.buyback),
               ).map((p) => {
                 const on = p.sell === sellId && p.buyback === pairBuy?.id;
+                const cut = p.label.indexOf(': ');
+                const brand = cut > 0 ? p.label.slice(0, cut) : '';
+                const route = cut > 0 ? p.label.slice(cut + 2) : p.label;
                 return (
                   <button
                     key={p.label}
@@ -316,19 +316,24 @@ export function SpreadBoard({
                       setBuyId(p.buyback);
                     }}
                     className={cn(
-                      'min-h-9 flex-none cursor-pointer whitespace-nowrap rounded-full border px-3.5 text-xs',
+                      'inline-flex min-h-9 flex-none cursor-pointer items-center gap-1.5 whitespace-nowrap rounded-full border px-3.5 text-xs transition-colors',
                       on
                         ? 'border-goldline bg-goldsoft text-text'
-                        : 'border-line bg-transparent text-muted hover:text-text',
+                        : 'border-line bg-transparent text-muted hover:border-goldline hover:text-text',
                     )}
                   >
-                    {p.label}
+                    {brand ? (
+                      <span className={cn('font-semibold', on ? 'text-gold' : 'text-text')}>
+                        {brand}
+                      </span>
+                    ) : null}
+                    <span>{route}</span>
                   </button>
                 );
               })}
             </div>
           </div>
-          <p className="m-0 max-w-[720px] text-xs leading-normal text-muted">
+          <p className="m-0 max-w-[760px] text-xs leading-relaxed text-muted">
             Galeri24 membeli kembali Antam dengan dua harga:{' '}
             <strong className="font-semibold text-text">biasa</strong> untuk keping yang dibeli di
             Pegadaian atau Galeri24, dan{' '}
