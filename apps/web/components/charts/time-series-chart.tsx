@@ -330,7 +330,11 @@ export function TimeSeriesChart({
       raf = requestAnimationFrame(() => {
         raf = 0;
         if (!pending) return;
-        chart.dispatchAction({ type: 'dataZoom', startValue: pending.start, endValue: pending.end });
+        chart.dispatchAction({
+          type: 'dataZoom',
+          startValue: pending.start,
+          endValue: pending.end,
+        });
         pending = null;
       });
     };
