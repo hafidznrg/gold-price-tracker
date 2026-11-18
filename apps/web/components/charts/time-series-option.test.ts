@@ -163,7 +163,15 @@ describe('tooltipRows', () => {
       at,
       [
         { label: 'rendah', color: '#a', data: [[at, 90]] },
-        { label: 'kosong', color: '#b', data: [[at - 1, 1], [at, null], [at + 1, 1]] },
+        {
+          label: 'kosong',
+          color: '#b',
+          data: [
+            [at - 1, 1],
+            [at, null],
+            [at + 1, 1],
+          ],
+        },
         { label: 'tinggi', color: '#c', data: [[at, 120]] },
       ],
       fmt,

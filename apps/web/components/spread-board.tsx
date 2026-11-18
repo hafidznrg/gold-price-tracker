@@ -49,7 +49,7 @@ export interface SpreadBoardProps {
 const FIELD =
   'h-10 w-full rounded-field border border-line bg-surface2 px-3 text-sm text-text disabled:cursor-not-allowed disabled:text-muted';
 const FIELD_LABEL = 'flex items-baseline gap-1.5 text-sm leading-tight';
-const PANEL ='min-w-0 rounded-card border border-line bg-surface p-6 max-sm:p-4';
+const PANEL = 'min-w-0 rounded-card border border-line bg-surface p-6 max-sm:p-4';
 const BG: Record<ColorToken, string> = {
   antam: 'bg-antam',
   ubs: 'bg-ubs',
