@@ -129,6 +129,8 @@ const COMMANDS: Record<string, Command> = {
       slot: { type: 'string' },
       out: { type: 'string' },
       date: { type: 'string' },
+      /** `true` = percobaan awal (D-67): `stale` tidak memicu alarm. */
+      early: { type: 'string' },
     },
     run: async (values) => {
       const rootDir = requireRoot(values);
@@ -142,6 +144,7 @@ const COMMANDS: Record<string, Command> = {
         runId: runIdFromEnv(),
         userAgent: process.env.SCRAPER_USER_AGENT || DEFAULT_USER_AGENT,
         date: targetDateOption(values.date),
+        early: str(values.early) === 'true',
       });
       console.log(describeRun(run));
       return run.exit_code;

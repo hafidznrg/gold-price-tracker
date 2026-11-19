@@ -6,8 +6,9 @@ compatibility_date = "2025-10-01"
 workers_dev = false
 
 [triggers]
-# Harus sama dengan ROUTES di src/index.ts (UTC; WIB = UTC+7). Maks. 5 per akun di paket Free.
-crons = ["5 2,5,6,8,10,11,12,15,16 * * *", "40 9 * * MON-FRI"]
+# Harus sama dengan ROUTES di src/index.ts (UTC; WIB = UTC+7; D-67). Satu cron memuat semua jam;
+# makro (jam 09 UTC) hanya dikirim Senin–Jumat oleh Worker. Maks. 5 per akun di paket Free.
+crons = ["20 1,2,4,6,9,10,12,16 * * *"]
 
 [vars]
 GITHUB_REPO = "hafidznrg/gold-price-tracker"

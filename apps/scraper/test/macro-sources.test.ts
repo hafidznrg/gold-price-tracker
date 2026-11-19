@@ -261,7 +261,7 @@ describe('plan scrape-macro', () => {
   const input = (over: Partial<PlanInput> = {}): PlanInput => ({
     workflow: 'scrape-macro',
     event: 'schedule',
-    schedule: '40 9 * * 1-5',
+    schedule: '20 9 * * 1-5',
     sources: '',
     force: false,
     config,
@@ -271,8 +271,8 @@ describe('plan scrape-macro', () => {
   });
 
   it('cron terdaftar: primary, tanpa matrix browser; worldbank bila tanggal ≥ 5 dan bulan lalu belum ada', () => {
-    expect(SCHEDULES['scrape-macro']?.['40 9 * * 1-5']?.slot).toBe('primary');
-    expect(slotOf('scrape-macro', 'schedule', '40 9 * * 1-5')).toBe('primary');
+    expect(SCHEDULES['scrape-macro']?.['20 9 * * 1-5']?.slot).toBe('primary');
+    expect(slotOf('scrape-macro', 'schedule', '20 9 * * 1-5')).toBe('primary');
     const r = plan(input({ now: new Date('2026-11-05T09:45:00Z'), monthlyGold: ['2026-09-01'] }));
     expect(r.slot).toBe('primary');
     expect(r.date).toBe('2026-11-05');
@@ -310,7 +310,7 @@ describe('plan scrape-macro', () => {
   });
 
   it('targetDate untuk cron hari kerja: kemunculan terakhir ≤ now (D-27)', () => {
-    const cron = '40 9 * * 1-5';
+    const cron = '20 9 * * 1-5';
     const at = (iso: string) => targetDate('schedule', cron, new Date(iso));
     expect(at('2026-11-04T09:45:00Z')).toBe('2026-11-04');
     expect(at('2026-11-04T17:30:00Z')).toBe('2026-11-04'); // 00.30 WIB esok

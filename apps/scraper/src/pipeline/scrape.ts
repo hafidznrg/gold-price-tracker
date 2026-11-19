@@ -40,6 +40,8 @@ export interface ScrapeOptions {
   runId: string;
   /** Tanggal Jakarta sasaran dari `plan` (D-27); kosong = tanggal `now`. */
   date?: string;
+  /** Percobaan awal (D-67): hasil `stale` tidak memicu alarm (kode keluar OK). */
+  early?: boolean;
   userAgent: string;
   now?: Date;
   /** Untuk uji: ganti modul sumber dari registry. */
@@ -161,6 +163,7 @@ export async function scrape(opts: ScrapeOptions): Promise<ScrapeRun> {
       failure = { code: result.error_code, message: result.error_message };
     } else if (result.outcome === 'stale') {
       staleReason = result.reason;
+      if (opts.early) staleReason += ' · percobaan awal (D-67)';
       if (missedSlot(parsed.dataDate, today, now)) {
         missed = true;
         staleReason += ` · terlewat: run terlambat sampai ${jakartaDate(now)}, sumber sudah berganti tanggal (D-41)`;
@@ -184,6 +187,7 @@ export async function scrape(opts: ScrapeOptions): Promise<ScrapeRun> {
     runStatus === 'failed'
       ? SCRAPE_EXIT.FAILED
       : runStatus === 'stale' &&
+          !opts.early &&
           expectedDay &&
           !missed &&
           sourceConfig.stale_is_error_on_expected_day

@@ -6,7 +6,7 @@ run-name: ${{ inputs.schedule && format('watchdog (cron {0})', inputs.schedule) 
 
 on:
   schedule:
-    # Cadangan saja (D-46): watchdog 13.05 & 23.05 WIB dipicu Cloudflare (apps/trigger). Cron ini
+    # Cadangan saja (D-46, D-67): watchdog 17.20 & 23.20 WIB dipicu Cloudflare (apps/trigger). Cron ini
     # memberi tahu bila Worker mati total; terlambat ±7 jam, tiba esok pagi dan tetap memeriksa
     # tanggal cron-nya. Harus sama dengan GITHUB_WATCHDOG_SCHEDULES di pipeline/watchdog.ts.
     - cron: '15 16 * * *' # 23.15 WIB — semua sumber

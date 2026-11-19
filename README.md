@@ -27,7 +27,7 @@ Pipeline berjalan sendiri lewat GitHub Actions. Bagian ini untuk saat ada yang p
 
 | Workflow | Kapan | Isi |
 | --- | --- | --- |
-| `scrape-retail` | Pemicu Cloudflare per jendela `schedule_window` di `config/sources.yml` (primary → retry): `day` 09.05 → 12.05 WIB (Logam Mulia); `afternoon` 15.05 → 17.05 WIB (UBS Lifestyle, Galeri24, Lotus Archi); `evening` 19.05 → 22.05 WIB; Pegadaian (`any`) ikut semua slot. Cadangan cron GitHub 04.15, 09.15, 19.15 WIB | Slot pertama `primary`; slot kedua `retry` hanya untuk sumber yang belum sukses. Watchdog 13.05 (siang), 18.05 (sore: UBS Lifestyle, Galeri24, Lotus Archi), 23.05 WIB (semua) |
+| `scrape-retail` | Satu Cron Trigger Cloudflare (menit :20, D-67): 08.20 percobaan awal Logam Mulia; 09.20 Logam Mulia; 11.20 + Pegadaian & Galeri24 (`midday`); 13.20 + percobaan awal UBS & Lotus Archi; 16.20 semua (+ makro hari kerja); 19.20 sweep primary semua sumber. Cadangan cron GitHub 04.15, 09.15 WIB | Slot `retry` hanya menjalankan sumber yang belum masuk atau masih carry-over (D-66); percobaan awal yang `stale` tidak membunyikan alarm. Watchdog 17.20 (Logam Mulia, Pegadaian, Galeri24) dan 23.20 WIB (semua) |
 | `ci` | Setiap push kode (bukan `data/**`) dan PR | Lint, typecheck, test |
 | `backfill`, `quarantine`, `probe`, `notify-test` | Manual | Lihat di bawah |
 

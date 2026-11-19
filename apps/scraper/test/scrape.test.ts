@@ -97,6 +97,26 @@ describe('scrape', () => {
     });
   });
 
+  it('percobaan awal (D-67): stale di hari yang diharapkan → kode 0 dengan catatan; failed tetap 1', async () => {
+    const run = await scrape(opts({ now: MONDAY, early: true }));
+    expect(run).toMatchObject({
+      status: 'stale',
+      expected_day: true,
+      exit_code: SCRAPE_EXIT.OK,
+    });
+    expect(run.error_message).toContain(' · percobaan awal (D-67)');
+    const failed = await scrape(
+      opts({
+        now: MONDAY,
+        early: true,
+        scraper: fake(async () => {
+          throw new ScrapeError('BLOCKED', 'diblokir');
+        }),
+      }),
+    );
+    expect(failed).toMatchObject({ status: 'failed', exit_code: SCRAPE_EXIT.FAILED });
+  });
+
   it('date dari plan: run yang terlambat lewat tengah malam menilai terhadap tanggal slot (D-27)', async () => {
     const afterMidnight = new Date('2026-10-24T18:35:00Z'); // 01.35 WIB Minggu 25 Okt
     expect((await scrape(opts({ now: afterMidnight }))).status).toBe('stale');

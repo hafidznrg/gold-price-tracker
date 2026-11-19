@@ -10,15 +10,15 @@ Spesifikasi rinci setiap workflow, kontrak antar job, perilaku saat gagal, dan k
 | --- | --- | --- | --- | --- |
 | `ci.yml` | PR, push ke `main` (kecuali `data/**`) | Lint, typecheck, test, build web | Tidak | 0 |
 | `probe.yml` | Manual | Fetch + parse + validasi satu sumber tanpa menulis | Tidak | 0 |
-| `scrape-retail.yml` | Pemicu Cloudflare 09.05 & 12.05 WIB (jendela siang), 15.05 & 17.05 WIB (jendela sore, D-63), 19.05 & 22.05 WIB (jendela malam); cron GitHub cadangan 04.15, 09.15 & 19.15 WIB (D-46); manual | Harga ritel | Ya | 1 |
+| `scrape-retail.yml` | Pemicu Cloudflare 08.20 (percobaan awal), 09.20, 11.20, 13.20, 16.20 WIB (retry bertahap) dan 19.20 WIB (sweep primary) (D-67); cron GitHub cadangan 04.15 & 09.15 WIB (D-46); manual | Harga ritel | Ya | 1 |
 | `quarantine.yml` | Manual | Setujui/tolak baris yang ditahan | Ya | 1 |
 | `backfill.yml` | Manual | Isi histori sekali jalan | Ya | 1–2 |
-| `scrape-macro.yml` | Pemicu Cloudflare 16.40 WIB hari kerja; cron GitHub cadangan 16.45 WIB (D-46); manual | XAU/USD, USD/IDR, refresh bulanan World Bank | Ya | 2 |
+| `scrape-macro.yml` | Pemicu Cloudflare 16.20 WIB hari kerja (D-67); cron GitHub cadangan 16.45 WIB (D-46); manual | XAU/USD, USD/IDR, refresh bulanan World Bank | Ya | 2 |
 | `retry-logammulia.yml` | Selesainya run terjadwal atau dari pemicu Cloudflare `scrape-retail`, manual | Picu ulang `scrape-retail` untuk `logammulia` bila gagal karena blokir/jaringan (D-40) | Tidak (lewat `scrape-retail`) | 1 |
-| `watchdog.yml` | Pemicu Cloudflare 13.05 WIB (ritel siang), 18.05 WIB (ritel sore, D-63) & 23.05 WIB (semua sumber); cron GitHub cadangan 23.15 WIB (D-46); manual | Telegram bila data hari itu belum masuk (D-44) | Tidak | 1 |
+| `watchdog.yml` | Pemicu Cloudflare 17.20 WIB (jendela `day` + `midday`) & 23.20 WIB (semua sumber) (D-67); cron GitHub cadangan 23.15 WIB (D-46); manual | Telegram bila data hari itu belum masuk (D-44) | Tidak | 1 |
 | `freshness.yml` | Cron 22.15 WIB harian | Deteksi sumber/workflow yang berhenti | Tidak (hanya Issue) | 5 |
 
-**Pemicu Cloudflare (D-45, D-46).** Cron GitHub Actions di repo ini rutin terlambat 4,5–10,5 jam, jadi semua slot utama dipicu Worker `apps/trigger` di Cloudflare Workers (Cron Triggers paket Free, 2 dari 5) lewat `workflow_dispatch` dengan input `schedule` = kunci slot di `SCHEDULES`/`WATCHDOG_SCHEDULES`. Workflow meneruskannya ke `--emulate`, sehingga run itu diperlakukan persis seperti run terjadwal kunci tersebut (slot, jendela, tanggal sasaran); judul run-nya `{workflow} (cron …)`. Kunci slot utama tidak terdaftar di `on.schedule`. Cron GitHub yang tersisa hanya cadangan: semuanya slot `retry`, sehingga keterlambatannya justru menjadi percobaan ulang yang melewati sumber yang sudah masuk.
+**Pemicu Cloudflare (D-45, D-46).** Cron GitHub Actions di repo ini rutin terlambat 4,5–10,5 jam, jadi semua slot utama dipicu Worker `apps/trigger` di Cloudflare Workers (Cron Triggers paket Free, 1 dari 5 sejak D-67) lewat `workflow_dispatch` dengan input `schedule` = kunci slot di `SCHEDULES`/`WATCHDOG_SCHEDULES`. Workflow meneruskannya ke `--emulate`, sehingga run itu diperlakukan persis seperti run terjadwal kunci tersebut (slot, jendela, tanggal sasaran); judul run-nya `{workflow} (cron …)`. Kunci slot utama tidak terdaftar di `on.schedule`. Cron GitHub yang tersisa hanya cadangan: semuanya slot `retry`, sehingga keterlambatannya justru menjadi percobaan ulang yang melewati sumber yang sudah masuk.
 
 | Cron Worker (UTC) | WIB | Dispatch |
 | --- | --- | --- |
@@ -72,14 +72,15 @@ Bila artifact `out-{source}` tidak ada (job scrape mati sebelum upload), `merge`
 
 | Pemicu | Sumber yang dijalankan |
 | --- | --- |
-| Cloudflare `5 2 * * *` (slot `primary`, jendela `day`) | Semua sumber `enabled` dengan `workflow: scrape-retail` dan `schedule_window: day` |
-| Cloudflare `5 5 * * *`; GitHub `15 21`, `15 2 * * *` (slot `retry`, jendela `day`, D-46) | Sumber jendela `day` yang hari ini belum `success`/`partial` atau masih `stale` pada hari yang diharapkan |
-| Cloudflare `5 8 * * *` (slot `primary`, jendela `afternoon`, D-63) | Seperti primary, untuk sumber `schedule_window: afternoon` (UBS Lifestyle, terbit ±12.00–16.30 WIB) |
-| Cloudflare `5 10 * * *`; GitHub `15 2 * * *` (slot `retry`, jendela `afternoon`, D-63) | Seperti retry, untuk sumber jendela `afternoon`. Cron GitHub 09.15 WIB (tiba ±14–19 WIB) mencakup jendela `day` dan `afternoon` |
-| Cloudflare `5 12 * * *` (slot `primary`, jendela `evening`) | Seperti primary, untuk sumber `schedule_window: evening` (Pegadaian, D-25) |
-| Cloudflare `5 15 * * *`; GitHub `15 12 * * *` (slot `retry`, jendela `evening`) | Seperti retry, untuk sumber jendela `evening` |
-| Sumber `schedule_window: any` | Ikut semua slot di atas (Pegadaian, D-42). Di retry siang dilewati bila hari ini sudah sukses dan bukan carry-over (D-46, D-66) |
-| Jendela `day` sebelum 08.30 WIB pada tanggal sasarannya | Dilewati (`DAY_FROM`, D-46): cron GitHub 04.15 WIB yang tiba tepat waktu tidak mencatat `stale` |
+| Cloudflare `20 1 * * *` (08.20 WIB, slot `retry`, percobaan awal jendela `day`, D-67) | Sumber jendela `day` (Logam Mulia) yang belum masuk; `stale` tidak dihitung kegagalan (kode 0, tanpa alarm) |
+| Cloudflare `20 2 * * *` (09.20 WIB, slot `retry`, jendela `day`) | Sumber jendela `day` yang hari ini belum `success`/`partial`, masih `stale`, atau masih carry-over (D-66) |
+| Cloudflare `20 4 * * *` (11.20 WIB, slot `retry`, jendela `day` + `midday`) | Seperti retry; jendela `midday` = Pegadaian dan Galeri24 (harga final ±10.05–11.01 WIB) |
+| Cloudflare `20 6 * * *` (13.20 WIB, slot `retry`, jendela `day` + `midday`, percobaan awal `afternoon`) | Seperti retry; sumber jendela `afternoon` (UBS Lifestyle, Lotus Archi) dicoba tanpa alarm bila `stale` |
+| Cloudflare `20 9 * * *` (16.20 WIB, slot `retry`, jendela `day` + `midday` + `afternoon`) | Seperti retry; `stale` UBS di sini memicu alarm |
+| Cloudflare `20 12 * * *` (19.20 WIB, slot `primary`, semua jendela) | **Sweep**: semua sumber dijalankan ulang untuk menangkap revisi sore (Pegadaian PER III, Galeri24, Logam Mulia) dan UBS yang terlambat |
+| GitHub `15 21 * * *` (04.15 WIB, tiba ±09–14 WIB) dan `15 2 * * *` (09.15 WIB, tiba ±14–19 WIB), slot `retry` | Cadangan bila Worker mati: masing-masing jendela `day` + `midday` dan `day` + `midday` + `afternoon` |
+| Sumber `schedule_window: evening`/`any` | Tidak dipakai lagi sejak D-67 (Pegadaian pindah ke `midday`) |
+| Jendela `day` sebelum 08.15 WIB pada tanggal sasarannya | Dilewati (`DAY_FROM`, D-46; 08.30 → 08.15 sejak D-67): cron GitHub 04.15 WIB yang tiba tepat waktu tidak mencatat `stale` |
 | Jendela `afternoon` sebelum 12.00 WIB pada tanggal sasarannya | Dilewati (`AFTERNOON_FROM`, D-63): cron GitHub 09.15 WIB yang tiba lebih awal tidak mencatat `stale` |
 | Manual | Input `sources` (kosong = semua, kecuali sumber `evening` sebelum 18.45 WIB, `afternoon` sebelum 12.00 WIB, dan `day` sebelum 08.30 WIB); `force: false` melewati sumber yang hari ini sudah sukses |
 
@@ -127,8 +128,7 @@ on:
   schedule:
     # Cadangan (D-46); slot utama dipicu Cloudflare lewat workflow_dispatch + input schedule.
     - cron: '15 21 * * *'  # 04.15 WIB — retry day, biasanya tiba ±09–14 WIB
-    - cron: '15 2 * * *'   # 09.15 WIB — retry day, biasanya tiba ±14–19 WIB
-    - cron: '15 12 * * *'  # 19.15 WIB — retry evening, biasanya tiba ±02 WIB esok
+    - cron: '15 2 * * *'   # 09.15 WIB — retry day/midday/afternoon, biasanya tiba ±14–19 WIB
   workflow_dispatch:
     inputs:
       sources:
@@ -287,7 +287,7 @@ Struktur sama dengan `scrape-retail.yml`; perbedaannya:
 ```yaml
 on:
   schedule:
-    # Primary 16.40 WIB hari kerja (setelah JISDOR terbit 15.15 WIB) dipicu Cloudflare (D-46).
+    # Primary 16.20 WIB hari kerja (setelah JISDOR terbit 15.15 WIB) dipicu Cloudflare (D-46, D-67).
     - cron: '45 9 * * 1-5'   # 16.45 WIB — slot retry cadangan; lewati sumber yang sukses ≥ 12.00 WIB hari itu
   workflow_dispatch:
     inputs:

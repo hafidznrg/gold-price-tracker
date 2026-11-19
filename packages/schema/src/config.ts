@@ -29,9 +29,10 @@ export type FetchMethod = z.infer<typeof FetchMethod>;
 
 /**
  * Pasangan cron (primary + retry) tempat sumber dijalankan dalam workflow-nya (WORKFLOWS §2.2).
- * `any` = ikut semua pasangan (D-42). `afternoon` = pasangan sore 15.05/17.05 WIB (UBS, D-63).
+ * `any` = ikut semua pasangan (D-42). `midday` = harga final terbit ±10–11 WIB (Pegadaian, Galeri24; D-67).
+ * `afternoon` = terbit siang–sore ±12.00–16.30 WIB (UBS, Lotus Archi; D-63, D-67).
  */
-export const ScheduleWindow = z.enum(['day', 'afternoon', 'evening', 'any']);
+export const ScheduleWindow = z.enum(['day', 'midday', 'afternoon', 'evening', 'any']);
 export type ScheduleWindow = z.infer<typeof ScheduleWindow>;
 
 export const SourceConfig = z.object({

@@ -22,33 +22,44 @@ export interface Dispatch {
   schedule: string;
 }
 
-const d = (workflow: string, schedule: string): Dispatch => ({ workflow, schedule });
+/** Dispatch dalam ROUTES; `weekdaysOnly` = hanya Senin–Jumat (hari UTC dari scheduledTime). */
+export interface Route extends Dispatch {
+  weekdaysOnly?: boolean;
+}
+
+const d = (workflow: string, schedule: string, weekdaysOnly = false): Route =>
+  weekdaysOnly ? { workflow, schedule, weekdaysOnly } : { workflow, schedule };
 
 /**
- * Cron Worker (harus sama dengan `crons` di wrangler.toml) → jam UTC → dispatch (D-46). Worker
- * memegang semua slot utama; cron GitHub tinggal cadangan berslot retry. Satu Cron Trigger boleh
- * memuat banyak jam selama menitnya sama, jadi cukup dua dari batas 5 per akun paket Free.
+ * Cron Worker (harus sama dengan `crons` di wrangler.toml) → jam UTC → daftar dispatch (D-46, D-67).
+ * Worker memegang semua slot Cloudflare (menit :20); cron GitHub tinggal cadangan berslot retry.
+ * Satu Cron Trigger boleh memuat banyak jam selama menitnya sama, jadi cukup satu dari batas 5 per
+ * akun paket Free. Jam 09 UTC memicu dua workflow (ritel, dan makro hanya Senin–Jumat).
  */
-export const ROUTES: Record<string, Record<number, Dispatch>> = {
-  '5 2,5,6,8,10,11,12,15,16 * * *': {
-    2: d('scrape-retail.yml', '5 2 * * *'), // 09.05 WIB primary siang
-    5: d('scrape-retail.yml', '5 5 * * *'), // 12.05 WIB retry siang
-    6: d('watchdog.yml', '5 6 * * *'), // 13.05 WIB watchdog ritel siang
-    8: d('scrape-retail.yml', '5 8 * * *'), // 15.05 WIB primary sore (UBS, D-63)
-    10: d('scrape-retail.yml', '5 10 * * *'), // 17.05 WIB retry sore (UBS, D-63)
-    11: d('watchdog.yml', '5 11 * * *'), // 18.05 WIB watchdog ritel sore
-    12: d('scrape-retail.yml', '5 12 * * *'), // 19.05 WIB primary malam
-    15: d('scrape-retail.yml', '5 15 * * *'), // 22.05 WIB retry malam
-    16: d('watchdog.yml', '5 16 * * *'), // 23.05 WIB watchdog semua sumber
-  },
-  // Hari-minggu di Cloudflare: 1 = Minggu (GitHub: 1 = Senin). Nama hari menghindari salah tafsir.
-  '40 9 * * MON-FRI': {
-    9: d('scrape-macro.yml', '40 9 * * 1-5'), // 16.40 WIB makro
+export const ROUTES: Record<string, Record<number, Route[]>> = {
+  '20 1,2,4,6,9,10,12,16 * * *': {
+    1: [d('scrape-retail.yml', '20 1 * * *')], // 08.20 WIB percobaan awal Logam Mulia
+    2: [d('scrape-retail.yml', '20 2 * * *')], // 09.20 WIB retry day
+    4: [d('scrape-retail.yml', '20 4 * * *')], // 11.20 WIB retry day + midday
+    6: [d('scrape-retail.yml', '20 6 * * *')], // 13.20 WIB retry day + midday, UBS/Lotus awal
+    9: [
+      d('scrape-retail.yml', '20 9 * * *'), // 16.20 WIB retry day + midday + afternoon
+      d('scrape-macro.yml', '20 9 * * 1-5', true), // 16.20 WIB makro, Senin–Jumat
+    ],
+    10: [d('watchdog.yml', '20 10 * * *')], // 17.20 WIB watchdog day + midday
+    12: [d('scrape-retail.yml', '20 12 * * *')], // 19.20 WIB sapuan semua sumber
+    16: [d('watchdog.yml', '20 16 * * *')], // 23.20 WIB watchdog semua sumber
   },
 };
 
-export function route(cron: string, scheduledTime: number): Dispatch | null {
-  return ROUTES[cron]?.[new Date(scheduledTime).getUTCHours()] ?? null;
+/** Dispatch yang berlaku untuk cron dan waktu terjadwal ini (kosong bila tidak terpetakan). */
+export function route(cron: string, scheduledTime: number): Dispatch[] {
+  const at = new Date(scheduledTime);
+  const day = at.getUTCDay();
+  const weekday = day >= 1 && day <= 5;
+  return (ROUTES[cron]?.[at.getUTCHours()] ?? [])
+    .filter((r) => weekday || !r.weekdaysOnly)
+    .map(({ workflow, schedule }) => ({ workflow, schedule }));
 }
 
 type FetchFn = (input: string, init?: RequestInit) => Promise<Response>;
@@ -105,22 +116,28 @@ export async function run(
   scheduledTime: number,
   env: Env,
   fetchFn: FetchFn = fetch,
-): Promise<Dispatch | null> {
-  const target = route(cron, scheduledTime);
-  if (!target) {
+): Promise<Dispatch[]> {
+  const targets = route(cron, scheduledTime);
+  if (targets.length === 0) {
     console.log(`cron "${cron}" jam ${new Date(scheduledTime).toISOString()} tidak dipetakan`);
-    return null;
+    return [];
   }
-  try {
-    await dispatch(target, env, fetchFn);
-    console.log(`dispatch ${target.workflow} (cron ${target.schedule})`);
-    return target;
-  } catch (err) {
-    const msg = `⚠️ pemicu Cloudflare: ${(err as Error).message}. Cron GitHub cadangan tetap jalan (terlambat).`;
+  const results = await Promise.allSettled(targets.map((t) => dispatch(t, env, fetchFn)));
+  const failures: Error[] = [];
+  results.forEach((r, i) => {
+    if (r.status === 'fulfilled') {
+      console.log(`dispatch ${targets[i]!.workflow} (cron ${targets[i]!.schedule})`);
+    } else {
+      failures.push(r.reason as Error);
+    }
+  });
+  if (failures.length > 0) {
+    const msg = `⚠️ pemicu Cloudflare: ${failures.map((f) => f.message).join('; ')}. Cron GitHub cadangan tetap jalan (terlambat).`;
     console.error(msg);
     await telegram(env, msg, fetchFn).catch(() => undefined);
-    throw err;
+    throw failures[0];
   }
+  return targets;
 }
 
 interface ScheduledController {

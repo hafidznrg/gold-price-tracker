@@ -45,23 +45,45 @@ describe('jadwal (D-46)', () => {
   it('cron watchdog.yml = GITHUB_WATCHDOG_SCHEDULES, terdaftar di WATCHDOG_SCHEDULES', async () => {
     expect(await crons('watchdog.yml')).toEqual([...GITHUB_WATCHDOG_SCHEDULES].sort());
     for (const c of GITHUB_WATCHDOG_SCHEDULES) expect(WATCHDOG_SCHEDULES[c]).toBe('all');
+    expect(Object.keys(WATCHDOG_SCHEDULES).sort()).toEqual([
+      '15 16 * * *',
+      '20 10 * * *',
+      '20 16 * * *',
+    ]);
   });
 
-  it('slot utama Cloudflare dan cadangan GitHub', () => {
+  it('slot Cloudflare (D-67) dan cadangan GitHub', () => {
     const retail = SCHEDULES['scrape-retail']!;
-    expect(retail['5 2 * * *']).toEqual({ slot: 'primary', windows: ['day'] });
-    expect(retail['5 5 * * *']).toEqual({ slot: 'retry', windows: ['day'] });
-    expect(retail['5 8 * * *']).toEqual({ slot: 'primary', windows: ['afternoon'] });
-    expect(retail['5 10 * * *']).toEqual({ slot: 'retry', windows: ['afternoon'] });
-    expect(retail['5 12 * * *']).toEqual({ slot: 'primary', windows: ['evening'] });
-    expect(retail['5 15 * * *']).toEqual({ slot: 'retry', windows: ['evening'] });
-    expect(retail['15 21 * * *']).toEqual({ slot: 'retry', windows: ['day'] });
-    expect(retail['15 2 * * *']).toEqual({ slot: 'retry', windows: ['day', 'afternoon'] });
+    expect(retail['20 1 * * *']).toEqual({ slot: 'retry', windows: [], early: ['day'] });
+    expect(retail['20 2 * * *']).toEqual({ slot: 'retry', windows: ['day'] });
+    expect(retail['20 4 * * *']).toEqual({ slot: 'retry', windows: ['day', 'midday'] });
+    expect(retail['20 6 * * *']).toEqual({
+      slot: 'retry',
+      windows: ['day', 'midday'],
+      early: ['afternoon'],
+    });
+    expect(retail['20 9 * * *']).toEqual({
+      slot: 'retry',
+      windows: ['day', 'midday', 'afternoon'],
+    });
+    expect(retail['20 12 * * *']).toEqual({
+      slot: 'primary',
+      windows: ['day', 'midday', 'afternoon'],
+    });
+    expect(retail['15 21 * * *']).toEqual({ slot: 'retry', windows: ['day', 'midday'] });
+    expect(retail['15 2 * * *']).toEqual({
+      slot: 'retry',
+      windows: ['day', 'midday', 'afternoon'],
+    });
+    expect(retail['15 12 * * *']).toBeUndefined();
+    expect(SCHEDULES['scrape-macro']!['20 9 * * 1-5']).toEqual({
+      slot: 'primary',
+      windows: ['day'],
+    });
     expect(SCHEDULES['scrape-macro']!['45 9 * * 1-5']).toEqual({ slot: 'retry', windows: ['day'] });
     expect(WATCHDOG_SCHEDULES).toMatchObject({
-      '5 6 * * *': 'day',
-      '5 11 * * *': 'afternoon',
-      '5 16 * * *': 'all',
+      '20 10 * * *': 'day_midday',
+      '20 16 * * *': 'all',
     });
   });
 
@@ -102,28 +124,27 @@ describe('jadwal (D-46)', () => {
 describe('watchdog', () => {
   const base = { config, status: missed };
 
-  it('cakupan day (16.50 WIB): hanya ritel jendela day', () => {
+  it('cakupan day_midday (17.20 WIB): ritel day + midday, bukan afternoon (D-67)', () => {
     const r = watchdog({
       ...base,
       event: 'schedule',
-      schedule: '5 6 * * *',
-      now: new Date('2026-11-11T10:05:00Z'),
+      schedule: '20 10 * * *',
+      now: new Date('2026-11-11T10:20:00Z'),
     });
-    expect(r).toMatchObject({ date: '2026-11-11', scope: 'day' });
-    expect(r.checked).toEqual(['logammulia']);
-    expect(r.overdue.map((o) => o.source)).toEqual(['logammulia']);
+    expect(r).toMatchObject({ date: '2026-11-11', scope: 'day_midday' });
+    expect(r.checked).toEqual(['pegadaian', 'galeri24', 'logammulia']);
+    expect(r.overdue.map((o) => o.source)).toEqual(['pegadaian', 'galeri24', 'logammulia']);
   });
 
-  it('cakupan afternoon (18.05 WIB): UBS dan Galeri24, termasuk hari Sabtu (D-63, D-64)', () => {
+  it('cakupan day_midday hari Sabtu tidak memeriksa UBS dan Lotus Archi', () => {
     const r = watchdog({
       ...base,
       event: 'schedule',
-      schedule: '5 11 * * *',
-      now: new Date('2026-11-14T11:05:00Z'), // Sabtu 18.05 WIB
+      schedule: '20 10 * * *',
+      now: new Date('2026-11-14T10:20:00Z'), // Sabtu 17.20 WIB
     });
-    expect(r).toMatchObject({ date: '2026-11-14', scope: 'afternoon' });
-    expect(r.checked).toEqual(['ubslifestyle', 'galeri24']);
-    expect(r.overdue.map((o) => o.source)).toEqual(['ubslifestyle', 'galeri24']);
+    expect(r).toMatchObject({ date: '2026-11-14', scope: 'day_midday' });
+    expect(r.checked).toEqual(['pegadaian', 'galeri24', 'logammulia']);
   });
 
   it('cakupan all: ritel butuh data bertanggal hari itu, makro cukup sukses hari itu', () => {
@@ -137,7 +158,7 @@ describe('watchdog', () => {
       config,
       status,
       event: 'schedule',
-      schedule: '5 16 * * *',
+      schedule: '20 16 * * *',
       now: new Date('2026-11-11T16:55:00Z'),
     });
     expect(r.scope).toBe('all');
@@ -159,7 +180,7 @@ describe('watchdog', () => {
     const r = watchdog({
       ...base,
       event: 'schedule',
-      schedule: '5 16 * * *',
+      schedule: '20 16 * * *',
       now: new Date('2026-11-11T18:30:00Z'), // 12 Nov 01.30 WIB
     });
     expect(r.date).toBe('2026-11-11');
@@ -190,23 +211,25 @@ describe('watchdog', () => {
   });
 
   it('formatWatchdog: null bila lengkap, daftar sumber bila terlambat', () => {
+    const okStatus = { logammulia: entry({}), pegadaian: entry({}), galeri24: entry({}) };
     const ok = watchdog({
       config,
-      status: { logammulia: entry({}), ubslifestyle: entry({}) },
+      status: okStatus,
       event: 'schedule',
-      schedule: '5 6 * * *',
-      now: new Date('2026-11-11T10:05:00Z'),
+      schedule: '20 10 * * *',
+      now: new Date('2026-11-11T10:20:00Z'),
     });
     expect(formatWatchdog(ok, 'https://x')).toBeNull();
 
     const late = watchdog({
-      ...base,
+      config,
+      status: { ...missed, pegadaian: entry({}), galeri24: entry({}) },
       event: 'schedule',
-      schedule: '5 6 * * *',
-      now: new Date('2026-11-11T10:05:00Z'),
+      schedule: '20 10 * * *',
+      now: new Date('2026-11-11T10:20:00Z'),
     });
     const text = formatWatchdog(late, 'https://github.com/o/r/actions')!;
-    expect(text).toContain('data 2026-11-11 belum masuk (1 dari 1 sumber)');
+    expect(text).toContain('data 2026-11-11 belum masuk (1 dari 3 sumber)');
     expect(text).toContain('• logammulia: data terakhir 2026-11-10, status success');
     expect(text).toContain('2026-11-10 18:27 WIB');
     expect(text).toContain('https://github.com/o/r/actions');

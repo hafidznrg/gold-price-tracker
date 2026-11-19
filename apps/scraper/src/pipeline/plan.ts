@@ -18,38 +18,47 @@ interface ScheduleSlot {
   slot: 'primary' | 'retry';
   /** Jendela sumber yang diikutkan slot ini (selain sumber `any`). */
   windows: readonly ScheduleWindow[];
+  /**
+   * Jendela percobaan awal (D-67): sumber di jendela ini ikut jadi kandidat dan dilewati bila sudah
+   * sukses (seperti retry), tetapi hasil `stale`-nya tidak memicu alarm (`early` di matrix).
+   */
+  early?: readonly ScheduleWindow[];
 }
 
 /**
- * Cron per workflow → slot dan jendela (D-46). Cron yang tidak terdaftar = `primary` tanpa saringan
- * jendela. Dua sumber kunci:
- * - Cron tiruan pemicu Cloudflare (`apps/trigger`, tepat waktu): slot utama. Tidak ada di
+ * Cron per workflow → slot dan jendela (D-46, D-67). Cron yang tidak terdaftar = `primary` tanpa
+ * saringan jendela. Dua sumber kunci:
+ * - Cron tiruan pemicu Cloudflare (`apps/trigger`, tepat waktu, menit :20): tidak ada di
  *   `on.schedule` GitHub; tiba lewat `workflow_dispatch` dengan input `schedule` (`--emulate`).
+ *   Semuanya `retry` (sumber yang sudah masuk dilewati) kecuali sapuan 19.20 WIB yang `primary`:
+ *   menjalankan ulang semua sumber untuk menangkap revisi harga sore.
  * - Cron GitHub di `.github/workflows/` (rutin terlambat 4,5–10,5 jam, D-45): selalu `retry`,
  *   sehingga sumber yang sudah masuk dilewati dan keterlambatannya menjadi cadangan.
  */
 export const SCHEDULES: Partial<Record<Workflow, Record<string, ScheduleSlot>>> = {
   'scrape-retail': {
-    '5 2 * * *': { slot: 'primary', windows: ['day'] }, // Cloudflare 09.05 WIB
-    '5 5 * * *': { slot: 'retry', windows: ['day'] }, // Cloudflare 12.05 WIB
-    '5 8 * * *': { slot: 'primary', windows: ['afternoon'] }, // Cloudflare 15.05 WIB (UBS, D-63)
-    '5 10 * * *': { slot: 'retry', windows: ['afternoon'] }, // Cloudflare 17.05 WIB (UBS, D-63)
-    '5 12 * * *': { slot: 'primary', windows: ['evening'] }, // Cloudflare 19.05 WIB
-    '5 15 * * *': { slot: 'retry', windows: ['evening'] }, // Cloudflare 22.05 WIB
-    '15 21 * * *': { slot: 'retry', windows: ['day'] }, // GitHub 04.15 WIB → tiba ±09–14 WIB
+    // Cloudflare 08.20 WIB: hanya percobaan awal Logam Mulia (terbit ±07.30–08.40).
+    '20 1 * * *': { slot: 'retry', windows: [], early: ['day'] },
+    '20 2 * * *': { slot: 'retry', windows: ['day'] }, // Cloudflare 09.20 WIB
+    '20 4 * * *': { slot: 'retry', windows: ['day', 'midday'] }, // Cloudflare 11.20 WIB
+    // Cloudflare 13.20 WIB: UBS dan Lotus Archi dicoba awal (belum tentu terbit).
+    '20 6 * * *': { slot: 'retry', windows: ['day', 'midday'], early: ['afternoon'] },
+    '20 9 * * *': { slot: 'retry', windows: ['day', 'midday', 'afternoon'] }, // Cloudflare 16.20 WIB
+    // Cloudflare 19.20 WIB: sapuan, jalankan ulang semuanya (revisi harga sore).
+    '20 12 * * *': { slot: 'primary', windows: ['day', 'midday', 'afternoon'] },
+    '15 21 * * *': { slot: 'retry', windows: ['day', 'midday'] }, // GitHub 04.15 WIB → tiba ±09–14 WIB
     // GitHub 09.15 WIB → tiba ±14–19 WIB, jadi juga cadangan jendela sore (D-63).
-    '15 2 * * *': { slot: 'retry', windows: ['day', 'afternoon'] },
-    '15 12 * * *': { slot: 'retry', windows: ['evening'] }, // GitHub 19.15 WIB → tiba ±02 WIB esok
+    '15 2 * * *': { slot: 'retry', windows: ['day', 'midday', 'afternoon'] },
   },
   'scrape-macro': {
-    '40 9 * * 1-5': { slot: 'primary', windows: ['day'] }, // Cloudflare 16.40 WIB, setelah JISDOR 15.15
+    '20 9 * * 1-5': { slot: 'primary', windows: ['day'] }, // Cloudflare 16.20 WIB, setelah JISDOR 15.15
     '45 9 * * 1-5': { slot: 'retry', windows: ['day'] }, // GitHub 16.45 WIB → tiba ±00 WIB
   },
 };
 
 /** Cron yang memang terdaftar di `on.schedule` GitHub (sisanya hanya dipicu Cloudflare). */
 export const GITHUB_SCHEDULES: Partial<Record<Workflow, readonly string[]>> = {
-  'scrape-retail': ['15 21 * * *', '15 2 * * *', '15 12 * * *'],
+  'scrape-retail': ['15 21 * * *', '15 2 * * *'],
   'scrape-macro': ['45 9 * * 1-5'],
 };
 
@@ -63,11 +72,11 @@ export const WORLDBANK_FROM_DAY = 5;
 export const EVENING_FROM = '18:45';
 
 /**
- * Jam Jakarta (`HH:mm`) mulai jendela `day`: Logam Mulia terbit ±07.30–08.40 WIB. Cron GitHub
- * 04.15 WIB yang kebetulan tiba tepat waktu (atau run manual tanpa daftar sumber) melewati
+ * Jam Jakarta (`HH:mm`) mulai jendela `day`: Logam Mulia terbit ±07.30–08.40 WIB; percobaan awal
+ * Cloudflare 08.20 WIB harus lolos (D-67). Cron GitHub 04.15 WIB yang kebetulan tiba tepat waktu (atau run manual tanpa daftar sumber) melewati
  * sumber `day` sebelum jam ini, alih-alih mencatat `stale` (D-46).
  */
-export const DAY_FROM = '08:30';
+export const DAY_FROM = '08:15';
 
 /**
  * Jam Jakarta (`HH:mm`) mulai jendela `afternoon`: UBS terbit ±12.00–16.30 WIB (D-63). Cron GitHub
@@ -100,7 +109,7 @@ export interface PlanResult {
   /** Tanggal Jakarta sasaran (`YYYY-MM-DD`), diteruskan ke scrape dan merge. */
   date: string;
   sources: ScraperId[];
-  matrix: { include: { source: ScraperId; browser: boolean }[] };
+  matrix: { include: { source: ScraperId; browser: boolean; early: boolean }[] };
   has_work: boolean;
   skipped: { source: ScraperId; reason: string }[];
 }
@@ -192,10 +201,15 @@ export function plan(input: PlanInput): PlanResult {
   const inWorkflow = config.sources.filter((s) => s.workflow === workflow);
 
   let candidates = inWorkflow.filter((s) => s.enabled);
-  const windows = slot === 'manual' ? undefined : scheduleOf(workflow, input.schedule)?.windows;
+  const scheduled = slot === 'manual' ? undefined : scheduleOf(workflow, input.schedule);
+  const windows = scheduled?.windows;
+  const earlyWindows = scheduled?.early ?? [];
+  const isEarly = (s: { schedule_window: ScheduleWindow }) =>
+    !(windows?.includes(s.schedule_window) || s.schedule_window === 'any') &&
+    earlyWindows.includes(s.schedule_window);
   if (windows !== undefined) {
     candidates = candidates.filter(
-      (s) => windows.includes(s.schedule_window) || s.schedule_window === 'any',
+      (s) => windows.includes(s.schedule_window) || s.schedule_window === 'any' || isEarly(s),
     );
   }
   const requested = input.sources
@@ -284,7 +298,11 @@ export function plan(input: PlanInput): PlanResult {
     date: today,
     sources: selected.map((s) => s.id),
     matrix: {
-      include: selected.map((s) => ({ source: s.id, browser: s.fetch_method === 'browser' })),
+      include: selected.map((s) => ({
+        source: s.id,
+        browser: s.fetch_method === 'browser',
+        early: isEarly(s),
+      })),
     },
     has_work: selected.length > 0,
     skipped,

@@ -3,13 +3,12 @@
 Cron GitHub Actions di repo ini rutin terlambat 4,5–10 jam. Worker ini memegang semua slot utama:
 ia memanggil `workflow_dispatch` tepat waktu (Cron Triggers, paket Free) dengan input `schedule` =
 kunci slot di `SCHEDULES`/`WATCHDOG_SCHEDULES`, sehingga `plan`/`watchdog` memperlakukannya seperti
-run terjadwal. Cron GitHub tinggal cadangan berslot retry (04.15, 09.15, 19.15, 16.45 hari kerja,
+run terjadwal. Cron GitHub tinggal cadangan berslot retry (04.15, 09.15, 16.45 hari kerja,
 dan watchdog 23.15 WIB).
 
 | Cron Worker (UTC)                 | WIB                                                     | Dispatch                                                                                                                                                  |
 | --------------------------------- | ------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `5 2,5,6,8,10,11,12,15,16 * * *` | 09.05, 12.05, 13.05, 15.05, 17.05, 18.05, 19.05, 22.05, 23.05 | `scrape-retail` primary/retry siang, `watchdog` siang, `scrape-retail` primary/retry sore (UBS, D-63), `watchdog` sore, `scrape-retail` primary/retry malam, `watchdog` semua |
-| `40 9 * * MON-FRI`                | 16.40 hari kerja                                        | `scrape-macro` primary                                                                                                                                    |
+| `20 1,2,4,6,9,10,12,16 * * *` | 08.20, 09.20, 11.20, 13.20, 16.20, 17.20, 19.20, 23.20 | `scrape-retail` (08.20 percobaan awal Logam Mulia; 09.20, 11.20, 13.20, 16.20 retry; 19.20 sapuan primary), `scrape-macro` primary Senin–Jumat 16.20 (Worker menyaring hari), `watchdog` 17.20 (day + midday) dan 23.20 (semua); D-67 |
 
 Setelah `crons` di `wrangler.toml` berubah, Worker harus di-deploy ulang (langkah 4 di bawah).
 
@@ -42,6 +41,6 @@ Hari-minggu memakai nama hari: di Cloudflare `1` = Minggu, bukan Senin.
    ```
 
 Cek: dashboard Cloudflare → Workers → `gold-price-trigger` → Settings → Trigger events (2 cron) dan
-Logs. Di GitHub, run dari Worker berjudul `scrape-retail (cron 5 2 * * *)` dan seterusnya.
+Logs. Di GitHub, run dari Worker berjudul `scrape-retail (cron 20 2 * * *)` dan seterusnya.
 
 Saat token kedaluwarsa, dispatch gagal (HTTP 401): buat token baru lalu ulangi langkah 3.

@@ -12,15 +12,16 @@
 #   mon_sat_id       — Senin–Sabtu dikurangi config/holidays.yml (D-63)
 #   monthly          — sekali per bulan (World Bank Pink Sheet)
 #
-# `schedule_window` (default `day`): pasangan cron primary + retry tempat sumber dijalankan.
-#   day     — scrape-retail Cloudflare 09.05 (primary) & 12.05 WIB (retry); cadangan GitHub 04.15 &
-#             09.15 WIB (retry, tiba ±5–10 jam kemudian); dilewati sebelum 08.30 WIB (D-46)
-#   afternoon — scrape-retail Cloudflare 15.05 (primary) & 17.05 WIB (retry); cadangan GitHub 09.15 WIB
-#             (retry, tiba ±14–19 WIB); dilewati sebelum 12.00 WIB; watchdog 18.05 WIB (D-63)
-#   evening — scrape-retail Cloudflare 19.05 (primary) & 22.05 WIB (retry); cadangan GitHub 19.15 WIB
-#   any     — semua slot di atas (D-42)
+# `schedule_window` (default `day`): jendela jadwal tempat sumber dijalankan (D-67). Cloudflare, WIB:
+#   day       — Logam Mulia terbit ±07.30–08.40: dicoba awal 08.20, lalu 09.20, 11.20, 13.20, 16.20
+#   midday    — harga final Pegadaian dan Galeri24 terbit ±10.05–11.01: 11.20, 13.20, 16.20
+#   afternoon — UBS dan Lotus Archi terbit ±12.00–16.30: percobaan awal 13.20 (tanpa alarm stale), 16.20
+#   Slot 19.20 (primary) menyapu ulang day + midday + afternoon untuk menangkap revisi harga sore.
+#   Cadangan GitHub (retry): 04.15 WIB day+midday; 09.15 WIB day+midday+afternoon.
+#   evening / any — tidak dipakai lagi (D-67); `any` = ikut semua slot (D-42).
+#   Dilewati sebelum 08.15 WIB (day) / 12.00 WIB (afternoon).
 # `accept_previous_day` (default false): V-06 menerima tanggal data sasaran − 1 s/d tanggal WIB run (D-42).
-# (scrape-macro: Cloudflare 16.40 WIB primary + cadangan GitHub 16.45 WIB retry, hari kerja; semua `day`, D-46.)
+# (scrape-macro: Cloudflare 16.20 WIB primary + cadangan GitHub 16.45 WIB retry, hari kerja; semua `day`, D-67.)
 
 sources:
   - id: ubslifestyle
@@ -29,7 +30,7 @@ sources:
     fetch_method: http
     workflow: scrape-retail
     update_calendar: mon_sat_id # terbit Senin–Sabtu, tidak Minggu (31 Okt, 7 & 14 Nov 2026; D-63)
-    schedule_window: afternoon # terbit ±12.00–16.30 WIB; slot 09.05/12.05 terlalu pagi (D-63)
+    schedule_window: afternoon # terbit ±12.00–16.30 WIB; dicoba awal 13.20 tanpa alarm stale (D-63, D-67)
     stale_is_error_on_expected_day: true
     parser_version: 1.0.0
     enabled: true
@@ -41,7 +42,7 @@ sources:
     fetch_method: api
     workflow: scrape-retail
     update_calendar: daily # P1-07: harga Minggu ada; final di P1-11 (Q-6)
-    schedule_window: any # snapshot biasanya terbit ±18.17–21.27 WIB, sekali 00.05 WIB (D-25, D-42)
+    schedule_window: midday # snapshot terbit pagi menjelang siang (D-67); riwayat lama ±18.17–21.27 WIB (D-25, D-42)
     stale_is_error_on_expected_day: true
     accept_previous_day: true # slot siang menambal snapshot kemarin (D-42)
     parser_version: 1.2.0
@@ -54,7 +55,7 @@ sources:
     fetch_method: api
     workflow: scrape-retail
     update_calendar: daily # harga Minggu ada (15 & 16 Nov 2026); final setelah observasi (Q-6)
-    schedule_window: afternoon # versi harga D terbit berulang: ±17.50 WIB D-1 (salinan harga D-1), lalu ±10.05–10.50 WIB hari D (harga sebenarnya); diambil dari API histori (versi updatedAt terbaru)
+    schedule_window: midday # versi harga D terbit berulang: ±17.50 WIB D-1 (salinan harga D-1), lalu harga final ±10.05–11.01 WIB hari D; diambil dari API histori (versi updatedAt terbaru) (D-66, D-67)
     stale_is_error_on_expected_day: true
     accept_previous_day: true # run terlambat lewat tengah malam tidak jadi alarm palsu (D-42)
     parser_version: 1.1.0

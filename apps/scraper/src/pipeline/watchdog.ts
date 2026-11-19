@@ -1,4 +1,4 @@
-import { jakartaIso, type SourceStatusFile } from '@gold/schema';
+import { jakartaIso, type ScheduleWindow, type SourceStatusFile } from '@gold/schema';
 import type { ProjectConfig } from '../config';
 import { isExpectedDay } from './calendar';
 import { doneToday, succeededOn, targetDate } from './plan';
@@ -8,17 +8,21 @@ import { doneToday, succeededOn, targetDate } from './plan';
 // membaca data/meta/status.json lewat cron tersendiri dan melapor ke Telegram bila sumber yang
 // diharapkan hari itu belum punya data.
 
-export type WatchdogScope = 'day' | 'afternoon' | 'all';
+export type WatchdogScope = 'day_midday' | 'all';
+
+/** Jendela sumber ritel yang diperiksa per cakupan (selain `all`). */
+const SCOPE_WINDOWS: Record<Exclude<WatchdogScope, 'all'>, readonly ScheduleWindow[]> = {
+  day_midday: ['day', 'midday'],
+};
 
 /**
- * Cron watchdog → cakupan (D-46, D-63). Tiga yang pertama hanya dipicu Cloudflare (tepat waktu); yang
+ * Cron watchdog → cakupan (D-46, D-67). Dua yang pertama hanya dipicu Cloudflare (tepat waktu); yang
  * terakhir ada di `on.schedule` `.github/workflows/watchdog.yml` sebagai cadangan bila Worker mati
  * total. Karena terlambat ±7 jam, ia tiba esok pagi dan tetap memeriksa tanggal cron-nya (D-27).
  */
 export const WATCHDOG_SCHEDULES: Record<string, WatchdogScope> = {
-  '5 6 * * *': 'day', // Cloudflare 13.05 WIB, setelah retry siang 12.05
-  '5 11 * * *': 'afternoon', // Cloudflare 18.05 WIB, setelah retry sore 17.05 (UBS, D-63)
-  '5 16 * * *': 'all', // Cloudflare 23.05 WIB, setelah retry malam 22.05
+  '20 10 * * *': 'day_midday', // Cloudflare 17.20 WIB, setelah retry 16.20 (sumber sore belum diperiksa)
+  '20 16 * * *': 'all', // Cloudflare 23.20 WIB, setelah sapuan 19.20
   '15 16 * * *': 'all', // GitHub 23.15 WIB → tiba ±06 WIB esok
 };
 
@@ -60,7 +64,8 @@ export function watchdog(input: {
       // Sumber ritel yang `stale` bukan error (mis. lotusarchi selama observasi jam terbit, P6-09)
       // tidak ikut diperiksa: tanpa jam terbit yang pasti, alarm "belum masuk" hanya akan palsu.
       (s.kind === 'macro' || s.stale_is_error_on_expected_day) &&
-      (scope === 'all' || (s.workflow === 'scrape-retail' && s.schedule_window === scope)),
+      (scope === 'all' ||
+        (s.workflow === 'scrape-retail' && SCOPE_WINDOWS[scope].includes(s.schedule_window))),
   );
   const overdue: Overdue[] = [];
   for (const s of sources) {

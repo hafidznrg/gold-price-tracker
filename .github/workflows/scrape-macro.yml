@@ -8,7 +8,7 @@ run-name: ${{ inputs.schedule && format('scrape-macro (cron {0})', inputs.schedu
 
 on:
   schedule:
-    # Cadangan saja (D-46): slot utama 16.40 WIB hari kerja dipicu Cloudflare (apps/trigger).
+    # Cadangan saja (D-46, D-67): slot utama 16.20 WIB hari kerja dipicu Cloudflare (apps/trigger).
     # Harus sama dengan GITHUB_SCHEDULES di apps/scraper/src/pipeline/plan.ts.
     - cron: '45 9 * * 1-5' # 16.45 WIB hari kerja — slot retry, biasanya tiba ±00 WIB
   workflow_dispatch:
