@@ -1,12 +1,12 @@
 {
   "galeri24": {
-    "last_run_id": "44457592991-1",
+    "last_run_id": "44522903625-1",
     "last_status": "success",
-    "last_success_at": "2026-11-19T04:20:45Z",
+    "last_success_at": "2026-11-19T12:20:41Z",
     "last_data_date": "2026-11-19",
     "consecutive_failures": 0,
-    "carry_over": false,
-    "updated_at": "2026-11-19T04:21:07Z"
+    "updated_at": "2026-11-19T12:21:24Z",
+    "carry_over": false
   },
   "jisdor": {
     "last_run_id": "44495445984-1",
@@ -17,40 +17,40 @@
     "updated_at": "2026-11-19T09:21:52Z"
   },
   "logammulia": {
-    "last_run_id": "44445066264-1",
+    "last_run_id": "44522903625-1",
     "last_status": "success",
-    "last_success_at": "2026-11-19T02:33:59Z",
+    "last_success_at": "2026-11-19T12:21:06Z",
     "last_data_date": "2026-11-19",
     "consecutive_failures": 0,
-    "carry_over": false,
-    "updated_at": "2026-11-19T02:34:14Z"
+    "updated_at": "2026-11-19T12:21:24Z",
+    "carry_over": false
   },
   "lotusarchi": {
-    "last_run_id": "44471390817-1",
+    "last_run_id": "44522903625-1",
     "last_status": "success",
-    "last_success_at": "2026-11-19T06:21:01Z",
+    "last_success_at": "2026-11-19T12:20:51Z",
     "last_data_date": "2026-11-19",
     "consecutive_failures": 0,
-    "carry_over": false,
-    "updated_at": "2026-11-19T06:21:21Z"
+    "updated_at": "2026-11-19T12:21:24Z",
+    "carry_over": false
   },
   "pegadaian": {
-    "last_run_id": "44457592991-1",
+    "last_run_id": "44522903625-1",
     "last_status": "success",
-    "last_success_at": "2026-11-19T04:20:51Z",
+    "last_success_at": "2026-11-19T12:20:45Z",
     "last_data_date": "2026-11-19",
     "consecutive_failures": 0,
-    "carry_over": false,
-    "updated_at": "2026-11-19T04:21:07Z"
+    "updated_at": "2026-11-19T12:21:24Z",
+    "carry_over": false
   },
   "ubslifestyle": {
-    "last_run_id": "44471390817-1",
+    "last_run_id": "44522903625-1",
     "last_status": "success",
-    "last_success_at": "2026-11-19T06:20:44Z",
+    "last_success_at": "2026-11-19T12:20:53Z",
     "last_data_date": "2026-11-19",
     "consecutive_failures": 0,
-    "carry_over": false,
-    "updated_at": "2026-11-19T06:21:21Z"
+    "updated_at": "2026-11-19T12:21:24Z",
+    "carry_over": false
   },
   "xaus": {
     "last_run_id": "44495445984-1",
