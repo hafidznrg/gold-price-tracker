@@ -5,8 +5,8 @@
     "last_success_at": "2026-11-20T04:20:46Z",
     "last_data_date": "2026-11-20",
     "consecutive_failures": 0,
-    "updated_at": "2026-11-20T04:21:32Z",
-    "carry_over": false
+    "carry_over": false,
+    "updated_at": "2026-11-20T04:21:32Z"
   },
   "jisdor": {
     "last_run_id": "44495445984-1",
@@ -22,17 +22,17 @@
     "last_success_at": "2026-11-20T04:21:11Z",
     "last_data_date": "2026-11-20",
     "consecutive_failures": 0,
-    "updated_at": "2026-11-20T04:21:32Z",
-    "carry_over": false
+    "carry_over": false,
+    "updated_at": "2026-11-20T04:21:32Z"
   },
   "lotusarchi": {
-    "last_run_id": "44522903625-1",
+    "last_run_id": "44687053978-1",
     "last_status": "success",
-    "last_success_at": "2026-11-19T12:20:51Z",
-    "last_data_date": "2026-11-19",
+    "last_success_at": "2026-11-20T06:20:47Z",
+    "last_data_date": "2026-11-20",
     "consecutive_failures": 0,
-    "carry_over": false,
-    "updated_at": "2026-11-19T12:21:24Z"
+    "updated_at": "2026-11-20T06:21:20Z",
+    "carry_over": false
   },
   "pegadaian": {
     "last_run_id": "44673697934-1",
@@ -40,17 +40,17 @@
     "last_success_at": "2026-11-20T04:20:45Z",
     "last_data_date": "2026-11-20",
     "consecutive_failures": 0,
-    "updated_at": "2026-11-20T04:21:32Z",
-    "carry_over": false
+    "carry_over": false,
+    "updated_at": "2026-11-20T04:21:32Z"
   },
   "ubslifestyle": {
-    "last_run_id": "44522903625-1",
+    "last_run_id": "44687053978-1",
     "last_status": "success",
-    "last_success_at": "2026-11-19T12:20:53Z",
-    "last_data_date": "2026-11-19",
+    "last_success_at": "2026-11-20T06:20:57Z",
+    "last_data_date": "2026-11-20",
     "consecutive_failures": 0,
-    "carry_over": false,
-    "updated_at": "2026-11-19T12:21:24Z"
+    "updated_at": "2026-11-20T06:21:20Z",
+    "carry_over": false
   },
   "xaus": {
     "last_run_id": "44495445984-1",
