@@ -33,6 +33,7 @@ import {
 import { cn } from '@/lib/utils';
 import { expectedFor, labelGaps, type DataCalendar } from '@/lib/calendar';
 import { useChartHeight } from '@/components/use-chart-height';
+import type { ChartRange } from '@/components/charts/time-series-option';
 
 export type BarSource = BarSourceDef;
 
@@ -64,22 +65,47 @@ const BG: Record<ColorToken, string> = {
   muted: 'bg-muted',
 };
 
+/** Penanda KPI = legenda grafik spread: garis putus-putus (rata-rata), titik emas (tersempit), titik merah (hari ini). */
+function KpiMarker({ kind }: { kind: 'dash' | 'min' | 'today' }) {
+  return kind === 'dash' ? (
+    <span
+      aria-hidden="true"
+      className="inline-block h-0 w-3.5 flex-none border-t-2 border-dashed border-gold"
+    />
+  ) : (
+    <span
+      aria-hidden="true"
+      className={cn(
+        'inline-block size-2 flex-none rounded-full',
+        kind === 'min' ? 'bg-gold' : 'bg-down',
+      )}
+    />
+  );
+}
+
 function Kpi({
   label,
   value,
   sub,
   sub2,
   tone,
+  marker,
+  className,
 }: {
   label: string;
   value: string;
   sub: string;
   sub2?: string;
   tone?: 'gold' | 'down';
+  marker?: 'dash' | 'min' | 'today';
+  className?: string;
 }) {
   return (
-    <div className="min-w-0 bg-surface px-3 py-2">
-      <div className="truncate text-xs text-faint">{label}</div>
+    <div className={cn('min-w-0 bg-surface px-3 py-2', className)}>
+      <div className="flex items-center gap-1.5 text-xs text-faint">
+        {marker ? <KpiMarker kind={marker} /> : null}
+        <span className="truncate">{label}</span>
+      </div>
       <div
         className={cn(
           'num text-lg font-semibold leading-tight tracking-[-0.02em]',
@@ -125,7 +151,11 @@ export function SpreadBoard({
       beli: sid === DEFAULT_ID ? null : sid,
       jual: bid === DEFAULT_ID ? null : bid,
     });
-  const chartH = useChartHeight(280, 220);
+  // Tinggi sudah termasuk navigator zoom bersama (pola Explorer "Jual + spread").
+  const chartH = useChartHeight(250, 200);
+  const spreadH = useChartHeight(210, 170);
+  const [compareTab, setCompareTab] = useState(true);
+  const [showAllPairs, setShowAllPairs] = useState(false);
 
   const sell = sellOptions.find((o) => o.id === sellId) as SpreadOption;
   // "Jual ke" hanya berisi pasangan sah; pilihan lama yang tidak sah pindah ke pasangan sah pertama.
@@ -143,11 +173,15 @@ export function SpreadBoard({
     if (pairBarId && bars.some((b) => b.id === pairBarId)) setBarId(pairBarId);
   }, [pairBarId, bars]);
   const tabOpt = sellOptions.find((o) => o.id === 'tab') as SpreadOption;
-  const lmOpt = sellOptions.find((o) => o.id === 'lm-antam') as SpreadOption;
+  // Pembanding Tabungan Emas disembunyikan bila pasangan terpilih adalah Tabungan Emas sendiri.
+  const canCompareTab = !problem && sell.id !== 'tab';
+  const showTab = canCompareTab && compareTab;
 
   const needed = useMemo(
-    () => [...new Set([lmOpt.file, tabOpt.file, ...(problem ? [] : [sell.file, buy.file])])],
-    [lmOpt.file, tabOpt.file, problem, sell.file, buy.file],
+    () => [
+      ...new Set([...(showTab ? [tabOpt.file] : []), ...(problem ? [] : [sell.file, buy.file])]),
+    ],
+    [showTab, tabOpt.file, problem, sell.file, buy.file],
   );
   const { files, loading, error } = useSeriesFiles(needed);
 
@@ -193,50 +227,52 @@ export function SpreadBoard({
     [days, sell.color],
   );
 
-  // Grafik spread %: Antam Logam Mulia vs Tabungan Emas, pada rentang yang sama.
-  const lmDays = useMemo(() => {
-    const f = files[lmOpt.file];
-    return f ? sliceDays(pairDays(lmOpt, f, lmOpt, f), from, to) : null;
-  }, [files, lmOpt, from, to]);
+  // Pembanding: spread Tabungan Emas pada rentang yang sama (hanya bila ditampilkan).
   const tabDays = useMemo(() => {
-    const f = files[tabOpt.file];
+    const f = showTab ? files[tabOpt.file] : undefined;
     return f ? sliceDays(pairDays(tabOpt, f, tabOpt, f), from, to) : null;
-  }, [files, tabOpt, from, to]);
-  const lmStats = useMemo(() => (lmDays ? spreadStats(lmDays) : null), [lmDays]);
+  }, [showTab, files, tabOpt, from, to]);
   const pctSeries: TimeSeries[] = useMemo(() => {
     const out: TimeSeries[] = [];
-    if (lmDays?.length) {
+    if (days.length > 0 && stats) {
       out.push({
-        id: 'lm',
-        label: 'Antam 1 g · Logam Mulia',
-        color: 'antam',
+        id: 'pct',
+        label: sell.label,
+        color: sell.color,
         highlightMin: true,
-        points: lmDays.map((d) => [d.date, d.pct]),
+        endLabel: formatPct(days.at(-1)!.pct, 2, false),
+        points: days.map((d) => [d.date, d.pct]),
       });
-      if (lmStats) {
-        out.push({
-          id: 'lm-avg',
-          label: 'Rata-rata Antam LM',
-          color: 'muted',
-          dashed: true,
-          width: 1.2,
-          points: [
-            [lmDays[0]!.date, lmStats.avgPct],
-            [lmDays.at(-1)!.date, lmStats.avgPct],
-          ],
-        });
-      }
+      out.push({
+        id: 'pct-avg',
+        label: 'Rata-rata rentang',
+        color: 'gold',
+        dashed: true,
+        width: 1.2,
+        legend: false,
+        points: [
+          [days[0]!.date, stats.avgPct],
+          [days.at(-1)!.date, stats.avgPct],
+        ],
+      });
     }
     if (tabDays?.length) {
       out.push({
-        id: 'tab',
-        label: 'Tabungan Emas · Pegadaian',
+        id: 'pct-tab',
+        label: 'Tabungan Emas',
         color: 'tab',
+        width: 1.2,
         points: tabDays.map((d) => [d.date, d.pct]),
       });
     }
     return out;
-  }, [lmDays, tabDays, lmStats]);
+  }, [days, stats, sell.label, sell.color, tabDays]);
+
+  const chartRange = useMemo(() => (from ? { from, to } : undefined), [from, to]);
+  const onChartRange = (r: ChartRange) => {
+    if (r.from === from && r.to === to) return;
+    setRange({ from: r.from, to: r.to });
+  };
 
   const bar = bars.find((b) => b.id === barId) ?? bars[0];
   const barItems: BarItem[] = weightBarItems(bar?.rows ?? []);
@@ -262,6 +298,15 @@ export function SpreadBoard({
     .join(' · ');
   const cmpMax = Math.max(0, ...compare.map((c) => c.pct ?? 0));
   const pairLabel = `${sell.label} → ${buy.label}`;
+  const pairTitle = `${sell.label} → ${buy.short}`;
+  const popular = POPULAR_PAIRS.filter(
+    (p) =>
+      sellOptions.some((o) => o.id === p.sell) && buybackOptions.some((o) => o.id === p.buyback),
+  );
+  const POPULAR_VISIBLE = 5;
+  const activePopular = popular.findIndex((p) => p.sell === sellId && p.buyback === pairBuy?.id);
+  const pairsExpanded = showAllPairs || activePopular >= POPULAR_VISIBLE;
+  const shownPopular = pairsExpanded ? popular : popular.slice(0, POPULAR_VISIBLE);
 
   return (
     <>
@@ -337,11 +382,7 @@ export function SpreadBoard({
               Pasangan populer
             </span>
             <div className="-mx-4 flex min-w-0 gap-2 overflow-x-auto px-4 pb-0.5 [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:overflow-x-visible sm:px-0 [&::-webkit-scrollbar]:hidden">
-              {POPULAR_PAIRS.filter(
-                (p) =>
-                  sellOptions.some((o) => o.id === p.sell) &&
-                  buybackOptions.some((o) => o.id === p.buyback),
-              ).map((p) => {
+              {shownPopular.map((p) => {
                 const on = p.sell === sellId && p.buyback === pairBuy?.id;
                 const cut = p.label.indexOf(': ');
                 const brand = cut > 0 ? p.label.slice(0, cut) : '';
@@ -369,6 +410,15 @@ export function SpreadBoard({
                   </button>
                 );
               })}
+              {!pairsExpanded && popular.length > POPULAR_VISIBLE ? (
+                <button
+                  type="button"
+                  onClick={() => setShowAllPairs(true)}
+                  className="inline-flex min-h-9 flex-none cursor-pointer items-center whitespace-nowrap rounded-full border border-line bg-transparent px-3.5 text-xs text-muted transition-colors hover:border-goldline hover:text-text"
+                >
+                  +{popular.length - POPULAR_VISIBLE} lainnya
+                </button>
+              ) : null}
             </div>
           </div>
           <p className="m-0 max-w-[760px] text-xs leading-relaxed text-muted">
@@ -393,11 +443,9 @@ export function SpreadBoard({
             <div className="min-w-0 rounded-card border border-line bg-surface p-4">
               <div className="mb-3 flex flex-wrap items-start justify-between gap-3">
                 <div className="min-w-0 flex-[1_1_320px]">
-                  <h2 className="m-0 text-xl font-semibold max-sm:text-lg">
-                    Harga jual vs buyback
-                  </h2>
+                  <h2 className="m-0 text-xl font-semibold max-sm:text-lg">{pairTitle}</h2>
                   <p className="num m-0 mt-0.5 text-sm text-muted max-sm:truncate">
-                    {pairLabel} · per gram
+                    per gram
                     {days.length > 0
                       ? ` · ${formatDate(days[0]!.date)} – ${formatDate(days.at(-1)!.date)}`
                       : ''}
@@ -413,8 +461,10 @@ export function SpreadBoard({
                 />
               </div>
               <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_210px]">
-                <div className="grid grid-cols-2 gap-px self-start overflow-hidden rounded-[14px] border border-line bg-line order-last lg:grid-cols-1">
+                <div className="grid grid-cols-2 gap-px self-start overflow-hidden rounded-[14px] border border-line bg-line lg:order-last lg:grid-cols-1">
                   <Kpi
+                    marker="today"
+                    className="order-1"
                     tone={signal?.wide ? 'down' : 'gold'}
                     label="Spread hari ini"
                     value={stats ? formatPct(stats.last.pct, 2, false) : EMPTY}
@@ -430,16 +480,21 @@ export function SpreadBoard({
                     }
                   />
                   <Kpi
+                    marker="dash"
+                    className="order-3 lg:order-2"
                     label={`Rata-rata ${rangeLabel}`}
                     value={stats ? formatPct(stats.avgPct, 2, false) : EMPTY}
                     sub={stats ? `dari ${formatNumber(stats.count)} hari data` : EMPTY}
                   />
                   <Kpi
+                    marker="min"
+                    className="order-4 lg:order-3"
                     label={`Tersempit ${rangeLabel}`}
                     value={stats ? formatPct(stats.min.pct, 2, false) : EMPTY}
                     sub={stats ? formatDate(stats.min.date) : EMPTY}
                   />
                   <Kpi
+                    className="order-2 lg:order-4"
                     label="Titik impas"
                     value={stats?.breakEven != null ? formatPct(stats.breakEven, 2) : EMPTY}
                     sub="kenaikan buyback yang dibutuhkan"
@@ -456,13 +511,66 @@ export function SpreadBoard({
                       rentang ini.
                     </Hint>
                   ) : (
-                    <SpreadBandChart
-                      sell={sellSeries}
-                      buyback={buySeries}
-                      gaps={gaps}
-                      ariaLabel={`Harga jual dan buyback ${pairLabel}`}
-                      height={chartH}
-                    />
+                    <div className="flex min-w-0 flex-col gap-3">
+                      <div className="min-w-0">
+                        <p className="m-0 mb-1 text-sm font-semibold">Harga jual vs buyback</p>
+                        <SpreadBandChart
+                          sell={sellSeries}
+                          buyback={buySeries}
+                          gaps={gaps}
+                          showZoom
+                          range={chartRange}
+                          onRangeChange={onChartRange}
+                          ariaLabel={`Harga jual dan buyback ${pairLabel}`}
+                          height={chartH}
+                        />
+                      </div>
+                      <div className="min-w-0">
+                        <div className="mb-1 flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
+                          <p className="m-0 text-sm font-semibold">
+                            Spread (jual − buyback) ÷ jual
+                          </p>
+                          {canCompareTab ? (
+                            <button
+                              type="button"
+                              aria-pressed={compareTab}
+                              onClick={() => setCompareTab((v) => !v)}
+                              className={cn(
+                                'inline-flex min-h-8 cursor-pointer items-center gap-1.5 rounded-full border px-3 text-xs transition-colors',
+                                compareTab
+                                  ? 'border-goldline bg-goldsoft text-text'
+                                  : 'border-line bg-transparent text-muted hover:border-goldline hover:text-text',
+                              )}
+                            >
+                              <span
+                                aria-hidden="true"
+                                className={cn(
+                                  'grid size-3.5 place-items-center rounded-[3px] border text-[10px] leading-none',
+                                  compareTab
+                                    ? 'border-text bg-text text-surface'
+                                    : 'border-line text-transparent',
+                                )}
+                              >
+                                ✓
+                              </span>
+                              Pembanding: Tabungan Emas
+                            </button>
+                          ) : null}
+                        </div>
+                        <TimeSeriesChart
+                          series={pctSeries}
+                          gaps={gaps}
+                          showZoom
+                          legend={false}
+                          valueFormat="percent"
+                          gridRight={56}
+                          range={chartRange}
+                          onRangeChange={onChartRange}
+                          ariaLabel={`Spread persen ${pairLabel}`}
+                          height={spreadH}
+                        />
+                      </div>
+                    </div>
                   )}
                 </div>
               </div>
@@ -470,48 +578,18 @@ export function SpreadBoard({
                 <SourceStamp source={sell.source} date={stats?.last.date ?? asOf} bare>
                   {stampNote || null}
                 </SourceStamp>
+                {showTab ? (
+                  <SourceStamp source="pegadaian" date={tabDays?.at(-1)?.date ?? asOf} bare>
+                    Tabungan Emas, per gram (pembanding spread)
+                  </SourceStamp>
+                ) : null}
               </InfoPopover>
             </div>
           </section>
         </>
       )}
 
-      <section className="wrap grid grid-cols-[repeat(auto-fit,minmax(min(420px,100%),1fr))] gap-5 pb-[22px]">
-        <div className={PANEL}>
-          <h2 className="m-0 text-xl font-semibold max-sm:text-lg">Spread % dari waktu ke waktu</h2>
-          <p className="m-0 mt-1.5 mb-3 text-sm text-muted">
-            {lmDays && lmDays.length > 0
-              ? `${formatDate(lmDays[0]!.date)} – ${formatDate(lmDays.at(-1)!.date)} · `
-              : ''}
-            Garis putus-putus = rata-rata Antam LM · titik = spread tersempit
-            {tabDays && tabDays.length > 0 && tabDays[0]!.date > (from ?? '')
-              ? ' · Tabungan Emas hanya tersedia 360 hari terakhir'
-              : ''}
-          </p>
-          {error ? (
-            <Hint>Data gagal dimuat.</Hint>
-          ) : !lmDays || !tabDays ? (
-            <Hint>Memuat data…</Hint>
-          ) : pctSeries.length === 0 ? (
-            <Hint>Tidak ada data pada rentang ini.</Hint>
-          ) : (
-            <TimeSeriesChart
-              series={pctSeries}
-              valueFormat="percent"
-              height={250}
-              ariaLabel="Spread persen Antam Logam Mulia dan Tabungan Emas"
-            />
-          )}
-          <InfoPopover label="Sumber" ariaLabel="Sumber data" side="top" className="mt-3">
-            <SourceStamp source="logammulia" date={lmStats?.last.date ?? asOf} bare>
-              Antam 1 g
-            </SourceStamp>
-            <SourceStamp source="pegadaian" date={tabDays?.at(-1)?.date ?? asOf} bare>
-              Tabungan Emas, per gram
-            </SourceStamp>
-          </InfoPopover>
-        </div>
-
+      <section className="wrap pb-[22px]">
         <div className={PANEL}>
           <div className="mb-4 flex flex-wrap items-start justify-between gap-x-4 gap-y-3">
             <div className="min-w-0 flex-[1_1_240px]">

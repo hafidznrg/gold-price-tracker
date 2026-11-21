@@ -529,6 +529,12 @@ test.describe('Spread', () => {
     await expect(buyAt).toHaveValue('g24-g24');
     await expect(sellTo).toHaveValue('g24-g24');
 
+    // Hanya lima chip pertama tampil; sisanya di balik "+N lainnya".
+    await expect(
+      page.getByRole('button', { name: 'EMASKU: Hartadinata → Hartadinata' }),
+    ).toHaveCount(0);
+    await page.getByRole('button', { name: /^\+\d+ lainnya$/ }).click();
+    await expect(page.getByRole('button', { name: /^\+\d+ lainnya$/ })).toHaveCount(0);
     await page
       .getByRole('button', { name: 'Antam: Logam Mulia → Galeri24 (non-Pegadaian)' })
       .click();
@@ -606,6 +612,29 @@ test.describe('Spread', () => {
     await expect(page.locator('#buyAt')).toHaveValue('g24-g24');
     await expect(page.locator('#sellTo')).toHaveValue('g24-g24');
     await expect(list.getByRole('button', { pressed: true })).toHaveCount(1);
+  });
+});
+
+test.describe('Spread: kartu pasangan', () => {
+  test('dua grafik (harga + spread) dalam satu kartu, pembanding Tabungan Emas, panel lama hilang', async ({
+    page,
+  }) => {
+    await page.goto('/spread');
+    const card = page.locator('#pasangan');
+    await expect(card.getByRole('img', { name: /^Harga jual dan buyback/ })).toHaveCount(1);
+    await expect(card.getByRole('img', { name: /^Spread persen/ })).toHaveCount(1);
+    await expect(card.getByRole('img')).toHaveCount(2);
+    const toggle = card.getByRole('button', { name: 'Pembanding: Tabungan Emas' });
+    await expect(toggle).toHaveAttribute('aria-pressed', 'true');
+    await toggle.click();
+    await expect(toggle).toHaveAttribute('aria-pressed', 'false');
+    await expect(page.getByRole('heading', { name: 'Spread % dari waktu ke waktu' })).toHaveCount(
+      0,
+    );
+
+    await page.goto('/spread?beli=tab&jual=tab');
+    await expect(card.getByRole('img', { name: /^Spread persen/ })).toHaveCount(1);
+    await expect(card.getByRole('button', { name: 'Pembanding: Tabungan Emas' })).toHaveCount(0);
   });
 });
 
@@ -721,6 +750,7 @@ test.describe('EMASKU / Hartadinata (Fase 7)', () => {
     await page.goto('/spread');
     const buyAt = page.locator('#buyAt');
     if ((await buyAt.locator('option[value="hr-emasku"]').count()) === 1) {
+      await page.getByRole('button', { name: /^\+\d+ lainnya$/ }).click();
       await page.getByRole('button', { name: 'EMASKU: Hartadinata → Hartadinata' }).click();
       await expect(buyAt).toHaveValue('hr-emasku');
       await expect(page.locator('#sellTo')).toHaveValue('hr-emasku');
