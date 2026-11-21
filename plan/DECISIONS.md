@@ -653,3 +653,12 @@ Log keputusan produk dan teknis (format ringkas ala ADR). Keputusan baru ditamba
 - **URL**: mode dasar `?g=1&v=sell|bb|spread|both&b=lm-antam,ubsl-ubs,…` (id `COMPARE_DEFS`; nilai bawaan tidak ditulis). Bawaan: 1 g, Harga jual, brand Antam LM, UBS Lifestyle, Galeri24, EMASKU. `?s=` (format lama) = **mode seri manual**: baris kontrol menampilkan "Seri manual (n)" + "Kembali ke pengaturan dasar", sehingga tautan lama tetap berfungsi. `m`, `agg`, `band`, `ffill`, `r` berlaku di kedua mode.
 - Preset D-70 menjadi `?g={w}&b={semua brand yang ada di w}` (+`m=gram`); pengalih `/bandingkan` dan tautan beranda ikut format ini. Dropdown "Bandingkan semua brand" D-70 dihapus (perannya diambil "Semua" di dropdown Brand).
 **Konsekuensi:** builder seri tetap ada tetapi tidak lagi jadi pintu masuk utama. Halaman Spread tetap untuk pasangan beli di A → jual di B dan spread per gramasi; spread antarbrand di tempat yang sama kini juga terlihat di Riwayat harga (tumpang tindih sebagian, ditinjau ulang bila membingungkan).
+
+### D-72 — Riwayat harga: judul grafik dihapus, rentang pindah ke baris periode (melengkapi D-71)
+
+**Konteks:** setelah D-71, judul besar grafik ("Harga jual 1 g dan spread · harian") hanya mengulang pilihan Gramasi dan Tampilkan tepat di atasnya. Di HP judul terlipat dua baris ("harian" sendirian) dan bersaing dengan judul halaman serif dan label grafik. Kata "harian" juga tidak menambah informasi pada agregasi bawaan.
+**Keputusan (pemilik, 21 Nov 2026):**
+- Judul besar grafik disembunyikan secara visual (`sr-only`, tetap jadi heading untuk pembaca layar). Label kecil di atas tiap grafik ("Harga jual per keping", "Spread (jual − buyback) ÷ jual", atau label mode di seri manual) selalu tampil.
+- Baris kedua kartu = **periode · jumlah brand ⓘ** di kiri dan **rentang cepat** di kanan, karena teks periode adalah hasil tombol rentang. Di HP urutannya dibalik: rentang (dibagi rata selebar baris) di atas, teks periode kecil satu baris di bawahnya. Toolbar D-71 tinggal Gramasi · Tampilkan · Brand · Lanjutan.
+- Agregasi hanya disebut bila bukan bawaan: "· penutupan mingguan/bulanan" di baris periode.
+**Konsekuensi:** hierarki teks di kartu tinggal judul halaman → label grafik; tata letak sama di desktop, tablet, dan HP (hanya urutan di HP yang berbeda).

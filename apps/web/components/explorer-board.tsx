@@ -17,7 +17,7 @@ import {
 } from '@/components/explorer-parts';
 import { ExplorerToolbar } from '@/components/explorer-toolbar';
 import { InfoPopover } from '@/components/info-popover';
-import type { RangeValue } from '@/components/range-control';
+import { RangeControl, type RangeValue } from '@/components/range-control';
 import { SourceStamp } from '@/components/source-stamp';
 import { useChartHeight } from '@/components/use-chart-height';
 import { useSeriesFiles } from '@/components/use-series-files';
@@ -151,7 +151,17 @@ function basicTitle(show: ShowMode, w: number, view: ViewOptions): string {
   return `${what}${mode} · ${AGG_NOUN[view.agg]}`;
 }
 
-/** Judul kecil di atas grafik harga pada tampilan Jual + spread. */
+/** Label grafik harga di mode seri manual. */
+function manualCaption(mode: ValueMode): string {
+  return {
+    nominal: 'Harga emas',
+    gram: 'Harga emas per gram',
+    index: 'Indeks harga (=100 di awal rentang)',
+    pct: 'Perubahan harga sejak awal rentang',
+  }[mode];
+}
+
+/** Label kecil di atas grafik harga (mode dasar); judul besar dihapus (D-72). */
 function priceChartCaption(show: ShowMode, mode: ValueMode): string {
   const what = show === 'bb' ? 'Buyback' : 'Harga jual';
   const how = {
@@ -468,7 +478,9 @@ export function ExplorerBoard({ options, weights, asOf, stamps, calendar }: Expl
   const priceChart = (height: number, caption: boolean) => (
     <div className="min-w-0">
       {caption ? (
-        <p className="m-0 mb-1 text-sm font-semibold">{priceChartCaption(show, view.mode)}</p>
+        <p className="m-0 mb-1 text-sm font-semibold">
+          {manual ? manualCaption(view.mode) : priceChartCaption(show, view.mode)}
+        </p>
       ) : null}
       <TimeSeriesChart
         series={series}
@@ -608,18 +620,20 @@ export function ExplorerBoard({ options, weights, asOf, stamps, calendar }: Expl
           manual={manual}
           manualCount={active.length}
           onBack={backToBasic}
-          range={range}
-          onRange={(r) => setRange(r)}
-          lastDate={lastDate}
-          minDate={minDate ?? undefined}
           advOpen={advOpen}
           onOpenAdvanced={openAdvanced}
         />
 
-        <div className="mb-3 min-w-0">
-          {/* Di HP popover dijangkarkan ke baris judul (bukan ikon) agar tidak meluber ke kanan. */}
-          <div className="relative flex items-center gap-2">
-            <h2 className="m-0 text-xl font-semibold max-sm:text-lg">{title}</h2>
+        {/* Judul besar dihapus (D-72): isinya mengulang kontrol; tetap ada untuk pembaca layar. */}
+        <h2 className="sr-only">{title}</h2>
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+          {/* Di HP popover dijangkarkan ke baris periode (bukan ikon) agar tidak meluber ke kanan. */}
+          <div className="relative flex min-w-0 items-center gap-1.5 max-sm:order-last">
+            <p className="num m-0 text-sm text-muted">
+              {eff.from ? `${formatDate(eff.from)} – ` : 'sampai '}
+              {formatDate(eff.to)} · {countLabel}
+              {view.agg !== 'd' ? ` · penutupan ${AGG_NOUN[view.agg]}` : ''}
+            </p>
             <InfoPopover ariaLabel="Keterangan grafik" className="max-sm:static">
               <ul className="m-0 flex list-disc flex-col gap-1 pl-4">
                 <li>Gulir untuk memperbesar, seret untuk menggeser.</li>
@@ -667,10 +681,16 @@ export function ExplorerBoard({ options, weights, asOf, stamps, calendar }: Expl
               </ul>
             </InfoPopover>
           </div>
-          <p className="num m-0 mt-0.5 text-sm text-muted">
-            {eff.from ? `${formatDate(eff.from)} – ` : 'sampai '}
-            {formatDate(eff.to)} · {countLabel}
-          </p>
+          <RangeControl
+            parts="presets"
+            fill
+            size="sm"
+            value={range}
+            onChange={(r) => setRange(r)}
+            lastDate={lastDate}
+            minDate={minDate ?? undefined}
+            className="max-sm:w-full"
+          />
         </div>
 
         {error ? (
@@ -685,9 +705,9 @@ export function ExplorerBoard({ options, weights, asOf, stamps, calendar }: Expl
             {spreadChart(spreadH2, true)}
           </div>
         ) : !manual && show === 'spread' ? (
-          spreadChart(chartH, false)
+          spreadChart(chartH, true)
         ) : (
-          priceChart(chartH, false)
+          priceChart(chartH, true)
         )}
 
         {cards.length > 0 && !loading ? (

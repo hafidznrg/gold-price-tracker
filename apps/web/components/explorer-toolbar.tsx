@@ -1,7 +1,6 @@
 'use client';
 
 import { type ReactNode, useEffect, useId, useRef, useState } from 'react';
-import { RangeControl, type RangeValue } from '@/components/range-control';
 import { Chevron, Swatch } from '@/components/explorer-parts';
 import { useViewportClamp } from '@/components/use-viewport-clamp';
 import { COMPARE_DEFS } from '@/lib/bandingkan';
@@ -165,15 +164,11 @@ export interface ExplorerToolbarProps {
   manual: boolean;
   manualCount: number;
   onBack: () => void;
-  range: RangeValue;
-  onRange: (r: RangeValue) => void;
-  lastDate: string;
-  minDate?: string;
   advOpen: boolean;
   onOpenAdvanced: () => void;
 }
 
-/** Satu baris kontrol di atas grafik (D-71): Gramasi · Tampilkan · Brand, rentang cepat, Lanjutan. */
+/** Satu baris kontrol di atas grafik (D-71): Gramasi · Tampilkan · Brand, Lanjutan. Rentang ada di baris periode (D-72). */
 export function ExplorerToolbar(p: ExplorerToolbarProps) {
   const rows = COMPARE_DEFS.map((d) => ({
     d,
@@ -342,23 +337,13 @@ export function ExplorerToolbar(p: ExplorerToolbarProps) {
         </>
       )}
 
-      <RangeControl
-        parts="presets"
-        fill
-        size="sm"
-        value={p.range}
-        onChange={p.onRange}
-        lastDate={p.lastDate}
-        minDate={p.minDate}
-        className="sm:ml-auto max-sm:order-last max-sm:w-full"
-      />
       <button
         type="button"
         aria-haspopup="dialog"
         aria-expanded={p.advOpen}
         aria-controls="explorer-advanced"
         onClick={p.onOpenAdvanced}
-        className="inline-flex min-h-10 cursor-pointer items-center gap-1.5 rounded-field border border-goldline bg-goldsoft px-3.5 text-sm max-sm:px-2.5 font-semibold text-gold-strong"
+        className="inline-flex min-h-10 cursor-pointer items-center gap-1.5 rounded-field border border-goldline bg-goldsoft px-3.5 text-sm font-semibold text-gold-strong sm:ml-auto max-sm:px-2.5"
       >
         <svg
           width="15"
