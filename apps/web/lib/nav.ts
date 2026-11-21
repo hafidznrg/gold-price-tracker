@@ -8,14 +8,13 @@ export interface NavItem {
 }
 
 /**
- * Navigasi utama. Fase 4 menambah Bandingkan, Kalkulator, Kelipatan (urutan mockup: sebelum Data).
+ * Navigasi utama. Bandingkan digabung ke Riwayat harga (D-70); menu bawah HP: Hari ini, Riwayat, Spread, Kalkulator.
  */
 export const NAV_ITEMS: readonly NavItem[] = [
   { href: '/', label: 'Hari ini' },
   { href: '/explorer', label: 'Riwayat harga', short: 'Riwayat' },
   { href: '/spread', label: 'Spread', short: 'Spread' },
-  { href: '/bandingkan', label: 'Bandingkan' },
-  { href: '/kalkulator', label: 'Kalkulator', more: true },
+  { href: '/kalkulator', label: 'Kalkulator' },
   { href: '/kelipatan', label: 'Kelipatan', more: true },
   { href: '/data', label: 'Data', more: true },
 ];

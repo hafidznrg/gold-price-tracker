@@ -6,6 +6,7 @@ import { ExplorerBoard } from '@/components/explorer-board';
 import { PageIntro } from '@/components/page-intro';
 import { readMeta } from '@/lib/data/load-fs';
 import { calendarFromMeta } from '@/lib/calendar';
+import { compareOptions, compareWeights } from '@/lib/bandingkan';
 import { explorerOptions } from '@/lib/explorer';
 
 export const metadata: Metadata = {
@@ -23,12 +24,13 @@ export default function ExplorerPage() {
       stamps[s.id as PriceSource] = { date: s.last_data_date, at: s.source_updated_at };
     }
   }
+  const options = explorerOptions(meta);
   return (
     <>
       <PageIntro
         eyebrow="Riwayat harga"
         title="Telusuri setiap seri harga"
-        lead="Gabungkan brand, sumber, gramasi, dan jenis harga dalam satu grafik. Setiap pengaturan tersimpan di URL sehingga bisa dibagikan apa adanya."
+        lead="Bandingkan brand di berat yang sama, atau gabungkan sendiri brand, sumber, gramasi, dan jenis harga dalam satu grafik. Setiap pengaturan tersimpan di URL sehingga bisa dibagikan apa adanya."
       />
       <NuqsAdapter>
         <Suspense
@@ -40,7 +42,8 @@ export default function ExplorerPage() {
           }
         >
           <ExplorerBoard
-            options={explorerOptions(meta)}
+            options={options}
+            presetWeights={compareWeights(compareOptions(options))}
             asOf={meta.as_of ?? new Date().toISOString().slice(0, 10)}
             stamps={stamps}
             calendar={calendarFromMeta(meta)}

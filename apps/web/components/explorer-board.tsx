@@ -13,6 +13,7 @@ import {
   colorVar,
   PRODUCT_KIND_LABELS,
   SOURCE_LABELS,
+  weightKey,
   type PriceField,
   type ProductKind,
   type SeriesPoint,
@@ -66,6 +67,7 @@ import {
   formatRupiah,
   formatWeight,
 } from '@/lib/format';
+import { comparePicks } from '@/lib/bandingkan';
 import { cn } from '@/lib/utils';
 import { expectedFor, labelGaps, type DataCalendar } from '@/lib/calendar';
 import { useChartHeight } from '@/components/use-chart-height';
@@ -78,6 +80,8 @@ export interface ExplorerBoardProps {
   stamps: Partial<Record<PriceSource, { date: string | null; at: string | null }>>;
   /** Kalender terbit sumber, agar akhir pekan/libur tidak dianggap celah. */
   calendar: DataCalendar;
+  /** Gramasi preset "Bandingkan semua brand" (D-70), dihitung di server. */
+  presetWeights?: number[];
 }
 
 const FIELD = 'h-11 w-full rounded-field border border-line bg-surface2 px-3 text-sm text-text';
@@ -244,7 +248,13 @@ function uniqBy<T>(xs: T[], key: (x: T) => string): T[] {
   return [...seen.values()];
 }
 
-export function ExplorerBoard({ options, asOf, stamps, calendar }: ExplorerBoardProps) {
+export function ExplorerBoard({
+  options,
+  asOf,
+  stamps,
+  calendar,
+  presetWeights = [],
+}: ExplorerBoardProps) {
   const [query, setQuery] = useQueryStates(
     {
       s: parseAsString,
@@ -292,6 +302,24 @@ export function ExplorerBoard({ options, asOf, stamps, calendar }: ExplorerBoard
     (next: SeriesPick[]) =>
       void setQuery({ s: samePicks(next, DEFAULT_PICKS) ? null : encodePicks(next) }),
     [setQuery],
+  );
+  // Preset "Bandingkan semua brand": seri = harga jual semua brand di satu gramasi, per gram;
+  // rentang dipertahankan. Terpilih hanya bila seri aktif persis sama dengan preset.
+  const presetOptions = useMemo(
+    () => presetWeights.map((w) => ({ value: weightKey(w), label: formatWeight(w) })),
+    [presetWeights],
+  );
+  const presetValue = useMemo(() => {
+    const cur = decodePicks(query.s);
+    return presetWeights.find((w) => samePicks(comparePicks(w, options), cur)) ?? null;
+  }, [presetWeights, options, query.s]);
+  const applyPreset = useCallback(
+    (key: string) => {
+      const w = presetWeights.find((x) => weightKey(x) === key);
+      if (w === undefined) return;
+      void setQuery({ s: encodePicks(comparePicks(w, options)), m: encodeMode('gram') });
+    },
+    [presetWeights, options, setQuery],
   );
   const setRange = useCallback(
     (r: RangeValue, fromChart = false) => {
@@ -519,6 +547,19 @@ export function ExplorerBoard({ options, asOf, stamps, calendar }: ExplorerBoard
               minDate={minDate && minDate !== '9999' ? minDate : undefined}
             />
           </div>
+          {presetOptions.length > 0 ? (
+            <div className="mb-3 flex flex-wrap items-center gap-x-3 gap-y-1.5">
+              <span className="text-sm font-semibold text-muted">Bandingkan semua brand</span>
+              <Segmented
+                label="Gramasi pembanding"
+                size="sm"
+                scroll
+                options={presetOptions}
+                value={presetValue === null ? null : weightKey(presetValue)}
+                onChange={applyPreset}
+              />
+            </div>
+          ) : null}
           {error ? (
             <Hint>Data gagal dimuat. Muat ulang halaman.</Hint>
           ) : active.length === 0 ? (

@@ -168,7 +168,7 @@ Job melewati tanggal yang sudah ada untuk Lotus Archi (lotusarchi.com) 1 g, jadi
 
 ## Situs web
 
-Situs statis (`apps/web`, Next.js static export): Hari ini, Explorer, Spread, Bandingkan, Kalkulator, Kelipatan, dan Data. Alamat: <https://gold.hafidznrg.my.id> (Vercel, dibangun ulang otomatis setiap ada commit data).
+Situs statis (`apps/web`, Next.js static export): Hari ini, Riwayat harga (termasuk preset "Bandingkan semua brand"), Spread, Kalkulator, Kelipatan (dengan premi Antam vs spot), dan Data. Alamat: <https://gold.hafidznrg.my.id> (Vercel, dibangun ulang otomatis setiap ada commit data).
 
 ```bash
 pnpm --filter web exec tsx scripts/build-data.ts  # CSV di data/ -> JSON di apps/web/public/data

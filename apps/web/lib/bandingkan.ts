@@ -16,10 +16,14 @@ import {
 import {
   aggregateClose,
   applyMode,
+  encodeMode,
+  encodePicks,
   gramDivisor,
+  MAX_SERIES,
   seriesPoints,
   viewChartPoints,
   type ExplorerOption,
+  type SeriesPick,
 } from './explorer';
 import { findGaps, spreadPct } from './spread';
 
@@ -149,6 +153,31 @@ export function findOption(
         (d.linear || o.w === w),
     ) ?? null
   );
+}
+
+/**
+ * Preset "Bandingkan semua brand" di Riwayat harga (D-70): harga jual semua series pembanding yang
+ * tersedia pada berat `w`, urut `COMPARE_DEFS`, maksimal `MAX_SERIES`. Tabungan Emas memakai
+ * beratnya sendiri (0,01 g): harganya sudah per gram dan melayani semua gramasi.
+ */
+export function comparePicks(w: number, options: readonly ExplorerOption[]): SeriesPick[] {
+  const picks: SeriesPick[] = [];
+  for (const d of COMPARE_DEFS) {
+    const o = findOption(d, w, options);
+    if (o) picks.push({ source: o.source, brand: o.brand, w: o.w, price: 'sell' });
+  }
+  return picks.slice(0, MAX_SERIES);
+}
+
+/** Alamat Riwayat harga dengan preset "Bandingkan semua brand" pada berat `w` (per gram; `r` opsional). */
+export function comparePresetHref(
+  w: number,
+  options: readonly ExplorerOption[],
+  range?: string | null,
+): string {
+  const q = [`s=${encodePicks(comparePicks(w, options))}`, `m=${encodeMode('gram')}`];
+  if (range) q.push(`r=${range}`);
+  return `/explorer?${q.join('&')}`;
 }
 
 /** Hanya opsi yang dipakai halaman ini (mengurangi muatan props). */

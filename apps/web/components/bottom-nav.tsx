@@ -8,7 +8,6 @@ import {
   Database,
   Ellipsis,
   House,
-  Scale,
   type LucideIcon,
 } from 'lucide-react';
 import Link from 'next/link';
@@ -22,7 +21,6 @@ const ICONS: Record<string, LucideIcon> = {
   '/': House,
   '/explorer': ChartLine,
   '/spread': ArrowLeftRight,
-  '/bandingkan': Scale,
   '/kalkulator': Calculator,
   '/kelipatan': ChartNoAxesCombined,
   '/data': Database,

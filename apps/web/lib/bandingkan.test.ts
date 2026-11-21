@@ -3,6 +3,7 @@ import {
   COMPARE_DEFS,
   compareLine,
   compareOptions,
+  comparePicks,
   compareWeights,
   decodeCompareMode,
   decodeWeight,
@@ -15,7 +16,7 @@ import {
   todayRows,
 } from './bandingkan';
 import type { LatestFile, LatestSeries, SeriesRowTuple } from './data';
-import type { ExplorerOption } from './explorer';
+import { MAX_SERIES, encodePick, type ExplorerOption } from './explorer';
 
 const opt = (over: Partial<ExplorerOption>): ExplorerOption => ({
   id: 'x',
@@ -69,6 +70,26 @@ describe('pencocokan series per berat', () => {
 
   it('compareOptions membuang opsi di luar enam series', () => {
     expect(compareOptions(OPTIONS)).toHaveLength(OPTIONS.length - 1);
+  });
+});
+
+describe('comparePicks (preset Riwayat harga)', () => {
+  it('berat yang dijual beberapa brand: harga jual per series + Tabungan Emas 0,01 g', () => {
+    expect(comparePicks(1, OPTIONS).map(encodePick)).toEqual([
+      'logammulia-antam-1-sell',
+      'pegadaian-antam-1-sell',
+      'ubslifestyle-ubs-1-sell',
+      'pegadaian-pegadaian-0.01-sell',
+    ]);
+  });
+
+  it('berat dengan lebih sedikit brand menghasilkan lebih sedikit seri', () => {
+    expect(comparePicks(5, OPTIONS)).toHaveLength(3);
+    expect(comparePicks(0.05, OPTIONS)).toHaveLength(2);
+  });
+
+  it('tidak melebihi MAX_SERIES', () => {
+    expect(comparePicks(1, OPTIONS).length).toBeLessThanOrEqual(MAX_SERIES);
   });
 });
 

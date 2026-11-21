@@ -46,7 +46,7 @@ const GRID = 'grid grid-cols-[110px_repeat(6,minmax(0,1fr))] items-center px-6';
 /** Kolom gramasi menempel di kiri saat tabel digeser di HP (D-54); latar menutup padding baris. */
 const STICKY = 'sticky left-0 z-[1] -ml-6 self-stretch flex items-center bg-surface pl-6';
 
-export function HomeMatrix({ cells }: { cells: TodayCells }) {
+export function HomeMatrix({ cells, compareHref }: { cells: TodayCells; compareHref: string }) {
   const [mode, setMode] = useState<MatrixMode>('jual');
   const [unit, setUnit] = useState<MatrixUnit>('keping');
   const rows = useMemo(() => buildMatrix(cells, mode, unit), [cells, mode, unit]);
@@ -184,10 +184,10 @@ export function HomeMatrix({ cells }: { cells: TodayCells }) {
             </ul>
           </InfoPopover>
           <Link
-            href="/bandingkan"
+            href={compareHref}
             className="text-sm font-semibold whitespace-nowrap text-gold no-underline hover:text-text"
           >
-            Semua gramasi &amp; sumber →
+            Bandingkan riwayatnya →
           </Link>
         </div>
       </div>

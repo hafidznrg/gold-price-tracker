@@ -111,10 +111,10 @@ Prioritas: **P0** = wajib untuk rilis publik (MVP) · **P1** = wajib untuk v1 le
 | FR-27 | Mode nilai: nominal Rp, per gram, indeks (=100 di awal periode), % perubahan | P1 | 4 |
 | FR-28 | Agregasi: harian, mingguan, bulanan (penutupan periode, opsional min–maks) | P1 | 4 |
 | FR-29 | Pasangan spread bebas: harga jual sumber A vs buyback sumber B | P1 | 4 |
-| FR-30 | Halaman **Bandingkan**: Antam vs UBS vs Galeri24 vs Tabungan Emas pada berat sama (per gram), termasuk Antam LM vs Antam Pegadaian | P1 | 4 |
+| FR-30 | **Bandingkan**: Antam vs UBS vs Galeri24 vs Tabungan Emas pada berat sama (per gram), termasuk Antam LM vs Antam Pegadaian — sejak D-70 berupa preset di Riwayat harga (Explorer), bukan halaman sendiri | P1 | 4 |
 | FR-31 | Halaman **Kalkulator**: beli tanggal X di sumber A, jual hari ini ke sumber B → untung/rugi dan titik impas | P1 | 4 |
 | FR-32 | **Grafik kelipatan** (skala log): emas Rp/gram vs emas US$/oz vs kurs, pilihan tahun dasar dan agregasi, titik spot hari ini bergaris putus, anotasi peristiwa dari `config/events.yml`, subjudul kelipatan + CAGR otomatis | P1 | 4 |
-| FR-33 | **Premi Antam vs spot**: harga Antam 1 g ÷ Rp/gram spot − 1, dari waktu ke waktu | P1 | 4 |
+| FR-33 | **Premi Antam vs spot**: harga Antam 1 g ÷ Rp/gram spot − 1, dari waktu ke waktu (di halaman Kelipatan sejak D-70) | P1 | 4 |
 | FR-34 | API statis: `/data/latest.json`, `/data/series/{source}-{brand}.json`, `/data/macro/*.json` | P1 | 4 |
 | FR-35 | Hari tanpa data diisi *forward-fill* berlabel secara bawaan; opsi menampilkan celah (D-55) | P1 | 4 |
 | FR-36 | Halaman **Kualitas data**: kelengkapan per sumber per bulan, riwayat run, insiden | P2 | 5 |

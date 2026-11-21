@@ -9,11 +9,6 @@ const PAGES = [
     marker: /Rp\s?\d{1,3}(\.\d{3})+/,
   },
   {
-    path: '/bandingkan',
-    heading: /Emas fisik dan tabungan\s+di berat yang sama/,
-    marker: /Rp\s?\d{1,3}(\.\d{3})+/,
-  },
-  {
     path: '/kalkulator',
     heading: /Kalau dijual hari ini,\s+untung berapa\?/,
     marker: /Rp\s?\d{1,3}(\.\d{3})+/,
@@ -439,58 +434,46 @@ test.describe('EMASKU / Hartadinata (Fase 7)', () => {
   });
 });
 
-test.describe('Bandingkan', () => {
-  const START = '/bandingkan?w=5&m=idx&r=6B';
-
-  async function expectState(page: Page) {
-    await expect(page.getByRole('radio', { name: '5 g', exact: true })).toBeChecked();
-    await expect(page.getByRole('radio', { name: 'Indeks', exact: true })).toBeChecked();
-    await expect(page.getByRole('radio', { name: '6B', exact: true })).toBeChecked();
-    await expect(page.getByRole('heading', { name: /Indeks harga jual .* 5 g/ })).toBeVisible();
-    await expect(page.getByRole('heading', { name: /Hari ini . 5 g/ })).toBeVisible();
-  }
-
-  test('gramasi, mode, dan rentang dipulihkan saat reload', async ({ page }) => {
+test.describe('Bandingkan (pengalih ke Riwayat harga, D-70)', () => {
+  test('tautan lama diteruskan: gramasi, mode, dan rentang dipertahankan', async ({ page }) => {
     const errors = collectErrors(page);
-    await page.goto(START);
-    await expectState(page);
-    await page.reload();
-    await expectState(page);
+    await page.goto('/bandingkan?w=5&m=idx&r=6B');
+    await expect(page).toHaveURL(/\/explorer\?/);
     const q = new URL(page.url()).searchParams;
-    expect([q.get('w'), q.get('m'), q.get('r')]).toEqual(['5', 'idx', '6B']);
+    expect(q.get('s')).toContain('-5-sell');
+    expect([q.get('m'), q.get('r')]).toEqual(['idx', '6B']);
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText(/Telusuri setiap seri harga/);
     await page.waitForLoadState('load');
     expect(errors).toEqual([]);
   });
 
-  test('mengubah pilihan memperbarui URL; bawaan tidak ditulis', async ({ page }) => {
+  test('tanpa parameter: preset 1 g per gram', async ({ page }) => {
     await page.goto('/bandingkan');
-    await page.getByRole('radio', { name: '10 g', exact: true }).click();
-    await page.getByRole('radio', { name: 'Indeks', exact: true }).click();
-    await expect(page).toHaveURL(/[?&]w=10(&|$)/);
-    await expect(page).toHaveURL(/[?&]m=idx(&|$)/);
-    await page.getByRole('radio', { name: '1 g', exact: true }).click();
-    await page.getByRole('radio', { name: 'Per gram', exact: true }).click();
-    await expect(page).not.toHaveURL(/[?&](w|m)=/);
+    await expect(page).toHaveURL(/\/explorer\?/);
+    const q = new URL(page.url()).searchParams;
+    expect(q.get('s')).toContain('-1-sell');
+    expect(q.get('m')).toBe('gram');
   });
 
-  test('baris Lotus Archi dan Galeri24 punya buyback; catatan dua harga Antam', async ({
+  test('preset "Bandingkan semua brand" di Riwayat harga mengganti seri dan mempertahankan rentang', async ({
     page,
   }) => {
-    await page.goto('/bandingkan');
-    const table = page.getByRole('table', { name: 'Perbandingan hari ini' });
-    const lotus = table.getByRole('row').filter({ hasText: 'Lotus Archi' });
-    await expect(lotus).toHaveCount(1);
-    await expect(lotus).toContainText('Galeri24');
-    await expect(lotus.getByRole('cell').nth(3)).toContainText(/Rp\s?\d/);
-    await expect(
-      table.getByRole('row').filter({ hasText: 'Pegadaian' }).filter({ hasText: 'Galeri24 ·' }),
-    ).toHaveCount(0);
-    await page.getByRole('button', { name: 'Sumber & catatan' }).click();
-    await expect(page.getByText(/Antam di Galeri24 punya dua harga buyback/)).toBeVisible();
+    await page.goto('/explorer?r=6B');
+    const group = page.getByRole('radiogroup', { name: 'Gramasi pembanding' });
+    await expect(group.getByRole('radio', { checked: true })).toHaveCount(0);
+    await group.getByRole('radio', { name: '5 g', exact: true }).click();
+    await expect(group.getByRole('radio', { name: '5 g', exact: true })).toBeChecked();
+    await expect(page).toHaveURL(/[?&]m=gram(&|$)/);
+    const q = new URL(page.url()).searchParams;
+    expect(q.get('s')).toContain('-5-sell');
+    expect(q.get('s')).not.toContain('buyback');
+    expect(q.get('r')).toBe('6B');
   });
+});
 
-  test('premi Antam memuat penjelasan dan peringatan spot indikatif', async ({ page }) => {
-    await page.goto('/bandingkan');
+test.describe('Kelipatan: premi Antam', () => {
+  test('bagian premi memuat penjelasan dan peringatan spot indikatif', async ({ page }) => {
+    await page.goto('/kelipatan');
     await expect(page.getByRole('heading', { name: /Berapa mahal emas ritel/ })).toBeVisible();
     await expect(page.getByText(/Spot dunia bersifat indikatif/)).toBeVisible();
     await expect(page.getByText('Ongkos cetak & sertifikat')).toBeVisible();
@@ -714,7 +697,7 @@ test.describe('Kalkulator', () => {
   });
 });
 
-test('navigasi utama memuat ketujuh halaman dan semua tautannya sampai', async ({ page }) => {
+test('navigasi utama memuat keenam halaman dan semua tautannya sampai', async ({ page }) => {
   const errors = collectErrors(page);
   await page.goto('/');
   const nav = page.getByRole('navigation', { name: 'Navigasi utama' }).first();
@@ -756,7 +739,7 @@ test('menu bawah HP: empat tab utama, "Lainnya" membuka sisa halaman dan tombol 
   await more.click();
   await expect(more).toHaveAttribute('aria-expanded', 'true');
   await expect(nav.getByRole('switch', { name: 'Mode gelap' })).toBeVisible();
-  await nav.locator('a[href="/kalkulator"]').click();
+  await nav.locator('a[href="/kelipatan"]').click();
   await expect(page.getByRole('heading', { level: 1 })).toHaveText(PAGES[4].heading);
   await expect(more).toHaveAttribute('aria-expanded', 'false');
   await expect(more).toHaveClass(/text-gold-strong/);

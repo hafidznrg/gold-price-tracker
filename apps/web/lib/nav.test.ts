@@ -4,12 +4,11 @@ import { describe, expect, it } from 'vitest';
 import { NAV_ITEMS, isActivePath } from './nav';
 
 describe('NAV_ITEMS', () => {
-  it('memuat ketujuh halaman, tanpa duplikat, dan tiap rute punya page.tsx', () => {
+  it('memuat keenam halaman, tanpa duplikat, dan tiap rute punya page.tsx', () => {
     expect(NAV_ITEMS.map((i) => i.href)).toEqual([
       '/',
       '/explorer',
       '/spread',
-      '/bandingkan',
       '/kalkulator',
       '/kelipatan',
       '/data',

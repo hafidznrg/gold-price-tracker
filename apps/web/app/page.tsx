@@ -17,7 +17,7 @@ import {
   formatTimeWib,
   jakartaDateOf,
 } from '@/lib/format';
-import { compareOptions, todayCells } from '@/lib/bandingkan';
+import { compareOptions, comparePresetHref, todayCells } from '@/lib/bandingkan';
 import { calendarFromMeta } from '@/lib/calendar';
 import { explorerOptions } from '@/lib/explorer';
 import { TREND_DEFS } from '@/lib/home-matrix';
@@ -181,7 +181,10 @@ export default function HomePage() {
         </div>
       </section>
 
-      <HomeMatrix cells={cells} />
+      <HomeMatrix
+        cells={cells}
+        compareHref={comparePresetHref(1, compareOptions(explorerOptions(meta)))}
+      />
       <HomeTrend options={trendOptions} asOf={asOf} calendar={calendarFromMeta(meta)} />
       <HomeEducation />
     </>
