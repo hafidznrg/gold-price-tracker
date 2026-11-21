@@ -1,10 +1,12 @@
 'use client';
 
+import Link from 'next/link';
 import { useEffect, useId, useRef, useState } from 'react';
 import { SourceStamp } from '@/components/source-stamp';
 import { useViewportClamp } from '@/components/use-viewport-clamp';
 import type { ColorToken } from '@/lib/data';
 import { EMPTY, changeDirection, formatChangeRupiah, formatPct, formatRupiah } from '@/lib/format';
+import { CARD_BRAND_ID } from '@/lib/momen';
 import type { CardModel } from '@/lib/today';
 import { cn } from '@/lib/utils';
 
@@ -57,7 +59,7 @@ export function PriceCard({
   return (
     <article
       aria-label={c.title}
-      className="flex min-w-0 flex-col gap-3.5 rounded-card-sm border border-line bg-surface px-5 py-[18px]"
+      className="relative flex min-w-0 flex-col gap-3.5 rounded-card-sm border border-line bg-surface px-5 py-[18px] transition-[border-color,box-shadow] hover:border-goldline hover:shadow-md"
     >
       <div className="flex min-w-0 flex-col gap-1.5">
         {/* Judul dan keterangan satuan ditumpuk (bukan satu baris) agar tidak saling patah di kartu
@@ -67,10 +69,17 @@ export function PriceCard({
             <div className="flex items-center gap-[9px]">
               <span className={cn('size-2.5 flex-none rounded-[3px]', DOT[c.color])} />
               <h2 className="m-0 truncate text-base leading-snug font-semibold">{c.title}</h2>
+              {/* Stretched link (D-76): tautan kosong menutupi seluruh kartu; tombol ⓘ di atasnya
+                  (z-[1]). Di luar <h2> agar nama heading tidak berubah. */}
+              <Link
+                href={`/explorer?b=${CARD_BRAND_ID[c.id] ?? c.id}&v=both`}
+                aria-label={`${c.title} — lihat riwayat harga`}
+                className="absolute inset-0 rounded-card-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold"
+              />
             </div>
             <p className="m-0 mt-0.5 truncate pl-[19px] text-xs text-faint">{c.unit}</p>
           </div>
-          <div ref={boxRef} className="relative flex-none">
+          <div ref={boxRef} className="relative z-[1] flex-none">
             <button
               type="button"
               aria-expanded={open}

@@ -101,6 +101,53 @@ test.describe('Beranda', () => {
     await expect(page.getByText('Kenapa buyback Galeri24 kosong?')).toHaveCount(0);
   });
 
+  test('Momen hari ini: 1-3 tautan ke Riwayat harga dengan kaki disclaimer', async ({ page }) => {
+    await page.goto('/');
+    const block = page.getByTestId('home-momen');
+    await expect(block.getByRole('heading', { name: 'Momen hari ini', exact: true })).toBeVisible();
+    const links = block.getByRole('link');
+    const n = await links.count();
+    expect(n).toBeGreaterThanOrEqual(1);
+    expect(n).toBeLessThanOrEqual(3);
+    for (let i = 0; i < n; i++) {
+      expect(await links.nth(i).getAttribute('href')).toMatch(/^\/explorer(\?|$)/);
+    }
+    await expect(block).toContainText('Ringkasan otomatis dari data, bukan rekomendasi investasi.');
+  });
+
+  test('kartu Antam bisa diklik ke Riwayat harga; tombol ⓘ tetap membuka popover', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await page.goto('/');
+    const link = page.getByRole('link', { name: 'Antam — lihat riwayat harga', exact: true });
+    await expect(link).toHaveAttribute('href', '/explorer?b=lm-antam&v=both');
+    // Klik ⓘ: popover terbuka dan tidak berpindah halaman.
+    await page.getByRole('button', { name: 'Keterangan Antam', exact: true }).click();
+    await expect(page.getByRole('note')).toBeVisible();
+    await expect(page).toHaveURL(/\/$/);
+    await page.keyboard.press('Escape');
+    // Klik badan kartu: pindah ke Riwayat harga dengan b dan v.
+    await page
+      .getByRole('article', { name: 'Antam', exact: true })
+      .click({ position: { x: 60, y: 90 } });
+    await expect(page).toHaveURL(/\/explorer\?/);
+    const q = new URL(page.url()).searchParams;
+    expect(q.get('b')).toBe('lm-antam');
+    expect(q.get('v')).toBe('both');
+  });
+
+  test('matriks: petunjuk biaya bolak-balik di mode Harga jual, tombol membuka tab Spread', async ({
+    page,
+  }) => {
+    await page.goto('/');
+    const hint = page.getByTestId('matrix-cost-hint');
+    await expect(hint).toContainText('Termurah dibeli belum tentu termurah bolak-balik');
+    await hint.getByRole('button', { name: 'tab Spread', exact: true }).click();
+    await expect(page.getByRole('radio', { name: 'Spread', exact: true })).toBeChecked();
+    await expect(page.getByTestId('matrix-cost-hint')).toHaveCount(0);
+  });
+
   test('matriks gramasi: ganti mode menandai sel terbaik dan memperbarui hint', async ({
     page,
   }) => {
@@ -117,7 +164,7 @@ test.describe('Beranda', () => {
     await expect(table.getByTestId('matrix-best').first()).toHaveText('tertinggi');
 
     await page.getByRole('radio', { name: 'Spread', exact: true }).click();
-    await expect(table.getByTestId('matrix-best').first()).toHaveText('terkecil');
+    await expect(table.getByTestId('matrix-best').first()).toHaveText('bolak-balik termurah');
     await expect(table).toContainText('%');
 
     await page.getByRole('radio', { name: 'Per gram', exact: true }).click();

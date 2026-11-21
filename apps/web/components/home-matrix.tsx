@@ -187,7 +187,7 @@ export function HomeMatrix({ cells, compareHref }: { cells: TodayCells; compareH
         {rows.length > 0 ? (
           <div
             data-testid="matrix-legend"
-            className="flex items-center gap-2 border-t border-line px-6 py-2.5 text-xs text-muted max-sm:px-4"
+            className="flex flex-wrap items-center gap-x-4 gap-y-1.5 border-t border-line px-6 py-2.5 text-xs text-muted max-sm:px-4"
           >
             <span
               aria-hidden="true"
@@ -196,6 +196,19 @@ export function HomeMatrix({ cells, compareHref }: { cells: TodayCells; compareH
             <span>
               <b className="font-semibold text-gold-strong">{BEST_LABEL[mode]}</b> di tiap gramasi
             </span>
+            {mode === 'jual' ? (
+              <span data-testid="matrix-cost-hint" className="sm:ml-auto sm:text-right">
+                Termurah dibeli belum tentu termurah bolak-balik — lihat{' '}
+                <button
+                  type="button"
+                  onClick={() => setMode('spread')}
+                  className="cursor-pointer border-none bg-transparent p-0 text-xs font-semibold text-gold underline hover:text-text"
+                >
+                  tab Spread
+                </button>
+                .
+              </span>
+            ) : null}
           </div>
         ) : null}
         <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2.5 border-t border-line px-6 py-3.5 text-sm max-sm:px-4">

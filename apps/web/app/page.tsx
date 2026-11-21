@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { Freshness, type FreshnessItem } from '@/components/freshness';
 import { HomeEducation } from '@/components/home-education';
+import { HomeMomen } from '@/components/home-momen';
 import { PriceCard } from '@/components/price-card';
 import { SITE_NAME, SITE_TAGLINE } from '@/components/site-header';
 import { HomeMatrix } from '@/components/home-matrix';
@@ -21,6 +22,7 @@ import { compareOptions, comparePresetHref, todayCells } from '@/lib/bandingkan'
 import { calendarFromMeta } from '@/lib/calendar';
 import { explorerOptions } from '@/lib/explorer';
 import { TREND_DEFS } from '@/lib/home-matrix';
+import { buildMomen } from '@/lib/momen';
 import { buildCards } from '@/lib/today';
 
 const NA = 'Belum tersedia';
@@ -100,6 +102,7 @@ export default function HomePage() {
   const latest = readLatest();
   const meta = readMeta();
   const cards = buildCards(latest);
+  const momen = buildMomen(cards);
   const reserveExtra = cards.some((c) => c.extra);
   const cells = todayCells(latest);
   const trendOptions = compareOptions(explorerOptions(meta)).filter((o) =>
@@ -161,6 +164,9 @@ export default function HomePage() {
             </div>
             <Freshness items={freshItems} latestLabel={latestLabel} builtAt={meta.built_at} />
           </div>
+
+          {/* Momen hari ini (D-76): dihitung saat build dari kartu dan spark 30 hari. */}
+          <HomeMomen items={momen} />
 
           {/* P7-10 (diubah 21 Nov setelah tinjauan pemilik): satu grid 6 kartu seragam (Antam, UBS,
               Galeri24, Lotus Archi, EMASKU, Tabungan Emas). HP 1 kolom, tablet 2, desktop (>= 1024

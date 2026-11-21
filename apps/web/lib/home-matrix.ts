@@ -27,7 +27,7 @@ export const MATRIX_COLS: readonly CompareDef[] = pick([
 export const BEST_LABEL: Record<MatrixMode, string> = {
   jual: 'termurah',
   buyback: 'tertinggi',
-  spread: 'terkecil',
+  spread: 'bolak-balik termurah',
 };
 export const MATRIX_HINT: Record<MatrixMode, string> = {
   jual: 'Harga jual termurah di tiap gramasi ditandai.',

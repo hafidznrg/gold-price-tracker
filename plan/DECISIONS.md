@@ -694,3 +694,16 @@ Log keputusan produk dan teknis (format ringkas ala ADR). Keputusan baru ditamba
 - Kelipatan: bagian premi Antam vs spot tampil tepat di bawah grafik, sebelum tabel "Angka di balik garis".
 - Tabel per gramasi beranda: bayangan pudar di tepi kanan selama masih ada kolom tersembunyi (kolom gramasi sudah tetap).
 **Konsekuensi:** di akhir pekan hitungan "hari ini" wajar kurang dari total (JISDOR dan sebagian sumber ritel tidak terbit); panel per sumber menjelaskannya.
+
+### D-76 — Beranda: blok "Momen hari ini", kartu brand bisa diklik, petunjuk biaya bolak-balik (P2 evaluasi 21 Nov 2026)
+
+**Konteks:** tagline situs "Temukan momen terbaik membeli emas", tetapi beranda hanya menyajikan angka; sinyal seperti spread Antam LM 16% (≈ 2× rata-rata 30 hari) tidak disorot. Kartu brand adalah jalan buntu (tidak bisa diklik). Tanda "termurah" di tabel per gramasi hanya menilai harga jual, padahal biaya bolak-balik (spread) yang menentukan untung-rugi.
+**Keputusan:**
+- **Blok "Momen hari ini"** di hero, di antara baris judul/status dan kartu: maksimal 3 kalimat deskriptif yang dihitung saat build dari `latest.json` (kartu Hari ini + `spark` 30 hari kalender), tanpa kata perintah (beli/jual/tunggu). Aturan, urut prioritas:
+  1. **Spread melebar**: brand dengan spread hari ini ≥ 1,25× rata-rata spread 30 harinya (≥ 10 hari pasangan jual+buyback). "Spread Antam (Logam Mulia) 16,0%, 1,8× rata-rata 30 hari (8,9%)." Bila beberapa, yang rasionya terbesar disebut, sisanya "+n brand lain".
+  2. **Posisi harga**: jumlah brand yang harga jualnya sama dengan terendah (atau tertinggi) 30 harinya. "Harga jual 5 dari 6 brand ada di titik terendah 30 hari." Dilewati bila nol.
+  3. **Bolak-balik tersempit**: spread % terkecil di antara kartu ber-buyback; bila yang tersempit Tabungan Emas, keping fisik tersempit ikut disebut. "Selisih jual-beli tersempit: Tabungan Emas 3,19% · keping fisik: Galeri24 5,96%."
+  - Tiap kalimat bertaut ke Riwayat harga dengan setelan yang relevan (mis. `?b=lm-antam&v=both`). Kaki blok: "Ringkasan otomatis dari data, bukan rekomendasi investasi." Bila tak ada kalimat yang lolos, blok tidak tampil.
+- **Kartu brand bisa diklik** (pola *stretched link* agar tombol ⓘ tetap bisa ditekan): membuka Riwayat harga untuk brand itu dengan Tampilkan = Jual + spread (`?b={id}&v=both`). Peta kartu → id: `logammulia-antam`→`lm-antam`, `ubslifestyle-ubs`→`ubsl-ubs`, `galeri24-galeri24`→`g24-g24`, `galeri24-lotusarchi`→`g24-lotus`, `hrtagold-emasku`→`hr-emasku`, `pegadaian-pegadaian`→`tab`.
+- **Tabel per gramasi**: pada mode Harga jual, legenda menambah petunjuk "Termurah dibeli belum tentu termurah bolak-balik — lihat tab Spread." dan penanda di tab Spread dinamai **"bolak-balik termurah"** (sebelumnya "terkecil").
+**Konsekuensi:** blok bergantung pada spark 30 hari di `latest.json` (tanpa berkas tambahan). Kalimat bersifat deskriptif; disclaimer "bukan rekomendasi investasi" tetap berlaku.
