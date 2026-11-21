@@ -178,8 +178,8 @@ export function HomeMatrix({ cells }: { cells: TodayCells }) {
               </li>
               <li>
                 Pegadaian tidak menampilkan harga buyback untuk emas batangan; Galeri24 menampilkan
-                buyback semua gramasi. Hartadinata (hrtagold.id) mencatat buyback per keping untuk
-                tiap gramasi; harganya sudah termasuk pajak.
+                buyback semua gramasi. EMASKU (hrtagold.id) mencatat buyback per keping untuk tiap
+                gramasi; harganya sudah termasuk pajak.
               </li>
             </ul>
           </InfoPopover>

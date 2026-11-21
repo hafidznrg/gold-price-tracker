@@ -302,7 +302,7 @@ describe('Galeri24 dan Lotus Archi (P6-10)', () => {
       'Galeri24: Galeri24 → Galeri24',
       'Antam: Logam Mulia → Galeri24 (non-Pegadaian)',
       'Lotus Archi: lotusarchi.com → lotusarchi.com',
-      'Hartadinata: HRTA Gold → HRTA Gold',
+      'EMASKU: HRTA Gold → HRTA Gold',
       'UBS: Pegadaian → UBS Lifestyle',
       'UBS: UBS Lifestyle → UBS Lifestyle',
     ]);

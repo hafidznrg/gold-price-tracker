@@ -39,7 +39,7 @@ const BRANDS: readonly Brand[] = ['antam', 'ubs', 'galeri24', 'pegadaian', 'lotu
 
 /** Varian yang menjadi series sendiri di Explorer (tidak digabung ke series biasa). */
 export const NON_PEGADAIAN = 'non_pegadaian';
-/** Hartadinata Prime (hrtagold, 25/50/100 g): seri sendiri, tidak digabung ke Gold (P7-09). */
+/** EMASKU Prime (hrtagold, 25/50/100 g): seri sendiri, tidak digabung ke Gold (P7-09). */
 export const PRIME = 'prime';
 /** Varian yang menjadi series sendiri di Explorer. */
 export type SeparateVariant = typeof NON_PEGADAIAN | typeof PRIME;
@@ -68,7 +68,7 @@ export interface SeriesPick {
   w: number;
   price: PriceField;
   /**
-   * `non_pegadaian` (Antam di Galeri24): series buyback terpisah; `prime` (Hartadinata): seri Prime
+   * `non_pegadaian` (Antam di Galeri24): series buyback terpisah; `prime` (EMASKU): seri Prime
    * sendiri. Keduanya tidak digabung ke seri biasa.
    */
   variant?: SeparateVariant;
@@ -175,7 +175,7 @@ export interface ExplorerOption {
   buybackFromGram?: boolean;
   /**
    * `non_pegadaian` = series buyback sendiri (keping dibeli di luar Pegadaian), tanpa harga jual;
-   * `prime` = seri Hartadinata Prime (jual + buyback), terpisah dari Gold.
+   * `prime` = seri EMASKU Prime (jual + buyback), terpisah dari Gold.
    */
   variant?: SeparateVariant;
 }

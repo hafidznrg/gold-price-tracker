@@ -113,7 +113,7 @@ export const ALL_DEFS: readonly CompareDef[] = [
 /**
  * Series halaman Bandingkan dan beranda, urut mockup: Antam LM, Antam dan UBS Pegadaian (garis
  * putus-putus), UBS Lifestyle, Galeri24 dan Lotus Archi dari Galeri24 (garis penuh, ada buyback),
- * Hartadinata (hrtagold.id, garis penuh, buyback per keping), Tabungan Emas. Harga Galeri24/Lotus di Pegadaian tidak digambar (lihat `ALL_DEFS`).
+ * EMASKU (hrtagold.id, garis penuh, buyback per keping), Tabungan Emas. Harga Galeri24/Lotus di Pegadaian tidak digambar (lihat `ALL_DEFS`).
  */
 const COMPARE_IDS: readonly string[] = [
   'lm-antam',

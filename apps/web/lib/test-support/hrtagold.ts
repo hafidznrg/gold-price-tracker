@@ -8,7 +8,7 @@ import type {
 } from '../data';
 import { seriesKey } from '../data';
 
-// Fixture sintetis Hartadinata (hrtagold.id, Fase 7) untuk uji unit: Gold 17 gramasi + Prime 25/50/100 g,
+// Fixture sintetis EMASKU (hrtagold.id, Fase 7) untuk uji unit: Gold 17 gramasi + Prime 25/50/100 g,
 // jual dan buyback per keping. Dipakai supaya logika UI teruji walau `data/prices/hrtagold/` belum ada.
 
 export const HRTA_FILE = 'hrtagold-emasku';
@@ -113,7 +113,7 @@ export function hrtaHighlight(): Highlight {
   };
 }
 
-/** `latest.json` yang hanya memuat Hartadinata (digabung ke latest lain lewat spread di tes). */
+/** `latest.json` yang hanya memuat EMASKU (digabung ke latest lain lewat spread di tes). */
 export function hrtaLatest(): LatestFile {
   return {
     schema_version: '1',
@@ -125,7 +125,7 @@ export function hrtaLatest(): LatestFile {
   };
 }
 
-/** `meta.series` Hartadinata untuk `explorerOptions`. */
+/** `meta.series` EMASKU untuk `explorerOptions`. */
 export function hrtaMetaSeries(): MetaSeries[] {
   return [
     ...GOLD_WEIGHTS.map((w) => ['', w] as const),

@@ -41,7 +41,7 @@ export interface CardModel {
   buySpark: (number | null)[] | null;
   /** Keterangan kaki kartu. */
   note: string;
-  /** Baris tambahan kecil di kaki kartu (Hartadinata: harga Prime 25 g); null = tanpa. Bukan kartu sendiri. */
+  /** Baris tambahan kecil di kaki kartu (EMASKU: harga Prime 25 g); null = tanpa. Bukan kartu sendiri. */
   extra: string | null;
   noBuyback: string;
 }
@@ -70,11 +70,11 @@ function cardNote(h: Highlight, all: Highlight[]): string {
     return `Harga dan buyback dari situs Galeri24.${p ? `${p} (tanpa buyback).` : ''}${la}`;
   }
   if (h.source === 'hrtagold')
-    return 'Harga jual dan buyback keping 1 g dari situs HRTA Gold (Hartadinata). Harga sudah termasuk pajak menurut Syarat & Ketentuan situs. Seri Prime (25/50/100 g) terpisah dari Gold.';
+    return 'Harga jual dan buyback keping 1 g dari situs EMASKU (Hartadinata). Harga sudah termasuk pajak menurut Syarat & Ketentuan situs. Seri Prime (25/50/100 g) terpisah dari Gold.';
   return 'Pegadaian tidak menampilkan harga buyback untuk emas batangan.';
 }
 
-/** Prime 25 g untuk catatan kartu Hartadinata; null bila seri Prime belum ada/tidak berjalan. */
+/** Prime 25 g untuk catatan kartu EMASKU; null bila seri Prime belum ada/tidak berjalan. */
 function primeExtra(h: Highlight, latest: LatestFile): string | null {
   if (h.source !== 'hrtagold') return null;
   const p = latest.series.find(

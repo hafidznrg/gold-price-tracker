@@ -163,7 +163,7 @@ export default function HomePage() {
           </div>
 
           {/* P7-10 (diubah 21 Nov setelah tinjauan pemilik): satu grid 6 kartu seragam (Antam, UBS,
-              Galeri24, Lotus Archi, Hartadinata, Tabungan Emas). HP 1 kolom, tablet 2, desktop (>= 1024
+              Galeri24, Lotus Archi, EMASKU, Tabungan Emas). HP 1 kolom, tablet 2, desktop (>= 1024
               px) 3 kolom, jadi 3 x 2. Kartu tanpa data tidak muncul; grid cukup berisi sisanya. */}
           <div
             role="list"

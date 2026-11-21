@@ -59,7 +59,7 @@ const WITH = hrtaLatest();
 const OPTIONS = explorerOptions({ series: hrtaMetaSeries() });
 const SORTED_GOLD = [...GOLD_WEIGHTS].sort((a, b) => a - b);
 
-describe('katalog Hartadinata', () => {
+describe('katalog EMASKU', () => {
   it('varian prime berlabel "Prime", bukan non-Pegadaian atau produksi', () => {
     expect(variantLabel('prime')).toBe('Prime');
     expect(variantLabel('non_pegadaian')).toBe('non-Pegadaian');
@@ -80,7 +80,7 @@ describe('katalog Hartadinata', () => {
     );
     expect(FILE_ORDER.indexOf(HRTA_FILE)).toBe(FILE_ORDER.indexOf('galeri24-lotusarchi') + 1);
     expect(seriesGroupLabel({ source: 'hrtagold', brand: 'emasku', product: 'gold_bar' })).toBe(
-      'Hartadinata · HRTA Gold',
+      'EMASKU · HRTA Gold',
     );
     expect(sourceStampText('hrtagold', '2026-11-21', '2026-11-21T08:12:00+07:00')).toContain(
       'hrtagold.id',
@@ -88,14 +88,14 @@ describe('katalog Hartadinata', () => {
   });
 });
 
-describe('Hari ini: kartu Hartadinata (P7-11)', () => {
+describe('Hari ini: kartu EMASKU (P7-11)', () => {
   const cards = buildCards(WITH);
   const card = cards.find((c) => c.id === HRTA_FILE)!;
 
   it('satu kartu Gold 1 g, jual + buyback per keping, tanpa kartu Prime', () => {
     expect(cards.filter((c) => c.source === 'hrtagold')).toHaveLength(1);
     expect(card).toMatchObject({
-      title: 'Hartadinata',
+      title: 'EMASKU',
       color: 'emasku',
       kind: 'fisik',
       sell: goldSell(1),
@@ -122,13 +122,13 @@ describe('Hari ini: kartu Hartadinata (P7-11)', () => {
 });
 
 describe('Spread (P7-12)', () => {
-  it('opsi Hartadinata tersembunyi tanpa file series, muncul bila ada', () => {
+  it('opsi EMASKU tersembunyi tanpa file series, muncul bila ada', () => {
     expect(hasHrtaEmasku(EMPTY_LATEST)).toBe(false);
     const none = buildOptions(EMPTY_LATEST);
     expect(none.sell.map((o) => o.id)).not.toContain('hr-emasku');
     expect(none.buyback.map((o) => o.id)).not.toContain('hr-emasku');
     expect(barSources(EMPTY_LATEST).map((b) => b.id)).not.toContain('hr-emasku');
-    expect(compareItems(EMPTY_LATEST).map((c) => c.name)).not.toContain('Hartadinata 1 g');
+    expect(compareItems(EMPTY_LATEST).map((c) => c.name)).not.toContain('EMASKU 1 g');
 
     expect(hasHrtaEmasku(WITH)).toBe(true);
     const { sell, buyback } = buildOptions(WITH);
@@ -142,7 +142,7 @@ describe('Spread (P7-12)', () => {
     expect(buyback.map((o) => o.id)).toContain('hr-emasku');
     expect(buybackChoices(hr, buyback).map((o) => o.id)).toEqual(['hr-emasku']);
     expect(resolveBuyback(hr, buyback, null)?.id).toBe('hr-emasku');
-    expect(compareItems(WITH).map((c) => c.name)).toContain('Hartadinata 1 g');
+    expect(compareItems(WITH).map((c) => c.name)).toContain('EMASKU 1 g');
   });
 
   it('todayPair: jual dan buyback Gold 1 g, bukan Prime', () => {
@@ -158,11 +158,7 @@ describe('Spread (P7-12)', () => {
 
   it('batang per gramasi: 17 gramasi, buyback per keping (bukan 1 g × berat)', () => {
     const bar = barSources(WITH).find((b) => b.id === 'hr-emasku')!;
-    expect(bar).toMatchObject({
-      label: 'HRTA Gold · Hartadinata',
-      source: 'hrtagold',
-      color: 'emasku',
-    });
+    expect(bar).toMatchObject({ label: 'HRTA Gold · EMASKU', source: 'hrtagold', color: 'emasku' });
     expect(bar.rows).toHaveLength(GOLD_WEIGHTS.length);
     const r1000 = bar.rows.find((r) => r.w === 1000)!;
     expect(r1000.value).toBeCloseTo(
@@ -195,7 +191,7 @@ describe('Bandingkan dan beranda (P7-12)', () => {
     expect(rows[0]).toMatchObject({ sell: goldSell(1), buyback: goldBuyback(1) });
   });
 
-  it('matriks: kolom Hartadinata terisi', () => {
+  it('matriks: kolom EMASKU terisi', () => {
     const cells = todayCells(WITH);
     const col = MATRIX_COLS.findIndex((d) => d.id === 'hr-emasku');
     const r = buildMatrix(cells, 'jual', 'keping').find((x) => x.w === 1)!;
@@ -229,11 +225,11 @@ describe('Explorer (P7-13)', () => {
     expect(prime[0]!.first.buyback).not.toBeNull();
   });
 
-  it('nama brand dan kunci: "Hartadinata Prime" / emasku_prime', () => {
+  it('nama brand dan kunci: "EMASKU Prime" / emasku_prime', () => {
     const prime = OPTIONS.find((o) => o.variant === 'prime')!;
     const gold = OPTIONS.find((o) => !o.variant)!;
-    expect(optionBrandName(prime)).toBe('Hartadinata Prime');
-    expect(optionBrandName(gold)).toBe('Hartadinata');
+    expect(optionBrandName(prime)).toBe('EMASKU Prime');
+    expect(optionBrandName(gold)).toBe('EMASKU');
     expect(optionBrandKey(prime)).toBe('emasku_prime');
     expect(optionBrandKey(gold)).toBe('emasku');
   });
@@ -263,7 +259,7 @@ describe('Explorer (P7-13)', () => {
 });
 
 describe('Kalkulator (P7-12)', () => {
-  it('Hartadinata tempat beli 17 gramasi; buyback per keping, tanpa "Berat lain"', () => {
+  it('EMASKU tempat beli 17 gramasi; buyback per keping, tanpa "Berat lain"', () => {
     const d = ALL_DEFS.find((x) => x.id === 'hr-emasku')!;
     expect(buyDefs(OPTIONS).map((x) => x.id)).toContain('hr-emasku');
     expect(buyDefs([]).map((x) => x.id)).not.toContain('hr-emasku');
