@@ -122,7 +122,7 @@ items:
 
   # EMASKU (Hartadinata), hrtagold.id (P7-05) — 17 gramasi Gold 0,1–1.000 g; Prime 25/50/100 g ikut
   # grup ini (kunci katalog tanpa variant). Buyback per keping untuk semua gramasi.
-  # `active_from` sementara = tanggal commit; HARUS sama dengan tanggal run pertama bila aktivasi (P7-07) lebih lambat.
+  # `active_from` = tanggal run pertama (P7-07, 21 Nov 2026).
   - source: hrtagold
     brand: emasku
     product: gold_bar

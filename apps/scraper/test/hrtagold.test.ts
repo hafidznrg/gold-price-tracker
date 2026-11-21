@@ -252,10 +252,10 @@ describe('fetchRaw', () => {
 });
 
 describe('config', () => {
-  it('sumber hrtagold terdaftar tetapi nonaktif (menunggu Q-11)', async () => {
+  it('sumber hrtagold aktif (P7-07, Q-11 diputuskan)', async () => {
     const config = await loadConfig(ROOT);
     const s = config.sources.find((x) => x.id === 'hrtagold')!;
-    expect(s).toMatchObject({ kind: 'prices', enabled: false, parser_version: '1.0.0' });
+    expect(s).toMatchObject({ kind: 'prices', enabled: true, parser_version: '1.0.0' });
     expect(s.accept_previous_day).toBe(true);
   });
 });

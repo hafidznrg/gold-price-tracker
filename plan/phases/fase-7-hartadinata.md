@@ -106,7 +106,8 @@
 
 ### Gelombang D — aktivasi
 
-- [ ] **P7-07** Aktifkan `hrtagold`. — `FR-09` · S
+- [x] **P7-07** Aktifkan `hrtagold`. — `FR-09` · S
+  - *21 Nov 2026: Q-11 diputuskan pemilik (aktifkan dan tampilkan). `enabled: true`, `active_from` 2026-11-21; run manual pertama `scrape-retail` `sources=hrtagold`. G7 mulai dihitung.*
   - **Prasyarat: Q-11 diputuskan pemilik** (izin HRTA / arsip tanpa publikasi / batal).
   - Prasyarat: P7-01 hijau dari runner, P7-05 dan P7-06 lulus, dan **P7-09 (data layer web) sudah masuk** supaya data baru tidak merusak halaman (tipe `Record` sudah lengkap).
   - `enabled: true`, satu run manual `scrape-retail` dengan `sources=hrtagold`, cek commit data + `status.json`. Watchdog membaca `config.sources`, jadi otomatis ikut dicek.

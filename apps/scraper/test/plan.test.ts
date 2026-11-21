@@ -458,7 +458,7 @@ describe('jadwal Cloudflare D-67 (konfigurasi asli, Sabtu 14 Nov 2026)', () => {
     plan(input({ config: real, schedule, now: at(wib), status }));
   const earlyOf = (r: ReturnType<typeof plan>) =>
     r.matrix.include.filter((m) => m.early).map((m) => m.source);
-  const ALL = ['ubslifestyle', 'pegadaian', 'galeri24', 'lotusarchi', 'logammulia'];
+  const ALL = ['ubslifestyle', 'pegadaian', 'galeri24', 'lotusarchi', 'logammulia', 'hrtagold'];
 
   it('konfigurasi: pegadaian dan galeri24 midday; UBS dan Lotus afternoon; Logam Mulia day', () => {
     const win = Object.fromEntries(real.sources.map((s) => [s.id, s.schedule_window]));
@@ -468,23 +468,29 @@ describe('jadwal Cloudflare D-67 (konfigurasi asli, Sabtu 14 Nov 2026)', () => {
       ubslifestyle: 'afternoon',
       lotusarchi: 'afternoon',
       logammulia: 'day',
+      hrtagold: 'day',
     });
   });
 
-  it('08.20: hanya Logam Mulia, early', () => {
+  it('08.20: Logam Mulia dan HRTA Gold (jendela day), early', () => {
     const r = run('20 1 * * *', '08:20');
-    expect(r).toMatchObject({ slot: 'retry', sources: ['logammulia'] });
-    expect(earlyOf(r)).toEqual(['logammulia']);
+    expect(r).toMatchObject({ slot: 'retry', sources: ['logammulia', 'hrtagold'] });
+    expect(earlyOf(r)).toEqual(['logammulia', 'hrtagold']);
   });
 
-  it('09.20: Logam Mulia, bukan early', () => {
+  it('09.20: Logam Mulia dan HRTA Gold, bukan early', () => {
     const r = run('20 2 * * *', '09:20');
-    expect(r.sources).toEqual(['logammulia']);
+    expect(r.sources).toEqual(['logammulia', 'hrtagold']);
     expect(earlyOf(r)).toEqual([]);
   });
 
   it('11.20: day + midday', () => {
-    expect(run('20 4 * * *', '11:20').sources).toEqual(['pegadaian', 'galeri24', 'logammulia']);
+    expect(run('20 4 * * *', '11:20').sources).toEqual([
+      'pegadaian',
+      'galeri24',
+      'logammulia',
+      'hrtagold',
+    ]);
   });
 
   it('13.20: day + midday, UBS dan Lotus Archi early', () => {

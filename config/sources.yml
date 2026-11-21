@@ -97,7 +97,7 @@ sources:
     stale_is_error_on_expected_day: false # jadi true setelah kalender terbukti (pola D-68)
     accept_previous_day: true
     parser_version: 1.0.0
-    enabled: false # true di P7-07 (menunggu Q-11)
+    enabled: true # P7-07, 21 Nov 2026 (Q-11 diputuskan pemilik)
     notes: Satu GET JSON tanpa token yang mengisi hrtagold.id/id/gold-price (Gold + Prime). Jual dan buyback per keping untuk semua gramasi. Tanpa histori.
 
   - id: xaus
