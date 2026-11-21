@@ -2,7 +2,7 @@
 
 | | |
 | --- | --- |
-| **Status** | Riset awal 17 Nov 2026. Scraper `lotusarchi@1.0.0` aktif sejak 17 Nov 2026 (P6-09, TECH-SPEC §5.8); jam terbit masih diamati (±21 Nov). Implementasi: [phases/fase-6-galeri24-lotus-archi.md](../phases/fase-6-galeri24-lotus-archi.md) (P6-07–P6-10) |
+| **Status** | Riset awal 17 Nov 2026. Scraper `lotusarchi@1.0.0` aktif sejak 17 Nov 2026 (P6-09, TECH-SPEC §5.8); jadwal final 21 Nov 2026: `afternoon`, `business_days_id` (D-68). Implementasi: [phases/fase-6-galeri24-lotus-archi.md](../phases/fase-6-galeri24-lotus-archi.md) (P6-07–P6-10) |
 | **Brand** | `lotusarchi` (baru). Emas batangan swasta 24K, 0,1–100 g, dijual di gerai Galeri24/Pegadaian dan toko resmi lotusarchi.com |
 | **Metode** | Browser biasa + fixture Pegadaian di repo. Runner GitHub (AS) **lolos** 17 Nov 2026 (P6-01) |
 

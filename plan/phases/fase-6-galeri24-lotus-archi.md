@@ -51,7 +51,7 @@
 
 ### Gelombang A — validasi akses (wajib sebelum kode produksi)
 
-- [ ] **P6-01** Probe `galeri24` dan `lotusarchi` dari runner GitHub. — `G0`-style · S
+- [x] **P6-01** Probe `galeri24` dan `lotusarchi` dari runner GitHub. — `G0`-style · S
   - Tambah target di `apps/scraper/src/probe/targets.ts` + `checks.ts` (`checkGaleri24`, `checkLotusArchi`), jalankan lewat `probe.yml`.
   - `galeri24`: `GET https://galeri24.co.id/api/gold-prices/page-data?take=1000&date={hari ini WIB}` → 200 JSON, `results` berisi keempat kode brand (Lotus Archi opsional) dengan `status = "1"`, ≥ 5 gramasi berharga per brand wajib, `date` sama untuk brand wajib. Cek juga `GET /harga-emas` memuat `<script id="__NUXT_DATA__">` (jalur fallback).
   - *Dicek lokal 17 Nov 2026: `date` diabaikan server (respons identik).* `galeri24`, satu request tambahan: `date` = kemarin. Catat apakah server memakai parameter itu (hasil bertanggal kemarin) atau mengabaikannya (hasil = hari ini). Hasilnya menentukan perilaku run terlambat (lihat P6-04).
@@ -60,6 +60,7 @@
   - Simpan fixture: `apps/scraper/test/fixtures/galeri24/` (`page-data-<tanggal>.json`, `harga-emas-<tanggal>.html`, satu fixture sintetis kasus tepi) dan `apps/scraper/test/fixtures/lotusarchi/` (`pricing-<tanggal>.html`), masing-masing dengan `README.md` seperti fixture Pegadaian. Fixture pertama boleh diambil dari terminal lokal; probe runner tetap menentukan lolos/tidaknya akses.
   - **Observasi jam terbit 3–5 hari:** `probe.yml` saat ini hanya `workflow_dispatch`. Tambah `schedule:` **sementara** (mis. 00.00, 04.00, 08.00, 12.00, 16.00 UTC = 07.00, 11.00, 15.00, 19.00, 23.00 WIB) yang hanya mem-probe `galeri24,lotusarchi`, lalu cabut setelah observasi. Yang dikonfirmasi: Galeri24 (harga tanggal D dibuat ±17.50 WIB hari D−1, revisi pagi D mis. Antam 10.14 WIB) dan lotusarchi.com (belum diketahui; 17 Nov masih menampilkan 16 Nov saat dicek).
   - *Probe runner 17 Nov 2026 08.58 WIB (run 43999485771, 43999495192): `galeri24` dan `lotusarchi` hijau dari AS. P6-09 tidak tertahan. Observasi jam terbit berjalan lewat `schedule:` sampai ±21 Nov.*
+  - *21 Nov 2026: observasi selesai (8 probe terjadwal 17–20 Nov, semua hijau). Galeri24 tanggal D sudah tampil ±11.45 WIB hari D (versi carry-over sejak malam D−1, D-66), jendela `midday` (D-67). lotusarchi.com ±11.45–12.00 WIB masih tanggal kemarin, 19.30–23.50 WIB sudah hari ini; run `afternoon` 13.20 WIB tiga kali berturut-turut langsung mendapat tanggal hari ini. Kalender dari `harga-gold` (521 tanggal sejak 27 Feb 2025): Senin–Jumat kecuali libur, Sabtu tidak menentu (11 dari 46 Sabtu 2026 kosong), Minggu tidak pernah → `business_days_id` (D-68). `schedule:` probe.yml dicabut.*
   - **Hasil P6-01 dicatat di TECH-SPEC §5.7/§5.8 dan research/*.md sebelum lanjut.** Bila lotusarchi.com diblokir dari runner → P6-09 ditandai "tertahan", fase tetap bisa selesai tanpanya.
 - [x] **P6-01b** Investigasi `GET /api/gold-prices` untuk P6-11 (dari terminal lokal, bukan runner). — S
   - Maksimal ±15 request, jeda ≥ 5 detik. Simpan contoh respons (dipangkas) di `apps/scraper/test/fixtures/galeri24/history-*.json` + README.
@@ -140,7 +141,8 @@
   - TECH-SPEC §5.7 "Galeri24 (`galeri24.ts`)" (isi dari research/galeri24.md + hasil P6-01), PRD §6 tabel sumber, WORKFLOWS bila jendela berbeda dari usulan.
   - Cabut `schedule:` sementara di `probe.yml` (P6-01) bila observasi sudah selesai.
   - Pantau 7 hari (G6).
-  - **Sisa (setelah observasi jam terbit ±21 Nov 2026):** finalkan jendela dan `update_calendar` `galeri24` + `lotusarchi`; set `stale_is_error_on_expected_day: true` untuk `lotusarchi`; cabut `schedule:` sementara di `probe.yml`; pantau G6 7 hari.
+  - *21 Nov 2026:* jadwal final (D-68): `galeri24` `daily` + `midday`; `lotusarchi` `business_days_id` + `afternoon` dengan `stale_is_error_on_expected_day: true`; `schedule:` sementara di `probe.yml` dicabut. TECH-SPEC §5.7/§5.8 diperbarui.
+  - **Sisa:** pantau G6 7 hari. `galeri24` hijau 17–21 Nov (5/7); dicentang bila hijau sampai 23 Nov.
 
 ### Gelombang D — Lotus Archi di Pegadaian
 

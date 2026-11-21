@@ -162,7 +162,12 @@ describe('watchdog', () => {
       now: new Date('2026-11-11T16:55:00Z'),
     });
     expect(r.scope).toBe('all');
-    expect(r.overdue.map((o) => o.source).sort()).toEqual(['galeri24', 'jisdor', 'pegadaian']);
+    expect(r.overdue.map((o) => o.source).sort()).toEqual([
+      'galeri24',
+      'jisdor',
+      'lotusarchi',
+      'pegadaian',
+    ]);
   });
 
   it('sukses makro dini hari = run kemarin yang terlambat, belum dihitung', () => {
@@ -196,13 +201,29 @@ describe('watchdog', () => {
     expect(r.checked.sort()).toEqual(['galeri24', 'logammulia', 'pegadaian']);
   });
 
-  it('sumber ritel dengan stale_is_error_on_expected_day: false tidak diperiksa (lotusarchi, P6-09)', () => {
+  it('lotusarchi diperiksa di hari kerja, tidak di Sabtu/Minggu (business_days_id, D-68)', () => {
     expect(base.config.sources.find((s) => s.id === 'lotusarchi')).toMatchObject({
       enabled: true,
-      stale_is_error_on_expected_day: false,
+      update_calendar: 'business_days_id',
+      stale_is_error_on_expected_day: true,
     });
+    const run = (now: string) =>
+      watchdog({ ...base, event: 'workflow_dispatch', schedule: '', now: new Date(now) });
+    expect(run('2026-11-17T15:00:00Z').checked).toContain('lotusarchi'); // Selasa 22.00 WIB
+    expect(run('2026-11-14T15:00:00Z').checked).not.toContain('lotusarchi'); // Sabtu
+    expect(run('2026-11-15T15:00:00Z').checked).not.toContain('lotusarchi'); // Minggu
+  });
+
+  it('sumber ritel dengan stale_is_error_on_expected_day: false tidak diperiksa', () => {
+    const cfg = {
+      ...base.config,
+      sources: base.config.sources.map((s) =>
+        s.id === 'lotusarchi' ? { ...s, stale_is_error_on_expected_day: false } : s,
+      ),
+    };
     const r = watchdog({
       ...base,
+      config: cfg,
       event: 'workflow_dispatch',
       schedule: '',
       now: new Date('2026-11-17T15:00:00Z'),

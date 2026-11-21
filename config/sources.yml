@@ -1,11 +1,11 @@
 # SOURCE + MACRO_SERIES (DATA-MODEL §3.5). Ditulis manusia lewat PR; state bot ada di data/meta/status.json.
 #
-# Aktif: lotusarchi (P6-09), ubslifestyle (P1-04), pegadaian (P1-07), logammulia (P1-06, D-26), xaus (P2-03),
+# Aktif: galeri24 (P6-06), lotusarchi (P6-09), ubslifestyle (P1-04), pegadaian (P1-07), logammulia (P1-06, D-26), xaus (P2-03),
 # jisdor (P2-04), worldbank (P2-05, hanya dipilih `plan` bila rata-rata bulan lalu belum ada).
 # `probe` dan run manual yang menyebut sumber secara eksplisit tetap bisa menjalankan sumber nonaktif.
 # `parser_version` = versi modul parser (`parserVersion` di apps/scraper/src/sources/*).
 #
-# `update_calendar` sementara; nilai final ditetapkan dari observasi Fase 0–1 (Q-6).
+# `update_calendar` final dari observasi Fase 1 dan Fase 6 (Q-6 ditutup, D-68).
 #   daily            — diharapkan ada data setiap hari
 #   weekdays         — Senin–Jumat
 #   business_days_id — Senin–Jumat dikurangi config/holidays.yml
@@ -41,7 +41,7 @@ sources:
     url: https://pegadaian.co.id/gold/prices/table
     fetch_method: api
     workflow: scrape-retail
-    update_calendar: daily # P1-07: harga Minggu ada; final di P1-11 (Q-6)
+    update_calendar: daily # harga Minggu ada (periode I terbit Sabtu malam); final (Q-6, D-68)
     schedule_window: midday # snapshot terbit pagi menjelang siang (D-67); riwayat lama ±18.17–21.27 WIB (D-25, D-42)
     stale_is_error_on_expected_day: true
     accept_previous_day: true # slot siang menambal snapshot kemarin (D-42)
@@ -54,7 +54,7 @@ sources:
     url: https://galeri24.co.id/api/gold-prices/page-data
     fetch_method: api
     workflow: scrape-retail
-    update_calendar: daily # harga Minggu ada (15 & 16 Nov 2026); final setelah observasi (Q-6)
+    update_calendar: daily # harga Sabtu–Minggu ada (15, 16, 21 Nov 2026); final (D-68)
     schedule_window: midday # versi harga D terbit berulang: ±17.50 WIB D-1 (salinan harga D-1), lalu harga final ±10.05–11.01 WIB hari D; diambil dari API histori (versi updatedAt terbaru) (D-66, D-67)
     stale_is_error_on_expected_day: true
     accept_previous_day: true # run terlambat lewat tengah malam tidak jadi alarm palsu (D-42)
@@ -67,9 +67,9 @@ sources:
     url: https://api.lotusarchi.com/harga-display
     fetch_method: api
     workflow: scrape-retail
-    update_calendar: daily # sementara; final setelah observasi P6-01 (±21 Nov 2026)
-    schedule_window: afternoon # jam terbit belum diketahui; 17 Nov pagi halaman masih 16 Nov, jadi dijadwalkan sore
-    stale_is_error_on_expected_day: false # final setelah observasi P6-01 (±21 Nov 2026); sementara tanpa alarm palsu
+    update_calendar: business_days_id # harga-gold: Senin–Jumat hampir selalu, Sabtu tidak menentu (11 dari 46 Sabtu 2026 kosong), Minggu dan libur tidak; Sabtu tetap diambil bila ada (D-68)
+    schedule_window: afternoon # probe P6-01 18–20 Nov: ±11.45–12.00 WIB masih kemarin, 13.20 WIB sudah hari ini (D-68)
+    stale_is_error_on_expected_day: true # P6-06, D-68
     accept_previous_day: true # halaman bisa tertinggal sehari (D-42)
     parser_version: 1.0.0
     enabled: true # P6-09, 17 Nov 2026
@@ -80,7 +80,7 @@ sources:
     url: https://logammulia.com/harga-emas
     fetch_method: browser
     workflow: scrape-retail
-    update_calendar: daily # 26 Okt 2026: harga diperbarui ±07.30–08.40 WIB, juga Minggu; final di P1-11 (Q-6)
+    update_calendar: daily # terbit juga Sabtu–Minggu (mis. Minggu 8 & 15 Nov 2026); final (Q-6, D-68)
     stale_is_error_on_expected_day: true
     parser_version: 1.0.0
     enabled: true

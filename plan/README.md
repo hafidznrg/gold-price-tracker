@@ -61,12 +61,12 @@ flowchart LR
 | Fase | Status | Mulai | Selesai |
 | --- | --- | --- | --- |
 | 0 | 11/12 selesai; G0 terpenuhi untuk semua sumber (P0-09 ditutup: Logam Mulia jalan dari runner sejak 26 Okt, D-26). Sisa: P0-01 ruleset + LICENSE | 25 Okt 2026 | |
-| 1 | 11/13 selesai (P1-01–P1-07, P1-09, P1-10, P1-12, P1-13); ketiga scraper aktif di `scrape-retail.yml` (Logam Mulia lewat stealth, D-26; run pertama di Actions sukses). P1-05 selesai (Telegram + Issue terbukti lewat `notify-test.yml`); P1-08 terimplementasi, menunggu bukti di run nyata | 26 Okt 2026 | |
+| 1 | 11/13 selesai (P1-01–P1-07, P1-09, P1-10, P1-12, P1-13); ketiga scraper aktif di `scrape-retail.yml` (Logam Mulia lewat stealth, D-26; run pertama di Actions sukses). P1-05 selesai (Telegram + Issue terbukti lewat `notify-test.yml`). **21 Nov 2026: 13/13, G1 terpenuhi** (P1-08 terbukti di run terjadwal, P1-11 observasi, Q-6 ditutup, D-68) | 26 Okt 2026 | |
 | 2 | 13/13 selesai. Validasi + merge makro (D-35); histori makro ter-commit: `xau_usd_oz` bulanan 1996+ dan harian 5 tahun (P2-07, 6 Nov 2026), `usd_idr_ecb` 1999+, `usd_idr_jisdor` 2013+, `usd_idr_annual` 1996–1998. Scraper harian + `scrape-macro.yml` aktif (D-36). `check-macro` lulus pada data repo (D-37). Kriteria G2 terpenuhi; penutupan fase menunggu `scrape-macro` hijau 5 hari kerja (pertama 5 Nov 2026) | 1 Nov 2026 | |
 | 3 | 11/12 selesai; situs tayang di <https://gold.hafidznrg.my.id> (P3-10, Q-5). Sisa P3-11: audit Lighthouse mobile. G3 menunggu data ritel ≥ 14 hari (±9 Nov) dan G1 | 1 Nov 2026 | |
 | 4 | 13/13 selesai; P4-13 Kalkulator total harga beli yang bisa diubah + berat lain (FR-37, D-61, 15 Nov 2026). (P4-04 sudah terpenuhi oleh Spread P3-07): Explorer mode nilai/agregasi/isi celah, `derived/*`, Bandingkan + premi Antam sejak 2010 (D-38), Kelipatan, Kalkulator (D-39), API statis di README, fallback 1 g Logam Mulia. G4 menunggu audit Lighthouse mobile ulang di situs live (NFR-08) | 7 Nov 2026 | |
 | 5 | Belum mulai | | |
-| 6 | 17 Nov 2026: P6-01b–P6-05 dan P6-07–P6-13 selesai; `galeri24` dan `lotusarchi` aktif (histori Galeri24 47.569 baris, histori lotusarchi.com 489 tanggal). Tersisa observasi jam terbit ±21 Nov → finalisasi jadwal P6-01/P6-06 (jendela + kalender, `stale_is_error_on_expected_day` lotusarchi, cabut `schedule:` probe.yml) dan pantau G6 7 hari | 17 Nov 2026 | |
+| 6 | 17 Nov 2026: P6-01b–P6-05 dan P6-07–P6-13 selesai; `galeri24` dan `lotusarchi` aktif (histori Galeri24 47.569 baris, histori lotusarchi.com 489 tanggal). 21 Nov 2026: 13/14, P6-01 selesai dan jadwal final (D-68). Tersisa P6-06: pantau G6 7 hari (`galeri24` hijau 17–21 Nov, target 23 Nov) | 17 Nov 2026 | |
 
 ## Riwayat revisi
 
@@ -96,3 +96,4 @@ flowchart LR
 | 17 Nov 2026 | P6-10 web: Galeri24 dan Lotus Archi di Hari ini, Data, Spread, Bandingkan, Riwayat harga, Kalkulator, header/footer |
 | 17 Nov 2026 | P6-09 scraper `lotusarchi` dari lotusarchi.com lewat dua endpoint JSON (`harga-display` + `harga-gold`; dua request per run, penyimpangan NFR-12 disetujui pemilik, D-65) |
 | 17 Nov 2026 | Backfill `lotusarchi-history`: 489 tanggal 1 g (jual + buyback) 27 Feb 2025–17 Nov 2026 dari `harga-gold` (satu request, tanggal ganda → `harga_id` terbesar); asumsi `harga_emas` = harga jual keping 1 g; katalog 1 g `active_from: 2025-02-27` |
+| 21 Nov 2026 | P1-08, P1-11 ditutup (G1 terpenuhi, Q-6 terjawab); P6-01 ditutup: observasi jam terbit selesai, kalender `lotusarchi` → `business_days_id` + alarm stale aktif, `schedule:` probe.yml dicabut (D-68) |

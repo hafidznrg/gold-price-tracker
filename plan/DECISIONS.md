@@ -606,3 +606,12 @@ Log keputusan produk dan teknis (format ringkas ala ADR). Keputusan baru ditamba
 - `DAY_FROM` 08.30 → 08.15 WIB agar slot 08.20 berjalan.
 - Cron GitHub cadangan tinggal 4: `scrape-retail` 04.15 (jendela `day` + `midday`) dan 09.15 WIB (semua jendela siang), `scrape-macro` 16.45 WIB, `watchdog` 23.15 WIB. Cron 19.15 WIB dicabut.
 **Konsekuensi:** run Cloudflare per hari 10 → 8 (9 di hari kerja). Harga Logam Mulia tampil 08.20 atau 09.20 WIB, Pegadaian/Galeri24 11.20 WIB (13.20 bila masih carry-over), UBS 13.20/16.20 WIB, revisi sore pada 19.20 WIB. Slot 08.20 sebagian besar menghasilkan run `stale` tanpa data. Worker `apps/trigger` harus di-deploy ulang (`wrangler deploy`) setelah kode ini ada di `main`; sampai itu, Worker lama mengirim kunci lama yang tidak lagi terdaftar dan diperlakukan sebagai `primary` tanpa saringan jendela.
+
+### D-68 — Kalender final semua sumber ritel dan akhir observasi probe (menutup Q-6, melengkapi D-63, D-67)
+
+**Konteks:** observasi Fase 1 (P1-11) dan probe terjadwal P6-01 (17–20 Nov 2026, 8 run) selesai. Logam Mulia dan Pegadaian terbit juga Sabtu–Minggu (mis. Logam Mulia Minggu 8 & 15 Nov; Pegadaian periode I Minggu). Galeri24 punya harga setiap hari termasuk 15, 16, 21 Nov. lotusarchi.com: ±11.45–12.00 WIB masih tanggal kemarin, 13.20 WIB sudah hari ini (18–20 Nov); `harga-gold` (521 tanggal sejak 27 Feb 2025) hanya punya satu hari Minggu, tidak pernah hari libur nasional, dan 11 dari 46 Sabtu 2026 kosong.
+**Keputusan:**
+- `update_calendar` final: `logammulia`, `pegadaian`, `galeri24` = `daily`; `ubslifestyle` = `mon_sat_id` (D-63); `lotusarchi` = `business_days_id`. Q-6 ditutup.
+- `lotusarchi` tetap `afternoon` dan `stale_is_error_on_expected_day: true`. Sabtu tidak dijadikan hari yang diharapkan karena terbitnya tidak menentu; harga Sabtu tetap diambil bila ada.
+- `schedule:` sementara di `probe.yml` dicabut; probe kembali hanya `workflow_dispatch`.
+**Konsekuensi:** watchdog dan run 16.20 WIB kini membunyikan alarm bila lotusarchi.com tidak terbit di hari kerja. Grafik web mengikuti kalender baru lewat `meta.json` (`update_calendar` dari config), jadi Sabtu tanpa data Lotus Archi tidak ditandai celah.

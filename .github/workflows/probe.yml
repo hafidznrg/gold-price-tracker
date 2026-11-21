@@ -4,9 +4,6 @@ name: probe
 # Hasil (raw + report.json) diunggah sebagai artifact; ringkasan di step summary.
 
 on:
-  # Sementara (P6-01): observasi jam terbit galeri24 & lotusarchi; cabut di P6-06.
-  schedule:
-    - cron: '0 0,4,8,12,16 * * *'
   workflow_dispatch:
     inputs:
       source:
@@ -31,7 +28,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: probe-${{ inputs.source || 'schedule' }}
+  group: probe-${{ inputs.source }}
   cancel-in-progress: false
 
 jobs:
@@ -42,9 +39,7 @@ jobs:
       fail-fast: false
       matrix:
         source: >-
-          ${{ github.event_name == 'schedule'
-            && fromJSON('["galeri24","lotusarchi"]')
-            || inputs.source == 'all'
+          ${{ inputs.source == 'all'
             && fromJSON('["ubslifestyle","pegadaian","logammulia","xaus","jisdor","worldbank","frankfurter","galeri24","lotusarchi"]')
             || fromJSON(format('["{0}"]', inputs.source)) }}
     steps:
