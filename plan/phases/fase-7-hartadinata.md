@@ -43,6 +43,7 @@
   - `checkHrtaGold`: `GET /api/v1/brandings/price/daily` → 200 `application/json`, `code = 200`, `updated_date` valid ISO `+07:00`, seri `Gold` ≥ 12 gramasi dan seri `Prime` ada, semua `price` dan `buyback_price` bilangan bulat > 0, `buyback_price < price`, tanggal `updated_date` ≤ 3 hari dari hari ini. Respons berisi tantangan (`Just a moment`, `cf-chl`) atau 403/429/503 → `BLOCKED`.
   - Simpan fixture di `apps/scraper/test/fixtures/hrtagold/` dengan `README.md` seperti fixture lain: `price-daily-2026-11-21.json` (respons penuh, diambil dari terminal lokal) dan satu fixture sintetis kasus tepi (Prime tanpa Gold, harga 0, `buyback ≥ jual`, tanggal kemarin).
   - **Observasi 5–7 hari:** tambah `schedule:` **sementara** di `probe.yml` yang hanya mem-probe `hrtagold` (usulan 01.00, 03.00, 05.00, 07.00, 09.00, 11.00 UTC = 08.00–18.00 WIB tiap 2 jam, bergeser bila perlu), mencatat `updated_date`, `created_at`, dan harga Gold 1 g per probe. Dijawab: jam terbit, revisi di hari yang sama, Sabtu/Minggu/libur nasional.
+  - *Probe runner 21 Nov 2026 (run 44864330585, AS): hijau. Observasi jam terbit berjalan.*
   - Hasil dicatat di research/hartadinata.md §3–§4. Bila runner diblokir → P7-05–P7-07 "tertahan", P7-03/P7-04 tetap boleh jalan.
 - [ ] **P7-02** Investigasi lokal: syarat situs, PPh, dan endpoint histori (Q-8, Q-9). — S
   - Dari terminal lokal, **maksimal ±5 request** tambahan, jeda ≥ 5 detik, tanpa menembus proteksi apa pun.

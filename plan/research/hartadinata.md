@@ -71,7 +71,7 @@
 ## 3. Akses dan robots
 
 - Satu `GET` dari terminal lokal, User-Agent proyek, tanpa Origin/Referer/cookie → HTTP 200 `application/json`.
-- Probe runner: menunggu run pertama (`probe.yml`, sumber `hrtagold`; schedule sementara 08.00–18.00 WIB tiap 2 jam).
+- Probe runner 21 Nov 2026 11.05 WIB (run 44864330585, colo PDX, AS): **lolos**, HTTP 200 JSON tanpa tantangan; `updated_date` 2026-11-21T08:12:26+07:00, Gold 1 g 2.258.000 / buyback 2.122.000. Observasi jam terbit lewat `schedule:` sementara 08.00–18.00 WIB tiap 2 jam sampai P7-08.
 - Runner GitHub (IP AS) **belum diuji**. P7-01 menjalankan probe sekali dari runner. Bila `403`/`429`/`503` atau halaman tantangan → `BLOCKED`, P7-05 tertahan; tidak ada penyamaran (D-24, kecuali pengecualian Logam Mulia D-26 yang tidak berlaku di sini).
 - `https://hrtagold.id/robots.txt` mengembalikan HTML SPA (200 `text/html`) → tidak ada aturan robots yang sebenarnya. Scraper memakai User-Agent proyek, satu request per hari untuk arsip harga non-komersial; catat pertimbangan ini di D-69.
 - Syarat penggunaan situs belum dibaca (FAQ/terms) → bagian P7-02.
