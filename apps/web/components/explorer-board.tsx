@@ -2,34 +2,38 @@
 
 import type { PriceSource } from '@gold/schema';
 import { debounce, parseAsString, useQueryStates } from 'nuqs';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import { TimeSeriesChart, type TimeSeries } from '@/components/charts/time-series-chart';
-import { RangeControl, type RangeValue } from '@/components/range-control';
-import { Segmented } from '@/components/segmented';
-import { InfoPopover } from '@/components/info-popover';
-import { SourceStamp } from '@/components/source-stamp';
-import { useSeriesFiles } from '@/components/use-series-files';
+import { AdvancedDialog, type ListedSeries } from '@/components/explorer-advanced';
 import {
-  colorVar,
-  PRODUCT_KIND_LABELS,
-  SOURCE_LABELS,
-  weightKey,
-  type PriceField,
-  type ProductKind,
-  type SeriesPoint,
-} from '@/lib/data';
+  AGG_NOUN,
+  DIR_CLASS,
+  Hint,
+  seriesLabel,
+  seriesParts,
+  Swatch,
+  uniq,
+  VALUE_FORMAT,
+} from '@/components/explorer-parts';
+import { ExplorerToolbar } from '@/components/explorer-toolbar';
+import { InfoPopover } from '@/components/info-popover';
+import type { RangeValue } from '@/components/range-control';
+import { SourceStamp } from '@/components/source-stamp';
+import { useChartHeight } from '@/components/use-chart-height';
+import { useSeriesFiles } from '@/components/use-series-files';
+import type { ColorToken, SeriesPoint } from '@/lib/data';
+import { expectedFor, labelGaps, type DataCalendar } from '@/lib/calendar';
 import {
   aggregateClose,
   applyMode,
   chartPoints,
-  DEFAULT_PICKS,
   decodeAgg,
   decodeFlag,
   decodeFlagOn,
   decodeMode,
-  DEFAULT_RANGE,
   decodePicks,
   decodeRange,
+  DEFAULT_RANGE,
   effectiveRange,
   encodeAgg,
   encodeFlag,
@@ -41,22 +45,19 @@ import {
   fillGaps,
   fillNotes,
   gramDivisor,
-  MAX_SERIES,
   mergeGaps,
-  optionBrandKey,
   optionBrandName,
   optionColor,
   rangeStats,
   resolvePick,
-  samePicks,
   seriesPoints,
   viewChartPoints,
   viewGaps,
-  type Aggregation,
   type ExplorerOption,
+  type RangeStat,
   type SeriesPick,
-  type ValueMode,
   type ViewOptions,
+  type ValueMode,
 } from '@/lib/explorer';
 import {
   changeDirection,
@@ -67,32 +68,37 @@ import {
   formatRupiah,
   formatWeight,
 } from '@/lib/format';
-import { comparePicks } from '@/lib/bandingkan';
+import type { CompareDef } from '@/lib/bandingkan';
+import {
+  basicEntries,
+  basicPricePicks,
+  decodeBrandIds,
+  decodeGram,
+  decodeShow,
+  encodeBrandIds,
+  encodeGram,
+  encodeShow,
+  showsPrice,
+  showsSpread,
+  spreadPoints,
+  spreadRangeStats,
+  type ShowMode,
+} from '@/lib/riwayat';
 import { cn } from '@/lib/utils';
-import { expectedFor, labelGaps, type DataCalendar } from '@/lib/calendar';
-import { useChartHeight } from '@/components/use-chart-height';
 
 export interface ExplorerBoardProps {
   options: ExplorerOption[];
+  /** Gramasi yang bisa dibandingkan antar brand (`compareWeights`), dihitung di server. */
+  weights: number[];
   /** Tanggal data terbaru (patokan rentang bila belum ada data termuat). */
   asOf: string;
   /** Stempel per sumber dari meta.json. */
   stamps: Partial<Record<PriceSource, { date: string | null; at: string | null }>>;
   /** Kalender terbit sumber, agar akhir pekan/libur tidak dianggap celah. */
   calendar: DataCalendar;
-  /** Gramasi preset "Bandingkan semua brand" (D-70), dihitung di server. */
-  presetWeights?: number[];
 }
 
-const FIELD = 'h-11 w-full rounded-field border border-line bg-surface2 px-3 text-sm text-text';
 const PANEL_SM = 'min-w-0 rounded-card border border-line bg-surface p-4';
-const PRICE_LABEL: Record<PriceField, string> = { sell: 'Jual', buyback: 'Buyback' };
-const DIR_CLASS = { up: 'text-up', down: 'text-down', flat: 'text-muted' } as const;
-// Bagian panel: kartu di tablet/desktop, polos dipisah garis di lembar HP.
-const SECTION =
-  'min-w-0 rounded-[18px] border border-line bg-surface p-5 max-sm:rounded-none max-sm:border-0 max-sm:border-t max-sm:bg-transparent max-sm:px-0 max-sm:py-4';
-const FIELD_LABEL = 'flex min-w-0 flex-col gap-1.5 text-xs font-medium text-muted';
-const GROUP_LABEL = 'text-xs font-medium text-muted';
 /**
  * Tabel ringkasan diatur menurut lebar kartunya sendiri (container query). Di HP tiap series
  * jadi blok ringkas: judul + Akhir di baris atas, Awal/Terendah/Tertinggi sejajar di bawahnya,
@@ -111,40 +117,14 @@ const SUM_NOTE = 'text-[11px] leading-snug text-muted @min-[580px]:text-xs';
 /** Teks utama blok (nama series, harga Akhir): di HP sedikit lebih besar dari angka lain. */
 const SUM_PRIMARY = 'text-[15px] font-semibold leading-snug @min-[580px]:text-sm';
 
-function seriesParts(o: ExplorerOption, price: PriceField): { title: string; meta: string } {
-  return {
-    title: [optionBrandName(o), SOURCE_LABELS[o.source]].join(' · '),
-    meta: [o.kind === 'fisik' ? formatWeight(o.w) : null, PRICE_LABEL[price]]
-      .filter(Boolean)
-      .join(' · '),
-  };
+const pctPlain = (v: number) => formatPct(v, 2, false);
+
+/** Seri satu garis: pilihan + opsi katalog (+ definisi brand di mode dasar). */
+interface Line extends ListedSeries {
+  def?: CompareDef;
 }
 
-function seriesLabel(o: ExplorerOption, price: PriceField): string {
-  const { title, meta } = seriesParts(o, price);
-  return meta ? `${title} · ${meta}` : title;
-}
-
-const MODE_OPTIONS: { value: ValueMode; label: string }[] = [
-  { value: 'nominal', label: 'Nominal' },
-  { value: 'gram', label: 'Per gram' },
-  { value: 'index', label: 'Indeks' },
-  { value: 'pct', label: '% ubah' },
-];
-const AGG_OPTIONS: { value: Aggregation; label: string }[] = [
-  { value: 'd', label: 'Harian' },
-  { value: 'w', label: 'Mingguan' },
-  { value: 'm', label: 'Bulanan' },
-];
-const AGG_NOUN: Record<Aggregation, string> = { d: 'harian', w: 'mingguan', m: 'bulanan' };
-const VALUE_FORMAT = {
-  nominal: 'rupiah',
-  gram: 'rupiah',
-  index: 'number',
-  pct: 'percent',
-} as const;
-
-function chartTitle(mode: ValueMode, agg: Aggregation): string {
+function manualTitle(mode: ValueMode, agg: ViewOptions['agg']): string {
   const head = {
     nominal: 'Harga emas',
     gram: 'Harga emas per gram',
@@ -154,107 +134,73 @@ function chartTitle(mode: ValueMode, agg: Aggregation): string {
   return `${head} · ${AGG_NOUN[agg]}`;
 }
 
-/** Judul ringkas di panel: brand + gramasi (sumber dan jenis harga ditampilkan terpisah). */
-function seriesTitle(o: ExplorerOption): string {
-  return [optionBrandName(o), o.kind === 'fisik' ? formatWeight(o.w) : null]
-    .filter(Boolean)
-    .join(' · ');
+function basicTitle(show: ShowMode, w: number, view: ViewOptions): string {
+  const wl = formatWeight(w);
+  const what = {
+    sell: `Harga jual ${wl}`,
+    bb: `Buyback ${wl}`,
+    spread: `Spread ${wl}`,
+    both: `Harga jual ${wl} dan spread`,
+  }[show];
+  const mode =
+    show === 'both' || show === 'spread'
+      ? ''
+      : ({ nominal: '', gram: ' per gram', index: ' (indeks)', pct: ' (% ubah)' } as const)[
+          view.mode
+        ];
+  return `${what}${mode} · ${AGG_NOUN[view.agg]}`;
 }
 
-function PriceTag({ price }: { price: PriceField }) {
-  return (
-    <span className="flex-none rounded-full border border-line bg-surface px-1.5 py-px text-2xs font-semibold uppercase tracking-[.06em] text-muted">
-      {PRICE_LABEL[price]}
-    </span>
-  );
+/** Judul kecil di atas grafik harga pada tampilan Jual + spread. */
+function priceChartCaption(show: ShowMode, mode: ValueMode): string {
+  const what = show === 'bb' ? 'Buyback' : 'Harga jual';
+  const how = {
+    nominal: 'per keping',
+    gram: 'per gram',
+    index: '(indeks, =100 di awal rentang)',
+    pct: '(% ubah sejak awal rentang)',
+  }[mode];
+  return `${what} ${how}`;
 }
 
-function SectionSummary({ children }: { children: React.ReactNode }) {
-  return (
-    <summary className="-my-1 flex min-h-9 cursor-pointer list-none items-center justify-between gap-3 [&::-webkit-details-marker]:hidden">
-      <h2 className="m-0 text-base font-semibold">{children}</h2>
-      <svg
-        width="16"
-        height="16"
-        viewBox="0 0 24 24"
-        aria-hidden="true"
-        className="flex-none fill-none stroke-current stroke-2 text-faint transition-transform group-open:rotate-180"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      >
-        <path d="M6 9l6 6 6-6" />
-      </svg>
-    </summary>
-  );
-}
-
-function seriesMeta(o: ExplorerOption, price: PriceField, perGram = false): string {
-  const first = o.first[price];
-  return [
-    o.kind === 'fisik' && !perGram ? 'per keping' : 'per gram',
-    o.source === 'logammulia' && price === 'sell' ? 'harga dasar' : null,
-    price === 'buyback' && o.buybackFromGram ? 'buyback 1 g × berat' : null,
-    o.variant === 'non_pegadaian' ? 'keping dibeli di luar Pegadaian' : null,
-    o.source === 'hrtagold' && price === 'sell' ? 'sudah termasuk pajak' : null,
-    first ? `sejak ${formatDate(first)}` : null,
-  ]
-    .filter(Boolean)
-    .join(' · ');
-}
-
-function Swatch({
+function StatCard({
   color,
   dashed,
-  width = 26,
-  className,
+  title,
+  main,
+  sub,
 }: {
-  color: string;
+  color: ColorToken | string;
   dashed: boolean;
-  width?: number;
-  className?: string;
+  title: string;
+  main: string;
+  sub: React.ReactNode;
 }) {
   return (
-    <svg
-      width={width}
-      height="10"
-      viewBox={`0 0 ${width} 10`}
-      aria-hidden="true"
-      className={cn('flex-none', className)}
-    >
-      <path
-        d={`M1 5 H${width - 1}`}
-        fill="none"
-        stroke={colorVar(color as never)}
-        strokeWidth="2.4"
-        strokeLinecap="round"
-        strokeDasharray={dashed ? '4 3' : undefined}
-      />
-    </svg>
+    <div className="flex min-w-0 flex-col gap-1.5 rounded-[14px] border border-line px-3.5 py-3">
+      <span className="flex min-w-0 items-center gap-2 text-xs text-muted">
+        <Swatch color={color} dashed={dashed} width={20} />
+        <span className="min-w-0 break-words">{title}</span>
+      </span>
+      <span className="num text-lg font-semibold">{main}</span>
+      <span className="num text-xs text-muted">{sub}</span>
+    </div>
   );
 }
 
-function Hint({ children }: { children: React.ReactNode }) {
-  return <p className="m-0 py-10 text-center text-sm text-muted">{children}</p>;
+interface SummaryRow {
+  key: string;
+  title: string;
+  meta: string;
+  color: string;
+  dashed: boolean;
+  s: RangeStat | null;
+  fmt: (v: number) => string;
+  /** Persentase perubahan di sel Akhir; tidak dipakai untuk spread (selisih persen tak bermakna). */
+  showChange: boolean;
 }
 
-function uniq<T>(xs: T[]): T[] {
-  return [...new Set(xs)];
-}
-
-/** Elemen pertama untuk tiap kunci, urutan asli dipertahankan. */
-function uniqBy<T>(xs: T[], key: (x: T) => string): T[] {
-  const seen = new Map<string, T>();
-  for (const x of xs) if (!seen.has(key(x))) seen.set(key(x), x);
-  return [...seen.values()];
-}
-
-export function ExplorerBoard({
-  options,
-  asOf,
-  stamps,
-  calendar,
-  presetWeights = [],
-}: ExplorerBoardProps) {
+export function ExplorerBoard({ options, weights, asOf, stamps, calendar }: ExplorerBoardProps) {
   const [query, setQuery] = useQueryStates(
     {
       s: parseAsString,
@@ -263,6 +209,9 @@ export function ExplorerBoard({
       agg: parseAsString,
       band: parseAsString,
       ffill: parseAsString,
+      g: parseAsString,
+      v: parseAsString,
+      b: parseAsString,
     },
     { history: 'replace' },
   );
@@ -289,38 +238,43 @@ export function ExplorerBoard({
     },
     [view, setQuery],
   );
-  const active = useMemo(
-    () =>
-      decodePicks(query.s).flatMap((pick) => {
-        const opt = resolvePick(pick, options);
-        return opt ? [{ pick, opt, id: encodePick(pick) }] : [];
-      }),
-    [query.s, options],
+
+  // Mode dasar (D-71) bila `s` tidak ada; `s` ada = mode seri manual (tautan lama).
+  const manual = query.s !== null;
+  const weight = decodeGram(query.g, weights);
+  const show = decodeShow(query.v);
+  const brandIds = useMemo(() => decodeBrandIds(query.b), [query.b]);
+  const entries = useMemo(
+    () => (manual ? [] : basicEntries(brandIds, weight, show, options)),
+    [manual, brandIds, weight, show, options],
   );
 
+  // Seri yang terdaftar: pilihan manual, atau (mode dasar) satu per brand tersedia.
+  const listed: Line[] = useMemo(() => {
+    if (manual) {
+      return decodePicks(query.s).flatMap((pick) => {
+        const opt = resolvePick(pick, options);
+        return opt ? [{ pick, opt, id: encodePick(pick) }] : [];
+      });
+    }
+    const picks = basicPricePicks(entries, show === 'bb' ? 'bb' : 'sell');
+    return picks.map((pick, i) => ({
+      pick,
+      opt: entries[i]!.opt,
+      id: encodePick(pick),
+      color: entries[i]!.def.color,
+      dashed: entries[i]!.def.dashed,
+      def: entries[i]!.def,
+    }));
+  }, [manual, query.s, options, entries, show]);
+  // Grafik harga: tak ada pada tampilan Spread.
+  const active = manual || showsPrice(show) ? listed : [];
+
   const setPicks = useCallback(
-    (next: SeriesPick[]) =>
-      void setQuery({ s: samePicks(next, DEFAULT_PICKS) ? null : encodePicks(next) }),
+    (next: SeriesPick[]) => void setQuery({ s: encodePicks(next) }),
     [setQuery],
   );
-  // Preset "Bandingkan semua brand": seri = harga jual semua brand di satu gramasi, per gram;
-  // rentang dipertahankan. Terpilih hanya bila seri aktif persis sama dengan preset.
-  const presetOptions = useMemo(
-    () => presetWeights.map((w) => ({ value: weightKey(w), label: formatWeight(w) })),
-    [presetWeights],
-  );
-  const presetValue = useMemo(() => {
-    const cur = decodePicks(query.s);
-    return presetWeights.find((w) => samePicks(comparePicks(w, options), cur)) ?? null;
-  }, [presetWeights, options, query.s]);
-  const applyPreset = useCallback(
-    (key: string) => {
-      const w = presetWeights.find((x) => weightKey(x) === key);
-      if (w === undefined) return;
-      void setQuery({ s: encodePicks(comparePicks(w, options)), m: encodeMode('gram') });
-    },
-    [presetWeights, options, setQuery],
-  );
+  const backToBasic = useCallback(() => void setQuery({ s: null }), [setQuery]);
   const setRange = useCallback(
     (r: RangeValue, fromChart = false) => {
       const code = encodeRange(r);
@@ -333,7 +287,14 @@ export function ExplorerBoard({
   );
 
   // --- Data ---------------------------------------------------------------
-  const needed = useMemo(() => uniq(active.map((a) => a.opt.file)), [active]);
+  const spreadSrc = useMemo(
+    () => (!manual && showsSpread(show) ? entries : []),
+    [manual, show, entries],
+  );
+  const needed = useMemo(
+    () => uniq([...active.map((a) => a.opt.file), ...spreadSrc.map((e) => e.opt.file)]),
+    [active, spreadSrc],
+  );
   const { files, loading, error } = useSeriesFiles(needed);
 
   const built = useMemo(() => {
@@ -345,19 +306,36 @@ export function ExplorerBoard({
     });
   }, [active, files, loading, calendar]);
 
+  // Spread % per brand: jual dan buyback sumber yang sama pada tanggal yang sama.
+  const spreadBuilt = useMemo(() => {
+    if (loading) return null;
+    return spreadSrc.map((e) => {
+      const file = files[e.opt.file];
+      const points = file
+        ? spreadPoints(seriesPoints(file, e.opt, 'sell'), seriesPoints(file, e.opt, 'buyback'))
+        : [];
+      return { e, points, chart: chartPoints(points, expectedFor(calendar, [e.opt.source])) };
+    });
+  }, [spreadSrc, files, loading, calendar]);
+
   const lastDate = useMemo(
     () =>
-      built
-        ?.map((b) => b.points.at(-1)?.date ?? '')
+      [...(built ?? []).map((b) => b.points), ...(spreadBuilt ?? []).map((b) => b.points)]
+        .map((pts) => pts.at(-1)?.date ?? '')
         .sort()
         .at(-1) || asOf,
-    [built, asOf],
+    [built, spreadBuilt, asOf],
   );
-  const minDate = useMemo(
-    () => built?.map((b) => b.points[0]?.date ?? '9999').sort()[0] ?? null,
-    [built],
-  );
-  const eff = effectiveRange(range, lastDate, minDate === '9999' ? null : minDate);
+  const minDate = useMemo(() => {
+    const first = [
+      ...(built ?? []).map((b) => b.points),
+      ...(spreadBuilt ?? []).map((b) => b.points),
+    ]
+      .map((pts) => pts[0]?.date ?? '9999')
+      .sort()[0];
+    return first && first !== '9999' ? first : null;
+  }, [built, spreadBuilt]);
+  const eff = effectiveRange(range, lastDate, minDate);
 
   // Titik tampilan per series: agregasi -> isi celah (opsional) -> mode nilai (P4-01..03).
   const shown = useMemo(
@@ -376,10 +354,10 @@ export function ExplorerBoard({
     () =>
       shown.map(({ b, vp, gaps: own }) => ({
         id: b.id,
-        label: seriesLabel(b.opt, b.pick.price),
-        color: optionColor(b.opt),
-        dashed: b.pick.price === 'buyback',
-        width: b.pick.price === 'buyback' ? 1.8 : 2.2,
+        label: b.def ? b.def.label : seriesLabel(b.opt, b.pick.price),
+        color: (b.color ?? optionColor(b.opt)) as ColorToken,
+        dashed: b.def ? b.def.dashed : b.pick.price === 'buyback',
+        width: !b.def && b.pick.price === 'buyback' ? 1.8 : 2.2,
         points: viewChartPoints(vp, own, view.ffill),
         envelope: bandOn
           ? {
@@ -392,6 +370,36 @@ export function ExplorerBoard({
     [shown, view.ffill, bandOn],
   );
   const gaps = useMemo(() => labelGaps(mergeGaps(shown.map((x) => x.gaps))), [shown]);
+
+  // Spread: agregasi dan isi celah yang sama; mode nilai tidak berlaku (selalu persen).
+  const spreadShown = useMemo(
+    () =>
+      (spreadBuilt ?? []).map((b) => {
+        let vp = aggregateClose(b.points, view.agg);
+        if (view.ffill) vp = fillGaps(vp, view.agg, expectedFor(calendar, [b.e.opt.source]));
+        const own = view.ffill ? [] : viewGaps(b.chart.gaps, view.agg);
+        return { b, vp, own };
+      }),
+    [spreadBuilt, view.agg, view.ffill, calendar],
+  );
+  const spreadSeries: TimeSeries[] = useMemo(
+    () =>
+      spreadShown.map(({ b, vp, own }) => ({
+        id: `spread-${b.e.def.id}`,
+        label: b.e.def.label,
+        color: b.e.def.color,
+        dashed: b.e.def.dashed,
+        width: 2.2,
+        points: viewChartPoints(vp, own, view.ffill),
+        notes: view.ffill ? fillNotes(vp) : undefined,
+      })),
+    [spreadShown, view.ffill],
+  );
+  const spreadGaps = useMemo(
+    () => labelGaps(mergeGaps(spreadShown.map((x) => x.own))),
+    [spreadShown],
+  );
+
   const chartRange = useMemo(
     () => (eff.from ? { from: eff.from, to: eff.to } : undefined),
     [eff.from, eff.to],
@@ -414,625 +422,437 @@ export function ExplorerBoard({
       }),
     [built, eff.from, eff.to, view.mode],
   );
+  const spreadStats = useMemo(
+    () =>
+      (spreadBuilt ?? []).map((b) => ({
+        b,
+        s: spreadRangeStats(b.points, eff.from, eff.to),
+        r: rangeStats(b.points, eff.from, eff.to),
+      })),
+    [spreadBuilt, eff.from, eff.to],
+  );
 
-  // --- Pemilih series -----------------------------------------------------
-  const [kind, setKind] = useState<ProductKind>('fisik');
-  const [brandSel, setBrandSel] = useState('antam');
-  const [sourceSel, setSourceSel] = useState<PriceSource>('logammulia');
-  const [wSel, setWSel] = useState('1');
-  const [priceSel, setPriceSel] = useState<PriceField>('sell');
-
-  const ofKind = options.filter((o) => o.kind === kind);
-  // Antam non-Pegadaian (`antam_np`) tampil sebagai brand sendiri dan tidak digabung ke Antam.
-  const brandOpts = uniqBy(ofKind, optionBrandKey);
-  const brands = brandOpts.map(optionBrandKey);
-  const brand = brands.includes(brandSel) ? brandSel : brands[0];
-  const sources = uniq(ofKind.filter((o) => optionBrandKey(o) === brand).map((o) => o.source));
-  const source = sources.includes(sourceSel) ? sourceSel : sources[0];
-  const weights = ofKind
-    .filter((o) => optionBrandKey(o) === brand && o.source === source)
-    .sort((a, b) => a.w - b.w);
-  const opt =
-    weights.find((o) => String(o.w) === wSel) ?? weights.find((o) => o.w === 1) ?? weights[0];
-  const prices = (['sell', 'buyback'] as const).filter((p) => opt?.first[p] != null);
-  const price = prices.includes(priceSel) ? priceSel : prices[0];
-  const candidate: SeriesPick | null =
-    opt && price
-      ? {
-          source: opt.source,
-          brand: opt.brand,
-          w: opt.w,
-          price,
-          ...(opt.variant ? { variant: opt.variant } : {}),
-        }
-      : null;
-  const duplicate = candidate ? active.some((a) => a.id === encodePick(candidate)) : false;
-  const full = active.length >= MAX_SERIES;
-  const addNote = duplicate
-    ? 'Series ini sudah ada di grafik.'
-    : full
-      ? `Maksimum ${MAX_SERIES} series. Hapus salah satu untuk menambah.`
-      : opt && !opt.first.buyback
-        ? `${SOURCE_LABELS[opt.source]} tidak menampilkan buyback untuk gramasi ini.`
-        : null;
-
-  // HP (< 640 px): panel pengaturan jadi lembar dari bawah (bottom sheet, D-54).
-  const [sheetOpen, setSheetOpen] = useState(false);
-  useEffect(() => {
-    if (!sheetOpen) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setSheetOpen(false);
-    };
-    document.addEventListener('keydown', onKey);
-    return () => document.removeEventListener('keydown', onKey);
-  }, [sheetOpen]);
   const chartH = useChartHeight(400, 240);
+  const priceH2 = useChartHeight(340, 240);
+  const spreadH2 = useChartHeight(270, 210);
 
-  const stampSources = uniq(active.map((a) => a.opt.source));
+  // --- Pop-up Lanjutan ------------------------------------------------------
+  const [advOpen, setAdvOpen] = useState(false);
+  const advTrigger = useRef<HTMLElement | null>(null);
+  const openAdvanced = useCallback(() => {
+    advTrigger.current = document.activeElement as HTMLElement | null;
+    setAdvOpen(true);
+  }, []);
+  const closeAdvanced = useCallback(() => {
+    setAdvOpen(false);
+    advTrigger.current?.focus();
+  }, []);
+
+  const stampSources = uniq([...active, ...spreadSrc].map((a) => a.opt.source));
   const hasLate = stats.some((x) => x.s?.startsLate);
 
-  return (
-    <section className="wrap flex flex-col gap-5 pb-16 lg:flex-row-reverse lg:items-start lg:gap-6">
-      <div className="flex min-w-0 flex-1 flex-col gap-5">
-        <div className={PANEL_SM}>
-          <div className="mb-3 flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
-            <div className="min-w-0">
-              {/* Di HP popover dijangkarkan ke baris judul (bukan ikon) agar tidak meluber ke kanan. */}
-              <div className="relative flex items-center gap-2">
-                <h2 className="m-0 text-xl font-semibold max-sm:text-lg">
-                  {chartTitle(view.mode, view.agg)}
-                </h2>
-                <InfoPopover ariaLabel="Keterangan grafik" className="max-sm:static">
-                  <ul className="m-0 flex list-disc flex-col gap-1 pl-4">
-                    <li>Gulir untuk memperbesar, seret untuk menggeser.</li>
-                    {view.ffill ? (
-                      <li>
-                        Hari yang seharusnya ada harga tapi datanya kosong diisi harga terakhir
-                        sebelumnya (tertulis &ldquo;isi dari …&rdquo; di tooltip). Matikan Isi celah
-                        untuk melihat hari yang kosong.
-                      </li>
-                    ) : (
-                      <li>
-                        Area berarsir: hari yang seharusnya ada harga tapi datanya kosong. Garis
-                        terputus di sana.
-                      </li>
-                    )}
-                    <li>
-                      Akhir pekan dan hari libur saat sumber tidak terbit tidak dianggap kosong.
-                    </li>
-                    <li>Emas fisik: harga per keping. Tabungan Emas: harga per gram.</li>
-                    {hasLate ? (
-                      <li>
-                        Garis yang lebih pendek berarti datanya baru tersedia sejak titik awalnya.
-                      </li>
-                    ) : null}
-                    {view.mode === 'gram' ? <li>Per gram: harga keping dibagi beratnya.</li> : null}
-                    {view.mode === 'index' || view.mode === 'pct' ? (
-                      <li>
-                        Indeks dan % ubah diukur dari titik pertama yang terlihat. Mengganti rentang
-                        ikut mengganti titik awalnya.
-                      </li>
-                    ) : null}
-                    {view.agg !== 'd' ? (
-                      <li>
-                        Satu titik = harga hari terakhir yang ada datanya di tiap{' '}
-                        {view.agg === 'w' ? 'minggu' : 'bulan'}.
-                      </li>
-                    ) : null}
-                    {bandOn ? (
-                      <li>Pita: rentang harga terendah sampai tertinggi di tiap periode.</li>
-                    ) : null}
-                  </ul>
-                </InfoPopover>
-              </div>
-              <p className="num m-0 mt-0.5 text-sm text-muted">
-                {eff.from ? `${formatDate(eff.from)} – ` : 'sampai '}
-                {formatDate(eff.to)} · {formatNumber(active.length)} series
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={() => setSheetOpen(true)}
-              aria-expanded={sheetOpen}
-              aria-controls="explorer-settings"
-              className="inline-flex min-h-10 cursor-pointer items-center gap-2 rounded-control border border-goldline bg-goldsoft px-3.5 text-sm font-semibold text-gold-strong sm:hidden"
-            >
-              Atur series ({active.length})
-            </button>
-            {presetOptions.length > 0 ? (
-              // Preset D-70: satu kontrol ringkas sejajar judul, bukan deretan tombol kedua.
-              <div className="flex items-center gap-2">
-                <span className="text-sm whitespace-nowrap text-muted">Bandingkan semua brand</span>
-                <select
-                  aria-label="Gramasi pembanding"
-                  className="h-9 cursor-pointer rounded-field border border-line bg-surface2 px-2.5 text-sm font-semibold text-text"
-                  value={presetValue === null ? '' : weightKey(presetValue)}
-                  onChange={(e) => applyPreset(e.target.value)}
-                >
-                  {presetValue === null ? <option value="">Pilih gramasi</option> : null}
-                  {presetOptions.map((o) => (
-                    <option key={o.value} value={o.value}>
-                      {o.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            ) : null}
-            <RangeControl
-              size="sm"
-              value={range}
-              onChange={(r) => setRange(r)}
-              lastDate={lastDate}
-              minDate={minDate && minDate !== '9999' ? minDate : undefined}
-            />
-          </div>
-          {error ? (
-            <Hint>Data gagal dimuat. Muat ulang halaman.</Hint>
-          ) : active.length === 0 ? (
-            <Hint>Tambahkan minimal satu series untuk menampilkan grafik.</Hint>
-          ) : loading || !built ? (
-            <Hint>Memuat data…</Hint>
+  // --- Judul ----------------------------------------------------------------
+  const title = manual ? manualTitle(view.mode, view.agg) : basicTitle(show, weight, view);
+  const countLabel = manual
+    ? `${formatNumber(active.length)} series`
+    : `${formatNumber(entries.length)} brand`;
+  const hasLines = manual ? active.length > 0 : entries.length > 0;
+  const emptyHint = manual
+    ? 'Tambahkan minimal satu series untuk menampilkan grafik.'
+    : entries.length === 0 && brandIds.length > 0
+      ? 'Tak ada brand yang tersedia untuk pilihan ini. Ganti gramasi atau tampilan.'
+      : 'Pilih minimal satu brand untuk menampilkan grafik.';
+  const both = !manual && show === 'both';
+  const ariaPrice = `Grafik harga: ${series.map((s) => s.label).join(', ')}`;
+
+  const priceChart = (height: number, caption: boolean) => (
+    <div className="min-w-0">
+      {caption ? (
+        <p className="m-0 mb-1 text-sm font-semibold">{priceChartCaption(show, view.mode)}</p>
+      ) : null}
+      <TimeSeriesChart
+        series={series}
+        gaps={gaps}
+        showZoom
+        legend={false}
+        valueFormat={VALUE_FORMAT[view.mode]}
+        height={height}
+        range={chartRange}
+        onRangeChange={onChartRange}
+        ariaLabel={ariaPrice}
+      />
+    </div>
+  );
+  const spreadChart = (height: number, caption: boolean) => (
+    <div className="min-w-0">
+      {caption ? (
+        <p className="m-0 mb-1 text-sm font-semibold">Spread (jual − buyback) ÷ jual</p>
+      ) : null}
+      <TimeSeriesChart
+        series={spreadSeries}
+        gaps={spreadGaps}
+        showZoom
+        legend={false}
+        valueFormat="percent"
+        height={height}
+        range={chartRange}
+        onRangeChange={onChartRange}
+        ariaLabel={`Grafik spread: ${spreadSeries.map((s) => s.label).join(', ')}`}
+      />
+    </div>
+  );
+
+  // --- Kartu statistik ------------------------------------------------------
+  const cards = manual
+    ? stats.map(({ b, s }) => ({
+        key: b.id,
+        color: optionColor(b.opt) as string,
+        dashed: b.pick.price === 'buyback',
+        title: seriesLabel(b.opt, b.pick.price),
+        main: s ? formatRupiah(s.last.value) : EMPTY,
+        sub: s ? (
+          <>
+            <span className={DIR_CLASS[changeDirection(s.changePct)]}>
+              {formatPct(s.changePct)}
+            </span>{' '}
+            <span className="text-faint">dalam rentang</span>
+          </>
+        ) : (
+          'Tidak ada data di rentang ini'
+        ),
+      }))
+    : entries.map((e) => {
+        const st = stats.find((x) => x.b.def?.id === e.def.id)?.s ?? null;
+        const sp = spreadStats.find((x) => x.b.e.def.id === e.def.id)?.s ?? null;
+        const spread = sp ? `spread ${pctPlain(sp.last.value)}` : null;
+        const base = { key: e.def.id, color: e.def.color as string, dashed: e.def.dashed };
+        const title = e.def.label;
+        if (show === 'spread') {
+          return {
+            ...base,
+            title,
+            main: sp ? pctPlain(sp.last.value) : EMPTY,
+            sub: sp
+              ? `rata-rata ${pctPlain(sp.avg)} dalam rentang`
+              : 'Tidak ada data di rentang ini',
+          };
+        }
+        const change = st ? (
+          st.startsLate ? (
+            <>data mulai {formatDate(st.first.date)}</>
           ) : (
-            <TimeSeriesChart
-              series={series}
-              gaps={gaps}
-              showZoom
-              legend={false}
-              valueFormat={VALUE_FORMAT[view.mode]}
-              height={chartH}
-              range={chartRange}
-              onRangeChange={onChartRange}
-              ariaLabel={`Grafik harga: ${series.map((s) => s.label).join(', ')}`}
-            />
-          )}
+            <>
+              <span className={DIR_CLASS[changeDirection(st.changePct)]}>
+                {formatPct(st.changePct)}
+              </span>{' '}
+              <span className="text-faint">dalam rentang</span>
+            </>
+          )
+        ) : (
+          'Tidak ada data di rentang ini'
+        );
+        return {
+          ...base,
+          title,
+          main: st ? formatRupiah(st.last.value) : EMPTY,
+          sub: spread ? (
+            <>
+              {change} · {spread}
+            </>
+          ) : (
+            change
+          ),
+        };
+      });
 
-          {built && built.length > 0 ? (
-            <div className="mt-5 grid grid-cols-[repeat(auto-fit,minmax(min(220px,100%),1fr))] gap-2.5">
-              {stats.map(({ b, s }) => (
-                <div
-                  key={b.id}
-                  className="flex min-w-0 flex-col gap-1.5 rounded-[14px] border border-line px-3.5 py-3"
-                >
-                  <span className="flex min-w-0 items-center gap-2 text-xs text-muted">
-                    <Swatch
-                      color={optionColor(b.opt)}
-                      dashed={b.pick.price === 'buyback'}
-                      width={20}
-                    />
-                    <span className="min-w-0 break-words">{seriesLabel(b.opt, b.pick.price)}</span>
-                  </span>
-                  <span className="num text-lg font-semibold">
-                    {s ? formatRupiah(s.last.value) : EMPTY}
-                  </span>
-                  <span
-                    className={cn(
-                      'num text-xs',
-                      s ? DIR_CLASS[changeDirection(s.changePct)] : 'text-muted',
-                    )}
-                  >
-                    {s ? formatPct(s.changePct) : 'Tidak ada data di rentang ini'}{' '}
-                    {s ? <span className="text-faint">dalam rentang</span> : null}
-                  </span>
-                </div>
-              ))}
-            </div>
-          ) : null}
+  // --- Baris tabel ringkasan ------------------------------------------------
+  const summary: SummaryRow[] =
+    !manual && show === 'spread'
+      ? spreadStats.map(({ b, r }) => ({
+          key: b.e.def.id,
+          title: b.e.def.label,
+          meta: `Spread · ${formatWeight(weight)}`,
+          color: b.e.def.color,
+          dashed: b.e.def.dashed,
+          s: r,
+          fmt: pctPlain,
+          showChange: false,
+        }))
+      : stats.map(({ b, s }) => {
+          const { title: t, meta } = seriesParts(b.opt, b.pick.price);
+          return {
+            key: b.id,
+            title: t,
+            meta,
+            color: b.color ?? optionColor(b.opt),
+            dashed: b.def ? b.def.dashed : b.pick.price === 'buyback',
+            s,
+            fmt: formatRupiah,
+            showChange: true,
+          };
+        });
+  const noRows = summary.length === 0;
 
-          <InfoPopover label="Sumber" ariaLabel="Sumber data" side="top" className="mt-4">
-            {stampSources.map((src) => {
-              const st = stamps[src];
-              const date =
-                st?.date ??
-                built
-                  ?.filter((b) => b.opt.source === src)
-                  .map((b) => b.points.at(-1)?.date ?? '')
-                  .sort()
-                  .at(-1) ??
-                asOf;
-              return (
-                <SourceStamp key={src} source={src} date={date || asOf} at={st?.at ?? null} bare>
-                  {active
-                    .filter((a) => a.opt.source === src)
-                    .map((a) => optionBrandName(a.opt))
-                    .filter((v, i, arr) => arr.indexOf(v) === i)
-                    .join(', ')}
-                </SourceStamp>
-              );
-            })}
-          </InfoPopover>
+  return (
+    <section className="wrap flex flex-col gap-5 pb-16">
+      <div className={PANEL_SM}>
+        <ExplorerToolbar
+          options={options}
+          weights={weights}
+          weight={weight}
+          onWeight={(w) => void setQuery({ g: encodeGram(w) })}
+          show={show}
+          onShow={(v) => void setQuery({ v: encodeShow(v) })}
+          brandIds={brandIds}
+          onBrands={(ids) => void setQuery({ b: encodeBrandIds(ids) })}
+          manual={manual}
+          manualCount={active.length}
+          onBack={backToBasic}
+          range={range}
+          onRange={(r) => setRange(r)}
+          lastDate={lastDate}
+          minDate={minDate ?? undefined}
+          advOpen={advOpen}
+          onOpenAdvanced={openAdvanced}
+        />
+
+        <div className="mb-3 min-w-0">
+          {/* Di HP popover dijangkarkan ke baris judul (bukan ikon) agar tidak meluber ke kanan. */}
+          <div className="relative flex items-center gap-2">
+            <h2 className="m-0 text-xl font-semibold max-sm:text-lg">{title}</h2>
+            <InfoPopover ariaLabel="Keterangan grafik" className="max-sm:static">
+              <ul className="m-0 flex list-disc flex-col gap-1 pl-4">
+                <li>Gulir untuk memperbesar, seret untuk menggeser.</li>
+                {view.ffill ? (
+                  <li>
+                    Hari yang seharusnya ada harga tapi datanya kosong diisi harga terakhir
+                    sebelumnya (tertulis &ldquo;isi dari …&rdquo; di tooltip). Matikan Isi hari
+                    tanpa data di Lanjutan untuk melihat hari yang kosong.
+                  </li>
+                ) : (
+                  <li>
+                    Area berarsir: hari yang seharusnya ada harga tapi datanya kosong. Garis
+                    terputus di sana.
+                  </li>
+                )}
+                <li>Akhir pekan dan hari libur saat sumber tidak terbit tidak dianggap kosong.</li>
+                <li>Emas fisik: harga per keping. Tabungan Emas: harga per gram.</li>
+                {!manual && showsSpread(show) ? (
+                  <li>
+                    Spread = (harga jual − buyback) ÷ harga jual, dari sumber yang sama pada tanggal
+                    yang sama. Buyback Logam Mulia selain 1 g dihitung dari buyback 1 g × berat.
+                  </li>
+                ) : null}
+                {hasLate ? (
+                  <li>
+                    Garis yang lebih pendek berarti datanya baru tersedia sejak titik awalnya.
+                  </li>
+                ) : null}
+                {view.mode === 'gram' ? <li>Per gram: harga keping dibagi beratnya.</li> : null}
+                {view.mode === 'index' || view.mode === 'pct' ? (
+                  <li>
+                    Indeks dan % ubah diukur dari titik pertama yang terlihat. Mengganti rentang
+                    ikut mengganti titik awalnya.
+                  </li>
+                ) : null}
+                {view.agg !== 'd' ? (
+                  <li>
+                    Satu titik = harga hari terakhir yang ada datanya di tiap{' '}
+                    {view.agg === 'w' ? 'minggu' : 'bulan'}.
+                  </li>
+                ) : null}
+                {bandOn ? (
+                  <li>Pita: rentang harga terendah sampai tertinggi di tiap periode.</li>
+                ) : null}
+              </ul>
+            </InfoPopover>
+          </div>
+          <p className="num m-0 mt-0.5 text-sm text-muted">
+            {eff.from ? `${formatDate(eff.from)} – ` : 'sampai '}
+            {formatDate(eff.to)} · {countLabel}
+          </p>
         </div>
 
-        <div className="overflow-hidden rounded-[18px] border border-line bg-surface">
-          <h2 className="m-0 px-5 py-[18px] text-base font-semibold">Ringkasan rentang</h2>
-          <div className="@container">
-            <div role="table" aria-label="Ringkasan rentang">
-              <div
-                role="row"
-                className={cn(
-                  SUM_ROW,
-                  'hidden py-2.5 text-2xs font-semibold uppercase tracking-[.1em] text-faint @min-[580px]:grid',
-                )}
-              >
-                <span role="columnheader">Series</span>
-                <span role="columnheader" className="text-right">
-                  Awal
-                </span>
-                <span role="columnheader" className="text-right">
-                  Akhir
-                </span>
-                <span role="columnheader" className="text-right">
-                  Terendah
-                </span>
-                <span role="columnheader" className="text-right">
-                  Tertinggi
-                </span>
-              </div>
-              {stats.length === 0 ? (
-                <p className="m-0 border-t border-line px-5 py-4 text-sm text-muted">
-                  {loading ? 'Memuat data…' : 'Belum ada series aktif.'}
-                </p>
-              ) : null}
-              {stats.map(({ b, s }) => {
-                const { title, meta } = seriesParts(b.opt, b.pick.price);
-                return (
-                  <div
-                    key={b.id}
-                    role="row"
-                    className={cn(
-                      SUM_ROW,
-                      'py-3 text-[13px] @min-[580px]:py-3.5 @min-[580px]:text-sm',
-                      // HP sangat sempit (≈320px): angka sedikit lebih kecil agar 3 kolom muat.
-                      '@max-[330px]:gap-x-2 @max-[330px]:px-4 @max-[330px]:text-xs',
-                    )}
-                  >
-                    {/* HP: judul selebar baris, ruang kanannya dipakai sel Akhir (lihat di bawah). */}
-                    <span
-                      role="cell"
-                      className="col-span-3 col-start-1 row-start-1 flex min-w-0 items-start gap-2.5 pr-[108px] @min-[580px]:col-span-1 @min-[580px]:col-start-auto @min-[580px]:row-start-auto @min-[580px]:pr-0"
-                    >
-                      <Swatch
-                        color={optionColor(b.opt)}
-                        dashed={b.pick.price === 'buyback'}
-                        width={16}
-                        className="mt-[6px] flex-none @min-[580px]:mt-[5px]"
-                      />
-                      <span className="flex min-w-0 flex-col">
-                        <span className={SUM_PRIMARY}>{title}</span>
-                        {meta ? <span className="text-xs text-muted">{meta}</span> : null}
-                      </span>
-                    </span>
-                    <span role="cell" className={SUM_CELL}>
-                      <span aria-hidden="true" className={SUM_CELL_LABEL}>
-                        Awal
-                      </span>
-                      <span className="whitespace-nowrap">
-                        {s ? formatRupiah(s.first.value) : EMPTY}
-                      </span>
-                      {s?.startsLate ? (
-                        <span className={SUM_NOTE}>mulai {formatDate(s.first.date)}</span>
-                      ) : null}
-                    </span>
-                    {/* HP: Akhir menumpang di kanan baris judul; sel lain mengalir ke baris kedua. */}
-                    <span
-                      role="cell"
-                      className="num col-span-3 col-start-1 row-start-1 flex flex-col items-end justify-self-end text-right @min-[580px]:col-span-1 @min-[580px]:col-start-auto @min-[580px]:row-start-auto @min-[580px]:justify-self-stretch"
-                    >
-                      <span className={cn(SUM_PRIMARY, 'whitespace-nowrap')}>
-                        {s ? formatRupiah(s.last.value) : EMPTY}
-                      </span>
-                      {s ? (
-                        <span
-                          className={cn(
-                            'text-xs font-medium',
-                            DIR_CLASS[changeDirection(s.changePct)],
-                          )}
-                        >
-                          {formatPct(s.changePct)}
-                        </span>
-                      ) : null}
-                    </span>
-                    <span role="cell" className={SUM_CELL}>
-                      <span aria-hidden="true" className={SUM_CELL_LABEL}>
-                        Terendah
-                      </span>
-                      <span className="whitespace-nowrap">
-                        {s ? formatRupiah(s.min.value) : EMPTY}
-                      </span>
-                      {s ? <span className={SUM_NOTE}>{formatDate(s.min.date)}</span> : null}
-                    </span>
-                    <span role="cell" className={SUM_CELL}>
-                      <span aria-hidden="true" className={SUM_CELL_LABEL}>
-                        Tertinggi
-                      </span>
-                      <span className="whitespace-nowrap">
-                        {s ? formatRupiah(s.max.value) : EMPTY}
-                      </span>
-                      {s ? <span className={SUM_NOTE}>{formatDate(s.max.date)}</span> : null}
-                    </span>
-                  </div>
-                );
-              })}
+        {error ? (
+          <Hint>Data gagal dimuat. Muat ulang halaman.</Hint>
+        ) : !hasLines ? (
+          <Hint>{emptyHint}</Hint>
+        ) : loading || !built ? (
+          <Hint>Memuat data…</Hint>
+        ) : both ? (
+          <div className="flex flex-col gap-4">
+            {priceChart(priceH2, true)}
+            {spreadChart(spreadH2, true)}
+          </div>
+        ) : !manual && show === 'spread' ? (
+          spreadChart(chartH, false)
+        ) : (
+          priceChart(chartH, false)
+        )}
+
+        {cards.length > 0 && !loading ? (
+          <div className="mt-5 grid grid-cols-[repeat(auto-fit,minmax(min(220px,100%),1fr))] gap-2.5">
+            {cards.map((c) => (
+              <StatCard
+                key={c.key}
+                color={c.color}
+                dashed={c.dashed}
+                title={c.title}
+                main={c.main}
+                sub={c.sub}
+              />
+            ))}
+          </div>
+        ) : null}
+
+        <InfoPopover label="Sumber" ariaLabel="Sumber data" side="top" className="mt-4">
+          {stampSources.map((src) => {
+            const st = stamps[src];
+            const date =
+              st?.date ??
+              built
+                ?.filter((b) => b.opt.source === src)
+                .map((b) => b.points.at(-1)?.date ?? '')
+                .sort()
+                .at(-1) ??
+              asOf;
+            const names = [...active, ...spreadSrc]
+              .filter((a) => a.opt.source === src)
+              .map((a) => optionBrandName(a.opt))
+              .filter((v, i, arr) => arr.indexOf(v) === i)
+              .join(', ');
+            return (
+              <SourceStamp key={src} source={src} date={date || asOf} at={st?.at ?? null} bare>
+                {names}
+              </SourceStamp>
+            );
+          })}
+        </InfoPopover>
+      </div>
+
+      <div className="overflow-hidden rounded-[18px] border border-line bg-surface">
+        <h2 className="m-0 px-5 py-[18px] text-base font-semibold">Ringkasan rentang</h2>
+        <div className="@container">
+          <div role="table" aria-label="Ringkasan rentang">
+            <div
+              role="row"
+              className={cn(
+                SUM_ROW,
+                'hidden py-2.5 text-2xs font-semibold uppercase tracking-[.1em] text-faint @min-[580px]:grid',
+              )}
+            >
+              <span role="columnheader">Series</span>
+              <span role="columnheader" className="text-right">
+                Awal
+              </span>
+              <span role="columnheader" className="text-right">
+                Akhir
+              </span>
+              <span role="columnheader" className="text-right">
+                Terendah
+              </span>
+              <span role="columnheader" className="text-right">
+                Tertinggi
+              </span>
             </div>
+            {noRows ? (
+              <p className="m-0 border-t border-line px-5 py-4 text-sm text-muted">
+                {loading && hasLines ? 'Memuat data…' : 'Belum ada series aktif.'}
+              </p>
+            ) : null}
+            {summary.map((row) => {
+              const { s } = row;
+              return (
+                <div
+                  key={row.key}
+                  role="row"
+                  className={cn(
+                    SUM_ROW,
+                    'py-3 text-[13px] @min-[580px]:py-3.5 @min-[580px]:text-sm',
+                    // HP sangat sempit (≈320px): angka sedikit lebih kecil agar 3 kolom muat.
+                    '@max-[330px]:gap-x-2 @max-[330px]:px-4 @max-[330px]:text-xs',
+                  )}
+                >
+                  {/* HP: judul selebar baris, ruang kanannya dipakai sel Akhir (lihat di bawah). */}
+                  <span
+                    role="cell"
+                    className="col-span-3 col-start-1 row-start-1 flex min-w-0 items-start gap-2.5 pr-[108px] @min-[580px]:col-span-1 @min-[580px]:col-start-auto @min-[580px]:row-start-auto @min-[580px]:pr-0"
+                  >
+                    <Swatch
+                      color={row.color}
+                      dashed={row.dashed}
+                      width={16}
+                      className="mt-[6px] flex-none @min-[580px]:mt-[5px]"
+                    />
+                    <span className="flex min-w-0 flex-col">
+                      <span className={SUM_PRIMARY}>{row.title}</span>
+                      {row.meta ? <span className="text-xs text-muted">{row.meta}</span> : null}
+                    </span>
+                  </span>
+                  <span role="cell" className={SUM_CELL}>
+                    <span aria-hidden="true" className={SUM_CELL_LABEL}>
+                      Awal
+                    </span>
+                    <span className="whitespace-nowrap">{s ? row.fmt(s.first.value) : EMPTY}</span>
+                    {s?.startsLate ? (
+                      <span className={SUM_NOTE}>mulai {formatDate(s.first.date)}</span>
+                    ) : null}
+                  </span>
+                  {/* HP: Akhir menumpang di kanan baris judul; sel lain mengalir ke baris kedua. */}
+                  <span
+                    role="cell"
+                    className="num col-span-3 col-start-1 row-start-1 flex flex-col items-end justify-self-end text-right @min-[580px]:col-span-1 @min-[580px]:col-start-auto @min-[580px]:row-start-auto @min-[580px]:justify-self-stretch"
+                  >
+                    <span className={cn(SUM_PRIMARY, 'whitespace-nowrap')}>
+                      {s ? row.fmt(s.last.value) : EMPTY}
+                    </span>
+                    {s && row.showChange ? (
+                      <span
+                        className={cn(
+                          'text-xs font-medium',
+                          DIR_CLASS[changeDirection(s.changePct)],
+                        )}
+                      >
+                        {formatPct(s.changePct)}
+                      </span>
+                    ) : null}
+                  </span>
+                  <span role="cell" className={SUM_CELL}>
+                    <span aria-hidden="true" className={SUM_CELL_LABEL}>
+                      Terendah
+                    </span>
+                    <span className="whitespace-nowrap">{s ? row.fmt(s.min.value) : EMPTY}</span>
+                    {s ? <span className={SUM_NOTE}>{formatDate(s.min.date)}</span> : null}
+                  </span>
+                  <span role="cell" className={SUM_CELL}>
+                    <span aria-hidden="true" className={SUM_CELL_LABEL}>
+                      Tertinggi
+                    </span>
+                    <span className="whitespace-nowrap">{s ? row.fmt(s.max.value) : EMPTY}</span>
+                    {s ? <span className={SUM_NOTE}>{formatDate(s.max.date)}</span> : null}
+                  </span>
+                </div>
+              );
+            })}
           </div>
         </div>
       </div>
 
-      {sheetOpen ? (
-        <div
-          aria-hidden="true"
-          onClick={() => setSheetOpen(false)}
-          className="fixed inset-0 z-50 bg-black/40 sm:hidden"
-        />
-      ) : null}
-      <aside
-        id="explorer-settings"
-        aria-label="Pengaturan grafik"
-        className={cn(
-          'flex min-w-0 flex-col gap-3 sm:max-lg:grid sm:max-lg:grid-cols-2 sm:max-lg:items-start sm:max-lg:gap-4 lg:w-[320px] lg:flex-none',
-          // HP: lembar dari bawah; bagian tanpa kartu, dipisah garis (D-54, D-55).
-          'max-sm:fixed max-sm:inset-x-0 max-sm:bottom-0 max-sm:z-50 max-sm:max-h-[85dvh] max-sm:gap-0 max-sm:overflow-y-auto max-sm:overscroll-contain max-sm:rounded-t-card max-sm:border-t max-sm:border-line max-sm:bg-bg max-sm:px-[18px] max-sm:pb-[calc(16px+env(safe-area-inset-bottom))]',
-          !sheetOpen && 'max-sm:hidden',
-        )}
-      >
-        <div className="sticky top-0 z-10 -mx-[18px] flex flex-col bg-bg px-[18px] pb-3 pt-2 sm:hidden">
-          <span aria-hidden="true" className="mx-auto mb-2 h-1 w-10 rounded-full bg-line" />
-          <div className="flex items-center justify-between">
-            <span className="text-base font-semibold">Pengaturan grafik</span>
-            <button
-              type="button"
-              onClick={() => setSheetOpen(false)}
-              className="min-h-10 cursor-pointer rounded-control bg-btn px-4 text-sm font-semibold text-btntext"
-            >
-              Selesai
-            </button>
-          </div>
-        </div>
-
-        <section aria-labelledby="active-title" className={cn(SECTION, 'flex flex-col gap-3')}>
-          <div className="flex items-baseline justify-between gap-3">
-            <h2 id="active-title" className="m-0 text-base font-semibold">
-              Series aktif
-            </h2>
-            <span className="num text-xs text-faint">
-              {active.length} dari maks. {MAX_SERIES}
-            </span>
-          </div>
-          {active.length === 0 ? (
-            <p className="m-0 rounded-xl border border-dashed border-line px-3 py-4 text-center text-sm leading-relaxed text-muted">
-              Belum ada series. Pilih di bagian Tambah series.
-            </p>
-          ) : (
-            <ul className="m-0 flex list-none flex-col gap-2 p-0">
-              {active.map((a) => {
-                const label = seriesLabel(a.opt, a.pick.price);
-                return (
-                  <li
-                    key={a.id}
-                    className="flex min-w-0 items-center gap-3 rounded-xl border border-line bg-surface2 py-2 pl-3 pr-1"
-                  >
-                    <Swatch
-                      color={optionColor(a.opt)}
-                      dashed={a.pick.price === 'buyback'}
-                      width={20}
-                    />
-                    <div className="min-w-0 flex-1">
-                      <div className="flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-0.5">
-                        <span className="min-w-0 break-words text-sm font-semibold leading-snug">
-                          {seriesTitle(a.opt)}
-                        </span>
-                        <PriceTag price={a.pick.price} />
-                      </div>
-                      <div className="mt-0.5 break-words text-xs leading-snug text-muted">
-                        {SOURCE_LABELS[a.opt.source]} ·{' '}
-                        {seriesMeta(a.opt, a.pick.price, view.mode === 'gram')}
-                      </div>
-                    </div>
-                    <button
-                      type="button"
-                      aria-label={`Hapus series ${label}`}
-                      title="Hapus dari grafik"
-                      onClick={() =>
-                        setPicks(active.filter((x) => x.id !== a.id).map((x) => x.pick))
-                      }
-                      className="grid size-10 flex-none cursor-pointer place-items-center rounded-full border-0 bg-transparent text-faint transition-colors hover:bg-surface hover:text-text"
-                    >
-                      <svg
-                        width="14"
-                        height="14"
-                        viewBox="0 0 24 24"
-                        aria-hidden="true"
-                        className="fill-none stroke-current stroke-2"
-                        strokeLinecap="round"
-                      >
-                        <path d="M6 6l12 12M18 6L6 18" />
-                      </svg>
-                    </button>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
-        </section>
-
-        <details open className={cn(SECTION, 'group')}>
-          <SectionSummary>Tambah series</SectionSummary>
-          <div className="mt-3 flex flex-col gap-3">
-            <Segmented
-              label="Produk"
-              size="sm"
-              className="grid w-full grid-cols-2"
-              options={(['fisik', 'tabungan'] as const).map((k) => ({
-                value: k,
-                label: PRODUCT_KIND_LABELS[k],
-              }))}
-              value={kind}
-              onChange={setKind}
-            />
-            <div className="grid grid-cols-2 gap-x-2.5 gap-y-3">
-              <label className={FIELD_LABEL}>
-                Brand
-                <select
-                  className={FIELD}
-                  value={brand}
-                  onChange={(e) => setBrandSel(e.target.value)}
-                >
-                  {brandOpts.map((o) => (
-                    <option key={optionBrandKey(o)} value={optionBrandKey(o)}>
-                      {optionBrandName(o)}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label className={FIELD_LABEL}>
-                Sumber
-                <select
-                  className={FIELD}
-                  value={source}
-                  onChange={(e) => setSourceSel(e.target.value as PriceSource)}
-                >
-                  {sources.map((s) => (
-                    <option key={s} value={s}>
-                      {SOURCE_LABELS[s]}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label className={FIELD_LABEL}>
-                Gramasi
-                <select
-                  className={FIELD}
-                  value={opt ? String(opt.w) : ''}
-                  onChange={(e) => setWSel(e.target.value)}
-                >
-                  {weights.map((o) => (
-                    <option key={o.id} value={String(o.w)}>
-                      {o.kind === 'tabungan' ? 'per gram' : formatWeight(o.w)}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label className={FIELD_LABEL}>
-                Jenis harga
-                <select
-                  className={FIELD}
-                  value={price}
-                  onChange={(e) => setPriceSel(e.target.value as PriceField)}
-                >
-                  {prices.map((p) => (
-                    <option key={p} value={p}>
-                      {PRICE_LABEL[p]}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            </div>
-            {opt && price ? (
-              <div className="flex min-w-0 items-center gap-2.5 rounded-xl border border-dashed border-line px-3 py-2.5">
-                <Swatch color={optionColor(opt)} dashed={price === 'buyback'} width={20} />
-                <span className="min-w-0 flex-1 break-words text-xs leading-snug text-muted">
-                  <span className="font-semibold text-text">{seriesTitle(opt)}</span> ·{' '}
-                  {SOURCE_LABELS[opt.source]} · {PRICE_LABEL[price]}
-                </span>
-              </div>
-            ) : null}
-            <button
-              type="button"
-              disabled={!candidate || duplicate || full}
-              onClick={() => candidate && setPicks([...active.map((a) => a.pick), candidate])}
-              className="inline-flex min-h-11 w-full cursor-pointer items-center justify-center gap-2 rounded-xl border-0 bg-btn text-sm font-semibold text-btntext disabled:cursor-not-allowed disabled:bg-surface2 disabled:text-faint"
-            >
-              <svg
-                width="14"
-                height="14"
-                viewBox="0 0 24 24"
-                aria-hidden="true"
-                className="fill-none stroke-current stroke-[2.4]"
-                strokeLinecap="round"
-              >
-                <path d="M12 5v14M5 12h14" />
-              </svg>
-              Tambah ke grafik
-            </button>
-            {addNote ? (
-              <p role="status" className="m-0 text-xs leading-relaxed text-muted">
-                {addNote}
-              </p>
-            ) : null}
-          </div>
-        </details>
-
-        <details open className={cn(SECTION, 'group sm:max-lg:col-span-2')}>
-          <SectionSummary>Tampilan</SectionSummary>
-          <div className="mt-3 grid gap-4 sm:max-lg:grid-cols-2 sm:max-lg:gap-x-6">
-            <div className="flex min-w-0 flex-col gap-4">
-              <div className="flex flex-col gap-1.5">
-                <span className={GROUP_LABEL}>Mode nilai</span>
-                <Segmented
-                  label="Mode nilai"
-                  size="sm"
-                  className="grid w-full grid-cols-4 [&>button]:min-w-0 [&>button]:px-1"
-                  options={MODE_OPTIONS}
-                  value={view.mode}
-                  onChange={(mode) => setView({ mode })}
-                />
-              </div>
-              <div className="flex flex-col gap-1.5">
-                <span className={GROUP_LABEL}>Agregasi · harga penutupan periode</span>
-                <Segmented
-                  label="Agregasi"
-                  size="sm"
-                  className="grid w-full grid-cols-3"
-                  options={AGG_OPTIONS}
-                  value={view.agg}
-                  onChange={(agg) => setView({ agg })}
-                />
-              </div>
-            </div>
-            <div className="flex min-w-0 flex-col gap-1.5">
-              <span className={GROUP_LABEL}>Opsi grafik</span>
-              <div className="flex flex-col divide-y divide-line rounded-xl border border-line">
-                <label className="flex min-h-11 cursor-pointer items-start gap-3 px-3 py-2.5 text-sm leading-snug">
-                  <input
-                    type="checkbox"
-                    checked={view.ffill}
-                    onChange={(e) => setView({ ffill: e.target.checked })}
-                    className="mt-0.5 size-[18px] flex-none accent-gold"
-                  />
-                  <span>
-                    Isi celah (forward-fill)
-                    <span className="mt-0.5 block text-xs text-muted">
-                      Hari tanpa data memakai nilai sebelumnya, ditandai di tooltip. Matikan untuk
-                      melihat celah.
-                    </span>
-                  </span>
-                </label>
-                <label
-                  className={cn(
-                    'flex min-h-11 items-start gap-3 px-3 py-2.5 text-sm leading-snug',
-                    view.agg === 'd' ? 'cursor-not-allowed' : 'cursor-pointer',
-                  )}
-                >
-                  <input
-                    type="checkbox"
-                    checked={bandOn}
-                    disabled={view.agg === 'd'}
-                    onChange={(e) => setView({ band: e.target.checked })}
-                    className="mt-0.5 size-[18px] flex-none accent-gold disabled:opacity-50"
-                  />
-                  <span className={view.agg === 'd' ? 'text-muted' : undefined}>
-                    Pita min–maks
-                    <span className="mt-0.5 block text-xs text-muted">
-                      {view.agg === 'd'
-                        ? 'Pilih agregasi mingguan atau bulanan untuk mengaktifkan.'
-                        : 'Rentang terendah–tertinggi dalam periode.'}
-                    </span>
-                  </span>
-                </label>
-              </div>
-            </div>
-          </div>
-        </details>
-      </aside>
+      <AdvancedDialog
+        open={advOpen}
+        onClose={closeAdvanced}
+        view={view}
+        onView={setView}
+        range={range}
+        onRange={(r) => setRange(r)}
+        lastDate={lastDate}
+        minDate={minDate ?? undefined}
+        options={options}
+        listed={listed}
+        manual={manual}
+        onPicks={setPicks}
+        onBack={backToBasic}
+      />
     </section>
   );
 }

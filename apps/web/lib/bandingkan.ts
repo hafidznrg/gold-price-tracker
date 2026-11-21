@@ -16,8 +16,6 @@ import {
 import {
   aggregateClose,
   applyMode,
-  encodeMode,
-  encodePicks,
   gramDivisor,
   MAX_SERIES,
   seriesPoints,
@@ -156,8 +154,7 @@ export function findOption(
 }
 
 /**
- * Preset "Bandingkan semua brand" di Riwayat harga (D-70): harga jual semua series pembanding yang
- * tersedia pada berat `w`, urut `COMPARE_DEFS`, maksimal `MAX_SERIES`. Tabungan Emas memakai
+ * Pilihan seri harga jual semua series pembanding yang tersedia pada berat `w`, urut `COMPARE_DEFS`, maksimal `MAX_SERIES`. Tabungan Emas memakai
  * beratnya sendiri (0,01 g): harganya sudah per gram dan melayani semua gramasi.
  */
 export function comparePicks(w: number, options: readonly ExplorerOption[]): SeriesPick[] {
@@ -169,13 +166,18 @@ export function comparePicks(w: number, options: readonly ExplorerOption[]): Ser
   return picks.slice(0, MAX_SERIES);
 }
 
-/** Alamat Riwayat harga dengan preset "Bandingkan semua brand" pada berat `w` (per gram; `r` opsional). */
+/**
+ * Alamat Riwayat harga (mode dasar, D-71) untuk berat `w`: semua brand pembanding yang ada di `w`,
+ * harga jual per gram (`r` opsional). Brand ditulis eksplisit agar tautan tetap berlaku bila
+ * bawaan berubah.
+ */
 export function comparePresetHref(
   w: number,
   options: readonly ExplorerOption[],
   range?: string | null,
 ): string {
-  const q = [`s=${encodePicks(comparePicks(w, options))}`, `m=${encodeMode('gram')}`];
+  const ids = COMPARE_DEFS.filter((d) => findOption(d, w, options)).map((d) => d.id);
+  const q = [`g=${weightKey(w)}`, `b=${ids.length > 0 ? ids.join(',') : '-'}`, 'm=gram'];
   if (range) q.push(`r=${range}`);
   return `/explorer?${q.join('&')}`;
 }

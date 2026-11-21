@@ -30,7 +30,7 @@ export default function ExplorerPage() {
       <PageIntro
         eyebrow="Riwayat harga"
         title="Telusuri setiap seri harga"
-        lead="Bandingkan brand di berat yang sama, atau gabungkan sendiri brand, sumber, gramasi, dan jenis harga dalam satu grafik. Setiap pengaturan tersimpan di URL sehingga bisa dibagikan apa adanya."
+        lead="Bandingkan brand di berat yang sama. Setiap pengaturan tersimpan di URL sehingga bisa dibagikan apa adanya."
       />
       <NuqsAdapter>
         <Suspense
@@ -43,7 +43,7 @@ export default function ExplorerPage() {
         >
           <ExplorerBoard
             options={options}
-            presetWeights={compareWeights(compareOptions(options))}
+            weights={compareWeights(compareOptions(options))}
             asOf={meta.as_of ?? new Date().toISOString().slice(0, 10)}
             stamps={stamps}
             calendar={calendarFromMeta(meta)}

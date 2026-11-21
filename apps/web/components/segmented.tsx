@@ -22,6 +22,7 @@ export function Segmented<T extends string>({
   semantics = 'radio',
   size = 'md',
   scroll = false,
+  fill = false,
   className,
 }: {
   options: readonly SegmentedOption<T>[];
@@ -34,6 +35,8 @@ export function Segmented<T extends string>({
   size?: 'md' | 'sm';
   /** Di layar < 640 px: satu baris yang bisa digeser horizontal, bukan membungkus. */
   scroll?: boolean;
+  /** HP: tombol dibagi rata selebar wadah (`flex-1`), alternatif `scroll`. */
+  fill?: boolean;
   className?: string;
 }) {
   const refs = useRef<(HTMLButtonElement | null)[]>([]);
@@ -66,6 +69,7 @@ export function Segmented<T extends string>({
         size === 'sm' ? 'gap-0.5 rounded-xl p-0.5' : 'gap-1 rounded-[14px] p-1',
         scroll &&
           'max-sm:max-w-full max-sm:flex-nowrap max-sm:overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden',
+        fill && 'max-sm:w-full max-sm:flex-nowrap',
         className,
       )}
     >
@@ -89,6 +93,7 @@ export function Segmented<T extends string>({
               size === 'sm'
                 ? 'min-h-9 min-w-10 px-2.5 text-xs max-sm:min-h-10'
                 : 'min-h-11 min-w-12 px-3.5 text-sm',
+              fill && 'max-sm:min-w-0 max-sm:flex-1 max-sm:shrink max-sm:px-1',
               active ? 'bg-btn text-btntext' : 'bg-transparent text-muted hover:text-text',
             )}
           >

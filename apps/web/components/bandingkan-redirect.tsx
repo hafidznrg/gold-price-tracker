@@ -6,7 +6,8 @@ import { useEffect } from 'react';
 /**
  * Pengalih `/bandingkan` → Riwayat harga (D-70). Static export tak punya redirect server, jadi
  * `?w=`, `?m=`, dan `?r=` dibaca di klien. `m=idx` → mode indeks, lainnya → per gram; `w` tak
- * dikenal → 1 g. `presets` = kunci berat → nilai `s` hasil preset (dihitung di server).
+ * dikenal → 1 g. Tujuannya mode dasar D-71 (`?g=&b=`). `presets` = kunci berat → nilai `b`
+ * (semua brand di gramasi itu), dihitung di server.
  */
 export function BandingkanRedirect({
   presets,
@@ -19,12 +20,13 @@ export function BandingkanRedirect({
   useEffect(() => {
     const q = new URLSearchParams(window.location.search);
     const w = q.get('w');
-    const s = (w && presets[w]) || presets['1'];
-    if (!s) {
+    const key = w && presets[w] ? w : '1';
+    const b = presets[key];
+    if (!b) {
       router.replace('/explorer');
       return;
     }
-    const out = [`s=${s}`, `m=${q.get('m') === 'idx' ? 'idx' : 'gram'}`];
+    const out = [`g=${key}`, `b=${b}`, `m=${q.get('m') === 'idx' ? 'idx' : 'gram'}`];
     const r = q.get('r');
     if (r) out.push(`r=${encodeURIComponent(r)}`);
     router.replace(`/explorer?${out.join('&')}`);

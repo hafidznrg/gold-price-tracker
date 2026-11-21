@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<title>Mockup Riwayat harga v3</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f7f5f0;--surface:#fff;--surface2:#f0efea;--line:#e1dfd8;--grid:#eceae4;--text:#15171c;--muted:#55575e;--faint:#686a71;--gold:#8a6618;--goldsoft:rgba(176,132,40,.12);--goldline:rgba(138,102,24,.35);--antam:#a67c1e;--ubs:#2f64d6;--g24:#9c3220;--tab:#0f7f6c;--lotus:#7a4bb5;--emasku:#b3237a;--btn:#15171c}
+*{box-sizing:border-box}
+body{margin:0;background:#e9e6de;font-family:Inter,system-ui,sans-serif;color:var(--text);width:1800px;display:flex;gap:32px;padding:28px}
+.frame{background:var(--bg);border-radius:18px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,.06)}
+.cap{font-size:13px;font-weight:700;letter-spacing:.08em;color:var(--gold);text-transform:uppercase;margin:0 0 10px}
+.serif{font-family:'Instrument Serif',Georgia,serif;font-weight:400}
+header{display:flex;align-items:center;justify-content:space-between;padding:18px 40px}
+.logo{display:flex;align-items:center;gap:10px;font-size:22px}
+.logo em{color:var(--gold)}
+nav{display:flex;gap:6px;padding:0 40px 12px;border-bottom:1px solid var(--line)}
+nav a{padding:8px 14px;border-radius:999px;font-size:15px;color:var(--muted)}
+nav a.on{background:var(--goldsoft);color:#7d5c14;font-weight:600}
+.chip-status{font-size:13px;border:1px solid var(--line);border-radius:999px;padding:7px 14px;color:var(--muted);background:var(--surface)}
+.wrap{padding:0 40px}
+.eyebrow{font-size:12px;letter-spacing:.14em;font-weight:600;color:var(--gold);margin:26px 0 6px}
+h1{font-size:44px;margin:0}
+.lead{color:var(--muted);font-size:15px;margin:8px 0 22px;max-width:720px;line-height:1.5}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:22px;padding:20px 26px;position:relative}
+.toolbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.dd{height:38px;border:1px solid var(--line);background:var(--surface);border-radius:11px;padding:0 12px;display:inline-flex;align-items:center;gap:8px;font-size:13.5px;font-weight:600;white-space:nowrap}
+.dd .k{font-weight:500;color:var(--faint)}
+.dd .car{color:var(--faint);font-size:11px;margin-left:2px}
+.dd.open{border-color:var(--gold);box-shadow:0 0 0 3px var(--goldsoft)}
+.dots{display:inline-flex}
+.dots i{width:10px;height:10px;border-radius:50%;border:2px solid #fff;margin-left:-4px}
+.dots i:first-child{margin-left:0}
+.seg{display:inline-flex;gap:2px;padding:3px;border:1px solid var(--line);border-radius:11px}
+.seg span{padding:6px 11px;border-radius:8px;font-size:13px;font-weight:600;color:var(--muted)}
+.seg span.on{background:var(--btn);color:#fff}
+.spacer{flex:1}
+.btn-adv{height:38px;border-radius:11px;padding:0 13px;display:inline-flex;align-items:center;gap:7px;font-size:13.5px;font-weight:600;border:1px solid var(--goldline);background:var(--goldsoft);color:#7d5c14}
+.pop{position:absolute;top:66px;left:276px;width:330px;background:var(--surface);border:1px solid var(--line);border-radius:16px;box-shadow:0 14px 40px rgba(20,20,20,.16);padding:10px;z-index:5}
+.pop h4{margin:4px 8px 8px;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);display:flex;justify-content:space-between}
+.pop h4 a{text-transform:none;letter-spacing:0;color:var(--gold);font-weight:600;font-size:12.5px}
+.opt{display:flex;align-items:center;gap:10px;padding:8px;border-radius:10px;font-size:13.5px}
+.opt .cb{width:18px;height:18px;border-radius:5px;border:1.5px solid var(--line);display:grid;place-items:center;font-size:12px;color:#fff;flex:none}
+.opt.on .cb{background:var(--btn);border-color:var(--btn)}
+.opt .sw{width:18px;height:3px;border-radius:2px;flex:none}
+.opt .sw.dash{background:none!important;border-top:3px dashed}
+.opt small{color:var(--faint);margin-left:auto;font-size:12px}
+.opt.dis{opacity:.45}
+.opt.hl{background:var(--surface2)}
+.head{display:flex;justify-content:space-between;align-items:flex-end;margin:20px 0 4px}
+.head h2{margin:0;font-size:20px}
+.sub{font-size:13px;color:var(--muted);margin-top:3px}
+.panel-title{font-size:13px;font-weight:600;color:var(--muted);margin:6px 0 0;display:flex;justify-content:space-between}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:14px}
+.stat{border:1px solid var(--line);border-radius:14px;padding:11px 14px;display:flex;flex-direction:column;gap:4px}
+.stat .t{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:7px}
+.stat .v{font-size:17px;font-weight:600}
+.stat .d{font-size:12px;color:var(--muted)}
+.stat .d b{color:#b4442a;font-weight:600}
+.num{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:50%;background:var(--gold);color:#fff;font-size:11px;font-weight:700;flex:none}
+/* dialog */
+.dialog{width:440px;background:var(--surface);border:1px solid var(--line);border-radius:22px;box-shadow:0 20px 50px rgba(20,20,20,.18);overflow:hidden}
+.dh{display:flex;justify-content:space-between;align-items:center;padding:18px 22px;border-bottom:1px solid var(--line)}
+.dh h3{margin:0;font-size:18px}
+.ds{padding:16px 22px;border-bottom:1px solid var(--line)}
+.ds .l{font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);margin-bottom:9px}
+.row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.tg{display:flex;justify-content:space-between;align-items:center;font-size:13.5px;padding:5px 0}
+.tg small{display:block;color:var(--faint);font-size:12px;margin-top:2px}
+.sw-t{width:36px;height:20px;border-radius:999px;background:var(--btn);position:relative;flex:none}
+.sw-t::after{content:'';position:absolute;right:3px;top:3px;width:14px;height:14px;border-radius:50%;background:#fff}
+.sw-t.off{background:var(--line)}.sw-t.off::after{right:auto;left:3px}
+.date{height:36px;border:1px solid var(--line);background:var(--surface2);border-radius:10px;padding:0 12px;display:inline-flex;align-items:center;font-size:13px}
+.ser{display:flex;align-items:center;gap:10px;padding:8px 10px;border:1px solid var(--line);border-radius:11px;font-size:13px;margin-bottom:6px}
+.ser .sw{width:18px;height:3px;border-radius:2px}
+.ser b{font-weight:600}
+.ser small{color:var(--faint)}
+.ser .x{margin-left:auto;color:var(--faint)}
+.add{display:flex;align-items:center;justify-content:center;gap:6px;border:1px dashed var(--goldline);border-radius:11px;padding:9px;font-size:13px;font-weight:600;color:var(--gold)}
+.df{display:flex;justify-content:space-between;align-items:center;padding:14px 22px;background:var(--surface2)}
+.btn{height:38px;border-radius:11px;padding:0 18px;display:inline-flex;align-items:center;font-size:13.5px;font-weight:600;background:var(--btn);color:#fff}
+.ghost{font-size:13px;font-weight:600;color:var(--muted)}
+.notes{margin-top:22px;font-size:13px;color:var(--muted);line-height:1.55}
+.notes div{display:flex;gap:10px;margin-bottom:9px}
+</style>
+</head>
+<body>
+<div>
+<p class="cap">Halaman Riwayat harga · desktop</p>
+<div class="frame" style="width:1280px">
+<header>
+  <div class="logo"><svg width="30" height="22" viewBox="0 0 30 22"><rect x="2" y="12" width="22" height="9" rx="2" fill="#a67c1e"/><path d="M4 10 L13 5 L18 8 L27 2" stroke="#7a5a14" stroke-width="2.4" fill="none"/></svg><span>Momen <em class="serif" style="font-style:italic">Emas</em></span></div>
+  <span class="chip-status">● Data 21 Nov 2026 · 13.20 WIB</span>
+</header>
+<nav><a>Hari ini</a><a class="on">Riwayat harga</a><a>Spread</a><a>Kalkulator</a><a>Kelipatan</a><a>Data</a></nav>
+<div class="wrap">
+  <div class="eyebrow">RIWAYAT HARGA</div>
+  <h1 class="serif">Telusuri setiap seri harga</h1>
+  <p class="lead">Bandingkan brand di berat yang sama. Setiap pengaturan tersimpan di URL sehingga bisa dibagikan apa adanya.</p>
+
+  <div class="card">
+    <div class="toolbar">
+      <span class="num">1</span>
+      <span class="dd"><span class="k">Gramasi</span>1 g<span class="car">▾</span></span>
+      <span class="dd"><span class="k">Tampilkan</span>Jual + spread<span class="car">▾</span></span>
+      <span class="dd open"><span class="dots"><i style="background:var(--antam)"></i><i style="background:var(--ubs)"></i><i style="background:var(--g24)"></i><i style="background:var(--emasku)"></i></span>4 brand<span class="car">▴</span></span>
+      <span class="spacer"></span>
+      <span class="num">2</span>
+      <div class="seg"><span>7H</span><span class="on">1B</span><span>3B</span><span>6B</span><span>YTD</span><span>1T</span><span>Semua</span></div>
+      <span class="num">3</span>
+      <span class="btn-adv">⚙ Lanjutan</span>
+    </div>
+
+    <div class="pop">
+      <h4>Brand · 1 g <a>Semua · Kosongkan</a></h4>
+      <div class="opt on"><span class="cb">✓</span><span class="sw" style="background:var(--antam)"></span>Antam <small>Logam Mulia</small></div>
+      <div class="opt dis"><span class="cb"></span><span class="sw dash" style="border-color:var(--antam)"></span>Antam <small>Pegadaian · tanpa buyback</small></div>
+      <div class="opt on"><span class="cb">✓</span><span class="sw" style="background:var(--ubs)"></span>UBS <small>UBS Lifestyle</small></div>
+      <div class="opt dis"><span class="cb"></span><span class="sw dash" style="border-color:var(--ubs)"></span>UBS <small>Pegadaian · tanpa buyback</small></div>
+      <div class="opt on"><span class="cb">✓</span><span class="sw" style="background:var(--g24)"></span>Galeri24 <small>Galeri24</small></div>
+      <div class="opt hl"><span class="cb"></span><span class="sw" style="background:var(--lotus)"></span>Lotus Archi <small>Galeri24</small></div>
+      <div class="opt on"><span class="cb">✓</span><span class="sw" style="background:var(--emasku)"></span>EMASKU <small>Hartadinata</small></div>
+      <div class="opt"><span class="cb"></span><span class="sw" style="background:var(--tab)"></span>Tabungan Emas <small>Pegadaian · per gram</small></div>
+    </div>
+
+    <div class="head">
+      <div><h2>Harga jual 1 g dan spread · harian</h2><div class="sub">21 Okt 2026 – 21 Nov 2026 · 4 brand</div></div>
+      <span style="font-size:13px;color:var(--muted)">ⓘ</span>
+    </div>
+    <div class="panel-title"><span>Harga jual per keping</span></div>
+    <svg id="price" width="1176" height="230"></svg>
+    <div class="panel-title"><span>Spread (jual − buyback) ÷ jual</span></div>
+    <svg id="spread" width="1176" height="140"></svg>
+
+    <div class="stats">
+      <div class="stat"><span class="t"><span style="width:16px;height:3px;background:var(--antam);border-radius:2px"></span>Antam · Logam Mulia</span><span class="v">Rp2.495.000</span><span class="d"><b>−2,31%</b> · spread 16,03% <span style="color:var(--faint)">(rata-rata 8,93%)</span></span></div>
+      <div class="stat"><span class="t"><span style="width:16px;height:3px;background:var(--ubs);border-radius:2px"></span>UBS · UBS Lifestyle</span><span class="v">Rp2.267.800</span><span class="d"><b>−8,7%</b> · spread 6,74%</span></div>
+      <div class="stat"><span class="t"><span style="width:16px;height:3px;background:var(--g24);border-radius:2px"></span>Galeri24</span><span class="v">Rp2.334.000</span><span class="d"><b>−4,46%</b> · spread 5,96%</span></div>
+      <div class="stat"><span class="t"><span style="width:16px;height:3px;background:var(--emasku);border-radius:2px"></span>EMASKU · Hartadinata</span><span class="v">Rp2.258.000</span><span class="d">data mulai 21 Nov · spread 6,02%</span></div>
+    </div>
+  </div>
+  <div style="height:32px"></div>
+</div>
+</div>
+</div>
+
+<div style="padding-top:26px">
+<p class="cap">Pop-up "⚙ Lanjutan"</p>
+<div class="dialog">
+  <div class="dh"><h3>Pengaturan lanjutan</h3><span style="color:var(--faint);font-size:18px">✕</span></div>
+  <div class="ds">
+    <div class="l">Nilai</div>
+    <div class="row"><div class="seg"><span class="on">Per keping</span><span>Per gram</span><span>Indeks</span><span>% ubah</span></div></div>
+  </div>
+  <div class="ds">
+    <div class="l">Agregasi</div>
+    <div class="row"><div class="seg"><span class="on">Harian</span><span>Mingguan</span><span>Bulanan</span></div></div>
+    <div class="tg" style="margin-top:10px"><div>Pita min–maks<small>Aktif saat agregasi mingguan/bulanan</small></div><span class="sw-t off"></span></div>
+    <div class="tg"><div>Isi hari tanpa data<small>Pakai nilai sebelumnya, ditandai di tooltip</small></div><span class="sw-t"></span></div>
+  </div>
+  <div class="ds">
+    <div class="l">Rentang kustom</div>
+    <div class="row"><span class="date">21/10/2026</span>–<span class="date">21/11/2026</span></div>
+  </div>
+  <div class="ds" style="border-bottom:0">
+    <div class="l">Seri manual <span style="text-transform:none;letter-spacing:0;font-weight:500">· campur gramasi, jual/buyback, varian</span></div>
+    <div class="ser"><span class="sw" style="background:var(--antam)"></span><b>Antam 1 g</b> <small>Logam Mulia · jual</small><span class="x">✕</span></div>
+    <div class="ser"><span class="sw" style="background:var(--antam);opacity:.55"></span><b>Antam 1 g</b> <small>Galeri24 non-Pegadaian · buyback</small><span class="x">✕</span></div>
+    <div class="ser"><span class="sw" style="background:var(--emasku)"></span><b>EMASKU Prime 25 g</b> <small>Hartadinata · jual</small><span class="x">✕</span></div>
+    <div class="add">+ Tambah seri</div>
+  </div>
+  <div class="df"><span class="ghost">Kembali ke pengaturan dasar</span><span class="btn">Terapkan</span></div>
+</div>
+<div class="notes">
+  <div><span class="num">1</span><span><b>Satu baris kontrol utama.</b> Gramasi, Tampilkan, dan Brand berupa tombol dropdown. Isinya baru muncul saat diklik (contoh: daftar brand terbuka).</span></div>
+  <div><span class="num">2</span><span><b>Rentang cepat</b> tetap terlihat karena paling sering diganti. Tanggal kustom pindah ke Lanjutan.</span></div>
+  <div><span class="num">3</span><span><b>Lanjutan</b> membuka pop-up. Di HP tampil sebagai lembar dari bawah. Bila seri manual dipakai, tombol dropdown 1 berubah jadi “Seri manual (3) ▾”.</span></div>
+</div>
+</div>
+
+<script>
+const N=31, W=1176, L=70, R=16;
+function rnd(seed){return()=>{seed=(seed*9301+49297)%233280;return seed/233280}}
+function series(start,end,vol,seed){const r=rnd(seed);const a=[];for(let i=0;i<N;i++){const t=i/(N-1);a.push(start+(end-start)*t+(r()-.5)*vol)}a[N-1]=end;return a}
+const P=[{c:'#a67c1e',d:series(2554,2495,25,3)},{c:'#2f64d6',d:series(2480,2268,40,7)},{c:'#9c3220',d:series(2443,2334,30,11)},{c:'#b3237a',d:null,last:2258}];
+const S=[{c:'#a67c1e',d:series(7.4,16.0,0.6,5).map((v,i)=>i<20?7.2+Math.sin(i/3)*0.6:v)},{c:'#2f64d6',d:series(6.2,6.74,0.4,9)},{c:'#9c3220',d:series(5.6,5.96,0.3,13)},{c:'#b3237a',d:null,last:6.02}];
+function draw(id,set,min,max,ticks,fmt,H,avg){
+  const svg=document.getElementById(id);const T=10,B=24;let h='';
+  const y=v=>T+(H-T-B)*(1-(v-min)/(max-min));const x=i=>L+(W-L-R)*i/(N-1);
+  ticks.forEach(t=>{h+=`<line x1="${L}" x2="${W-R}" y1="${y(t)}" y2="${y(t)}" stroke="#eceae4"/><text x="${L-10}" y="${y(t)+4}" font-size="11" fill="#686a71" text-anchor="end">${fmt(t)}</text>`});
+  ['21 Okt','26 Okt','31 Okt','5 Nov','10 Nov','15 Nov','21 Nov'].forEach((lb,k)=>{h+=`<text x="${L+(W-L-R)*k/6}" y="${H-6}" font-size="11" fill="#686a71" text-anchor="${k===6?'end':'middle'}">${lb}</text>`});
+  if(avg){h+=`<line x1="${L}" x2="${W-R}" y1="${y(avg)}" y2="${y(avg)}" stroke="#a67c1e" stroke-dasharray="5 4" opacity=".6"/><text x="${W-R-4}" y="${y(avg)-5}" font-size="11" fill="#8a6618" text-anchor="end">rata-rata Antam LM 8,93%</text>`}
+  set.forEach(s=>{if(s.d){h+=`<polyline fill="none" stroke="${s.c}" stroke-width="2.2" stroke-linejoin="round" points="${s.d.map((v,i)=>x(i)+','+y(v)).join(' ')}"/><circle cx="${x(N-1)}" cy="${y(s.d[N-1])}" r="3.5" fill="${s.c}"/>`}else{h+=`<circle cx="${x(N-1)}" cy="${y(s.last)}" r="3.5" fill="${s.c}"/>`}});
+  svg.innerHTML=h;
+}
+draw('price',P,2200,2600,[2200,2300,2400,2500,2600],v=>'Rp'+(v/1000).toFixed(1).replace('.',',')+' jt',230);
+draw('spread',S,4,18,[4,8,12,16],v=>v+'%',140,8.93);
+</script>
+</body>
+</html>

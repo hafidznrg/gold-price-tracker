@@ -21,6 +21,8 @@ export function RangeControl({
   lastDate,
   minDate,
   size = 'md',
+  parts = 'all',
+  fill = false,
   className,
 }: {
   value: RangeValue;
@@ -29,6 +31,10 @@ export function RangeControl({
   minDate?: string;
   /** `sm` = toolbar padat; diteruskan ke Segmented dan input tanggal. */
   size?: 'md' | 'sm';
+  /** `presets` = hanya segmen 7H…Semua (toolbar), `dates` = hanya dua input tanggal (pop-up Lanjutan). */
+  parts?: 'all' | 'presets' | 'dates';
+  /** HP: tombol preset dibagi rata selebar baris (tanpa geser samping). */
+  fill?: boolean;
   className?: string;
 }) {
   const { from, to } = rangeToDates(value, lastDate);
@@ -47,40 +53,48 @@ export function RangeControl({
         className,
       )}
     >
-      <Segmented
-        label="Rentang waktu"
-        options={RANGE_PRESETS.map((p) => ({ value: p, label: p }))}
-        value={typeof value === 'string' ? value : null}
-        onChange={onChange}
-        size={size}
-        scroll
-      />
-      <div className="flex flex-wrap items-center gap-2 max-sm:w-full max-sm:min-w-0 max-sm:flex-nowrap">
-        <label htmlFor="range-from" className="text-xs text-muted max-sm:sr-only">
-          Kustom
-        </label>
-        <input
-          id="range-from"
-          type="date"
-          aria-label="Tanggal awal"
-          className={cn(FIELD, FIELD_SIZE[size], 'max-sm:w-auto max-sm:min-w-0 max-sm:flex-1')}
-          value={fromValue}
-          min={minDate}
-          max={to}
-          onChange={(e) => setCustom({ from: e.target.value })}
+      {parts !== 'dates' ? (
+        <Segmented
+          label="Rentang waktu"
+          options={RANGE_PRESETS.map((p) => ({ value: p, label: p }))}
+          value={typeof value === 'string' ? value : null}
+          onChange={onChange}
+          size={size}
+          scroll={!fill}
+          fill={fill}
         />
-        <span className="text-faint">–</span>
-        <input
-          id="range-to"
-          type="date"
-          aria-label="Tanggal akhir"
-          className={cn(FIELD, FIELD_SIZE[size], 'max-sm:w-auto max-sm:min-w-0 max-sm:flex-1')}
-          value={to}
-          min={fromValue || minDate}
-          max={lastDate}
-          onChange={(e) => setCustom({ to: e.target.value })}
-        />
-      </div>
+      ) : null}
+      {parts !== 'presets' ? (
+        <div className="flex flex-wrap items-center gap-2 max-sm:w-full max-sm:min-w-0 max-sm:flex-nowrap">
+          <label
+            htmlFor="range-from"
+            className={cn('text-xs text-muted max-sm:sr-only', parts === 'dates' && 'sr-only')}
+          >
+            Kustom
+          </label>
+          <input
+            id="range-from"
+            type="date"
+            aria-label="Tanggal awal"
+            className={cn(FIELD, FIELD_SIZE[size], 'max-sm:w-auto max-sm:min-w-0 max-sm:flex-1')}
+            value={fromValue}
+            min={minDate}
+            max={to}
+            onChange={(e) => setCustom({ from: e.target.value })}
+          />
+          <span className="text-faint">–</span>
+          <input
+            id="range-to"
+            type="date"
+            aria-label="Tanggal akhir"
+            className={cn(FIELD, FIELD_SIZE[size], 'max-sm:w-auto max-sm:min-w-0 max-sm:flex-1')}
+            value={to}
+            min={fromValue || minDate}
+            max={lastDate}
+            onChange={(e) => setCustom({ to: e.target.value })}
+          />
+        </div>
+      ) : null}
     </div>
   );
 }

@@ -1,8 +1,14 @@
 import type { Metadata } from 'next';
 import { BandingkanRedirect } from '@/components/bandingkan-redirect';
-import { comparePresetHref, comparePicks, compareOptions, compareWeights } from '@/lib/bandingkan';
+import {
+  COMPARE_DEFS,
+  comparePresetHref,
+  compareOptions,
+  compareWeights,
+  findOption,
+} from '@/lib/bandingkan';
 import { readMeta } from '@/lib/data/load-fs';
-import { encodePicks, explorerOptions } from '@/lib/explorer';
+import { explorerOptions } from '@/lib/explorer';
 import { weightKey } from '@/lib/data';
 
 export const metadata: Metadata = {
@@ -10,11 +16,14 @@ export const metadata: Metadata = {
   robots: { index: false },
 };
 
-/** Tautan lama: diteruskan ke Riwayat harga dengan preset "Bandingkan semua brand" (D-70). */
+/** Tautan lama: diteruskan ke Riwayat harga mode dasar dengan semua brand di gramasi itu (D-70, D-71). */
 export default function BandingkanPage() {
   const options = compareOptions(explorerOptions(readMeta()));
   const presets: Record<string, string> = {};
-  for (const w of compareWeights(options))
-    presets[weightKey(w)] = encodePicks(comparePicks(w, options));
+  for (const w of compareWeights(options)) {
+    presets[weightKey(w)] = COMPARE_DEFS.filter((d) => findOption(d, w, options))
+      .map((d) => d.id)
+      .join(',');
+  }
   return <BandingkanRedirect presets={presets} fallbackHref={comparePresetHref(1, options)} />;
 }

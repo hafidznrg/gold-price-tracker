@@ -2,7 +2,7 @@ import { expect, test, type Page } from '@playwright/test';
 
 const PAGES = [
   { path: '/', heading: /Harga emas\s+hari ini/, marker: /Rp\s?\d{1,3}(\.\d{3})+/ },
-  { path: '/explorer', heading: /Telusuri setiap seri harga/, marker: /\d+ dari maks\./ },
+  { path: '/explorer', heading: /Telusuri setiap seri harga/, marker: /\d+ brand/ },
   {
     path: '/spread',
     heading: /Jarak antara harga beli\s+dan jual kembali/,
@@ -139,39 +139,139 @@ test.describe('Beranda', () => {
   });
 });
 
-test.describe('Explorer', () => {
-  test('judul Riwayat harga dan seri Galeri24 / Antam non-Pegadaian dari URL', async ({ page }) => {
+test.describe('Explorer (Riwayat harga, D-71)', () => {
+  const dialogOf = (page: Page) => page.getByRole('dialog', { name: 'Pengaturan lanjutan' });
+  const openAdvanced = async (page: Page) => {
+    await page.getByRole('button', { name: /^Lanjutan/ }).click();
+    await expect(dialogOf(page)).toBeVisible();
+    return dialogOf(page);
+  };
+  const paramsOf = (page: Page) => new URL(page.url()).searchParams;
+
+  test('mode dasar bawaan: satu grafik harga jual dan empat brand', async ({ page }) => {
+    const errors = collectErrors(page);
+    await page.goto('/explorer');
+    await expect(page).toHaveTitle('Riwayat harga · Momen Emas');
+    await expect(page.getByRole('button', { name: /^Gramasi\s*1 g/ })).toBeVisible();
+    await expect(page.getByRole('button', { name: /^Tampilkan\s*Harga jual/ })).toBeVisible();
+    await expect(page.getByRole('button', { name: /^4 brand/ })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /^Harga jual 1 g · harian/ })).toBeVisible();
+    await expect(page.getByRole('img', { name: /^Grafik harga/ })).toHaveCount(1);
+    await expect(page.getByRole('img', { name: /^Grafik spread/ })).toHaveCount(0);
+    // Panel kiri lama sudah tidak ada.
+    await expect(page.getByText('Tambah series')).toHaveCount(0);
+    await page.waitForLoadState('load');
+    expect(errors).toEqual([]);
+  });
+
+  test('dropdown Brand: centang mengubah b di URL; Semua dan Kosongkan', async ({ page }) => {
+    await page.goto('/explorer');
+    const trigger = page.getByRole('button', { name: /^4 brand/ });
+    await expect(trigger).toHaveAttribute('aria-expanded', 'false');
+    await trigger.click();
+    await expect(trigger).toHaveAttribute('aria-expanded', 'true');
+    const group = page.getByRole('group', { name: 'Brand', exact: true });
+    await group.getByRole('checkbox', { name: /^Antam\s*Logam Mulia/ }).uncheck();
+    await expect.poll(() => paramsOf(page).get('b')).toBe('ubsl-ubs,g24-g24,hr-emasku');
+    await expect(page.getByRole('button', { name: /^3 brand/ })).toBeVisible();
+    await group.getByRole('button', { name: 'Kosongkan' }).click();
+    await expect.poll(() => paramsOf(page).get('b')).toBe('-');
+    await group.getByRole('button', { name: 'Semua' }).click();
+    await expect.poll(() => paramsOf(page).get('b')).toContain('lm-antam');
+    await page.keyboard.press('Escape');
+    await expect(group).toHaveCount(0);
+  });
+
+  test('Tampilkan Spread: v=spread, brand tanpa buyback nonaktif, satu grafik persen', async ({
+    page,
+  }) => {
+    await page.goto('/explorer');
+    await page.getByRole('button', { name: /^Tampilkan/ }).click();
+    await page
+      .getByRole('group', { name: 'Tampilkan', exact: true })
+      .getByRole('button', { name: 'Spread', exact: true })
+      .click();
+    await expect.poll(() => paramsOf(page).get('v')).toBe('spread');
+    await expect(page.getByRole('heading', { name: /^Spread 1 g · harian/ })).toBeVisible();
+    await expect(page.getByRole('img', { name: /^Grafik spread/ })).toHaveCount(1);
+    await expect(page.getByRole('img', { name: /^Grafik harga/ })).toHaveCount(0);
+    await page.getByRole('button', { name: /\d+ brand/ }).click();
+    const group = page.getByRole('group', { name: 'Brand', exact: true });
+    for (const name of [/^Antam\s*Pegadaian/, /^UBS\s*Pegadaian/]) {
+      const row = group.getByRole('checkbox', { name });
+      await expect(row).toBeDisabled();
+      await expect(row).toHaveAccessibleName(/tanpa buyback/);
+    }
+    await expect(group.getByRole('checkbox', { name: /^Tabungan Emas/ })).toBeEnabled();
+  });
+
+  test('Jual + spread: dua grafik, harga di atas spread', async ({ page }) => {
+    const errors = collectErrors(page);
+    await page.goto('/explorer?v=both');
+    await expect(page.getByRole('heading', { name: /^Harga jual 1 g dan spread/ })).toBeVisible();
+    const price = page.getByRole('img', { name: /^Grafik harga/ });
+    const spread = page.getByRole('img', { name: /^Grafik spread/ });
+    await expect(price).toHaveCount(1);
+    await expect(spread).toHaveCount(1);
+    const pb = await price.boundingBox();
+    const sb = await spread.boundingBox();
+    expect(pb!.y).toBeLessThan(sb!.y);
+    expect(sb!.height).toBeLessThanOrEqual(pb!.height);
+    await page.waitForLoadState('load');
+    expect(errors).toEqual([]);
+  });
+
+  test('gramasi lain: g di URL, rentang dipertahankan', async ({ page }) => {
+    await page.goto('/explorer?r=6B');
+    await page.getByRole('button', { name: /^Gramasi/ }).click();
+    await page
+      .getByRole('group', { name: 'Gramasi', exact: true })
+      .getByRole('button', { name: '5 g', exact: true })
+      .click();
+    await expect.poll(() => paramsOf(page).get('g')).toBe('5');
+    expect(paramsOf(page).get('r')).toBe('6B');
+    await expect(page.getByRole('heading', { name: /^Harga jual 5 g/ })).toBeVisible();
+  });
+
+  test('tautan lama ?s= : mode seri manual dengan seri Galeri24 / Antam non-Pegadaian', async ({
+    page,
+  }) => {
     const errors = collectErrors(page);
     await page.goto(
       '/explorer?s=galeri24-lotusarchi-1-buyback,galeri24-antam_np-1-buyback,galeri24-antam-1-buyback',
     );
-    await expect(page).toHaveTitle('Riwayat harga · Momen Emas');
-    await expect(page.getByText('Riwayat harga', { exact: true }).first()).toBeVisible();
-    await expect(page.getByText('3 dari maks.')).toBeVisible();
+    await expect(page.getByRole('button', { name: /^Seri manual \(3\)/ })).toBeVisible();
+    await expect(page.getByRole('button', { name: /^Gramasi/ })).toHaveCount(0);
+    await expect(page.getByRole('button', { name: 'Kembali ke pengaturan dasar' })).toBeVisible();
+    await expect(page.getByRole('img', { name: /^Grafik harga/ })).toHaveCount(1);
+    const dlg = await openAdvanced(page);
     await expect(
-      page.getByRole('button', { name: /^Hapus series Antam non-Pegadaian/ }),
+      dlg.getByRole('button', { name: /^Hapus series Antam non-Pegadaian/ }),
     ).toHaveCount(1);
-    await expect(page.getByRole('button', { name: /^Hapus series Lotus Archi/ })).toHaveCount(1);
+    await expect(dlg.getByRole('button', { name: /^Hapus series Lotus Archi/ })).toHaveCount(1);
     // Form tambah: brand Lotus Archi, sumber Galeri24, dan Antam non-Pegadaian terpisah.
-    const brand = page.getByLabel('Brand');
+    await dlg.getByRole('button', { name: '+ Tambah seri' }).click();
+    const brand = dlg
+      .locator('label')
+      .filter({ hasText: /^Brand/ })
+      .locator('select');
     await expect(brand.locator('option', { hasText: 'Lotus Archi' })).toHaveCount(1);
     await expect(brand.locator('option', { hasText: 'Antam non-Pegadaian' })).toHaveCount(1);
     await brand.selectOption({ label: 'Antam non-Pegadaian' });
     await expect(
-      page
+      dlg
         .locator('label')
         .filter({ hasText: /^Sumber/ })
         .locator('option'),
     ).toHaveText(['Galeri24']);
-    await expect(page.getByLabel('Jenis harga').locator('option')).toHaveText(['Buyback']);
+    await expect(dlg.getByLabel('Jenis harga').locator('option')).toHaveText(['Buyback']);
     expect(errors).toEqual([]);
   });
 
   const START = '/explorer?s=logammulia-antam-1-sell,pegadaian-pegadaian-0.01-buyback&r=3B';
 
   async function expectState(page: Page) {
-    await expect(page.getByText('2 dari maks.')).toBeVisible();
-    await expect(page.getByRole('button', { name: /^Hapus series/ })).toHaveCount(2);
+    await expect(page.getByRole('button', { name: /^Seri manual \(2\)/ })).toBeVisible();
     await expect(page.getByRole('radio', { name: '3B', exact: true })).toBeChecked();
   }
 
@@ -181,8 +281,8 @@ test.describe('Explorer', () => {
     await expectState(page);
     await page.reload();
     await expectState(page);
-    expect(new URL(page.url()).searchParams.get('r')).toBe('3B');
-    expect(new URL(page.url()).searchParams.get('s')).toBe(
+    expect(paramsOf(page).get('r')).toBe('3B');
+    expect(paramsOf(page).get('s')).toBe(
       'logammulia-antam-1-sell,pegadaian-pegadaian-0.01-buyback',
     );
     expect(errors).toEqual([]);
@@ -192,16 +292,19 @@ test.describe('Explorer', () => {
     const errors = collectErrors(page);
     await page.goto(`${START}&m=idx&agg=w&band=1&ffill=0`);
     const check = async () => {
-      await expect(page.getByRole('radio', { name: 'Indeks', exact: true })).toBeChecked();
-      await expect(page.getByRole('radio', { name: 'Mingguan', exact: true })).toBeChecked();
-      await expect(page.getByRole('checkbox', { name: /Pita min–maks/ })).toBeChecked();
-      await expect(page.getByRole('checkbox', { name: /Isi celah/ })).not.toBeChecked();
+      const dlg = await openAdvanced(page);
+      await expect(dlg.getByRole('radio', { name: 'Indeks', exact: true })).toBeChecked();
+      await expect(dlg.getByRole('radio', { name: 'Mingguan', exact: true })).toBeChecked();
+      await expect(dlg.getByRole('switch', { name: /Pita min–maks/ })).toBeChecked();
+      await expect(dlg.getByRole('switch', { name: /Isi hari tanpa data/ })).not.toBeChecked();
+      await dlg.getByRole('button', { name: 'Selesai' }).click();
+      await expect(dlg).toHaveCount(0);
       await expect(page.getByRole('heading', { name: /Indeks harga .* mingguan/ })).toBeVisible();
     };
     await check();
     await page.reload();
     await check();
-    const q = new URL(page.url()).searchParams;
+    const q = paramsOf(page);
     expect([q.get('m'), q.get('agg'), q.get('band'), q.get('ffill')]).toEqual([
       'idx',
       'w',
@@ -211,27 +314,70 @@ test.describe('Explorer', () => {
     expect(errors).toEqual([]);
   });
 
-  test('mengubah tampilan memperbarui URL; bawaan tidak ditulis', async ({ page }) => {
-    await page.goto(START);
-    await page.getByRole('radio', { name: '% ubah', exact: true }).click();
-    await page.getByRole('radio', { name: 'Bulanan', exact: true }).click();
-    await expect(page.getByRole('checkbox', { name: /Isi celah/ })).toBeChecked();
-    await page.getByRole('checkbox', { name: /Isi celah/ }).uncheck();
+  test('Lanjutan: mengubah tampilan memperbarui URL; bawaan tidak ditulis', async ({ page }) => {
+    await page.goto('/explorer');
+    const dlg = await openAdvanced(page);
+    await dlg.getByRole('radio', { name: '% ubah', exact: true }).click();
+    await dlg.getByRole('radio', { name: 'Bulanan', exact: true }).click();
+    const ffill = dlg.getByRole('switch', { name: /Isi hari tanpa data/ });
+    await expect(ffill).toBeChecked();
+    await ffill.click();
     await expect(page).toHaveURL(/[?&]m=pct(&|$)/);
     await expect(page).toHaveURL(/[?&]agg=m(&|$)/);
     await expect(page).toHaveURL(/[?&]ffill=0(&|$)/);
-    await page.getByRole('radio', { name: 'Nominal', exact: true }).click();
-    await page.getByRole('radio', { name: 'Harian', exact: true }).click();
-    await page.getByRole('checkbox', { name: /Isi celah/ }).check();
+    await dlg.getByRole('radio', { name: 'Per keping', exact: true }).click();
+    await dlg.getByRole('radio', { name: 'Harian', exact: true }).click();
+    await ffill.click();
     await expect(page).not.toHaveURL(/[?&](m|agg|ffill)=/);
+    await expect(dlg.getByRole('switch', { name: /Pita min–maks/ })).toBeDisabled();
+  });
+
+  test('Lanjutan: Escape menutup dan fokus kembali ke tombolnya', async ({ page }) => {
+    await page.goto('/explorer');
+    const btn = page.getByRole('button', { name: /^Lanjutan/ });
+    await btn.click();
+    await expect(dialogOf(page)).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(dialogOf(page)).toHaveCount(0);
+    await expect(btn).toBeFocused();
+  });
+
+  test('Kembali ke pengaturan dasar menghapus s dan memulihkan dropdown', async ({ page }) => {
+    await page.goto(START);
+    const dlg = await openAdvanced(page);
+    await dlg.getByRole('button', { name: 'Kembali ke pengaturan dasar' }).click();
+    await expect.poll(() => paramsOf(page).get('s')).toBeNull();
+    expect(paramsOf(page).get('r')).toBe('3B');
+    await expect(page.getByRole('button', { name: /^Gramasi/ })).toBeVisible();
+    await expect(page.getByRole('button', { name: /\d+ brand/ })).toBeVisible();
+    await dlg.getByRole('button', { name: 'Selesai' }).click();
+    await expect(dlg).toHaveCount(0);
   });
 
   test('mengubah rentang memperbarui URL', async ({ page }) => {
     await page.goto(START);
-    await page.getByRole('radio', { name: '3B', exact: true }).click();
-    await expect(page).toHaveURL(/[?&]r=3B(&|$)/);
-    await expect(page.getByRole('radio', { name: '3B', exact: true })).toBeChecked();
+    await page.getByRole('radio', { name: '1T', exact: true }).click();
+    await expect(page).toHaveURL(/[?&]r=1T(&|$)/);
+    await expect(page.getByRole('radio', { name: '1T', exact: true })).toBeChecked();
   });
+
+  for (const width of [375, 768]) {
+    test(`tanpa gulir horizontal di ${width}px, dropdown Brand tidak meluap`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 900 });
+      await page.goto('/explorer');
+      await page.getByRole('button', { name: /^4 brand/ }).click();
+      const panel = page.getByRole('group', { name: 'Brand', exact: true });
+      await expect(panel).toBeVisible();
+      const box = await panel.boundingBox();
+      expect(box!.x).toBeGreaterThanOrEqual(0);
+      expect(box!.x + box!.width).toBeLessThanOrEqual(width);
+      const { scrollWidth, clientWidth } = await page.evaluate(() => ({
+        scrollWidth: document.documentElement.scrollWidth,
+        clientWidth: document.documentElement.clientWidth,
+      }));
+      expect(scrollWidth).toBeLessThanOrEqual(clientWidth);
+    });
+  }
 });
 
 test.describe('Spread', () => {
@@ -420,54 +566,52 @@ test.describe('EMASKU / Hartadinata (Fase 7)', () => {
       await expect(page.getByRole('button', { name: /EMASKU: Hartadinata/ })).toHaveCount(0);
     }
     await page.goto('/explorer');
-    const brand = page
-      .locator('select')
-      .filter({ has: page.locator('option', { hasText: 'Antam' }) });
-    const hasEmasku =
-      (await brand
-        .first()
-        .locator('option', { hasText: /^EMASKU/ })
-        .count()) > 0;
+    // Dropdown Brand memuat EMASKU (Hartadinata) sebagai brand pembanding.
+    await page.getByRole('button', { name: /\d+ brand/ }).click();
+    await expect(
+      page.getByRole('group', { name: 'Brand', exact: true }).getByRole('checkbox', {
+        name: /^EMASKU/,
+      }),
+    ).toHaveCount(1);
+    await page.keyboard.press('Escape');
+    // Seri manual: Prime brand sendiri bila EMASKU punya data.
+    await page.getByRole('button', { name: /^Lanjutan/ }).click();
+    const dlg = page.getByRole('dialog', { name: 'Pengaturan lanjutan' });
+    await dlg.getByRole('button', { name: '+ Tambah seri' }).click();
+    const brand = dlg
+      .locator('label')
+      .filter({ hasText: /^Brand/ })
+      .locator('select');
+    const hasEmasku = (await brand.locator('option', { hasText: /^EMASKU/ }).count()) > 0;
     if (hasEmasku) {
-      await expect(brand.first().locator('option', { hasText: 'EMASKU Prime' })).toHaveCount(1);
+      await expect(brand.locator('option', { hasText: 'EMASKU Prime' })).toHaveCount(1);
     }
   });
 });
 
-test.describe('Bandingkan (pengalih ke Riwayat harga, D-70)', () => {
+test.describe('Bandingkan (pengalih ke Riwayat harga, D-70, D-71)', () => {
   test('tautan lama diteruskan: gramasi, mode, dan rentang dipertahankan', async ({ page }) => {
     const errors = collectErrors(page);
     await page.goto('/bandingkan?w=5&m=idx&r=6B');
     await expect(page).toHaveURL(/\/explorer\?/);
     const q = new URL(page.url()).searchParams;
-    expect(q.get('s')).toContain('-5-sell');
+    expect(q.get('g')).toBe('5');
+    expect(q.get('b')).toContain('lm-antam');
+    expect(q.get('s')).toBeNull();
     expect([q.get('m'), q.get('r')]).toEqual(['idx', '6B']);
     await expect(page.getByRole('heading', { level: 1 })).toHaveText(/Telusuri setiap seri harga/);
     await page.waitForLoadState('load');
     expect(errors).toEqual([]);
   });
 
-  test('tanpa parameter: preset 1 g per gram', async ({ page }) => {
+  test('tanpa parameter: 1 g per gram, semua brand yang ada', async ({ page }) => {
     await page.goto('/bandingkan');
     await expect(page).toHaveURL(/\/explorer\?/);
     const q = new URL(page.url()).searchParams;
-    expect(q.get('s')).toContain('-1-sell');
+    expect(q.get('g')).toBe('1');
+    expect(q.get('b')).toContain('lm-antam');
     expect(q.get('m')).toBe('gram');
-  });
-
-  test('preset "Bandingkan semua brand" di Riwayat harga mengganti seri dan mempertahankan rentang', async ({
-    page,
-  }) => {
-    await page.goto('/explorer?r=6B');
-    const preset = page.getByRole('combobox', { name: 'Gramasi pembanding' });
-    await expect(preset).toHaveValue('');
-    await preset.selectOption({ label: '5 g' });
-    await expect(preset).toHaveValue('5');
-    await expect(page).toHaveURL(/[?&]m=gram(&|$)/);
-    const q = new URL(page.url()).searchParams;
-    expect(q.get('s')).toContain('-5-sell');
-    expect(q.get('s')).not.toContain('buyback');
-    expect(q.get('r')).toBe('6B');
+    await expect(page.getByRole('button', { name: /^Gramasi\s*1 g/ })).toBeVisible();
   });
 });
 
