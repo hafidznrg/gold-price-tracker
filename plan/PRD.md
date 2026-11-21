@@ -42,7 +42,7 @@ Proyek ini **non-komersial**, untuk kepentingan pribadi sekaligus **portofolio d
 - Akun pengguna, login, portofolio pribadi tersimpan di server.
 - Prediksi harga.
 - Monetisasi.
-- Brand lain di luar Antam, UBS, Galeri24, dan Lotus Archi (arsitektur disiapkan agar mudah ditambah; Lotus Archi masuk Fase 6, D-65).
+- Brand lain di luar Antam, UBS, Galeri24, Lotus Archi, dan Hartadinata/EMASKU (arsitektur disiapkan agar mudah ditambah; Lotus Archi masuk Fase 6, D-65; EMASKU direncanakan di Fase 7, draf D-69). Perhiasan (mis. Ardore) tidak termasuk.
 
 ## 5. Pengguna
 
@@ -61,6 +61,7 @@ Proyek ini **non-komersial**, untuk kepentingan pribadi sekaligus **portofolio d
 | pegadaian.co.id/harga-emas | Galeri24 (0,5–1.000 g), UBS (0,5–500 g), Antam (0,5–100 g): harga jual saja — buyback batangan tidak ditampilkan (Q-1) | `GET /gold/prices/table` (JSON, tanpa token; D-20) | ±10.30 WIB per 24 Okt 2026 (`idHarga`); tidak diperbarui Minggu | Rendah |
 | galeri24.co.id/harga-emas | Antam (0,5–100 g), UBS (0,5–500 g), Galeri24 (0,5–1.000 g): harga jual **dan buyback**; opsional Lotus Archi (1–100 g) dan buyback Antam non-Pegadaian (D-64, D-65) | `GET /api/gold-prices/page-data` (JSON server route Nuxt, tanpa token); fallback `__NUXT_DATA__` di `/harga-emas`; histori sejak 1 Feb 2024 dari `/api/gold-prices` (Q-7) | Harga D dibuat sore/malam D−1 (±17.50–21.40 WIB), revisi pagi D (±10.14 WIB); setiap hari | Rendah |
 | lotusarchi.com/pricing | Lotus Archi 0,1–100 g: harga jual per keping; buyback hanya per gram (disimpan di baris 1 g, D-65) | `GET api.lotusarchi.com/harga-display` (harga keping, tanpa tanggal) + `GET lotusarchi.com/wp-json/la/v1/harga-gold` (tanggal, harga dasar, buyback per gram); tabel HTML `/pricing/` basi, tidak dipakai | Jam terbit belum pasti (17 Nov 2026 pagi masih tanggal 16 Nov); diobservasi sampai ±21 Nov | Sedang (Cloudflare; runner lolos; dua request per run, D-65) |
+| hrtagold.id/id/gold-price *(rencana Fase 7)* | EMASKU (Hartadinata) Gold 0,1–1.000 g (17 gramasi) dan Prime 25/50/100 g: harga jual **dan buyback** per keping | `GET hrtagold.id/api/v1/brandings/price/daily` (JSON tanpa token, satu request; belum diuji dari runner GitHub); tanpa histori (Q-8) | Terbit 08.12 WIB (21 Nov 2026, Sabtu); jam dan kalender diobservasi (Q-10) | Rendah (tanpa proteksi bot terlihat) |
 | logammulia.com | Antam 1 g: histori jual (sejak 2010) dan buyback (sejak 2015); opsional tabel gramasi | Sesi browser + token CSRF → endpoint JSON grafik (belum terverifikasi: situs maintenance sejak 25 Okt 2026) | Setelah 08.30 WIB | Tinggi |
 | xaus.com API | XAU/USD harian (≤ 5 tahun) + spot | REST JSON tanpa key; histori = futures GC=F, spot = gold-api.com (indikatif) | Harian | Rendah |
 | World Bank Pink Sheet | XAU/USD rata-rata bulanan, histori panjang | XLSX bulanan; URL ber-hash dari tautan halaman Commodity Markets (D-21) | Bulanan (±tanggal 2) | Rendah |
@@ -189,6 +190,9 @@ Ringkasan; rincian dan alasannya di [DECISIONS.md](./DECISIONS.md).
 | Q-5 | Nama domain dan nama produk | **Terjawab (P3-10, 1 Nov 2026):** domain `gold.hafidznrg.my.id` (Vercel); nama tampilan "Harga Emas Historis", diganti "Momen Emas" dengan tagline *Temukan momen terbaik membeli emas* (13 Nov 2026, D-51) |
 | Q-6 | `update_calendar` tiap sumber (apakah UBS/Pegadaian/Logam Mulia update di akhir pekan dan hari libur) | Observasi 2 minggu di Fase 1. Temuan awal UBS: Senin–Sabtu, sebagian libur tetap update (TECH-SPEC §5.1). Pegadaian: harga Minggu ada, diterbitkan Sabtu malam sebagai periode I (TECH-SPEC §5.2). **Terjawab (21 Nov 2026):** Logam Mulia, Pegadaian, Galeri24 `daily`; UBS Lifestyle `mon_sat_id` (D-63); Lotus Archi `business_days_id` (D-68) |
 | Q-7 | Bolehkah histori Galeri24 diambil dari endpoint `GET /api/gold-prices` (±178 ribu baris sejak ±Feb 2024, tidak ditautkan dari halaman harga; `robots.txt` tidak melarang `/api`)? | **Terjawab (17 Nov 2026):** boleh, sekali jalan dengan jeda ≥ 5 detik, hanya vendor target (P6-11, [research/galeri24.md §5](./research/galeri24.md#5-histori-get-apigold-prices-q-7-disetujui)) |
+| Q-8 | Adakah endpoint histori harga resmi HRTA Gold (`hrtagold.id`) untuk backfill EMASKU? Halaman hanya menampilkan hari ini; media memuat harga harian tetapi tidak cocok sebagai sumber | Terbuka. Diselidiki di P7-02 dari terminal lokal (≤ ±5 request, jeda ≥ 5 detik); bila ada, perlu persetujuan pemilik (pola Q-7). Bila tidak: seri EMASKU mulai saat aktivasi ([research/hartadinata.md §5](./research/hartadinata.md#5-batasan-data)) |
+| Q-9 | Apakah "Harga Dasar" EMASKU sudah termasuk PPh 0,25% (seperti pertanyaan serupa pada Logam Mulia, D-24/D-26)? | Terbuka. Dicek di FAQ/syarat hrtagold.id pada P7-02; sementara disimpan apa adanya dan diberi label "harga dasar situs" |
+| Q-10 | Jam terbit, revisi intraday, dan kalender (Sabtu/Minggu/libur) harga `hrtagold`? | Terbuka. Sampel tunggal: 21 Nov 2026 (Sabtu) 08.12 WIB. Observasi lewat probe terjadwal sementara 5–7 hari (P7-01), final di P7-08 |
 
 ## 14. Rencana rilis
 
@@ -223,3 +227,4 @@ Ringkasan; rincian dan alasannya di [DECISIONS.md](./DECISIONS.md).
 | 1.1 | 25 Okt 2026 | Tinjauan skema & workflow: tambah DATA-MODEL.md (ERD, kamus data, aturan merge, *as-of join*) dan WORKFLOWS.md; FR-15 karantina, FR-16 log revisi, FR-17 monitor kesegaran; pemisahan `config/` vs `data/`; kolom `run_id`; NFR-03 diperjelas; Q-6 |
 | 1.2 | 1 Nov 2026 | Mockup web (`mockup/`): FR-20 dan FR-30 memuat Tabungan Emas, FR-23 disederhanakan menjadi unduhan + data terakhir (D-34) |
 | 1.3 | 15 Nov 2026 | FR-37: Kalkulator dengan total harga beli yang bisa diubah dan berat lain untuk buyback per gram (D-61) |
+| 1.4 | 21 Nov 2026 | Rencana Fase 7 (Hartadinata/EMASKU): §4 ruang lingkup, §6 sumber `hrtagold`, Q-8 (histori), Q-9 (PPh Harga Dasar), Q-10 (jadwal/kalender) |

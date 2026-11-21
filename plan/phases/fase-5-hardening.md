@@ -48,7 +48,7 @@
 
 ## Backlog setelah v1
 
-- Brand lain (King Halim, Hartadinata/EmasKu, BSI Gold, dll.) sebagai modul scraper baru. Lotus Archi dipindah ke [Fase 6](./fase-6-galeri24-lotus-archi.md).
+- Brand lain (King Halim, BSI Gold, dll.) sebagai modul scraper baru. Lotus Archi dipindah ke [Fase 6](./fase-6-galeri24-lotus-archi.md); Hartadinata/EMASKU dipindah ke [Fase 7](./fase-7-hartadinata.md).
 - Harga intraday bila sumber berubah lebih dari sekali sehari.
 - Alert harga (mis. spread di bawah ambang).
 - Migrasi CSV → DuckDB saat build bila query makin berat.

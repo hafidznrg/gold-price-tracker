@@ -10,7 +10,7 @@ Folder ini adalah panduan implementasi proyek. Mulai dari PRD untuk memahami **a
 | [WORKFLOWS.md](./WORKFLOWS.md) | YAML GitHub Actions, kontrak antar job, notifikasi, matriks kegagalan, kredensial, Vercel |
 | [DECISIONS.md](./DECISIONS.md) | Log keputusan produk dan teknis |
 | [phases/](./phases/) | Satu file per fase: tujuan, tugas, kriteria selesai, gerbang keluar |
-| [research/](./research/) | Catatan riset sumber yang belum/baru masuk TECH-SPEC (Galeri24, Lotus Archi) |
+| [research/](./research/) | Catatan riset sumber yang belum/baru masuk TECH-SPEC (Galeri24, Lotus Archi, Hartadinata) |
 | [mockup/](./mockup/) | Mockup web semua halaman (acuan visual Fase 3–4): token desain, konvensi tampilan, pemetaan ke data nyata |
 
 ## Fase implementasi
@@ -24,6 +24,7 @@ flowchart LR
   F4[Fase 4<br/>Analitik & fleksibilitas]
   F5[Fase 5<br/>Hardening & portofolio]
   F6[Fase 6<br/>Galeri24 & Lotus Archi]
+  F7[Fase 7<br/>Hartadinata EMASKU]
   R((Rilis publik))
 
   F0 -->|G0| F1
@@ -33,6 +34,7 @@ flowchart LR
   F3 --> R
   R --> F4 --> F5
   F1 -->|G1| F6
+  F6 -->|G6| F7
 ```
 
 | Fase | Fokus | Bergantung pada | Gerbang keluar | Perkiraan usaha* |
@@ -44,6 +46,7 @@ flowchart LR
 | [4](./phases/fase-4-analitik.md) | Bandingkan, Kalkulator, grafik kelipatan, premi, mode nilai & agregasi, API statis | G2, G3 | **G4** — semua FR P1 selesai | 5–7 hari |
 | [5](./phases/fase-5-hardening.md) | Reparse, halaman kualitas data, dokumentasi, studi kasus portofolio | G4 | **G5** — siap dipresentasikan | 3–5 hari |
 | [6](./phases/fase-6-galeri24-lotus-archi.md) | Sumber `galeri24` (buyback Antam/UBS/Galeri24, menutup Q-1), brand Lotus Archi dari Galeri24, Pegadaian, dan lotusarchi.com | G1 (paralel dengan Fase 5; menggantikan P5-06) | **G6** — 7 hari run `galeri24` hijau, histori Galeri24 terisi, seri Lotus Archi tampil di web | 5–7 hari |
+| [7](./phases/fase-7-hartadinata.md) | Sumber `hrtagold` (EMASKU, Hartadinata): jual + buyback per keping Gold 0,1–1.000 g dan Prime 25/50/100 g, satu request per hari, tampil di semua halaman web | G1, G6 (paralel dengan Fase 5) | **G7** — 7 hari run `hrtagold` hijau, jadwal/kalender final, seri EMASKU tampil di web tanpa menggeser sumber lain | 3–4 hari + observasi probe 5–7 hari |
 
 \* Perkiraan kasar untuk satu pengembang penuh waktu; sesuaikan dengan ritme sendiri.
 
@@ -67,6 +70,7 @@ flowchart LR
 | 4 | 13/13 selesai; P4-13 Kalkulator total harga beli yang bisa diubah + berat lain (FR-37, D-61, 15 Nov 2026). (P4-04 sudah terpenuhi oleh Spread P3-07): Explorer mode nilai/agregasi/isi celah, `derived/*`, Bandingkan + premi Antam sejak 2010 (D-38), Kelipatan, Kalkulator (D-39), API statis di README, fallback 1 g Logam Mulia. G4 menunggu audit Lighthouse mobile ulang di situs live (NFR-08) | 7 Nov 2026 | |
 | 5 | Belum mulai | | |
 | 6 | 17 Nov 2026: P6-01b–P6-05 dan P6-07–P6-13 selesai; `galeri24` dan `lotusarchi` aktif (histori Galeri24 47.569 baris, histori lotusarchi.com 489 tanggal). 21 Nov 2026: 13/14, P6-01 selesai dan jadwal final (D-68). Tersisa P6-06: pantau G6 7 hari (`galeri24` hijau 17–21 Nov, target 23 Nov) | 17 Nov 2026 | |
+| 7 | Rencana siap 21 Nov 2026 (0/15; riset [research/hartadinata.md](./research/hartadinata.md), draf D-69). Belum dikerjakan: probe runner (P7-01) dulu | | |
 
 ## Riwayat revisi
 
@@ -97,3 +101,4 @@ flowchart LR
 | 17 Nov 2026 | P6-09 scraper `lotusarchi` dari lotusarchi.com lewat dua endpoint JSON (`harga-display` + `harga-gold`; dua request per run, penyimpangan NFR-12 disetujui pemilik, D-65) |
 | 17 Nov 2026 | Backfill `lotusarchi-history`: 489 tanggal 1 g (jual + buyback) 27 Feb 2025–17 Nov 2026 dari `harga-gold` (satu request, tanggal ganda → `harga_id` terbesar); asumsi `harga_emas` = harga jual keping 1 g; katalog 1 g `active_from: 2025-02-27` |
 | 21 Nov 2026 | P1-08, P1-11 ditutup (G1 terpenuhi, Q-6 terjawab); P6-01 ditutup: observasi jam terbit selesai, kalender `lotusarchi` → `business_days_id` + alarm stale aktif, `schedule:` probe.yml dicabut (D-68) |
+| 21 Nov 2026 | Rencana Fase 7: riset Hartadinata/EMASKU (`research/hartadinata.md`, endpoint `hrtagold.id/api/v1/brandings/price/daily`), `phases/fase-7-hartadinata.md` (P7-01–P7-15, G7); PRD Q-8 (histori), Q-9 (PPh Harga Dasar), Q-10 (jadwal/kalender); draf D-69 |
