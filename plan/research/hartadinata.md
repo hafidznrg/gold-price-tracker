@@ -72,9 +72,16 @@
 
 - Satu `GET` dari terminal lokal, User-Agent proyek, tanpa Origin/Referer/cookie → HTTP 200 `application/json`.
 - Probe runner 21 Nov 2026 11.05 WIB (run 44864330585, colo PDX, AS): **lolos**, HTTP 200 JSON tanpa tantangan; `updated_date` 2026-11-21T08:12:26+07:00, Gold 1 g 2.258.000 / buyback 2.122.000. Observasi jam terbit lewat `schedule:` sementara 08.00–18.00 WIB tiap 2 jam sampai P7-08.
-- Runner GitHub (IP AS) **belum diuji**. P7-01 menjalankan probe sekali dari runner. Bila `403`/`429`/`503` atau halaman tantangan → `BLOCKED`, P7-05 tertahan; tidak ada penyamaran (D-24, kecuali pengecualian Logam Mulia D-26 yang tidak berlaku di sini).
+- Bila runner kelak `403`/`429`/`503` atau menampilkan halaman tantangan → `BLOCKED`, tanpa penyamaran (D-24; pengecualian Logam Mulia D-26 tidak berlaku di sini).
 - `https://hrtagold.id/robots.txt` mengembalikan HTML SPA (200 `text/html`) → tidak ada aturan robots yang sebenarnya. Scraper memakai User-Agent proyek, satu request per hari untuk arsip harga non-komersial; catat pertimbangan ini di D-69.
-- Syarat penggunaan situs belum dibaca (FAQ/terms) → bagian P7-02.
+
+### Hasil P7-02 (21 Nov 2026, browser biasa, tanpa request tambahan ke API)
+
+- **Syarat & Ketentuan** (`/id/terms-condition`):
+  - "Harga yang tercantum sudah termasuk pajak" (bagian pesanan) → Q-9: harga jual situs **sudah termasuk pajak**, meski kolomnya berlabel "Harga Dasar". Beda dengan Logam Mulia (Harga Dasar belum termasuk PPh 0,25%, D-24).
+  - §9 Kekayaan Intelektual: Konten HRTA dilindungi hak cipta dan **database**; izin hanya untuk "melihat dan menggunakan situs web", dan pengguna "tidak boleh menyalin, mereproduksi, membuat tersedia secara online … mempublikasikan … mendistribusikan" Konten HRTA tanpa izin. **Belum ada sumber lain di proyek dengan klausul seketat ini.** Menampilkan ulang dan membagikan harga (situs + CSV terbuka) berpotensi bertentangan dengan klausul ini → keputusan pemilik sebelum aktivasi (Q-11).
+- **FAQ** (`/id/faqs`): tidak menyebut pajak atau pembatasan akses otomatis. Info relevan: EMASKU diproduksi sejak 2024; buyback di HRTA Gold hanya untuk produk Hartadinata (EMASKU, EMASKITA, ARDORE, Perhiasan Kencana, BSI); jadwal pencairan buyback toko Senin–Sabtu.
+- **Histori (Q-8):** halaman harga tidak memuat grafik atau riwayat, dan permintaan jaringan halaman hanya `price/daily` (+ `price/one` di beranda). Tidak ada endpoint histori yang terlihat dari situs → Q-8 ditutup "tidak ada histori di situs; seri mulai saat aktivasi". Aplikasi HRTA Gold tidak diperiksa.
 
 ## 4. Waktu terbit dan kalender (belum pasti)
 
@@ -86,7 +93,7 @@
 ## 5. Batasan data
 
 - **Tanpa histori** (Q-8). Seri `emasku` mulai pada hari aktivasi; katalog `active_from` = tanggal aktivasi (bukan tanggal mundur).
-- **Harga Dasar** di tabel situs = `price` di API = harga jual keping. Belum jelas apakah termasuk PPh 0,25% (pada Logam Mulia, D-24/D-26, harga dasar dan pajak dinyatakan terpisah). Dicek di FAQ/terms situs pada P7-02 (Q-9). Sementara disimpan apa adanya dan diberi catatan "harga dasar situs" di web.
+- **Harga Dasar** di tabel situs = `price` di API = harga jual keping, dan menurut Syarat & Ketentuan **sudah termasuk pajak** (P7-02). Disimpan apa adanya; web memberi catatan "sudah termasuk pajak (menurut situs)".
 - **Prime** = produk/varian terpisah: `variant = 'prime'`, bukan tahun produksi. Tidak digabung dengan Gold, tidak mengganti Gold di Hari ini/Spread. Aturan `isYearVariant` (hanya 4 digit, D-64) memastikan `prime` tidak dianggap varian tahun; `matchAcrossSources` jatuh ke `variant = ''` (sudah ada sejak Fase 6).
 - Buyback per keping untuk semua gramasi → tidak ada aturan "per gram saja" (`hasPerGramBuyback` tidak berlaku).
 - Tidak ada `source_updated_at` per baris; seluruh tabel memakai `updated_date`. Karena `data_date` = tanggal `updated_date`, baris **tidak pernah carry-over** (D-66).
@@ -98,7 +105,8 @@
 | API internal berubah atau menambah token/Origin | Gagal keras `PARSE_ERROR`; fixture kontrak; probe dengan pemeriksaan bentuk. Tidak membongkar autentikasi (D-24) |
 | IP runner GitHub diblokir | Probe P7-01 sebelum kode produksi. Bila diblokir, P7-05–P7-07 tertahan dan dicatat; fase tidak dipaksa |
 | Tanpa histori | Seri dimulai saat aktivasi; hanya bila Q-8 menemukan endpoint resmi (dari terminal lokal, owner approval seperti Q-7), buat job backfill terpisah |
-| Ambiguitas PPh pada Harga Dasar | Q-9; label di web "harga dasar situs"; tidak mengurangi/menambah pajak sendiri |
+| Klausul Kekayaan Intelektual di Syarat & Ketentuan (larangan menyalin/mempublikasikan Konten HRTA) | Q-11: pemilik memutuskan sebelum aktivasi (P7-07). Opsi: minta izin tertulis ke HRTA, hanya arsip tanpa publikasi, atau tidak dilanjutkan |
+| Label "Harga Dasar" padahal sudah termasuk pajak | Q-9 terjawab (P7-02); catatan di web, tidak mengurangi/menambah pajak sendiri |
 | Jam terbit/kalender belum diketahui | Alarm stale mati sampai observasi selesai (Q-10); jendela `day` dengan retry D-67 |
 | Prime membingungkan atau menimpa Gold | Variant terpisah; uji `matchAcrossSources` dan Explorer |
 | Layout Hari ini: lima kartu batangan | Keputusan di P7-10 (lihat fase-7) |

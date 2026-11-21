@@ -45,7 +45,8 @@
   - **Observasi 5–7 hari:** tambah `schedule:` **sementara** di `probe.yml` yang hanya mem-probe `hrtagold` (usulan 01.00, 03.00, 05.00, 07.00, 09.00, 11.00 UTC = 08.00–18.00 WIB tiap 2 jam, bergeser bila perlu), mencatat `updated_date`, `created_at`, dan harga Gold 1 g per probe. Dijawab: jam terbit, revisi di hari yang sama, Sabtu/Minggu/libur nasional.
   - *Probe runner 21 Nov 2026 (run 44864330585, AS): hijau. Observasi jam terbit berjalan.*
   - Hasil dicatat di research/hartadinata.md §3–§4. Bila runner diblokir → P7-05–P7-07 "tertahan", P7-03/P7-04 tetap boleh jalan.
-- [ ] **P7-02** Investigasi lokal: syarat situs, PPh, dan endpoint histori (Q-8, Q-9). — S
+- [x] **P7-02** Investigasi lokal: syarat situs, PPh, dan endpoint histori (Q-8, Q-9). — S
+  - *21 Nov 2026: Q-8 ditutup (tidak ada histori di situs), Q-9 terjawab (harga sudah termasuk pajak). Temuan baru: Syarat & Ketentuan §9 melarang publikasi ulang Konten HRTA → Q-11, wajib diputuskan sebelum P7-07.*
   - Dari terminal lokal, **maksimal ±5 request** tambahan, jeda ≥ 5 detik, tanpa menembus proteksi apa pun.
   - Baca FAQ/syarat di `hrtagold.id` (halaman publik): apakah "Harga Dasar" sudah termasuk PPh 0,25% (Q-9), dan ada pembatasan pengambilan otomatis? Hasil menentukan label web dan catatan D-69.
   - Cari endpoint histori: parameter tanggal pada `price/daily`, atau rute yang dipakai grafik harga di aplikasi/situs (`/api/v1/brandings/price/...`). Hanya dari jaringan browser biasa dan permintaan GET publik; **jangan** mencoba menebak rute secara acak atau membongkar autentikasi.
@@ -106,6 +107,7 @@
 ### Gelombang D — aktivasi
 
 - [ ] **P7-07** Aktifkan `hrtagold`. — `FR-09` · S
+  - **Prasyarat: Q-11 diputuskan pemilik** (izin HRTA / arsip tanpa publikasi / batal).
   - Prasyarat: P7-01 hijau dari runner, P7-05 dan P7-06 lulus, dan **P7-09 (data layer web) sudah masuk** supaya data baru tidak merusak halaman (tipe `Record` sudah lengkap).
   - `enabled: true`, satu run manual `scrape-retail` dengan `sources=hrtagold`, cek commit data + `status.json`. Watchdog membaca `config.sources`, jadi otomatis ikut dicek.
   - `catalog.yml` `active_from` = tanggal run pertama. Cabut `schedule:` probe sementara bila observasi selesai (P7-08).
