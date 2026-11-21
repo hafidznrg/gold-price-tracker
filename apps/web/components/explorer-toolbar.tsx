@@ -204,7 +204,7 @@ export function ExplorerToolbar(p: ExplorerToolbarProps) {
             panelClassName="min-w-[168px]"
             trigger={
               <>
-                <span className="text-muted max-sm:hidden">Gramasi</span>
+                <span className="text-muted max-lg:hidden">Gramasi</span>
                 <span className="num font-semibold">{formatWeight(p.weight)}</span>
               </>
             }
@@ -227,7 +227,7 @@ export function ExplorerToolbar(p: ExplorerToolbarProps) {
             panelClassName="min-w-[200px]"
             trigger={
               <>
-                <span className="text-muted max-sm:hidden">Tampilkan</span>
+                <span className="text-muted max-lg:hidden">Tampilkan</span>
                 <span className="font-semibold">{SHOW_LABELS[p.show]}</span>
               </>
             }

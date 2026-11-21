@@ -63,7 +63,6 @@ import {
   changeDirection,
   EMPTY,
   formatDate,
-  formatNumber,
   formatPct,
   formatRupiah,
   formatWeight,
@@ -124,14 +123,22 @@ interface Line extends ListedSeries {
   def?: CompareDef;
 }
 
-function manualTitle(mode: ValueMode, agg: ViewOptions['agg']): string {
+/** "21 Okt – 21 Nov 2026" (tahun sekali bila sama); tanpa awal → "sampai 21 Nov 2026". */
+function formatPeriod(from: string | null | undefined, to: string): string {
+  if (!from) return `sampai ${formatDate(to)}`;
+  return from.slice(0, 4) === to.slice(0, 4)
+    ? `${formatDate(from, false)} – ${formatDate(to)}`
+    : `${formatDate(from)} – ${formatDate(to)}`;
+}
+
+function manualTitle(mode: ValueMode): string {
   const head = {
     nominal: 'Harga emas',
     gram: 'Harga emas per gram',
     index: 'Indeks harga (=100 di awal rentang)',
     pct: 'Perubahan harga sejak awal rentang',
   }[mode];
-  return `${head} · ${AGG_NOUN[agg]}`;
+  return head;
 }
 
 function basicTitle(show: ShowMode, w: number, view: ViewOptions): string {
@@ -140,7 +147,7 @@ function basicTitle(show: ShowMode, w: number, view: ViewOptions): string {
     sell: `Harga jual ${wl}`,
     bb: `Buyback ${wl}`,
     spread: `Spread ${wl}`,
-    both: `Harga jual ${wl} dan spread`,
+    both: `Harga jual dan spread ${wl}`,
   }[show];
   const mode =
     show === 'both' || show === 'spread'
@@ -148,7 +155,7 @@ function basicTitle(show: ShowMode, w: number, view: ViewOptions): string {
       : ({ nominal: '', gram: ' per gram', index: ' (indeks)', pct: ' (% ubah)' } as const)[
           view.mode
         ];
-  return `${what}${mode} · ${AGG_NOUN[view.agg]}`;
+  return `${what}${mode}`;
 }
 
 /** Label grafik harga di mode seri manual. */
@@ -462,10 +469,7 @@ export function ExplorerBoard({ options, weights, asOf, stamps, calendar }: Expl
   const hasLate = stats.some((x) => x.s?.startsLate);
 
   // --- Judul ----------------------------------------------------------------
-  const title = manual ? manualTitle(view.mode, view.agg) : basicTitle(show, weight, view);
-  const countLabel = manual
-    ? `${formatNumber(active.length)} series`
-    : `${formatNumber(entries.length)} brand`;
+  const title = manual ? manualTitle(view.mode) : basicTitle(show, weight, view);
   const hasLines = manual ? active.length > 0 : entries.length > 0;
   const emptyHint = manual
     ? 'Tambahkan minimal satu series untuk menampilkan grafik.'
@@ -624,62 +628,66 @@ export function ExplorerBoard({ options, weights, asOf, stamps, calendar }: Expl
           onOpenAdvanced={openAdvanced}
         />
 
-        {/* Judul besar dihapus (D-72): isinya mengulang kontrol; tetap ada untuk pembaca layar. */}
-        <h2 className="sr-only">{title}</h2>
-        <div className="mb-3 flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
-          {/* Di HP popover dijangkarkan ke baris periode (bukan ikon) agar tidak meluber ke kanan. */}
-          <div className="relative flex min-w-0 items-center gap-1.5 max-sm:order-last">
-            <p className="num m-0 text-sm text-muted">
-              {eff.from ? `${formatDate(eff.from)} – ` : 'sampai '}
-              {formatDate(eff.to)} · {countLabel}
-              {view.agg !== 'd' ? ` · penutupan ${AGG_NOUN[view.agg]}` : ''}
-            </p>
-            <InfoPopover ariaLabel="Keterangan grafik" className="max-sm:static">
-              <ul className="m-0 flex list-disc flex-col gap-1 pl-4">
-                <li>Gulir untuk memperbesar, seret untuk menggeser.</li>
-                {view.ffill ? (
+        {/* Kepala grafik (D-73): judul ringkas + periode di kiri, rentang di kanan (HP: di bawahnya). */}
+        <div className="mb-3 flex flex-wrap items-end justify-between gap-x-4 gap-y-3">
+          <div className="min-w-0">
+            <h2 className="m-0 text-lg leading-snug font-semibold">{title}</h2>
+            {/* Di HP popover dijangkarkan ke baris periode (bukan ikon) agar tidak meluber ke kanan. */}
+            <div className="relative flex min-w-0 items-center gap-1.5">
+              <p className="num m-0 text-sm text-muted">
+                {formatPeriod(eff.from, eff.to)}
+                {view.agg !== 'd' ? ` · penutupan ${AGG_NOUN[view.agg]}` : ''}
+              </p>
+              <InfoPopover ariaLabel="Keterangan grafik" className="max-sm:static">
+                <ul className="m-0 flex list-disc flex-col gap-1 pl-4">
+                  <li>Gulir untuk memperbesar, seret untuk menggeser.</li>
+                  {view.ffill ? (
+                    <li>
+                      Hari yang seharusnya ada harga tapi datanya kosong diisi harga terakhir
+                      sebelumnya (tertulis &ldquo;isi dari …&rdquo; di tooltip). Matikan Isi hari
+                      tanpa data di Lanjutan untuk melihat hari yang kosong.
+                    </li>
+                  ) : (
+                    <li>
+                      Area berarsir: hari yang seharusnya ada harga tapi datanya kosong. Garis
+                      terputus di sana.
+                    </li>
+                  )}
                   <li>
-                    Hari yang seharusnya ada harga tapi datanya kosong diisi harga terakhir
-                    sebelumnya (tertulis &ldquo;isi dari …&rdquo; di tooltip). Matikan Isi hari
-                    tanpa data di Lanjutan untuk melihat hari yang kosong.
+                    Akhir pekan dan hari libur saat sumber tidak terbit tidak dianggap kosong.
                   </li>
-                ) : (
-                  <li>
-                    Area berarsir: hari yang seharusnya ada harga tapi datanya kosong. Garis
-                    terputus di sana.
-                  </li>
-                )}
-                <li>Akhir pekan dan hari libur saat sumber tidak terbit tidak dianggap kosong.</li>
-                <li>Emas fisik: harga per keping. Tabungan Emas: harga per gram.</li>
-                {!manual && showsSpread(show) ? (
-                  <li>
-                    Spread = (harga jual − buyback) ÷ harga jual, dari sumber yang sama pada tanggal
-                    yang sama. Buyback Logam Mulia selain 1 g dihitung dari buyback 1 g × berat.
-                  </li>
-                ) : null}
-                {hasLate ? (
-                  <li>
-                    Garis yang lebih pendek berarti datanya baru tersedia sejak titik awalnya.
-                  </li>
-                ) : null}
-                {view.mode === 'gram' ? <li>Per gram: harga keping dibagi beratnya.</li> : null}
-                {view.mode === 'index' || view.mode === 'pct' ? (
-                  <li>
-                    Indeks dan % ubah diukur dari titik pertama yang terlihat. Mengganti rentang
-                    ikut mengganti titik awalnya.
-                  </li>
-                ) : null}
-                {view.agg !== 'd' ? (
-                  <li>
-                    Satu titik = harga hari terakhir yang ada datanya di tiap{' '}
-                    {view.agg === 'w' ? 'minggu' : 'bulan'}.
-                  </li>
-                ) : null}
-                {bandOn ? (
-                  <li>Pita: rentang harga terendah sampai tertinggi di tiap periode.</li>
-                ) : null}
-              </ul>
-            </InfoPopover>
+                  <li>Emas fisik: harga per keping. Tabungan Emas: harga per gram.</li>
+                  {!manual && showsSpread(show) ? (
+                    <li>
+                      Spread = (harga jual − buyback) ÷ harga jual, dari sumber yang sama pada
+                      tanggal yang sama. Buyback Logam Mulia selain 1 g dihitung dari buyback 1 g ×
+                      berat.
+                    </li>
+                  ) : null}
+                  {hasLate ? (
+                    <li>
+                      Garis yang lebih pendek berarti datanya baru tersedia sejak titik awalnya.
+                    </li>
+                  ) : null}
+                  {view.mode === 'gram' ? <li>Per gram: harga keping dibagi beratnya.</li> : null}
+                  {view.mode === 'index' || view.mode === 'pct' ? (
+                    <li>
+                      Indeks dan % ubah diukur dari titik pertama yang terlihat. Mengganti rentang
+                      ikut mengganti titik awalnya.
+                    </li>
+                  ) : null}
+                  {view.agg !== 'd' ? (
+                    <li>
+                      Satu titik = harga hari terakhir yang ada datanya di tiap{' '}
+                      {view.agg === 'w' ? 'minggu' : 'bulan'}.
+                    </li>
+                  ) : null}
+                  {bandOn ? (
+                    <li>Pita: rentang harga terendah sampai tertinggi di tiap periode.</li>
+                  ) : null}
+                </ul>
+              </InfoPopover>
+            </div>
           </div>
           <RangeControl
             parts="presets"
@@ -705,9 +713,9 @@ export function ExplorerBoard({ options, weights, asOf, stamps, calendar }: Expl
             {spreadChart(spreadH2, true)}
           </div>
         ) : !manual && show === 'spread' ? (
-          spreadChart(chartH, true)
+          spreadChart(chartH, false)
         ) : (
-          priceChart(chartH, true)
+          priceChart(chartH, false)
         )}
 
         {cards.length > 0 && !loading ? (

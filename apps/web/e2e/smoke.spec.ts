@@ -155,7 +155,7 @@ test.describe('Explorer (Riwayat harga, D-71)', () => {
     await expect(page.getByRole('button', { name: /^Gramasi\s*1 g/ })).toBeVisible();
     await expect(page.getByRole('button', { name: /^Tampilkan\s*Harga jual/ })).toBeVisible();
     await expect(page.getByRole('button', { name: /^4 brand/ })).toBeVisible();
-    await expect(page.getByRole('heading', { name: /^Harga jual 1 g · harian/ })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Harga jual 1 g', exact: true })).toBeVisible();
     await expect(page.getByRole('img', { name: /^Grafik harga/ })).toHaveCount(1);
     await expect(page.getByRole('img', { name: /^Grafik spread/ })).toHaveCount(0);
     // Panel kiri lama sudah tidak ada.
@@ -192,7 +192,7 @@ test.describe('Explorer (Riwayat harga, D-71)', () => {
       .getByRole('button', { name: 'Spread', exact: true })
       .click();
     await expect.poll(() => paramsOf(page).get('v')).toBe('spread');
-    await expect(page.getByRole('heading', { name: /^Spread 1 g · harian/ })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Spread 1 g', exact: true })).toBeVisible();
     await expect(page.getByRole('img', { name: /^Grafik spread/ })).toHaveCount(1);
     await expect(page.getByRole('img', { name: /^Grafik harga/ })).toHaveCount(0);
     await page.getByRole('button', { name: /\d+ brand/ }).click();
@@ -208,7 +208,9 @@ test.describe('Explorer (Riwayat harga, D-71)', () => {
   test('Jual + spread: dua grafik, harga di atas spread', async ({ page }) => {
     const errors = collectErrors(page);
     await page.goto('/explorer?v=both');
-    await expect(page.getByRole('heading', { name: /^Harga jual 1 g dan spread/ })).toBeVisible();
+    await expect(
+      page.getByRole('heading', { name: 'Harga jual dan spread 1 g', exact: true }),
+    ).toBeVisible();
     const price = page.getByRole('img', { name: /^Grafik harga/ });
     const spread = page.getByRole('img', { name: /^Grafik spread/ });
     await expect(price).toHaveCount(1);
@@ -299,7 +301,8 @@ test.describe('Explorer (Riwayat harga, D-71)', () => {
       await expect(dlg.getByRole('switch', { name: /Isi hari tanpa data/ })).not.toBeChecked();
       await dlg.getByRole('button', { name: 'Selesai' }).click();
       await expect(dlg).toHaveCount(0);
-      await expect(page.getByRole('heading', { name: /Indeks harga .* mingguan/ })).toBeVisible();
+      await expect(page.getByRole('heading', { name: /^Indeks harga/ })).toBeVisible();
+      await expect(page.getByText(/penutupan mingguan/)).toBeVisible();
     };
     await check();
     await page.reload();

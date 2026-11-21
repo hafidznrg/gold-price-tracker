@@ -662,3 +662,13 @@ Log keputusan produk dan teknis (format ringkas ala ADR). Keputusan baru ditamba
 - Baris kedua kartu = **periode · jumlah brand ⓘ** di kiri dan **rentang cepat** di kanan, karena teks periode adalah hasil tombol rentang. Di HP urutannya dibalik: rentang (dibagi rata selebar baris) di atas, teks periode kecil satu baris di bawahnya. Toolbar D-71 tinggal Gramasi · Tampilkan · Brand · Lanjutan.
 - Agregasi hanya disebut bila bukan bawaan: "· penutupan mingguan/bulanan" di baris periode.
 **Konsekuensi:** hierarki teks di kartu tinggal judul halaman → label grafik; tata letak sama di desktop, tablet, dan HP (hanya urutan di HP yang berbeda).
+
+### D-73 — Riwayat harga: judul ringkas kembali, tanpa hitungan brand (mengubah D-72)
+
+**Konteks:** tanpa judul, grafik terasa tak berlabel, dan tangkapan layar grafik yang dibagikan kehilangan konteks (pengaturan di toolbar tidak selalu ikut terpotret). Hitungan "· 4 brand" di baris periode justru mengulang tombol Brand. Di lebar tablet (±760 px) toolbar dan baris periode terlipat: label "Gramasi"/"Tampilkan" + tombol Lanjutan tidak muat satu baris.
+**Keputusan (pemilik, 21 Nov 2026):**
+- Kepala grafik = **judul ringkas** (18 px, satu baris: "Harga jual 1 g", "Spread 1 g", "Harga jual dan spread 1 g", "+ per gram/(indeks)/(% ubah)"; seri manual: label mode) dengan **periode** di bawahnya ("21 Okt – 21 Nov 2026", tahun ditulis sekali bila sama, ⓘ di sampingnya); rentang cepat di kanan, di HP selebar baris di bawah kepala.
+- Hitungan brand/series tidak ditulis di kepala. Agregasi non-bawaan tetap "· penutupan mingguan/bulanan".
+- Label kecil per grafik hanya pada **Jual + spread** (membedakan dua grafik); pada satu grafik judul sudah cukup.
+- Label "Gramasi"/"Tampilkan" di toolbar hanya tampil ≥ 1024 px (`lg`), sehingga tablet tetap satu baris.
+**Konsekuensi:** judul tetap sedikit mengulang toolbar, tetapi singkat dan menjadi konteks saat grafik dibagikan.
