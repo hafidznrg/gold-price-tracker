@@ -285,9 +285,9 @@ test.describe('Spread', () => {
   test('spread per gramasi: tujuh sumber, ganti sumber, gramasi 1 g disorot', async ({ page }) => {
     await page.goto('/spread');
     const src = page.locator('#barSrc');
-    // Opsi EMASKU ('HRTA Gold · EMASKU') baru muncul setelah ada data hrtagold; sisanya tetap.
+    // Opsi EMASKU ('Hartadinata · EMASKU') baru muncul setelah ada data hrtagold; sisanya tetap.
     const barOptions = (await src.locator('option').allTextContents()).filter(
-      (t) => t !== 'HRTA Gold · EMASKU',
+      (t) => t !== 'Hartadinata · EMASKU',
     );
     expect(barOptions).toEqual([
       'UBS Lifestyle · UBS (tahun produksi berjalan)',
@@ -306,11 +306,11 @@ test.describe('Spread', () => {
   });
 });
 
-test.describe('EMASKU / HRTA Gold (Fase 7)', () => {
+test.describe('EMASKU / Hartadinata (Fase 7)', () => {
   // Dijaga agar lulus sebelum dan sesudah data hrtagold pertama: bagian berdata bersyarat.
-  test('footer menyebut sumber HRTA Gold; matriks punya kolom EMASKU', async ({ page }) => {
+  test('footer menyebut sumber Hartadinata; matriks punya kolom EMASKU', async ({ page }) => {
     await page.goto('/');
-    await expect(page.locator('footer')).toContainText('HRTA Gold (EMASKU, hrtagold.id)');
+    await expect(page.locator('footer')).toContainText('Hartadinata (EMASKU, hrtagold.id)');
     await expect(page.locator('footer')).toContainText('sudah termasuk pajak');
     const table = page.getByRole('table', { name: 'Perbandingan harga per gramasi' });
     await expect(table.getByRole('columnheader', { name: /EMASKU/ })).toBeVisible();
@@ -418,11 +418,11 @@ test.describe('EMASKU / HRTA Gold (Fase 7)', () => {
     await page.goto('/spread');
     const buyAt = page.locator('#buyAt');
     if ((await buyAt.locator('option[value="hr-emasku"]').count()) === 1) {
-      await page.getByRole('button', { name: 'EMASKU: HRTA Gold → HRTA Gold' }).click();
+      await page.getByRole('button', { name: 'EMASKU: Hartadinata → Hartadinata' }).click();
       await expect(buyAt).toHaveValue('hr-emasku');
       await expect(page.locator('#sellTo')).toHaveValue('hr-emasku');
     } else {
-      await expect(page.getByRole('button', { name: /EMASKU: HRTA Gold/ })).toHaveCount(0);
+      await expect(page.getByRole('button', { name: /EMASKU: Hartadinata/ })).toHaveCount(0);
     }
     await page.goto('/explorer');
     const brand = page

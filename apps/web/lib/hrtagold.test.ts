@@ -80,7 +80,7 @@ describe('katalog EMASKU', () => {
     );
     expect(FILE_ORDER.indexOf(HRTA_FILE)).toBe(FILE_ORDER.indexOf('galeri24-lotusarchi') + 1);
     expect(seriesGroupLabel({ source: 'hrtagold', brand: 'emasku', product: 'gold_bar' })).toBe(
-      'EMASKU · HRTA Gold',
+      'EMASKU · Hartadinata',
     );
     expect(sourceStampText('hrtagold', '2026-11-21', '2026-11-21T08:12:00+07:00')).toContain(
       'hrtagold.id',
@@ -158,7 +158,11 @@ describe('Spread (P7-12)', () => {
 
   it('batang per gramasi: 17 gramasi, buyback per keping (bukan 1 g × berat)', () => {
     const bar = barSources(WITH).find((b) => b.id === 'hr-emasku')!;
-    expect(bar).toMatchObject({ label: 'HRTA Gold · EMASKU', source: 'hrtagold', color: 'emasku' });
+    expect(bar).toMatchObject({
+      label: 'Hartadinata · EMASKU',
+      source: 'hrtagold',
+      color: 'emasku',
+    });
     expect(bar.rows).toHaveLength(GOLD_WEIGHTS.length);
     const r1000 = bar.rows.find((r) => r.w === 1000)!;
     expect(r1000.value).toBeCloseTo(

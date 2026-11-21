@@ -151,7 +151,7 @@ export const SOURCE_LABELS: Record<PriceSource, string> = {
   ubslifestyle: 'UBS Lifestyle',
   galeri24: 'Galeri24',
   lotusarchi: 'Lotus Archi',
-  hrtagold: 'EMASKU (Hartadinata)',
+  hrtagold: 'Hartadinata',
 };
 
 /** Domain untuk atribusi "Sumber: …". */
@@ -216,7 +216,7 @@ export function variantLabel(variant: string): string {
 export function seriesGroupLabel(ref: Pick<SeriesRef, 'source' | 'brand' | 'product'>): string {
   // Lotus Archi di situs resminya: "Lotus Archi · Lotus Archi" menyesatkan, tulis domainnya.
   if (ref.source === 'lotusarchi') return `${displayBrand(ref)} · ${SOURCE_DOMAINS[ref.source]}`;
-  // EMASKU di situs Hartadinata: "EMASKU · EMASKU (Hartadinata)" berulang, pakai nama modul.
+  // EMASKU di situs Hartadinata: "EMASKU · Hartadinata".
   if (ref.source === 'hrtagold') return `${displayBrand(ref)} · ${SCRAPER_LABELS.hrtagold}`;
   return `${displayBrand(ref)} · ${SOURCE_LABELS[ref.source]}`;
 }
@@ -315,7 +315,7 @@ export const SCRAPER_LABELS: Record<ScraperId, string> = {
   worldbank: 'World Bank Pink Sheet',
   galeri24: 'Galeri24',
   lotusarchi: 'Lotus Archi',
-  hrtagold: 'HRTA Gold',
+  hrtagold: 'Hartadinata',
 };
 
 /** Urutan file series di kartu Hari ini dan halaman Data (mockup). */

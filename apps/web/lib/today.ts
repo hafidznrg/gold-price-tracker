@@ -70,7 +70,7 @@ function cardNote(h: Highlight, all: Highlight[]): string {
     return `Harga dan buyback dari situs Galeri24.${p ? `${p} (tanpa buyback).` : ''}${la}`;
   }
   if (h.source === 'hrtagold')
-    return 'Harga jual dan buyback keping 1 g dari situs EMASKU (Hartadinata). Harga sudah termasuk pajak menurut Syarat & Ketentuan situs. Seri Prime (25/50/100 g) terpisah dari Gold.';
+    return 'Harga jual dan buyback keping 1 g dari situs Hartadinata (hrtagold.id). Harga sudah termasuk pajak menurut Syarat & Ketentuan situs. Seri Prime (25/50/100 g) terpisah dari Gold.';
   return 'Pegadaian tidak menampilkan harga buyback untuk emas batangan.';
 }
 

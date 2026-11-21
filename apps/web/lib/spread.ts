@@ -229,8 +229,8 @@ export function buildOptions(latest: LatestFile): {
     'gold_bar',
     [''],
     1,
-    'EMASKU · HRTA Gold · 1 g',
-    'EMASKU (HRTA Gold)',
+    'EMASKU · Hartadinata · 1 g',
+    'EMASKU (Hartadinata)',
   );
   const ubs = opt(
     'ubsl-ubs',
@@ -366,7 +366,7 @@ export const POPULAR_PAIRS: { sell: string; buyback: string; label: string }[] =
     label: 'Antam: Logam Mulia → Galeri24 (non-Pegadaian)',
   },
   { sell: 'la-lotus', buyback: 'la-lotus', label: 'Lotus Archi: lotusarchi.com → lotusarchi.com' },
-  { sell: 'hr-emasku', buyback: 'hr-emasku', label: 'EMASKU: HRTA Gold → HRTA Gold' },
+  { sell: 'hr-emasku', buyback: 'hr-emasku', label: 'EMASKU: Hartadinata → Hartadinata' },
   { sell: 'pg-ubs', buyback: 'ubsl-ubs', label: 'UBS: Pegadaian → UBS Lifestyle' },
   { sell: 'ubsl-ubs', buyback: 'ubsl-ubs', label: 'UBS: UBS Lifestyle → UBS Lifestyle' },
 ];
@@ -493,7 +493,7 @@ export function compareItems(latest: LatestFile): CompareItem[] {
     ['Galeri24 1 g', 'Galeri24 → Galeri24', 'g24-g24', 'g24-g24'],
     ['Lotus Archi 1 g', 'Galeri24 → Galeri24', 'g24-lotus', 'g24-lotus'],
     ['Lotus Archi 1 g', 'lotusarchi.com → lotusarchi.com', 'la-lotus', 'la-lotus'],
-    ['EMASKU 1 g', 'HRTA Gold → HRTA Gold', 'hr-emasku', 'hr-emasku'],
+    ['EMASKU 1 g', 'Hartadinata → Hartadinata', 'hr-emasku', 'hr-emasku'],
     ['Antam 1 g', 'Pegadaian → Galeri24', 'pg-antam', 'g24-antam'],
     ['Antam 1 g', 'Logam Mulia → Galeri24 (non-Pegadaian)', 'lm-antam', 'g24-antam-np'],
   ];
@@ -619,8 +619,8 @@ export function barSources(latest: LatestFile): BarSourceDef[] {
       ? [
           mk(
             'hr-emasku',
-            'HRTA Gold · EMASKU',
-            'HRTA Gold · EMASKU (hrtagold.id). Buyback per keping untuk tiap gramasi; harga sudah termasuk pajak',
+            'Hartadinata · EMASKU',
+            'Hartadinata · EMASKU (hrtagold.id). Buyback per keping untuk tiap gramasi; harga sudah termasuk pajak',
             'hrtagold',
             'emasku',
             HR_FILE,
