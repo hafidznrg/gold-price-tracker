@@ -5,16 +5,8 @@ import { debounce, parseAsString, useQueryStates } from 'nuqs';
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { TimeSeriesChart, type TimeSeries } from '@/components/charts/time-series-chart';
 import { AdvancedDialog, type ListedSeries } from '@/components/explorer-advanced';
-import {
-  AGG_NOUN,
-  DIR_CLASS,
-  Hint,
-  seriesLabel,
-  seriesParts,
-  Swatch,
-  uniq,
-  VALUE_FORMAT,
-} from '@/components/explorer-parts';
+import { AGG_NOUN, Hint, seriesLabel, uniq, VALUE_FORMAT } from '@/components/explorer-parts';
+import { ExplorerSummary } from '@/components/explorer-summary';
 import { ExplorerToolbar } from '@/components/explorer-toolbar';
 import { InfoPopover } from '@/components/info-popover';
 import { RangeControl, type RangeValue } from '@/components/range-control';
@@ -54,19 +46,11 @@ import {
   viewChartPoints,
   viewGaps,
   type ExplorerOption,
-  type RangeStat,
   type SeriesPick,
   type ViewOptions,
   type ValueMode,
 } from '@/lib/explorer';
-import {
-  changeDirection,
-  EMPTY,
-  formatDate,
-  formatPct,
-  formatRupiah,
-  formatWeight,
-} from '@/lib/format';
+import { formatDate, formatWeight } from '@/lib/format';
 import type { CompareDef } from '@/lib/bandingkan';
 import {
   basicEntries,
@@ -83,7 +67,13 @@ import {
   spreadRangeStats,
   type ShowMode,
 } from '@/lib/riwayat';
-import { cn } from '@/lib/utils';
+import {
+  changeOf,
+  gapAt,
+  makeSpreadInfo,
+  type SummaryItem,
+  type SummaryMode,
+} from '@/lib/riwayat-summary';
 
 export interface ExplorerBoardProps {
   options: ExplorerOption[];
@@ -98,25 +88,6 @@ export interface ExplorerBoardProps {
 }
 
 const PANEL_SM = 'min-w-0 rounded-card border border-line bg-surface p-4';
-/**
- * Tabel ringkasan diatur menurut lebar kartunya sendiri (container query). Di HP tiap series
- * jadi blok ringkas: judul + Akhir di baris atas, Awal/Terendah/Tertinggi sejajar di bawahnya,
- * tanpa geser ke samping. Dari 580px kartu berubah jadi tabel 5 kolom.
- */
-const SUM_WIDE = '@min-[580px]:grid-cols-[minmax(0,1.5fr)_repeat(4,minmax(0,1fr))]';
-const SUM_ROW = cn(
-  'grid grid-cols-3 gap-x-3 gap-y-2.5 border-t border-line px-5 @min-[580px]:items-center',
-  SUM_WIDE,
-);
-const SUM_CELL = 'num flex min-w-0 flex-col @min-[580px]:items-end @min-[580px]:text-right';
-const SUM_CELL_LABEL =
-  'mb-px text-2xs font-semibold uppercase tracking-[.08em] text-faint @min-[580px]:hidden';
-/** Teks keterangan di bawah angka (tanggal, "mulai …"): di HP lebih kecil dari angkanya. */
-const SUM_NOTE = 'text-[11px] leading-snug text-muted @min-[580px]:text-xs';
-/** Teks utama blok (nama series, harga Akhir): di HP sedikit lebih besar dari angka lain. */
-const SUM_PRIMARY = 'text-[15px] font-semibold leading-snug @min-[580px]:text-sm';
-
-const pctPlain = (v: number) => formatPct(v, 2, false);
 
 /** Seri satu garis: pilihan + opsi katalog (+ definisi brand di mode dasar). */
 interface Line extends ListedSeries {
@@ -178,43 +149,6 @@ function priceChartCaption(show: ShowMode, mode: ValueMode): string {
     pct: '(% ubah sejak awal rentang)',
   }[mode];
   return `${what} ${how}`;
-}
-
-function StatCard({
-  color,
-  dashed,
-  title,
-  main,
-  sub,
-}: {
-  color: ColorToken | string;
-  dashed: boolean;
-  title: string;
-  main: string;
-  sub: React.ReactNode;
-}) {
-  return (
-    <div className="flex min-w-0 flex-col gap-1.5 rounded-[14px] border border-line px-3.5 py-3">
-      <span className="flex min-w-0 items-center gap-2 text-xs text-muted">
-        <Swatch color={color} dashed={dashed} width={20} />
-        <span className="min-w-0 break-words">{title}</span>
-      </span>
-      <span className="num text-lg font-semibold">{main}</span>
-      <span className="num text-xs text-muted">{sub}</span>
-    </div>
-  );
-}
-
-interface SummaryRow {
-  key: string;
-  title: string;
-  meta: string;
-  color: string;
-  dashed: boolean;
-  s: RangeStat | null;
-  fmt: (v: number) => string;
-  /** Persentase perubahan di sel Akhir; tidak dipakai untuk spread (selisih persen tak bermakna). */
-  showChange: boolean;
 }
 
 export function ExplorerBoard({ options, weights, asOf, stamps, calendar }: ExplorerBoardProps) {
@@ -328,10 +262,16 @@ export function ExplorerBoard({ options, weights, asOf, stamps, calendar }: Expl
     if (loading) return null;
     return spreadSrc.map((e) => {
       const file = files[e.opt.file];
-      const points = file
-        ? spreadPoints(seriesPoints(file, e.opt, 'sell'), seriesPoints(file, e.opt, 'buyback'))
-        : [];
-      return { e, points, chart: chartPoints(points, expectedFor(calendar, [e.opt.source])) };
+      const sell = file ? seriesPoints(file, e.opt, 'sell') : [];
+      const buyback = file ? seriesPoints(file, e.opt, 'buyback') : [];
+      const points = spreadPoints(sell, buyback);
+      return {
+        e,
+        points,
+        sell,
+        buyback,
+        chart: chartPoints(points, expectedFor(calendar, [e.opt.source])),
+      };
     });
   }, [spreadSrc, files, loading, calendar]);
 
@@ -435,17 +375,24 @@ export function ExplorerBoard({ options, weights, asOf, stamps, calendar }: Expl
       (built ?? []).map((b) => {
         const d = view.mode === 'gram' ? gramDivisor(b.opt) : 1;
         const pts = d === 1 ? b.points : b.points.map((p) => ({ ...p, value: p.value / d }));
-        return { b, s: rangeStats(pts, eff.from, eff.to) };
+        const s = rangeStats(pts, eff.from, eff.to);
+        // Harga terakhir per gram (sebanding antar brand), apa pun mode nilainya.
+        const perGram = s ? (s.last.value * d) / gramDivisor(b.opt) : null;
+        return { b, s, perGram };
       }),
     [built, eff.from, eff.to, view.mode],
   );
   const spreadStats = useMemo(
     () =>
-      (spreadBuilt ?? []).map((b) => ({
-        b,
-        s: spreadRangeStats(b.points, eff.from, eff.to),
-        r: rangeStats(b.points, eff.from, eff.to),
-      })),
+      (spreadBuilt ?? []).map((b) => {
+        const s = spreadRangeStats(b.points, eff.from, eff.to);
+        return {
+          b,
+          s,
+          r: rangeStats(b.points, eff.from, eff.to),
+          gap: s ? gapAt(b.sell, b.buyback, s.last.date) : null,
+        };
+      }),
     [spreadBuilt, eff.from, eff.to],
   );
 
@@ -518,96 +465,78 @@ export function ExplorerBoard({ options, weights, asOf, stamps, calendar }: Expl
     </div>
   );
 
-  // --- Kartu statistik ------------------------------------------------------
-  const cards = manual
-    ? stats.map(({ b, s }) => ({
+  // --- Daftar "Dalam rentang ini" (D-74) -----------------------------------
+  const summaryMode: SummaryMode = manual ? 'manual' : show;
+  const summaryItems: SummaryItem[] = useMemo(() => {
+    if (manual) {
+      return stats.map(({ b, s }) => ({
         key: b.id,
+        name: seriesLabel(b.opt, b.pick.price),
+        source: '',
         color: optionColor(b.opt) as string,
         dashed: b.pick.price === 'buyback',
-        title: seriesLabel(b.opt, b.pick.price),
-        main: s ? formatRupiah(s.last.value) : EMPTY,
-        sub: s ? (
-          <>
-            <span className={DIR_CLASS[changeDirection(s.changePct)]}>
-              {formatPct(s.changePct)}
-            </span>{' '}
-            <span className="text-faint">dalam rentang</span>
-          </>
-        ) : (
-          'Tidak ada data di rentang ini'
-        ),
-      }))
-    : entries.map((e) => {
-        const st = stats.find((x) => x.b.def?.id === e.def.id)?.s ?? null;
-        const sp = spreadStats.find((x) => x.b.e.def.id === e.def.id)?.s ?? null;
-        const spread = sp ? `spread ${pctPlain(sp.last.value)}` : null;
-        const base = { key: e.def.id, color: e.def.color as string, dashed: e.def.dashed };
-        const title = e.def.label;
-        if (show === 'spread') {
-          return {
-            ...base,
-            title,
-            main: sp ? pctPlain(sp.last.value) : EMPTY,
-            sub: sp
-              ? `rata-rata ${pctPlain(sp.avg)} dalam rentang`
-              : 'Tidak ada data di rentang ini',
-          };
-        }
-        const change = st ? (
-          st.startsLate ? (
-            <>data mulai {formatDate(st.first.date)}</>
-          ) : (
-            <>
-              <span className={DIR_CLASS[changeDirection(st.changePct)]}>
-                {formatPct(st.changePct)}
-              </span>{' '}
-              <span className="text-faint">dalam rentang</span>
-            </>
-          )
-        ) : (
-          'Tidak ada data di rentang ini'
-        );
+        kind: 'rupiah' as const,
+        stat: s,
+        change: changeOf(s, 'rupiah'),
+        comparable: null,
+        spread: null,
+      }));
+    }
+    return entries.map((e): SummaryItem => {
+      const base = { key: e.def.id, name: e.def.brandName, source: e.def.sourceName };
+      const look = { color: e.def.color as string, dashed: e.def.dashed };
+      const price = stats.find((x) => x.b.def?.id === e.def.id);
+      const sp = spreadStats.find((x) => x.b.e.def.id === e.def.id);
+      const spread = sp?.s ? makeSpreadInfo(sp.s, sp.r, sp.gap) : null;
+      if (show === 'spread') {
         return {
           ...base,
-          title,
-          main: st ? formatRupiah(st.last.value) : EMPTY,
-          sub: spread ? (
-            <>
-              {change} · {spread}
-            </>
-          ) : (
-            change
-          ),
+          ...look,
+          kind: 'pct',
+          stat: sp?.r ?? null,
+          change: changeOf(sp?.r ?? null, 'pct'),
+          comparable: spread?.last ?? null,
+          spread,
         };
-      });
+      }
+      const s = price?.s ?? null;
+      return {
+        ...base,
+        ...look,
+        kind: 'rupiah',
+        stat: s,
+        change: changeOf(s, 'rupiah'),
+        comparable: price?.perGram ?? null,
+        spread,
+      };
+    });
+  }, [manual, stats, entries, spreadStats, show]);
 
-  // --- Baris tabel ringkasan ------------------------------------------------
-  const summary: SummaryRow[] =
-    !manual && show === 'spread'
-      ? spreadStats.map(({ b, r }) => ({
-          key: b.e.def.id,
-          title: b.e.def.label,
-          meta: `Spread · ${formatWeight(weight)}`,
-          color: b.e.def.color,
-          dashed: b.e.def.dashed,
-          s: r,
-          fmt: pctPlain,
-          showChange: false,
-        }))
-      : stats.map(({ b, s }) => {
-          const { title: t, meta } = seriesParts(b.opt, b.pick.price);
-          return {
-            key: b.id,
-            title: t,
-            meta,
-            color: b.color ?? optionColor(b.opt),
-            dashed: b.def ? b.def.dashed : b.pick.price === 'buyback',
-            s,
-            fmt: formatRupiah,
-            showChange: true,
-          };
-        });
-  const noRows = summary.length === 0;
+  const sourcePopover = (
+    <InfoPopover label="Sumber" ariaLabel="Sumber data" side="top">
+      {stampSources.map((src) => {
+        const st = stamps[src];
+        const date =
+          st?.date ??
+          built
+            ?.filter((b) => b.opt.source === src)
+            .map((b) => b.points.at(-1)?.date ?? '')
+            .sort()
+            .at(-1) ??
+          asOf;
+        const names = [...active, ...spreadSrc]
+          .filter((a) => a.opt.source === src)
+          .map((a) => optionBrandName(a.opt))
+          .filter((v, i, arr) => arr.indexOf(v) === i)
+          .join(', ');
+        return (
+          <SourceStamp key={src} source={src} date={date || asOf} at={st?.at ?? null} bare>
+            {names}
+          </SourceStamp>
+        );
+      })}
+    </InfoPopover>
+  );
 
   return (
     <section className="wrap flex flex-col gap-5 pb-16">
@@ -717,154 +646,19 @@ export function ExplorerBoard({ options, weights, asOf, stamps, calendar }: Expl
         ) : (
           priceChart(chartH, false)
         )}
-
-        {cards.length > 0 && !loading ? (
-          <div className="mt-5 grid grid-cols-[repeat(auto-fit,minmax(min(220px,100%),1fr))] gap-2.5">
-            {cards.map((c) => (
-              <StatCard
-                key={c.key}
-                color={c.color}
-                dashed={c.dashed}
-                title={c.title}
-                main={c.main}
-                sub={c.sub}
-              />
-            ))}
-          </div>
-        ) : null}
-
-        <InfoPopover label="Sumber" ariaLabel="Sumber data" side="top" className="mt-4">
-          {stampSources.map((src) => {
-            const st = stamps[src];
-            const date =
-              st?.date ??
-              built
-                ?.filter((b) => b.opt.source === src)
-                .map((b) => b.points.at(-1)?.date ?? '')
-                .sort()
-                .at(-1) ??
-              asOf;
-            const names = [...active, ...spreadSrc]
-              .filter((a) => a.opt.source === src)
-              .map((a) => optionBrandName(a.opt))
-              .filter((v, i, arr) => arr.indexOf(v) === i)
-              .join(', ');
-            return (
-              <SourceStamp key={src} source={src} date={date || asOf} at={st?.at ?? null} bare>
-                {names}
-              </SourceStamp>
-            );
-          })}
-        </InfoPopover>
       </div>
 
-      <div className="overflow-hidden rounded-[18px] border border-line bg-surface">
-        <h2 className="m-0 px-5 py-[18px] text-base font-semibold">Ringkasan rentang</h2>
-        <div className="@container">
-          <div role="table" aria-label="Ringkasan rentang">
-            <div
-              role="row"
-              className={cn(
-                SUM_ROW,
-                'hidden py-2.5 text-2xs font-semibold uppercase tracking-[.1em] text-faint @min-[580px]:grid',
-              )}
-            >
-              <span role="columnheader">Series</span>
-              <span role="columnheader" className="text-right">
-                Awal
-              </span>
-              <span role="columnheader" className="text-right">
-                Akhir
-              </span>
-              <span role="columnheader" className="text-right">
-                Terendah
-              </span>
-              <span role="columnheader" className="text-right">
-                Tertinggi
-              </span>
-            </div>
-            {noRows ? (
-              <p className="m-0 border-t border-line px-5 py-4 text-sm text-muted">
-                {loading && hasLines ? 'Memuat data…' : 'Belum ada series aktif.'}
-              </p>
-            ) : null}
-            {summary.map((row) => {
-              const { s } = row;
-              return (
-                <div
-                  key={row.key}
-                  role="row"
-                  className={cn(
-                    SUM_ROW,
-                    'py-3 text-[13px] @min-[580px]:py-3.5 @min-[580px]:text-sm',
-                    // HP sangat sempit (≈320px): angka sedikit lebih kecil agar 3 kolom muat.
-                    '@max-[330px]:gap-x-2 @max-[330px]:px-4 @max-[330px]:text-xs',
-                  )}
-                >
-                  {/* HP: judul selebar baris, ruang kanannya dipakai sel Akhir (lihat di bawah). */}
-                  <span
-                    role="cell"
-                    className="col-span-3 col-start-1 row-start-1 flex min-w-0 items-start gap-2.5 pr-[108px] @min-[580px]:col-span-1 @min-[580px]:col-start-auto @min-[580px]:row-start-auto @min-[580px]:pr-0"
-                  >
-                    <Swatch
-                      color={row.color}
-                      dashed={row.dashed}
-                      width={16}
-                      className="mt-[6px] flex-none @min-[580px]:mt-[5px]"
-                    />
-                    <span className="flex min-w-0 flex-col">
-                      <span className={SUM_PRIMARY}>{row.title}</span>
-                      {row.meta ? <span className="text-xs text-muted">{row.meta}</span> : null}
-                    </span>
-                  </span>
-                  <span role="cell" className={SUM_CELL}>
-                    <span aria-hidden="true" className={SUM_CELL_LABEL}>
-                      Awal
-                    </span>
-                    <span className="whitespace-nowrap">{s ? row.fmt(s.first.value) : EMPTY}</span>
-                    {s?.startsLate ? (
-                      <span className={SUM_NOTE}>mulai {formatDate(s.first.date)}</span>
-                    ) : null}
-                  </span>
-                  {/* HP: Akhir menumpang di kanan baris judul; sel lain mengalir ke baris kedua. */}
-                  <span
-                    role="cell"
-                    className="num col-span-3 col-start-1 row-start-1 flex flex-col items-end justify-self-end text-right @min-[580px]:col-span-1 @min-[580px]:col-start-auto @min-[580px]:row-start-auto @min-[580px]:justify-self-stretch"
-                  >
-                    <span className={cn(SUM_PRIMARY, 'whitespace-nowrap')}>
-                      {s ? row.fmt(s.last.value) : EMPTY}
-                    </span>
-                    {s && row.showChange ? (
-                      <span
-                        className={cn(
-                          'text-xs font-medium',
-                          DIR_CLASS[changeDirection(s.changePct)],
-                        )}
-                      >
-                        {formatPct(s.changePct)}
-                      </span>
-                    ) : null}
-                  </span>
-                  <span role="cell" className={SUM_CELL}>
-                    <span aria-hidden="true" className={SUM_CELL_LABEL}>
-                      Terendah
-                    </span>
-                    <span className="whitespace-nowrap">{s ? row.fmt(s.min.value) : EMPTY}</span>
-                    {s ? <span className={SUM_NOTE}>{formatDate(s.min.date)}</span> : null}
-                  </span>
-                  <span role="cell" className={SUM_CELL}>
-                    <span aria-hidden="true" className={SUM_CELL_LABEL}>
-                      Tertinggi
-                    </span>
-                    <span className="whitespace-nowrap">{s ? row.fmt(s.max.value) : EMPTY}</span>
-                    {s ? <span className={SUM_NOTE}>{formatDate(s.max.date)}</span> : null}
-                  </span>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </div>
+      {hasLines && !error ? (
+        <ExplorerSummary
+          key={summaryMode}
+          items={summaryItems}
+          mode={summaryMode}
+          valueMode={view.mode}
+          to={eff.to}
+          loading={loading || !built}
+          footer={sourcePopover}
+        />
+      ) : null}
 
       <AdvancedDialog
         open={advOpen}

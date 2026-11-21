@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<title>Mockup ringkasan rentang HP</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Instrument+Serif&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f7f5f0;--surface:#fff;--surface2:#f0efea;--line:#e1dfd8;--text:#15171c;--muted:#55575e;--faint:#686a71;--gold:#8a6618;--goldsoft:rgba(176,132,40,.12);--goldline:rgba(138,102,24,.35);--down:#b4442a;--antam:#a67c1e;--ubs:#2f64d6;--g24:#9c3220;--tab:#0f7f6c;--lotus:#7a4bb5;--emasku:#b3237a;--btn:#15171c}
+*{box-sizing:border-box}
+body{margin:0;background:#e9e6de;font-family:Inter,system-ui,sans-serif;color:var(--text);display:flex;gap:36px;padding:28px;width:1340px;align-items:flex-start}
+.col{display:flex;flex-direction:column;gap:10px}
+.cap{font-size:12.5px;font-weight:700;letter-spacing:.08em;color:var(--gold);text-transform:uppercase;margin:0}
+.capsub{font-size:13px;color:var(--muted);margin:0 0 4px;max-width:375px;line-height:1.45}
+.phone{width:375px;background:var(--bg);border-radius:28px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.08);padding:14px 16px 20px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:20px;overflow:hidden}
+.ghost{height:56px;border-radius:14px;background:repeating-linear-gradient(-45deg,#ece9e1,#ece9e1 6px,#f3f1ec 6px,#f3f1ec 12px);display:grid;place-items:center;font-size:12px;color:var(--faint);margin-bottom:12px}
+.head{display:flex;justify-content:space-between;align-items:center;padding:14px 16px 10px}
+.head h3{margin:0;font-size:15px;font-weight:600}
+.sort{display:inline-flex;gap:2px;padding:2px;border:1px solid var(--line);border-radius:10px}
+.sort span{font-size:11.5px;font-weight:600;color:var(--muted);padding:5px 8px;border-radius:7px}
+.sort span.on{background:var(--btn);color:#fff}
+.row{border-top:1px solid var(--line);padding:11px 16px 12px}
+.l1{display:flex;align-items:center;gap:8px}
+.sw{width:14px;height:3px;border-radius:2px;flex:none}
+.sw.dash{background:none!important;border-top:3px dashed}
+.name{font-size:13.5px;font-weight:600;white-space:nowrap}
+.name small{font-weight:400;color:var(--muted)}
+.val{margin-left:auto;font-size:15px;font-weight:650;font-variant-numeric:tabular-nums}
+.badge{font-size:10.5px;font-weight:700;color:var(--gold);background:var(--goldsoft);border:1px solid var(--goldline);border-radius:999px;padding:2px 7px;letter-spacing:.02em}
+.l2{display:flex;align-items:center;gap:10px;margin-top:8px;padding-left:22px}
+.bar{position:relative;flex:1;height:18px}
+.bar .track{position:absolute;left:0;right:0;top:8px;height:3px;border-radius:2px;background:var(--surface2)}
+.bar .dot{position:absolute;top:4px;width:11px;height:11px;border-radius:50%;border:2px solid #fff;box-shadow:0 0 0 1px rgba(0,0,0,.12);transform:translateX(-50%)}
+.bar .lo,.bar .hi{position:absolute;top:-6px;font-size:9.5px;color:var(--faint)}
+.bar .lo{left:0}.bar .hi{right:0}
+.chg{font-size:12.5px;font-weight:600;font-variant-numeric:tabular-nums;min-width:52px;text-align:right}
+.down{color:var(--down)}.flat{color:var(--muted)}
+.note{font-size:11.5px;color:var(--faint);padding-left:22px;margin-top:5px;display:flex;align-items:center;gap:6px}
+.spr{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+.spr b{color:var(--text);font-weight:600}
+.spr.warn b{color:var(--down)}
+.chev{color:var(--faint);font-size:11px;margin-left:6px}
+.exp{background:#fbfaf7}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px 8px;margin:12px 0 2px 22px}
+.grid .k{font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--faint)}
+.grid .v{font-size:12.5px;font-weight:600;font-variant-numeric:tabular-nums;margin-top:2px}
+.grid .d{font-size:11px;color:var(--muted)}
+.foot{border-top:1px solid var(--line);padding:11px 16px;font-size:12px;color:var(--muted);display:flex;justify-content:space-between}
+.legendhint{font-size:11.5px;color:var(--faint);padding:0 16px 10px;margin-top:-4px}
+.notes{max-width:440px;font-size:13px;color:var(--muted);line-height:1.55;padding-top:30px}
+.notes h4{margin:0 0 10px;font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--gold)}
+.notes div{display:flex;gap:10px;margin-bottom:10px}
+.num{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:50%;background:var(--gold);color:#fff;font-size:11px;font-weight:700;flex:none}
+.row.best{background:linear-gradient(90deg,rgba(176,132,40,.09),rgba(176,132,40,.02) 70%);box-shadow:inset 3px 0 0 var(--gold)}
+.row.best .val{color:var(--gold)}
+.cheap{font-size:11px;font-weight:600;color:var(--gold);white-space:nowrap;margin-right:-4px}
+</style>
+</head>
+<body>
+
+<div class="col">
+  <p class="cap">A · Tampilkan: Harga jual</p>
+  <p class="capsub">Kartu statistik dan tabel "Ringkasan rentang" digabung jadi satu daftar, sekaligus legenda grafik.</p>
+  <div class="phone">
+    <div class="ghost">[ toolbar · judul · grafik ]</div>
+    <div class="card">
+      <div class="head"><h3>Dalam rentang ini</h3><div class="sort"><span class="on">Termurah</span><span>Perubahan</span></div></div>
+      <div id="listA"></div>
+      <div class="foot"><span>Ketuk baris untuk detail</span><span>ⓘ Sumber</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="col">
+  <p class="cap">B · Tampilkan: Jual + spread</p>
+  <p class="capsub">Spread hari ini ikut di tiap baris. Baris yang diketuk membuka awal, terendah, tertinggi, dan statistik spread.</p>
+  <div class="phone">
+    <div class="ghost">[ toolbar · judul · 2 grafik ]</div>
+    <div class="card">
+      <div class="head"><h3>Dalam rentang ini</h3><div class="sort"><span class="on">Termurah</span><span>Spread</span></div></div>
+      <div id="listB"></div>
+      <div class="foot"><span>Ketuk baris untuk detail</span><span>ⓘ Sumber</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="notes">
+  <h4>Anatomi satu baris</h4>
+  <div><span class="num">1</span><span><b>Baris 1:</b> warna garis (sama dengan grafik, putus-putus = Pegadaian), brand · sumber, harga <b>terakhir</b>. Brand <b>termurah</b> ditandai halus: garis emas tipis di kiri, latar keemasan samar, harga berwarna emas, dan kata kecil “termurah” sebelum % (tanpa badge, tanpa baris tambahan).</span></div>
+  <div><span class="num">2</span><span><b>Baris 2: bilah rentang.</b> Kiri = terendah, kanan = tertinggi dalam rentang; titik = posisi harga sekarang. Langsung terlihat “di titik terendah sebulan”. Di kanan: % perubahan.</span></div>
+  <div><span class="num">3</span><span><b>Catatan kecil</b> hanya bila perlu: “data mulai 26 Okt”, “terakhir 20 Nov” (sumber belum terbit).</span></div>
+  <div><span class="num">4</span><span><b>Detail (ketuk):</b> Awal, Terendah, Tertinggi beserta tanggalnya; di mode spread juga rata-rata dan tersempit. Angka yang dulu selalu tampil di tabel kini hanya muncul saat dibutuhkan.</span></div>
+  <div><span class="num">5</span><span><b>Urutkan:</b> Termurah (bawaan) atau Perubahan / Spread. Urutan termurah langsung menjawab “beli di mana”.</span></div>
+  <div><span class="num">6</span><span><b>Desktop/tablet:</b> daftar yang sama menjadi tabel 2 kolom (atau satu tabel lebar) di bawah grafik; kartu statistik 4–5 kolom dihapus.</span></div>
+</div>
+
+<script>
+const fmt=v=>'Rp'+v.toLocaleString('id-ID');
+const A=[
+ {n:'Tabungan Emas',s:'Pegadaian',c:'--tab',v:2256000,lo:2256000,hi:2434000,ch:'−7,31%',best:true},
+ {n:'EMASKU',s:'Hartadinata',c:'--emasku',v:2258000,lo:null,ch:'—',note:'data mulai 21 Nov · belum ada pembanding'},
+ {n:'UBS',s:'UBS Lifestyle',c:'--ubs',v:2267800,lo:2267800,hi:2564300,ch:'−8,68%',note:'data mulai 26 Okt · terakhir 20 Nov'},
+ {n:'Galeri24',s:'Galeri24',c:'--g24',v:2334000,lo:2334000,hi:2528000,ch:'−6,79%'},
+ {n:'Lotus Archi',s:'Galeri24',c:'--lotus',v:2335000,lo:2335000,hi:2566000,ch:'−9,00%'},
+ {n:'UBS',s:'Pegadaian',c:'--ubs',dash:1,v:2357000,lo:2357000,hi:2572000,ch:'−4,46%',note:'data mulai 31 Okt'},
+ {n:'Antam',s:'Logam Mulia',c:'--antam',v:2495000,lo:2495000,hi:2570000,ch:'−2,31%'},
+ {n:'Antam',s:'Pegadaian',c:'--antam',dash:1,v:2533000,lo:2533000,hi:2604000,ch:'−1,21%',note:'data mulai 31 Okt'},
+];
+const jt=v=>(v/1e6).toFixed(2).replace('.',',')+' jt';
+function row(r,extra=''){
+  const pos=r.lo==null?null:(r.hi===r.lo?50:(r.v-r.lo)/(r.hi-r.lo)*100);
+  return `<div class="row ${r.exp?'exp':''} ${r.best?'best':''}">
+    <div class="l1"><span class="sw ${r.dash?'dash':''}" style="background:var(${r.c});border-color:var(${r.c})"></span>
+      <span class="name">${r.n} <small>· ${r.s}</small></span>
+      <span class="val">${fmt(r.v)}</span><span class="chev">${r.exp?'▴':'▾'}</span></div>
+    <div class="l2">${pos==null?'<div class="bar"><div class="track"></div></div>':`<div class="bar"><span class="lo">${jt(r.lo)}</span><span class="hi">${jt(r.hi)}</span><div class="track"></div><div class="dot" style="left:${Math.max(4,Math.min(96,pos))}%;background:var(${r.c})"></div></div>`}
+      ${r.sp!==undefined?`<span class="spr ${r.warn?'warn':''}">spread <b>${r.sp}</b></span>`:''}
+      ${r.best?'<span class="cheap">termurah</span>':''}<span class="chg ${r.ch==='—'?'flat':'down'}">${r.ch}</span></div>
+    ${r.note?`<div class="note">${r.note}</div>`:''}
+    ${extra}
+  </div>`;
+}
+document.getElementById('listA').innerHTML=A.map(r=>row(r)).join('');
+const B=[
+ {n:'EMASKU',s:'Hartadinata',c:'--emasku',v:2258000,lo:null,ch:'—',sp:'6,02%',note:'data mulai 21 Nov',best:true},
+ {n:'UBS',s:'UBS Lifestyle',c:'--ubs',v:2267800,lo:2267800,hi:2564300,ch:'−8,68%',sp:'6,74%',note:'terakhir 20 Nov'},
+ {n:'Galeri24',s:'Galeri24',c:'--g24',v:2334000,lo:2334000,hi:2528000,ch:'−6,79%',sp:'5,96%'},
+ {n:'Antam',s:'Logam Mulia',c:'--antam',v:2495000,lo:2495000,hi:2570000,ch:'−2,31%',sp:'16,03%',warn:1,exp:1},
+];
+const detail=`<div class="grid">
+  <div><div class="k">Awal</div><div class="v">Rp2.554.000</div><div class="d">21 Okt</div></div>
+  <div><div class="k">Terendah</div><div class="v">Rp2.495.000</div><div class="d">21 Nov</div></div>
+  <div><div class="k">Tertinggi</div><div class="v">Rp2.570.000</div><div class="d">28 Okt</div></div>
+  <div><div class="k">Spread kini</div><div class="v" style="color:var(--down)">16,03%</div><div class="d">Rp400.000</div></div>
+  <div><div class="k">Rata-rata</div><div class="v">8,93%</div><div class="d">29 hari</div></div>
+  <div><div class="k">Tersempit</div><div class="v">7,23%</div><div class="d">10 Nov</div></div>
+</div>`;
+document.getElementById('listB').innerHTML=B.map(r=>row(r,r.exp?detail:'')).join('');
+</script>
+</body>
+</html>

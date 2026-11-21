@@ -10,6 +10,7 @@ import {
   formatJakartaStamp,
   formatPct,
   formatRupiah,
+  formatCompact,
   formatRupiahShort,
   formatStampShort,
   formatTimeWib,
@@ -24,6 +25,8 @@ describe('format', () => {
     expect(formatRupiah(-4000)).toBe('−Rp4.000');
     expect(formatRupiah(18_086.45, 2)).toBe('Rp18.086,45');
     expect(formatRupiahShort(2_510_000)).toBe('Rp2,51 jt');
+    expect(formatCompact(2_260_000)).toBe('2,26 jt');
+    expect(formatCompact(850_000)).toBe('850 rb');
   });
 
   it('persen dan perubahan', () => {

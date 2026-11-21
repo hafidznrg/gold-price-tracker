@@ -164,6 +164,58 @@ test.describe('Explorer (Riwayat harga, D-71)', () => {
     expect(errors).toEqual([]);
   });
 
+  test('daftar "Dalam rentang ini": 4 baris, satu terbaik, detail, urutan (D-74)', async ({
+    page,
+  }) => {
+    const errors = collectErrors(page);
+    await page.goto('/explorer');
+    await expect(
+      page.getByRole('heading', { name: 'Dalam rentang ini', exact: true }),
+    ).toBeVisible();
+    // Kartu statistik dan tabel lama sudah tidak ada.
+    await expect(page.getByRole('table', { name: 'Ringkasan rentang' })).toHaveCount(0);
+    const list = page.getByRole('list', { name: 'Dalam rentang ini', exact: true });
+    const rows = list.getByRole('listitem');
+    await expect(rows).toHaveCount(4);
+    await expect(list.locator('[data-best="true"]')).toHaveCount(1);
+    await expect(list.locator('[data-best="true"]').getByRole('button')).toHaveAccessibleName(
+      /\(termurah\)/,
+    );
+
+    const first = rows.first().getByRole('button');
+    await expect(first).toHaveAttribute('aria-expanded', 'false');
+    await first.click();
+    await expect(first).toHaveAttribute('aria-expanded', 'true');
+    await expect(rows.first().getByText('Terendah', { exact: true })).toBeVisible();
+    await expect(rows.first().getByText('Tertinggi', { exact: true })).toBeVisible();
+
+    const names = () => rows.getByRole('button').allTextContents();
+    const before = await names();
+    await page.getByRole('radio', { name: 'Perubahan', exact: true }).click();
+    await expect(rows).toHaveCount(4);
+    await expect.poll(async () => (await names()).join('|')).not.toBe(before.join('|'));
+    await page.waitForLoadState('load');
+    expect(errors).toEqual([]);
+  });
+
+  test('daftar: Jual + spread menambah detail spread; seri manual tanpa penanda', async ({
+    page,
+  }) => {
+    await page.goto('/explorer?v=both');
+    const list = page.getByRole('list', { name: 'Dalam rentang ini', exact: true });
+    await expect(list.getByRole('listitem')).toHaveCount(4);
+    await expect(page.getByRole('radio', { name: 'Spread', exact: true })).toBeVisible();
+    await list.getByRole('listitem').first().getByRole('button').click();
+    await expect(list.getByText('Spread kini', { exact: true })).toBeVisible();
+    await expect(list.getByText('Tersempit', { exact: true })).toBeVisible();
+
+    await page.goto('/explorer?s=logammulia-antam-1-sell,galeri24-galeri24-1-sell');
+    const manual = page.getByRole('list', { name: 'Dalam rentang ini', exact: true });
+    await expect(manual.getByRole('listitem')).toHaveCount(2);
+    await expect(manual.locator('[data-best="true"]')).toHaveCount(0);
+    await expect(page.getByRole('radio', { name: 'Bawaan', exact: true })).toBeVisible();
+  });
+
   test('dropdown Brand: centang mengubah b di URL; Semua dan Kosongkan', async ({ page }) => {
     await page.goto('/explorer');
     const trigger = page.getByRole('button', { name: /^4 brand/ });

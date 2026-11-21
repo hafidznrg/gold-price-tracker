@@ -672,3 +672,14 @@ Log keputusan produk dan teknis (format ringkas ala ADR). Keputusan baru ditamba
 - Label kecil per grafik hanya pada **Jual + spread** (membedakan dua grafik); pada satu grafik judul sudah cukup.
 - Label "Gramasi"/"Tampilkan" di toolbar hanya tampil ≥ 1024 px (`lg`), sehingga tablet tetap satu baris.
 **Konsekuensi:** judul tetap sedikit mengulang toolbar, tetapi singkat dan menjadi konteks saat grafik dibagikan.
+
+### D-74 — Riwayat harga: kartu statistik dan tabel "Ringkasan rentang" digabung jadi daftar "Dalam rentang ini"
+
+**Konteks:** di bawah grafik ada kartu statistik per seri (harga akhir, % perubahan) **dan** tabel "Ringkasan rentang" (awal, akhir, %, terendah, tertinggi) untuk seri yang sama. Di HP keduanya jadi dua blok panjang dengan isi yang berulang. Mockup disetujui pemilik 21 Nov 2026: `plan/mockup/riwayat-ringkasan-v2.{html,png}`.
+**Keputusan:**
+- Satu daftar **"Dalam rentang ini"** menggantikan keduanya, sekaligus legenda grafik. Baris: warna garis (putus-putus = sesuai grafik), brand · sumber, **harga terakhir**; baris kedua **bilah rentang** (kiri = terendah, kanan = tertinggi dalam rentang, titik = harga terakhir, label ringkas "2,26 jt") dan % perubahan; catatan kecil hanya bila perlu ("data mulai 26 Okt", "terakhir 20 Nov" bila sumber belum terbit sampai akhir rentang). Mode spread/jual + spread menambah "spread x%" (merah bila ≥ 1,25× rata-rata rentangnya, agar selisih kecil tidak ikut diberi peringatan).
+- Ketuk baris → detail: Awal, Terendah, Tertinggi + tanggal; di mode spread juga spread kini (Rp), rata-rata (n hari), tersempit + tanggal.
+- **Penanda terbaik halus** (tanpa badge): garis emas 3 px di kiri, latar keemasan samar, harga berwarna emas, kata kecil di samping %. Arti "terbaik" mengikuti Tampilkan: Harga jual / Jual + spread = **termurah** (dibandingkan per gram, sehingga Tabungan Emas setara keping), Buyback = **tertinggi**, Spread = **tersempit**. Tidak ada penanda di seri manual atau mode indeks/% ubah (tidak sebanding).
+- **Urutkan** (state lokal, tidak di URL): {terbaik} (bawaan) atau Perubahan; Jual + spread: Termurah atau Spread; seri manual: Bawaan atau Perubahan.
+- Desktop/tablet memakai daftar yang sama dalam 2 kolom (≥ 1024 px), 1 kolom di bawahnya. Kartu statistik dan tabel lama dihapus. "ⓘ Sumber" di kaki daftar.
+**Konsekuensi:** angka awal/terendah/tertinggi tidak lagi selalu tampil; tersedia lewat ketuk. Daftar menjadi satu-satunya legenda grafik (toolbar Brand tetap untuk memilih).

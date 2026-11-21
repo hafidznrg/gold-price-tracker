@@ -258,3 +258,13 @@ export function formatDataAge(
   }
   return EMPTY;
 }
+
+/** Angka ringkas tanpa "Rp": "2,26 jt", "1,20 M", "850 rb" (label ujung bilah rentang). */
+export function formatCompact(n: number): string {
+  const a = Math.abs(n);
+  const sign = n < 0 ? MINUS : '';
+  if (a >= 1e9) return `${sign}${formatNumber(a / 1e9, 2)} M`;
+  if (a >= 1e6) return `${sign}${formatNumber(a / 1e6, 2)} jt`;
+  if (a >= 1e3) return `${sign}${formatNumber(a / 1e3, 0)} rb`;
+  return `${sign}${formatNumber(a, 0)}`;
+}
