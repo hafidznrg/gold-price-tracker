@@ -25,3 +25,13 @@ describe('rangeToDates', () => {
     });
   });
 });
+
+describe('rangeWords', () => {
+  it('preset dalam kata, kustom = rentang', async () => {
+    const { rangeWords } = await import('./range');
+    expect(rangeWords('1B')).toBe('1 bulan');
+    expect(rangeWords('YTD')).toBe('sejak awal tahun');
+    expect(rangeWords('Semua')).toBe('seluruh data');
+    expect(rangeWords({ from: '2026-01-01', to: '2026-02-01' })).toBe('rentang');
+  });
+});

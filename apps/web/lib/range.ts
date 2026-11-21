@@ -51,3 +51,18 @@ export function rangeToDates(
       return { from: null, to: lastDate };
   }
 }
+
+const RANGE_WORDS: Record<RangePreset, string> = {
+  '7H': '7 hari',
+  '1B': '1 bulan',
+  '3B': '3 bulan',
+  '6B': '6 bulan',
+  YTD: 'sejak awal tahun',
+  '1T': '1 tahun',
+  Semua: 'seluruh data',
+};
+
+/** Rentang dalam kata ("1 bulan"), untuk label yang dibaca orang; rentang kustom = "rentang". */
+export function rangeWords(range: RangeValue): string {
+  return typeof range === 'string' ? RANGE_WORDS[range] : 'rentang';
+}

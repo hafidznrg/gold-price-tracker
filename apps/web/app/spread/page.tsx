@@ -1,16 +1,11 @@
 import type { Metadata } from 'next';
+import { NuqsAdapter } from 'nuqs/adapters/next/app';
+import { Suspense } from 'react';
 import { PageIntro } from '@/components/page-intro';
 import { SpreadBoard } from '@/components/spread-board';
 import { calendarFromMeta } from '@/lib/calendar';
 import { readLatest, readMeta } from '@/lib/data/load-fs';
-import {
-  barSources,
-  buildOptions,
-  compareItems,
-  compatible,
-  todayPair,
-  type TodayPair,
-} from '@/lib/spread';
+import { barSources, buildOptions, compareItems } from '@/lib/spread';
 
 export const metadata: Metadata = {
   title: 'Spread',
@@ -22,13 +17,6 @@ export const metadata: Metadata = {
 export default function SpreadPage() {
   const latest = readLatest();
   const { sell, buyback } = buildOptions(latest);
-
-  const today: Record<string, TodayPair> = {};
-  for (const s of sell) {
-    for (const b of buyback) {
-      if (compatible(s, b)) today[`${s.id}|${b.id}`] = todayPair(latest, s, b);
-    }
-  }
 
   const bars = barSources(latest);
 
@@ -43,15 +31,18 @@ export default function SpreadPage() {
         }
         lead="Spread adalah selisih harga jual toko dengan harga buyback. Makin sempit, makin cepat emas yang dibeli kembali ke titik impas."
       />
-      <SpreadBoard
-        sellOptions={sell}
-        buybackOptions={buyback}
-        today={today}
-        compare={compareItems(latest)}
-        bars={bars}
-        asOf={latest.as_of ?? new Date().toISOString().slice(0, 10)}
-        calendar={calendarFromMeta(readMeta())}
-      />
+      <NuqsAdapter>
+        <Suspense fallback={<div className="min-h-[1800px]" />}>
+          <SpreadBoard
+            sellOptions={sell}
+            buybackOptions={buyback}
+            compare={compareItems(latest)}
+            bars={bars}
+            asOf={latest.as_of ?? new Date().toISOString().slice(0, 10)}
+            calendar={calendarFromMeta(readMeta())}
+          />
+        </Suspense>
+      </NuqsAdapter>
     </>
   );
 }

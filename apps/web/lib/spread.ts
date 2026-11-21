@@ -13,6 +13,7 @@ import {
   type SeriesFile,
 } from './data';
 import { formatWeight } from './format';
+import { SPREAD_WARN_RATIO } from './riwayat-summary';
 
 // Hitungan halaman Spread (FR-22). Spread % = (jual − buyback) / jual. Semua murni agar bisa diuji.
 
@@ -94,6 +95,15 @@ export function spreadStats(days: SpreadDay[]): SpreadStats | null {
     min,
     breakEven: breakEvenPct(last.sell, last.buyback),
   };
+}
+
+/** Spread hari ini dibanding rata-ratanya di rentang; `wide` bila ≥ SPREAD_WARN_RATIO. */
+export function spreadSignal(
+  stats: Pick<SpreadStats, 'last' | 'avgPct'> | null,
+): { ratio: number; wide: boolean } | null {
+  if (!stats || !(stats.avgPct > 0)) return null;
+  const ratio = stats.last.pct / stats.avgPct;
+  return { ratio, wide: ratio >= SPREAD_WARN_RATIO };
 }
 
 function addDay(iso: string, n: number): string {
@@ -469,6 +479,8 @@ export function weightSpreads(latest: LatestFile, file: string, variant: string)
 }
 
 export interface CompareItem {
+  sellId: string;
+  buybackId: string;
   name: string;
   src: string;
   color: ColorToken;
@@ -480,7 +492,20 @@ export interface CompareItem {
   at: string | null;
 }
 
-/** Kartu "emas fisik vs tabungan emas": spread per gram hari ini. */
+/** Urut dari spread tersempit; yang belum punya data (pct null) di akhir. Urutan asal dipertahankan bila sama. */
+export function sortByPct<T extends { pct: number | null }>(items: readonly T[]): T[] {
+  return items
+    .map((item, i) => ({ item, i }))
+    .sort((a, b) => {
+      if (a.item.pct === null || b.item.pct === null) {
+        return a.item.pct === b.item.pct ? a.i - b.i : a.item.pct === null ? 1 : -1;
+      }
+      return a.item.pct - b.item.pct || a.i - b.i;
+    })
+    .map((x) => x.item);
+}
+
+/** Daftar "Bolak-balik hari ini": spread per gram hari ini tiap pasangan, tersempit dulu. */
 export function compareItems(latest: LatestFile): CompareItem[] {
   const { sell, buyback } = buildOptions(latest);
   const get = (id: string, list: SpreadOption[]) => list.find((o) => o.id === id) as SpreadOption;
@@ -497,12 +522,14 @@ export function compareItems(latest: LatestFile): CompareItem[] {
     ['Antam 1 g', 'Pegadaian → Galeri24', 'pg-antam', 'g24-antam'],
     ['Antam 1 g', 'Logam Mulia → Galeri24 (non-Pegadaian)', 'lm-antam', 'g24-antam-np'],
   ];
-  return rows
+  const items = rows
     .filter(([, , sid]) => sell.some((o) => o.id === sid))
-    .map(([name, src, sid, bid]) => {
+    .map(([name, src, sid, bid]): CompareItem => {
       const s = get(sid, sell);
       const t = todayPair(latest, s, get(bid, buyback));
       return {
+        sellId: sid,
+        buybackId: bid,
         name,
         src,
         color: s.color,
@@ -514,6 +541,7 @@ export function compareItems(latest: LatestFile): CompareItem[] {
         at: t.sellAt,
       };
     });
+  return sortByPct(items);
 }
 
 // ---------------------------------------------------------------------------
@@ -636,4 +664,21 @@ export function weightBarItems(
   rows: readonly WeightBarRow[],
 ): { label: string; value: number | null; highlight: boolean }[] {
   return rows.map((r) => ({ label: r.label, value: r.value, highlight: r.w === 1 }));
+}
+
+const BAR_FOR_BUYBACK: Record<string, string> = {
+  'lm-antam': 'lm',
+  'ubsl-ubs': 'ubsl',
+  'g24-antam': 'g24-antam',
+  'g24-antam-np': 'g24-antam',
+  'g24-ubs': 'g24-ubs',
+  'g24-g24': 'g24-g24',
+  'g24-lotus': 'g24-lotus',
+  'la-lotus': 'la-lotus',
+  'hr-emasku': 'hr-emasku',
+};
+
+/** Sumber grafik per gramasi yang cocok dengan buyback pasangan terpilih; null (mis. Tabungan Emas) = tak ada. */
+export function barIdForBuyback(buybackId: string): string | null {
+  return BAR_FOR_BUYBACK[buybackId] ?? null;
 }

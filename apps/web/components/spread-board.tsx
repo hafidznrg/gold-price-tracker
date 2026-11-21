@@ -1,6 +1,7 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { parseAsString, useQueryStates } from 'nuqs';
+import { useEffect, useMemo, useState } from 'react';
 import { BarChart, type BarItem } from '@/components/charts/bar-chart';
 import { SpreadBandChart } from '@/components/charts/spread-band-chart';
 import { TimeSeriesChart, type TimeSeries } from '@/components/charts/time-series-chart';
@@ -10,7 +11,8 @@ import { SourceStamp } from '@/components/source-stamp';
 import { useSeriesFiles } from '@/components/use-series-files';
 import type { ColorToken } from '@/lib/data';
 import { EMPTY, formatDate, formatNumber, formatPct, formatRupiah } from '@/lib/format';
-import { rangeToDates } from '@/lib/range';
+import { DEFAULT_RANGE, decodeRange, encodeRange } from '@/lib/explorer';
+import { rangeToDates, rangeWords } from '@/lib/range';
 import {
   findGaps,
   pairDays,
@@ -21,10 +23,11 @@ import {
   type CompareItem,
   type SpreadDay,
   type SpreadOption,
-  type TodayPair,
   POPULAR_PAIRS,
+  barIdForBuyback,
   buybackChoices,
   resolveBuyback,
+  spreadSignal,
   weightBarItems,
 } from '@/lib/spread';
 import { cn } from '@/lib/utils';
@@ -36,8 +39,6 @@ export type BarSource = BarSourceDef;
 export interface SpreadBoardProps {
   sellOptions: SpreadOption[];
   buybackOptions: SpreadOption[];
-  /** Harga hari ini per pasangan sah, kunci `${sellId}|${buybackId}`. */
-  today: Record<string, TodayPair>;
   compare: CompareItem[];
   bars: BarSource[];
   /** Tanggal data terbaru (patokan rentang). */
@@ -46,6 +47,7 @@ export interface SpreadBoardProps {
   calendar: DataCalendar;
 }
 
+const DEFAULT_ID = 'lm-antam';
 const FIELD =
   'h-10 w-full rounded-field border border-line bg-surface2 px-3 text-sm text-text disabled:cursor-not-allowed disabled:text-muted';
 const FIELD_LABEL = 'flex items-baseline gap-1.5 text-sm leading-tight';
@@ -66,12 +68,14 @@ function Kpi({
   label,
   value,
   sub,
-  gold,
+  sub2,
+  tone,
 }: {
   label: string;
   value: string;
   sub: string;
-  gold?: boolean;
+  sub2?: string;
+  tone?: 'gold' | 'down';
 }) {
   return (
     <div className="min-w-0 bg-surface px-3 py-2">
@@ -79,12 +83,15 @@ function Kpi({
       <div
         className={cn(
           'num text-lg font-semibold leading-tight tracking-[-0.02em]',
-          gold ? 'text-gold' : '',
+          tone === 'gold' ? 'text-gold' : tone === 'down' ? 'text-down' : '',
         )}
       >
         {value}
       </div>
       <div className="num truncate text-xs text-muted lg:whitespace-normal">{sub}</div>
+      {sub2 ? (
+        <div className="num truncate text-xs text-muted lg:whitespace-normal">{sub2}</div>
+      ) : null}
     </div>
   );
 }
@@ -96,16 +103,28 @@ function Hint({ children }: { children: React.ReactNode }) {
 export function SpreadBoard({
   sellOptions,
   buybackOptions,
-  today,
   compare,
   bars,
   asOf,
   calendar,
 }: SpreadBoardProps) {
-  const [sellId, setSellId] = useState('lm-antam');
-  const [buyId, setBuyId] = useState('lm-antam');
-  const [range, setRange] = useState<RangeValue>('1B');
-  const [barId, setBarId] = useState(bars[0]?.id ?? '');
+  const [query, setQuery] = useQueryStates(
+    { beli: parseAsString, jual: parseAsString, r: parseAsString },
+    { history: 'replace' },
+  );
+  // Id tak dikenal jatuh ke bawaan; bawaan tidak ditulis ke URL.
+  const sellId = sellOptions.some((o) => o.id === query.beli) ? (query.beli as string) : DEFAULT_ID;
+  const buyId = query.jual ?? DEFAULT_ID;
+  const range = useMemo(() => decodeRange(query.r), [query.r]);
+  const setRange = (r: RangeValue) => {
+    const code = encodeRange(r);
+    void setQuery({ r: code === encodeRange(DEFAULT_RANGE) ? null : code });
+  };
+  const setPair = (sid: string, bid: string) =>
+    void setQuery({
+      beli: sid === DEFAULT_ID ? null : sid,
+      jual: bid === DEFAULT_ID ? null : bid,
+    });
   const chartH = useChartHeight(280, 220);
 
   const sell = sellOptions.find((o) => o.id === sellId) as SpreadOption;
@@ -115,6 +134,14 @@ export function SpreadBoard({
   const problem = pairProblem(sell, pairBuy);
   // Tanpa pasangan: `buy` hanya pengisi; semua turunan dijaga `problem`.
   const buy = pairBuy ?? sell;
+  // Sumber grafik gramasi mengikuti buyback pasangan; pengguna tetap bisa memilih sumber lain.
+  const pairBarId = pairBuy ? barIdForBuyback(pairBuy.id) : null;
+  const [barId, setBarId] = useState(
+    () => bars.find((b) => b.id === pairBarId)?.id ?? bars[0]?.id ?? '',
+  );
+  useEffect(() => {
+    if (pairBarId && bars.some((b) => b.id === pairBarId)) setBarId(pairBarId);
+  }, [pairBarId, bars]);
   const tabOpt = sellOptions.find((o) => o.id === 'tab') as SpreadOption;
   const lmOpt = sellOptions.find((o) => o.id === 'lm-antam') as SpreadOption;
 
@@ -216,7 +243,8 @@ export function SpreadBoard({
   const barColor: ColorToken = bar?.color ?? 'ubs';
   const barMissing = (bar?.rows ?? []).filter((r) => r.value === null).length;
 
-  const pairToday = problem ? null : (today[`${sellId}|${buyId}`] ?? null);
+  const signal = spreadSignal(stats);
+  const rangeLabel = rangeWords(range);
   const stampNote = [
     sell.source === buy.source ? '' : `buyback: ${buy.short}`,
     buy.id === 'g24-antam-np'
@@ -224,6 +252,8 @@ export function SpreadBoard({
       : buy.id === 'g24-antam'
         ? 'buyback biasa: untuk keping Antam yang dibeli di Pegadaian atau Galeri24'
         : '',
+    'dicocokkan pada brand, produk, dan gramasi yang sama di tanggal yang sama',
+    buy.source === 'ubslifestyle' ? 'buyback UBS memakai tahun produksi berjalan' : '',
     allDays && allDays.length > 0 && allDays.length < 30
       ? `baru ${allDays.length} hari memiliki jual dan buyback sekaligus`
       : '',
@@ -247,7 +277,16 @@ export function SpreadBoard({
                 id="buyAt"
                 className={FIELD}
                 value={sellId}
-                onChange={(e) => setSellId(e.target.value)}
+                onChange={(e) =>
+                  setPair(
+                    e.target.value,
+                    resolveBuyback(
+                      sellOptions.find((o) => o.id === e.target.value) as SpreadOption,
+                      buybackOptions,
+                      buyId,
+                    )?.id ?? buyId,
+                  )
+                }
               >
                 {sellOptions.map((o) => (
                   <option key={o.id} value={o.id}>
@@ -282,7 +321,7 @@ export function SpreadBoard({
                 className={FIELD}
                 value={pairBuy?.id ?? ''}
                 disabled={!pairBuy}
-                onChange={(e) => setBuyId(e.target.value)}
+                onChange={(e) => setPair(sellId, e.target.value)}
               >
                 {pairBuy ? null : <option value="">Belum ada data buyback</option>}
                 {buyChoices.map((o) => (
@@ -313,10 +352,7 @@ export function SpreadBoard({
                     type="button"
                     aria-label={p.label}
                     aria-pressed={on}
-                    onClick={() => {
-                      setSellId(p.sell);
-                      setBuyId(p.buyback);
-                    }}
+                    onClick={() => setPair(p.sell, p.buyback)}
                     className={cn(
                       'inline-flex min-h-9 flex-none cursor-pointer items-center gap-1.5 whitespace-nowrap rounded-full border px-3.5 text-xs transition-colors',
                       on
@@ -353,7 +389,7 @@ export function SpreadBoard({
         </section>
       ) : (
         <>
-          <section className="wrap pb-[22px]">
+          <section id="pasangan" className="wrap scroll-mt-20 pb-[22px]">
             <div className="min-w-0 rounded-card border border-line bg-surface p-4">
               <div className="mb-3 flex flex-wrap items-start justify-between gap-3">
                 <div className="min-w-0 flex-[1_1_320px]">
@@ -379,7 +415,7 @@ export function SpreadBoard({
               <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_210px]">
                 <div className="grid grid-cols-2 gap-px self-start overflow-hidden rounded-[14px] border border-line bg-line order-last lg:grid-cols-1">
                   <Kpi
-                    gold
+                    tone={signal?.wide ? 'down' : 'gold'}
                     label="Spread hari ini"
                     value={stats ? formatPct(stats.last.pct, 2, false) : EMPTY}
                     sub={
@@ -387,14 +423,19 @@ export function SpreadBoard({
                         ? `${formatRupiah(stats.last.spread)} per gram · ${formatDate(stats.last.date)}`
                         : 'Belum ada hari dengan jual dan buyback'
                     }
+                    sub2={
+                      signal
+                        ? `${formatNumber(signal.ratio, 1)}× rata-rata${signal.wide ? ' · melebar' : ''}`
+                        : undefined
+                    }
                   />
                   <Kpi
-                    label={`Rata-rata ${typeof range === 'string' ? range : 'rentang'}`}
+                    label={`Rata-rata ${rangeLabel}`}
                     value={stats ? formatPct(stats.avgPct, 2, false) : EMPTY}
                     sub={stats ? `dari ${formatNumber(stats.count)} hari data` : EMPTY}
                   />
                   <Kpi
-                    label={`Tersempit ${typeof range === 'string' ? range : 'rentang'}`}
+                    label={`Tersempit ${rangeLabel}`}
                     value={stats ? formatPct(stats.min.pct, 2, false) : EMPTY}
                     sub={stats ? formatDate(stats.min.date) : EMPTY}
                   />
@@ -439,6 +480,9 @@ export function SpreadBoard({
         <div className={PANEL}>
           <h2 className="m-0 text-xl font-semibold max-sm:text-lg">Spread % dari waktu ke waktu</h2>
           <p className="m-0 mt-1.5 mb-3 text-sm text-muted">
+            {lmDays && lmDays.length > 0
+              ? `${formatDate(lmDays[0]!.date)} – ${formatDate(lmDays.at(-1)!.date)} · `
+              : ''}
             Garis putus-putus = rata-rata Antam LM · titik = spread tersempit
             {tabDays && tabDays.length > 0 && tabDays[0]!.date > (from ?? '')
               ? ' · Tabungan Emas hanya tersedia 360 hari terakhir'
@@ -515,7 +559,9 @@ export function SpreadBoard({
                 aria-hidden="true"
                 className={cn('h-2.5 w-[18px] flex-none rounded-[3px]', BG[barColor])}
               />
-              1 g = gramasi acuan yang dipakai grafik di atas. Gramasi lain tampil lebih pudar.
+              {bar && bar.id === pairBarId
+                ? '1 g = gramasi acuan yang dipakai grafik di atas. Gramasi lain tampil lebih pudar.'
+                : '1 g = gramasi acuan. Gramasi lain tampil lebih pudar.'}
             </p>
           ) : null}
           {bar ? (
@@ -528,44 +574,66 @@ export function SpreadBoard({
         </div>
       </section>
 
-      <section className="wrap grid grid-cols-[repeat(auto-fit,minmax(min(420px,100%),1fr))] gap-5 pb-16">
+      <section className="wrap pb-16">
         <div className={cn(PANEL, 'flex flex-col gap-[18px]')}>
           <div>
-            <h2 className="m-0 text-xl font-semibold max-sm:text-lg">
-              Emas fisik vs tabungan emas
-            </h2>
+            <h2 className="m-0 text-xl font-semibold max-sm:text-lg">Bolak-balik hari ini</h2>
             <p className="m-0 mt-2 text-sm leading-[1.6] text-muted">
-              Spread per gram hari ini. Tabungan emas tidak menanggung ongkos cetak per keping,
-              sehingga jarak jual–buyback-nya biasanya lebih sempit.
+              Spread per gram hari ini untuk tiap pasangan beli → jual kembali, dari yang tersempit.
+              Pilih baris untuk melihat riwayatnya di atas. Tabungan emas tidak menanggung ongkos
+              cetak per keping, sehingga biasanya lebih sempit.
             </p>
           </div>
-          <div className="flex flex-col gap-3">
-            {compare.map((c) => (
-              <div key={`${c.name}${c.src}`} className="flex flex-col gap-1.5">
-                <div className="flex flex-wrap justify-between gap-x-2.5 text-sm">
-                  <span className="flex min-w-0 items-center gap-2">
-                    <span className={cn('size-[9px] flex-none rounded-[2px]', BG[c.color])} />
-                    <span className="font-semibold">{c.name}</span>
-                    <span className="text-muted">· {c.src}</span>
-                  </span>
-                  <span className="num font-semibold">{formatPct(c.pct, 2, false)}</span>
-                </div>
-                <div className="h-3 overflow-hidden rounded-[5px] bg-surface2">
-                  <div
-                    className={cn('h-full rounded-[5px]', BG[c.color])}
-                    style={{
-                      width: `${c.pct !== null && cmpMax > 0 ? ((c.pct / cmpMax) * 100).toFixed(1) : 0}%`,
+          <ul aria-label="Bolak-balik hari ini" className="m-0 flex list-none flex-col gap-1 p-0">
+            {compare.map((c, i) => {
+              const on = c.sellId === sellId && c.buybackId === pairBuy?.id;
+              return (
+                <li key={`${c.sellId}|${c.buybackId}`}>
+                  <button
+                    type="button"
+                    aria-pressed={on}
+                    onClick={() => {
+                      setPair(c.sellId, c.buybackId);
+                      document
+                        .getElementById('pasangan')
+                        ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
                     }}
-                  />
-                </div>
-                <span className="num text-xs text-faint">
-                  {c.sell !== null && c.buyback !== null
-                    ? `jual ${formatRupiah(c.sell)} · buyback ${formatRupiah(c.buyback)}`
-                    : 'Data belum lengkap'}
-                </span>
-              </div>
-            ))}
-          </div>
+                    className={cn(
+                      'flex w-full cursor-pointer flex-col gap-1.5 rounded-[10px] border-l-2 px-3 py-2.5 text-left transition-colors',
+                      on
+                        ? 'border-l-goldline bg-goldsoft'
+                        : 'border-l-transparent hover:bg-surface2',
+                    )}
+                  >
+                    <span className="flex flex-wrap justify-between gap-x-2.5 text-sm">
+                      <span className="flex min-w-0 items-center gap-2">
+                        <span className={cn('size-[9px] flex-none rounded-[2px]', BG[c.color])} />
+                        <span className="font-semibold">{c.name}</span>
+                        <span className="text-muted">· {c.src}</span>
+                        {i === 0 && c.pct !== null ? (
+                          <span className="text-xs text-faint">tersempit</span>
+                        ) : null}
+                      </span>
+                      <span className="num font-semibold">{formatPct(c.pct, 2, false)}</span>
+                    </span>
+                    <span className="h-3 overflow-hidden rounded-[5px] bg-surface2">
+                      <span
+                        className={cn('block h-full rounded-[5px]', BG[c.color])}
+                        style={{
+                          width: `${c.pct !== null && cmpMax > 0 ? ((c.pct / cmpMax) * 100).toFixed(1) : 0}%`,
+                        }}
+                      />
+                    </span>
+                    <span className="num text-xs text-faint">
+                      {c.sell !== null && c.buyback !== null
+                        ? `jual ${formatRupiah(c.sell)} · buyback ${formatRupiah(c.buyback)}`
+                        : 'Data belum lengkap'}
+                    </span>
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
           {compare[0]?.date ? (
             <InfoPopover label="Sumber" ariaLabel="Sumber data" side="top" className="self-start">
               <SourceStamp
@@ -578,72 +646,6 @@ export function SpreadBoard({
               </SourceStamp>
             </InfoPopover>
           ) : null}
-        </div>
-
-        <div className={cn(PANEL, 'flex flex-col gap-[18px]')}>
-          <div>
-            <h2 className="m-0 text-xl font-semibold max-sm:text-lg">Pasangan lintas sumber</h2>
-            <p className="m-0 mt-2 text-sm leading-[1.6] text-muted">
-              {problem
-                ? problem
-                : `${pairLabel}. Dicocokkan pada brand, produk, dan gramasi yang sama di tanggal yang sama; buyback UBS memakai tahun produksi berjalan.`}
-            </p>
-          </div>
-          {pairToday && pairToday.sell !== null && pairToday.buyback !== null ? (
-            <>
-              <div className="grid grid-cols-3 gap-px overflow-hidden rounded-[14px] border border-line bg-line max-sm:grid-cols-1">
-                <div className="min-w-0 bg-surface p-3.5">
-                  <div className="text-xs text-faint">Jual · {sell.short}</div>
-                  <div className="num mt-1 text-lg font-semibold">
-                    {formatRupiah(pairToday.sell)}
-                  </div>
-                </div>
-                <div className="min-w-0 bg-surface p-3.5">
-                  <div className="text-xs text-faint">Buyback · {buy.short}</div>
-                  <div className="num mt-1 text-lg font-semibold">
-                    {formatRupiah(pairToday.buyback)}
-                  </div>
-                </div>
-                <div className="min-w-0 bg-surface p-3.5">
-                  <div className="text-xs text-faint">Spread</div>
-                  <div className="num mt-1 text-lg font-semibold text-gold">
-                    {formatPct(
-                      ((pairToday.sell - pairToday.buyback) / pairToday.sell) * 100,
-                      2,
-                      false,
-                    )}
-                  </div>
-                  <div className="num mt-0.5 text-xs text-muted">
-                    {formatRupiah(pairToday.sell - pairToday.buyback)}
-                  </div>
-                </div>
-              </div>
-              <InfoPopover label="Sumber" ariaLabel="Sumber data" side="top" className="self-start">
-                <SourceStamp
-                  source={sell.source}
-                  date={pairToday.sellDate ?? asOf}
-                  at={pairToday.sellAt}
-                  bare
-                >
-                  harga jual
-                </SourceStamp>
-                {sell.source !== buy.source ? (
-                  <SourceStamp
-                    source={buy.source}
-                    date={pairToday.buyDate ?? asOf}
-                    at={pairToday.buyAt}
-                    bare
-                  >
-                    buyback
-                  </SourceStamp>
-                ) : null}
-              </InfoPopover>
-            </>
-          ) : problem ? null : (
-            <p className="m-0 text-sm text-muted">
-              Data hari ini belum lengkap untuk pasangan ini (jual atau buyback kosong).
-            </p>
-          )}
         </div>
       </section>
     </>

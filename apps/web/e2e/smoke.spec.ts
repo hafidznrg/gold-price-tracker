@@ -577,6 +577,36 @@ test.describe('Spread', () => {
     await expect(list.getByRole('listitem').filter({ hasText: '1 g' }).first()).toBeVisible();
     await expect(page.getByText(/1 g = gramasi acuan/)).toBeVisible();
   });
+
+  test('URL membawa pasangan; chip dan baris "Bolak-balik hari ini" memilih pasangan', async ({
+    page,
+  }) => {
+    const paramsOf = (p: Page) => new URL(p.url()).searchParams;
+    await page.goto('/spread?beli=pg-antam&jual=g24-antam');
+    await expect(page.locator('#buyAt')).toHaveValue('pg-antam');
+    await expect(page.locator('#sellTo')).toHaveValue('g24-antam');
+    await expect(page.getByText('Rata-rata 1 bulan')).toBeVisible();
+    await expect(page.getByText('Tersempit 1 bulan')).toBeVisible();
+
+    await page.getByRole('button', { name: 'Galeri24: Galeri24 → Galeri24' }).click();
+    await expect(page.locator('#buyAt')).toHaveValue('g24-g24');
+    await expect.poll(() => paramsOf(page).get('beli')).toBe('g24-g24');
+    expect(paramsOf(page).get('jual')).toBe('g24-g24');
+
+    // Pasangan bawaan tidak ditulis ke URL.
+    await page.getByRole('button', { name: 'Antam: Logam Mulia → Logam Mulia' }).click();
+    await expect.poll(() => paramsOf(page).get('beli')).toBeNull();
+    expect(paramsOf(page).get('jual')).toBeNull();
+
+    const list = page.getByRole('list', { name: 'Bolak-balik hari ini' });
+    await list
+      .getByRole('button', { name: /Galeri24 1 g/ })
+      .first()
+      .click();
+    await expect(page.locator('#buyAt')).toHaveValue('g24-g24');
+    await expect(page.locator('#sellTo')).toHaveValue('g24-g24');
+    await expect(list.getByRole('button', { pressed: true })).toHaveCount(1);
+  });
 });
 
 test.describe('EMASKU / Hartadinata (Fase 7)', () => {

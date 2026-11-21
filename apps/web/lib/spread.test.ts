@@ -2,6 +2,9 @@ import { describe, expect, it } from 'vitest';
 import type { LatestFile, LatestSeries, SeriesRowTuple } from './data';
 import {
   POPULAR_PAIRS,
+  barIdForBuyback,
+  sortByPct,
+  spreadSignal,
   barSources,
   breakEvenPct,
   buildOptions,
@@ -423,5 +426,57 @@ describe('Galeri24 dan Lotus Archi (P6-10)', () => {
     const rows = weightSpreads(L, 'lotusarchi-lotusarchi', '');
     expect(rows[0]!.value).toBeCloseTo((342_000 / 2_591_000) * 100, 6);
     expect(rows[1]!.value).toBeCloseTo(((12_592_000 - 5 * 2_249_000) / 12_592_000) * 100, 6);
+  });
+});
+
+describe('spreadSignal, barIdForBuyback, sortByPct', () => {
+  const st = (last: number, avg: number) =>
+    ({ last: { pct: last }, avgPct: avg }) as Parameters<typeof spreadSignal>[0];
+
+  it('spreadSignal: rasio terhadap rata-rata; melebar mulai 1,25×', () => {
+    expect(spreadSignal(null)).toBeNull();
+    expect(spreadSignal(st(1, 0))).toBeNull();
+    expect(spreadSignal(st(5, 4))).toEqual({ ratio: 1.25, wide: true });
+    expect(spreadSignal(st(3, 4))).toEqual({ ratio: 0.75, wide: false });
+  });
+
+  it('barIdForBuyback memetakan buyback ke sumber gramasi; Tabungan Emas tidak punya', () => {
+    expect(barIdForBuyback('lm-antam')).toBe('lm');
+    expect(barIdForBuyback('ubsl-ubs')).toBe('ubsl');
+    expect(barIdForBuyback('g24-antam-np')).toBe('g24-antam');
+    expect(barIdForBuyback('hr-emasku')).toBe('hr-emasku');
+    expect(barIdForBuyback('tab')).toBeNull();
+  });
+
+  it('sortByPct: tersempit dulu, null terakhir, stabil', () => {
+    const rows = [
+      { id: 'a', pct: 5 },
+      { id: 'b', pct: null },
+      { id: 'c', pct: 2 },
+      { id: 'd', pct: 5 },
+      { id: 'e', pct: null },
+    ];
+    expect(sortByPct(rows).map((r) => r.id)).toEqual(['c', 'a', 'd', 'b', 'e']);
+  });
+
+  it('compareItems terurut dan memuat id pasangan', () => {
+    const lt = {
+      series: [
+        {
+          file: 'pegadaian-pegadaian',
+          variant: '',
+          w: 0.01,
+          current: true,
+          sell: 100,
+          buyback: 98,
+        },
+        { file: 'logammulia-antam', variant: '', w: 1, current: true, sell: 100, buyback: 95 },
+      ],
+      as_of: null,
+    } as unknown as LatestFile;
+    const items = compareItems(lt);
+    const pcts = items.map((c) => c.pct).filter((p): p is number => p !== null);
+    expect(pcts).toEqual([...pcts].sort((a, b) => a - b));
+    expect(items.every((c) => c.sellId && c.buybackId)).toBe(true);
   });
 });
