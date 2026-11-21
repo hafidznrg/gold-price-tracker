@@ -2,6 +2,7 @@ import { addDaysIso } from '@gold/schema';
 import {
   checkFrankfurter,
   checkGaleri24,
+  checkHrtaGold,
   checkLotusArchi,
   checkJisdor,
   checkLogamMulia,
@@ -27,6 +28,7 @@ export const PROBE_TARGETS = [
   'frankfurter',
   'galeri24',
   'lotusarchi',
+  'hrtagold',
 ] as const;
 export type ProbeTarget = (typeof PROBE_TARGETS)[number];
 
@@ -311,6 +313,29 @@ export async function probeLotusArchi(ctx: ProbeContext): Promise<TargetOutput> 
   return { raws, result };
 }
 
+export async function probeHrtaGold(ctx: ProbeContext): Promise<TargetOutput> {
+  const raws: RawFile[] = [];
+  const get = recorder(ctx, raws);
+  // Tanpa ensureOk: 403/429/503 atau tantangan harus dilaporkan oleh pemeriksaan (BLOCKED).
+  const res = await get('price-daily.json', 'https://hrtagold.id/api/v1/brandings/price/daily');
+  const result = checkHrtaGold(res.body, ctx.today);
+  const blocked = [403, 429, 503].includes(res.status);
+  result.checks.unshift(
+    {
+      name: 'tidak BLOCKED (bukan 403/429/503)',
+      ok: !blocked,
+      detail: blocked ? `BLOCKED: HTTP ${res.status}` : String(res.status),
+    },
+    { name: 'HTTP 200 price/daily', ok: res.status === 200, detail: String(res.status) },
+    {
+      name: 'Content-Type application/json',
+      ok: /application\/json/i.test(res.contentType),
+      detail: res.contentType,
+    },
+  );
+  return { raws, result };
+}
+
 export const PROBES: Record<ProbeTarget, (ctx: ProbeContext) => Promise<TargetOutput>> = {
   ubslifestyle: probeUbsLifestyle,
   pegadaian: probePegadaian,
@@ -321,4 +346,5 @@ export const PROBES: Record<ProbeTarget, (ctx: ProbeContext) => Promise<TargetOu
   frankfurter: probeFrankfurter,
   galeri24: probeGaleri24,
   lotusarchi: probeLotusArchi,
+  hrtagold: probeHrtaGold,
 };

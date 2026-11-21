@@ -6,6 +6,7 @@ import { describe, expect, it } from 'vitest';
 import {
   checkFrankfurter,
   checkGaleri24,
+  checkHrtaGold,
   checkLotusArchi,
   checkJisdor,
   checkLogamMulia,
@@ -187,5 +188,67 @@ describe('probe Galeri24 & Lotus Archi (P6-01)', () => {
   it('Lotus Archi: halaman tantangan Cloudflare gagal', () => {
     const r = checkLotusArchi('<html><title>Just a moment...</title></html>', '{}', NOW);
     expect(failed(r)).toContain('bukan halaman tantangan Cloudflare');
+  });
+});
+
+describe('probe Hartadinata (hrtagold)', () => {
+  const real = () => read('hrtagold/price-daily-2026-11-21.json');
+
+  it('respons asli 21 Nov lolos; mencatat updated_date, created_at, Gold 1 g', () => {
+    const r = checkHrtaGold(real(), '2026-11-21');
+    expect(failed(r)).toEqual([]);
+    expect(r.dataDate).toBe('2026-11-21');
+    const detail = (n: string) => r.checks.find((x) => x.name.startsWith(n))!.detail;
+    expect(detail('updated_date (info)')).toBe('2026-11-21T08:12:26+07:00');
+    expect(detail('created_at')).toContain('Prime=2026-11-21T08:12:26+07:00');
+    expect(detail('Gold 1 g')).toBe('price 2258000, buyback 2122000');
+  });
+
+  it('kasus tepi: tanpa Gold gagal; Prime bermasalah hanya peringatan', () => {
+    const r = checkHrtaGold(read('hrtagold/price-daily-edge-synthetic.json'), '2026-11-21');
+    expect(failed(r)).toEqual(['seri Gold ≥ 12 gramasi']);
+    const prime = r.checks.find((x) => x.name.startsWith('Prime: harga'))!;
+    expect(prime.ok).toBe(true);
+    expect(prime.detail).toMatch(/PERINGATAN: 2 baris/);
+    expect(r.dataDate).toBe('2026-11-20');
+  });
+
+  it('Prime hilang hanya peringatan', () => {
+    const j = JSON.parse(real().toString());
+    j.data = j.data.filter((s: { series: string }) => s.series === 'Gold');
+    const r = checkHrtaGold(JSON.stringify(j), '2026-11-21');
+    expect(failed(r)).toEqual([]);
+    expect(r.checks.find((x) => x.name.startsWith('seri Prime'))!.detail).toMatch(/PERINGATAN/);
+  });
+
+  it('Gold: harga 0 dan buyback >= jual gagal', () => {
+    const j = JSON.parse(real().toString());
+    j.data[0].prices[0].price = 0;
+    j.data[0].prices[3].buyback_price = j.data[0].prices[3].price;
+    const r = checkHrtaGold(JSON.stringify(j), '2026-11-21');
+    expect(failed(r)).toEqual(
+      expect.arrayContaining([
+        'Gold: price/buyback_price bilangan bulat > 0',
+        'Gold: buyback < price',
+      ]),
+    );
+  });
+
+  it('updated_date tanpa +07:00, code bukan 200, dan data basi gagal', () => {
+    const j = JSON.parse(real().toString());
+    j.code = 500;
+    j.updated_date = '2026-11-21T01:12:26Z';
+    expect(failed(checkHrtaGold(JSON.stringify(j), '2026-11-21'))).toEqual(
+      expect.arrayContaining(['code = 200', 'updated_date ISO +07:00']),
+    );
+    expect(failed(checkHrtaGold(real(), '2026-11-25'))).toContain('updated_date ≤ 3 hari');
+    expect(failed(checkHrtaGold(real(), '2026-11-24'))).toEqual([]);
+  });
+
+  it('halaman tantangan dan non-JSON gagal', () => {
+    const r = checkHrtaGold('<html><title>Just a moment...</title></html>', '2026-11-21');
+    expect(failed(r)).toEqual(
+      expect.arrayContaining(['bukan halaman tantangan Cloudflare', 'JSON valid']),
+    );
   });
 });

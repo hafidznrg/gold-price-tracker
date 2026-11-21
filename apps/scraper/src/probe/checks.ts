@@ -43,6 +43,9 @@ function sliceTable(html: string, openTagStart: string): string | null {
   return end === -1 ? null : html.slice(start, end);
 }
 
+// `challenge-platform/scripts/jsd` ikut disuntik di halaman normal; tantangan asli memakai `/h/`.
+const CHALLENGE_RE = /Just a moment|cf-chl|challenge-platform\/h\//i;
+
 const daysBetween = (from: string, to: string) =>
   Math.round((Date.parse(`${to}T00:00:00Z`) - Date.parse(`${from}T00:00:00Z`)) / 86_400_000);
 
@@ -485,10 +488,7 @@ export function checkLotusArchi(
   const d = text(display);
   const g = text(gold);
   // `challenge-platform/scripts/jsd` ikut disuntik di halaman normal; tantangan asli memakai `/h/`.
-  c.add(
-    'bukan halaman tantangan Cloudflare',
-    !/Just a moment|cf-chl|challenge-platform\/h\//i.test(d + g),
-  );
+  c.add('bukan halaman tantangan Cloudflare', !CHALLENGE_RE.test(d + g));
   const parsed = <T>(name: string, s: string): T | undefined =>
     c.try(name, () => JSON.parse(s) as T);
   const dj = parsed<{ data?: { produk?: string; type?: string; harga?: number }[] }>(
@@ -534,5 +534,87 @@ export function checkLotusArchi(
     );
   }
   freshness(c, 'tanggal data', dataDate, today, 3);
+  return { checks: c.list, dataDate };
+}
+
+// ── Hartadinata / EMASKU (hrtagold.id, P7-01) ───────────────────────────────
+
+interface HrtaPrice {
+  gramasi?: number;
+  price?: number;
+  buyback_price?: number;
+}
+interface HrtaSeries {
+  series?: string;
+  created_at?: string;
+  prices?: HrtaPrice[];
+}
+
+const isPosInt = (n: unknown) => typeof n === 'number' && Number.isSafeInteger(n) && n > 0;
+const WIB_ISO = /^(\d{4}-\d{2}-\d{2})T\d{2}:\d{2}:\d{2}\+07:00$/;
+const validWibIso = (s: unknown): s is string =>
+  typeof s === 'string' && WIB_ISO.test(s) && !Number.isNaN(Date.parse(s));
+
+/**
+ * `GET /api/v1/brandings/price/daily`: seri `Gold` (wajib) dan `Prime` (opsional) dengan harga jual
+ * dan buyback per keping. Tanpa tanggal per baris; `updated_date` (WIB) berlaku untuk seluruh tabel.
+ * Detail pemeriksaan memuat `updated_date`, `created_at`, dan harga Gold 1 g untuk observasi jam terbit.
+ */
+export function checkHrtaGold(body: Buffer | string, today: string): CheckResult {
+  const c = new Checks();
+  const t = text(body);
+  c.add('bukan halaman tantangan Cloudflare', !CHALLENGE_RE.test(t));
+  const json = c.try(
+    'JSON valid',
+    () => JSON.parse(t) as { code?: number; data?: HrtaSeries[]; updated_date?: string },
+  );
+  if (!json) return { checks: c.list, dataDate: null };
+  c.add('code = 200', json.code === 200, String(json.code));
+  const updated = json.updated_date;
+  const okDate = c.add('updated_date ISO +07:00', validWibIso(updated), String(updated));
+  const dataDate = okDate ? WIB_ISO.exec(updated!)![1]! : null;
+  if (okDate) c.add('updated_date (info)', true, updated!);
+
+  const series = Array.isArray(json.data) ? json.data : [];
+  const created = series.map((s) => `${s.series}=${s.created_at}`).join('; ');
+  c.add('created_at per seri (info)', true, created || '-');
+  const gold = series.find((s) => s.series === 'Gold');
+  const prime = series.find((s) => s.series === 'Prime');
+  const goldRows = gold?.prices ?? [];
+  c.add('seri Gold ≥ 12 gramasi', goldRows.length >= 12, `${goldRows.length} gramasi`);
+  // Prime opsional (rencana Fase 7): hilang atau cacat hanya peringatan.
+  c.add(
+    'seri Prime (opsional)',
+    true,
+    prime ? `${prime.prices?.length ?? 0} gramasi` : 'PERINGATAN: seri Prime tidak ada',
+  );
+
+  const priceProblems = (rows: HrtaPrice[]) =>
+    rows.filter((r) => !isPosInt(r.price) || !isPosInt(r.buyback_price)).length;
+  const spreadProblems = (rows: HrtaPrice[]) =>
+    rows.filter(
+      (r) => isPosInt(r.price) && isPosInt(r.buyback_price) && r.buyback_price! >= r.price!,
+    ).length;
+  const gp = priceProblems(goldRows);
+  c.add('Gold: price/buyback_price bilangan bulat > 0', gp === 0, `${gp} baris bermasalah`);
+  const gs = spreadProblems(goldRows);
+  c.add('Gold: buyback < price', gs === 0, `${gs} baris bermasalah`);
+  if (prime) {
+    const rows = prime.prices ?? [];
+    const pp = priceProblems(rows) + spreadProblems(rows);
+    c.add(
+      'Prime: harga valid, buyback < price (peringatan)',
+      true,
+      pp === 0 ? `${rows.length} baris` : `PERINGATAN: ${pp} baris bermasalah`,
+    );
+  }
+
+  const one = goldRows.find((r) => r.gramasi === 1);
+  c.add(
+    'Gold 1 g (info)',
+    true,
+    one ? `price ${one.price}, buyback ${one.buyback_price}` : 'baris 1 g tidak ada',
+  );
+  freshness(c, 'updated_date', dataDate, today, 3);
   return { checks: c.list, dataDate };
 }

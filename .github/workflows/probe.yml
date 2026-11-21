@@ -4,6 +4,9 @@ name: probe
 # Hasil (raw + report.json) diunggah sebagai artifact; ringkasan di step summary.
 
 on:
+  # SEMENTARA (P7-01): observasi jam terbit hrtagold, 08.00-18.00 WIB tiap 2 jam; cabut di P7-08.
+  schedule:
+    - cron: '0 1,3,5,7,9,11 * * *'
   workflow_dispatch:
     inputs:
       source:
@@ -22,13 +25,14 @@ on:
             frankfurter,
             galeri24,
             lotusarchi,
+            hrtagold,
           ]
 
 permissions:
   contents: read
 
 concurrency:
-  group: probe-${{ inputs.source }}
+  group: probe-${{ inputs.source || 'schedule' }}
   cancel-in-progress: false
 
 jobs:
@@ -39,8 +43,10 @@ jobs:
       fail-fast: false
       matrix:
         source: >-
-          ${{ inputs.source == 'all'
-            && fromJSON('["ubslifestyle","pegadaian","logammulia","xaus","jisdor","worldbank","frankfurter","galeri24","lotusarchi"]')
+          ${{ github.event_name == 'schedule'
+            && fromJSON('["hrtagold"]')
+            || inputs.source == 'all'
+            && fromJSON('["ubslifestyle","pegadaian","logammulia","xaus","jisdor","worldbank","frankfurter","galeri24","lotusarchi","hrtagold"]')
             || fromJSON(format('["{0}"]', inputs.source)) }}
     steps:
       - uses: actions/checkout@v4
