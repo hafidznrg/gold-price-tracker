@@ -161,7 +161,10 @@ export function HomeTrend({ options, asOf, calendar }: HomeTrendProps) {
         </div>
 
         <div className="flex justify-end text-sm">
-          <Link href="/explorer" className="font-semibold text-gold no-underline hover:text-text">
+          <Link
+            href="/explorer?r=Semua"
+            className="font-semibold text-gold no-underline hover:text-text"
+          >
             Buka riwayat lengkap sejak 2010 →
           </Link>
         </div>

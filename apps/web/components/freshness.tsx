@@ -43,6 +43,11 @@ export function Freshness({
   const isFresh = (date: string | null) =>
     date !== null && (today - Date.parse(`${date}T00:00:00Z`)) / DAY_MS <= FRESH_MAX_DAYS;
   const freshCount = items.filter((i) => isFresh(i.date)).length;
+  // Teks hitungan memakai "data hari ini", bukan "terkini" (≤ 2 hari): sumber yang datanya kemarin
+  // tidak ikut dihitung, agar sejalan dengan catatan "data 20 Nov" di kartu (P1, evaluasi 21 Nov).
+  const todayIso = jakartaDateOf(now);
+  const isToday = (date: string | null) => date === todayIso;
+  const todayCount = items.filter((i) => isToday(i.date)).length;
 
   return (
     <div className="relative">
@@ -57,10 +62,10 @@ export function Freshness({
         <span>
           <b className="font-semibold">Diperbarui {latestLabel}</b>{' '}
           <span className="text-muted max-sm:hidden">
-            · {freshCount} dari {items.length} sumber terkini
+            · {todayCount} dari {items.length} sumber hari ini
           </span>
           <span className="text-muted sm:hidden">
-            · {freshCount}/{items.length} terkini
+            · {todayCount}/{items.length} hari ini
           </span>
         </span>
         <svg
@@ -90,12 +95,21 @@ export function Freshness({
               <span className="flex items-center gap-2 text-sm font-semibold">
                 <span
                   aria-hidden="true"
-                  className={cn('size-[7px] rounded-full', isFresh(i.date) ? 'bg-up' : 'bg-faint')}
+                  className={cn(
+                    'size-[7px] rounded-full',
+                    isToday(i.date) ? 'bg-up' : isFresh(i.date) ? 'bg-gold' : 'bg-faint',
+                  )}
                 />
                 {i.name}
               </span>
               <span className="text-xs text-muted">{i.when}</span>
-              <span className="sr-only">{isFresh(i.date) ? 'terkini' : 'belum terkini'}</span>
+              <span className="sr-only">
+                {isToday(i.date)
+                  ? 'data hari ini'
+                  : isFresh(i.date)
+                    ? 'data 1–2 hari lalu'
+                    : 'data lama'}
+              </span>
             </li>
           ))}
         </ul>

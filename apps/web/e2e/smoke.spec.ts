@@ -148,6 +148,36 @@ test.describe('Explorer (Riwayat harga, D-71)', () => {
   };
   const paramsOf = (page: Page) => new URL(page.url()).searchParams;
 
+  test('gulir biasa di atas grafik menggulir halaman; Ctrl + gulir memperbesar', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1366, height: 900 });
+    await page.goto('/explorer');
+    const chart = page.getByRole('img', { name: /^Grafik harga/ });
+    await expect(chart).toBeVisible();
+    await expect(page.locator('main canvas').first()).toBeVisible();
+    const box = (await chart.boundingBox())!;
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+    // Grafik selesai digambar (gestur dipasang setelah ECharts siap).
+    await page.waitForTimeout(500);
+    const before = await page.evaluate(() => window.scrollY);
+    await page.mouse.wheel(0, 300);
+    await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(before);
+    expect(paramsOf(page).get('r')).toBeNull();
+    await expect(page.getByText('Tekan Ctrl (⌘ di Mac) + gulir untuk memperbesar')).toBeVisible();
+
+    // Ctrl + gulir = zoom → rentang kustom di URL.
+    await page.evaluate(() => window.scrollTo(0, 0));
+    const b2 = (await chart.boundingBox())!;
+    await page.mouse.move(b2.x + b2.width / 2, b2.y + b2.height / 2);
+    await page.keyboard.down('Control');
+    await page.mouse.wheel(0, -300);
+    await page.keyboard.up('Control');
+    await expect
+      .poll(() => paramsOf(page).get('r'))
+      .toMatch(/^\d{4}-\d{2}-\d{2}\.\.\d{4}-\d{2}-\d{2}$/);
+  });
+
   test('mode dasar bawaan: satu grafik harga jual dan empat brand', async ({ page }) => {
     const errors = collectErrors(page);
     await page.goto('/explorer');
@@ -677,6 +707,14 @@ test.describe('Kelipatan: premi Antam', () => {
     await expect(page.getByText(/Spot dunia bersifat indikatif/)).toBeVisible();
     await expect(page.getByText('Ongkos cetak & sertifikat')).toBeVisible();
     await expect(page.getByText('Margin distribusi')).toBeVisible();
+    // Premi tampil sebelum tabel tahunan yang panjang (evaluasi journey 21 Nov).
+    const premiY = (await page
+      .getByRole('heading', { name: /Berapa mahal emas ritel/ })
+      .boundingBox())!.y;
+    const tableY = (await page
+      .getByRole('heading', { name: 'Angka di balik garis' })
+      .boundingBox())!.y;
+    expect(premiY).toBeLessThan(tableY);
   });
 });
 

@@ -38,10 +38,11 @@ export default function KelipatanPage() {
             until={annual.until}
             spot={latest.spot}
             events={events}
+            // Premi tepat di bawah grafik, sebelum tabel tahunan panjang (evaluasi journey 21 Nov).
+            beforeTable={<PremiumSection className="pb-[22px]" />}
           />
         </Suspense>
       </NuqsAdapter>
-      <PremiumSection />
     </>
   );
 }

@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useMemo, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { InfoHeading, InfoPopover } from '@/components/info-popover';
 import { Segmented } from '@/components/segmented';
 import type { TodayCells } from '@/lib/bandingkan';
@@ -50,6 +50,22 @@ export function HomeMatrix({ cells, compareHref }: { cells: TodayCells; compareH
   const [mode, setMode] = useState<MatrixMode>('jual');
   const [unit, setUnit] = useState<MatrixUnit>('keping');
   const rows = useMemo(() => buildMatrix(cells, mode, unit), [cells, mode, unit]);
+  // Tanda "masih bisa digeser": bayangan pudar di tepi kanan selama ada kolom tersembunyi.
+  const scrollerRef = useRef<HTMLDivElement>(null);
+  const [moreRight, setMoreRight] = useState(false);
+  useEffect(() => {
+    const el = scrollerRef.current;
+    if (!el) return;
+    const update = () => setMoreRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 2);
+    update();
+    el.addEventListener('scroll', update, { passive: true });
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    return () => {
+      el.removeEventListener('scroll', update);
+      ro.disconnect();
+    };
+  }, []);
 
   return (
     <section className="wrap pt-12 pb-6">
@@ -80,78 +96,93 @@ export function HomeMatrix({ cells, compareHref }: { cells: TodayCells; compareH
         </div>
         {/* `relative`: jadikan blok penampung elemen absolut (mis. sr-only "termurah") agar ikut
             terpotong di dalam scroller, bukan melebarkan halaman dan navbar bawah di HP. */}
-        <div
-          className="relative overflow-x-auto"
-          // Bisa digeser di HP: perlu bisa difokus agar tabel terjangkau keyboard (WCAG 2.1.1).
-          tabIndex={0}
-          role="region"
-          aria-label="Tabel per gramasi, geser ke samping untuk kolom lain"
-        >
-          <div role="table" aria-label="Perbandingan harga per gramasi" className="min-w-[1020px]">
+        <div className="relative">
+          <div
+            ref={scrollerRef}
+            className="relative overflow-x-auto"
+            // Bisa digeser di HP: perlu bisa difokus agar tabel terjangkau keyboard (WCAG 2.1.1).
+            tabIndex={0}
+            role="region"
+            aria-label="Tabel per gramasi, geser ke samping untuk kolom lain"
+          >
             <div
-              role="row"
-              className={cn(GRID, 'border-t border-line py-2.5 text-xs font-semibold text-faint')}
+              role="table"
+              aria-label="Perbandingan harga per gramasi"
+              className="min-w-[1020px]"
             >
-              <span role="columnheader" className={cn(STICKY, 'tracking-[0.08em] uppercase')}>
-                Gramasi
-              </span>
-              {MATRIX_COLS.map((d) => (
-                <span
-                  key={d.id}
-                  role="columnheader"
-                  className="flex items-center gap-2 text-sm text-text"
-                >
-                  <span
-                    aria-hidden="true"
-                    className={cn('size-2 rounded-[2px]', COLOR_CLASSES[d.color].bg)}
-                  />
-                  <span>
-                    {d.brandName}{' '}
-                    <span className="text-xs font-normal text-faint">{d.sourceName}</span>
-                  </span>
-                </span>
-              ))}
-            </div>
-            {rows.map((r) => (
               <div
-                key={r.w}
                 role="row"
-                data-testid="matrix-row"
-                className={cn(GRID, 'border-t border-line py-1')}
+                className={cn(GRID, 'border-t border-line py-2.5 text-xs font-semibold text-faint')}
               >
-                <span role="rowheader" className={cn(STICKY, 'text-sm font-semibold')}>
-                  {formatWeight(r.w)}
+                <span role="columnheader" className={cn(STICKY, 'tracking-[0.08em] uppercase')}>
+                  Gramasi
                 </span>
-                {r.cells.map((x, i) => (
+                {MATRIX_COLS.map((d) => (
                   <span
-                    key={MATRIX_COLS[i]?.id}
-                    role="cell"
-                    className={cn(
-                      'num mr-2 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 rounded-[9px] px-2.5 py-[9px] text-sm',
-                      x.value === null ? 'text-faint' : 'text-text',
-                      x.best ? 'bg-goldsoft font-semibold' : 'font-normal',
-                    )}
+                    key={d.id}
+                    role="columnheader"
+                    className="flex items-center gap-2 text-sm text-text"
                   >
-                    {x.value === null
-                      ? EMPTY
-                      : mode === 'spread'
-                        ? formatPct(x.value, 2, false)
-                        : formatRupiah(x.value)}
-                    {x.best ? (
-                      <span data-testid="matrix-best" className="sr-only">
-                        {BEST_LABEL[mode]}
-                      </span>
-                    ) : null}
+                    <span
+                      aria-hidden="true"
+                      className={cn('size-2 rounded-[2px]', COLOR_CLASSES[d.color].bg)}
+                    />
+                    <span>
+                      {d.brandName}{' '}
+                      <span className="text-xs font-normal text-faint">{d.sourceName}</span>
+                    </span>
                   </span>
                 ))}
               </div>
-            ))}
-            {rows.length === 0 ? (
-              <div role="row" className="border-t border-line px-6 py-6 text-sm text-muted">
-                <span role="cell">Belum ada data.</span>
-              </div>
-            ) : null}
+              {rows.map((r) => (
+                <div
+                  key={r.w}
+                  role="row"
+                  data-testid="matrix-row"
+                  className={cn(GRID, 'border-t border-line py-1')}
+                >
+                  <span role="rowheader" className={cn(STICKY, 'text-sm font-semibold')}>
+                    {formatWeight(r.w)}
+                  </span>
+                  {r.cells.map((x, i) => (
+                    <span
+                      key={MATRIX_COLS[i]?.id}
+                      role="cell"
+                      className={cn(
+                        'num mr-2 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 rounded-[9px] px-2.5 py-[9px] text-sm',
+                        x.value === null ? 'text-faint' : 'text-text',
+                        x.best ? 'bg-goldsoft font-semibold' : 'font-normal',
+                      )}
+                    >
+                      {x.value === null
+                        ? EMPTY
+                        : mode === 'spread'
+                          ? formatPct(x.value, 2, false)
+                          : formatRupiah(x.value)}
+                      {x.best ? (
+                        <span data-testid="matrix-best" className="sr-only">
+                          {BEST_LABEL[mode]}
+                        </span>
+                      ) : null}
+                    </span>
+                  ))}
+                </div>
+              ))}
+              {rows.length === 0 ? (
+                <div role="row" className="border-t border-line px-6 py-6 text-sm text-muted">
+                  <span role="cell">Belum ada data.</span>
+                </div>
+              ) : null}
+            </div>
           </div>
+          <div
+            aria-hidden="true"
+            data-testid="matrix-more"
+            className={cn(
+              'pointer-events-none absolute inset-y-0 right-0 w-12 bg-gradient-to-l from-surface to-transparent transition-opacity',
+              moreRight ? 'opacity-100' : 'opacity-0',
+            )}
+          />
         </div>
         {rows.length > 0 ? (
           <div

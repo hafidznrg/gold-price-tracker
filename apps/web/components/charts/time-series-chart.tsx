@@ -147,6 +147,8 @@ export function TimeSeriesChart({
   const onRangeRef = useRef(onRangeChange);
   const [ready, setReady] = useState(false);
   const [compact, setCompact] = useState(false);
+  /** Petunjuk "Ctrl + gulir" sesaat setelah gulir biasa di atas grafik (halaman tetap bergulir). */
+  const [wheelHint, setWheelHint] = useState(false);
   const theme = useThemeAttribute();
 
   useEffect(() => {
@@ -296,8 +298,10 @@ export function TimeSeriesChart({
   ]);
 
   // Gestur zoom/geser sendiri (pengganti interaksi bawaan dataZoom `inside` yang terlalu sensitif):
-  // gulir = zoom halus sebanding delta, gulir horizontal = geser, seret = geser (redam PAN_SPEED),
-  // cubit = zoom sebanding jarak jari. Sentuhan vertikal diteruskan ke scroll halaman.
+  // Ctrl/⌘ + gulir (atau cubit trackpad, yang dikirim browser sebagai gulir + ctrlKey) = zoom halus
+  // sebanding delta; gulir biasa diteruskan ke scroll halaman (tidak menjebak) dan memunculkan
+  // petunjuk; gulir horizontal = geser, seret = geser (redam PAN_SPEED), cubit = zoom sebanding
+  // jarak jari. Sentuhan vertikal diteruskan ke scroll halaman.
   useEffect(() => {
     const el = elRef.current;
     const chart = chartRef.current;
@@ -339,17 +343,29 @@ export function TimeSeriesChart({
       });
     };
 
+    let hintTimer = 0;
+    const showWheelHint = () => {
+      setWheelHint(true);
+      window.clearTimeout(hintTimer);
+      hintTimer = window.setTimeout(() => setWheelHint(false), 1400);
+    };
+
     const onWheel = (e: WheelEvent) => {
       const p = local(e);
       if (!inGrid(p)) return;
       const cur = current();
       const box = cur && gridBox(cur.win);
       if (!cur || !box) return;
-      e.preventDefault();
       const dx = wheelPixels(e.shiftKey && !e.deltaX ? e.deltaY : e.deltaX, e.deltaMode);
       const dy = e.shiftKey && !e.deltaX ? 0 : wheelPixels(e.deltaY, e.deltaMode);
+      const vertical = Math.abs(dy) >= Math.abs(dx) && dy !== 0;
+      if (vertical && !e.ctrlKey && !e.metaKey) {
+        showWheelHint();
+        return;
+      }
+      e.preventDefault();
       let w = cur.win;
-      if (Math.abs(dy) >= Math.abs(dx) && dy !== 0) {
+      if (vertical) {
         w = zoomWindow(w, cur.ext, wheelZoomFactor(dy, e.ctrlKey), (p[0] - box.left) / box.width);
       } else if (dx !== 0) {
         w = panWindow(w, cur.ext, -dx / box.width);
@@ -442,6 +458,7 @@ export function TimeSeriesChart({
     el.addEventListener('pointercancel', onUp);
     return () => {
       if (raf) cancelAnimationFrame(raf);
+      window.clearTimeout(hintTimer);
       el.style.touchAction = prevTouch;
       el.removeEventListener('wheel', onWheel);
       el.removeEventListener('pointerdown', onDown);
@@ -493,6 +510,17 @@ export function TimeSeriesChart({
           aria-label={ariaLabel ?? `Grafik ${series.map((s) => s.label).join(', ')}`}
           className="absolute inset-0"
         />
+        <div
+          aria-hidden="true"
+          className={cn(
+            'pointer-events-none absolute inset-0 grid place-items-center bg-surface/55 transition-opacity duration-200',
+            wheelHint ? 'opacity-100' : 'opacity-0',
+          )}
+        >
+          <span className="rounded-field bg-btn px-3 py-1.5 text-xs font-semibold text-btntext">
+            Tekan Ctrl (⌘ di Mac) + gulir untuk memperbesar
+          </span>
+        </div>
         {!hasData && (
           <div className="pointer-events-none absolute inset-0 grid place-items-center text-sm text-faint">
             {emptyText}

@@ -683,3 +683,14 @@ Log keputusan produk dan teknis (format ringkas ala ADR). Keputusan baru ditamba
 - **Urutkan** (state lokal, tidak di URL): {terbaik} (bawaan) atau Perubahan; Jual + spread: Termurah atau Spread; seri manual: Bawaan atau Perubahan.
 - Desktop/tablet memakai daftar yang sama dalam 2 kolom (≥ 1024 px), 1 kolom di bawahnya. Kartu statistik dan tabel lama dihapus. "ⓘ Sumber" di kaki daftar.
 **Konsekuensi:** angka awal/terendah/tertinggi tidak lagi selalu tampil; tersedia lewat ketuk. Daftar menjadi satu-satunya legenda grafik (toolbar Brand tetap untuk memilih).
+
+### D-75 — Perbaikan P1 evaluasi user journey 21 Nov 2026
+
+**Konteks:** evaluasi ulang user journey (21 Nov 2026) menemukan lima masalah kecil yang langsung terasa: grafik menjebak scroll halaman, status "8 dari 8 sumber terkini" bertentangan dengan kartu "data 20 Nov", tautan "riwayat lengkap sejak 2010" membuka rentang 1 bulan, premi Antam (D-70) tertimbun di bawah tabel tahunan Kelipatan, dan tabel per gramasi beranda terpotong tanpa tanda bisa digeser.
+**Keputusan:**
+- Grafik: gulir vertikal biasa **diteruskan ke halaman** dan memunculkan petunjuk "Tekan Ctrl (⌘ di Mac) + gulir untuk memperbesar"; zoom = Ctrl/⌘ + gulir atau cubit trackpad (dikirim browser sebagai gulir + ctrlKey). Gulir horizontal, seret, dan cubit sentuh tetap seperti D-47/D-54.
+- Chip pembaruan menghitung sumber yang datanya **hari ini** ("5 dari 8 sumber hari ini"), bukan "terkini" (≤ 2 hari). Titik di panel: hijau = hari ini, emas = 1–2 hari lalu, abu-abu = lebih lama. Titik berdenyut tetap memakai aturan ≤ 2 hari.
+- Tautan beranda "Buka riwayat lengkap sejak 2010 →" membuka `/explorer?r=Semua`.
+- Kelipatan: bagian premi Antam vs spot tampil tepat di bawah grafik, sebelum tabel "Angka di balik garis".
+- Tabel per gramasi beranda: bayangan pudar di tepi kanan selama masih ada kolom tersembunyi (kolom gramasi sudah tetap).
+**Konsekuensi:** di akhir pekan hitungan "hari ini" wajar kurang dari total (JISDOR dan sebagian sumber ritel tidak terbit); panel per sumber menjelaskannya.

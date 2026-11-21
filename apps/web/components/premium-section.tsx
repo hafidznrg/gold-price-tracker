@@ -9,6 +9,7 @@ import { premiumMonthlyLine, premiumStats } from '@/lib/bandingkan';
 import { formatDate, formatMonthYear, formatPct } from '@/lib/format';
 import { rangeToDates } from '@/lib/range';
 import { sourceStampParts } from '@/lib/source-stamp';
+import { cn } from '@/lib/utils';
 
 type PremiumView = 'bulanan' | 'harian';
 
@@ -36,7 +37,8 @@ const EXPLAIN: { title: string; body: string }[] = [
  * Premi Antam vs spot (P4-09, FR-33): grafik premi % dari `derived/premium-antam.json`, angka
  * hari ini dan rata-rata, penjelasan komponen premi, dan penegasan bahwa spot hanya indikatif.
  */
-export function PremiumSection() {
+/** `className` menimpa jarak bawah bawaan (mis. saat disisipkan di tengah halaman Kelipatan, D-70). */
+export function PremiumSection({ className }: { className?: string } = {}) {
   const [file, setFile] = useState<PremiumAntamFile | null>(null);
   const [error, setError] = useState(false);
   useEffect(() => {
@@ -115,7 +117,7 @@ export function PremiumSection() {
   }, [file, stats, line, view]);
 
   return (
-    <section className="wrap pb-16" aria-labelledby="premi-judul">
+    <section className={cn('wrap', className ?? 'pb-16')} aria-labelledby="premi-judul">
       <div className="rounded-card border border-line bg-surface p-[26px] max-sm:p-4">
         <div className="mb-[22px] flex flex-wrap items-end justify-between gap-5">
           <div className="max-w-[640px] min-w-0">

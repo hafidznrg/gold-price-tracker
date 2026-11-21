@@ -40,6 +40,8 @@ export interface KelipatanBoardProps {
   until: string | null;
   spot: LatestSpot | null;
   events: { date: string; label: string }[];
+  /** Disisipkan antara grafik dan tabel tahunan (bagian premi Antam vs spot). */
+  beforeTable?: React.ReactNode;
 }
 
 const PANEL = 'min-w-0 rounded-card border border-line bg-surface p-4 sm:px-5';
@@ -62,7 +64,7 @@ function cagrText(line: KLine | null): string {
   return line?.cagr === null || line?.cagr === undefined ? EMPTY : formatPct(line.cagr * 100, 1);
 }
 
-export function KelipatanBoard({ annual, until, spot, events }: KelipatanBoardProps) {
+export function KelipatanBoard({ annual, until, spot, events, beforeTable }: KelipatanBoardProps) {
   const [query, setQuery] = useQueryStates(
     { b: parseAsString, a: parseAsString, lm: parseAsString },
     { history: 'replace' },
@@ -331,6 +333,8 @@ export function KelipatanBoard({ annual, until, spot, events }: KelipatanBoardPr
           ) : null}
         </div>
       </section>
+
+      {beforeTable}
 
       <section className="wrap pb-16">
         <div className="overflow-hidden rounded-card border border-line bg-surface">

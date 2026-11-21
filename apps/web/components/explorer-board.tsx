@@ -569,7 +569,9 @@ export function ExplorerBoard({ options, weights, asOf, stamps, calendar }: Expl
               </p>
               <InfoPopover ariaLabel="Keterangan grafik" className="max-sm:static">
                 <ul className="m-0 flex list-disc flex-col gap-1 pl-4">
-                  <li>Gulir untuk memperbesar, seret untuk menggeser.</li>
+                  <li>
+                    Ctrl (⌘ di Mac) + gulir atau cubit untuk memperbesar, seret untuk menggeser.
+                  </li>
                   {view.ffill ? (
                     <li>
                       Hari yang seharusnya ada harga tapi datanya kosong diisi harga terakhir
