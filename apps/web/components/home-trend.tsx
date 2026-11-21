@@ -115,7 +115,7 @@ export function HomeTrend({ options, asOf, calendar }: HomeTrendProps) {
           </div>
         )}
 
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-6">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
           {TREND_DEFS.map((d) => {
             const line = lines?.find((l) => l.d.id === d.id)?.line;
             const s = line ? trendStats(line.points) : null;
@@ -129,12 +129,14 @@ export function HomeTrend({ options, asOf, calendar }: HomeTrendProps) {
                 <span className="flex items-center gap-2 text-sm font-semibold">
                   <span
                     aria-hidden="true"
-                    className={cn('size-2 rounded-[2px]', COLOR_CLASSES[d.color].bg)}
+                    className={cn('size-2 flex-none rounded-[2px]', COLOR_CLASSES[d.color].bg)}
                   />
-                  {d.brandName}
+                  <span title={d.brandName} className="min-w-0 truncate">
+                    {d.brandName}
+                  </span>
                   <span
                     className={cn(
-                      'num ml-auto font-semibold',
+                      'num ml-auto flex-none font-semibold whitespace-nowrap',
                       chg === null ? 'text-muted' : chg >= 0 ? 'text-up' : 'text-down',
                     )}
                   >

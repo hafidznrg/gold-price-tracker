@@ -25,13 +25,11 @@ const TEXT_DIR = { up: 'text-up', down: 'text-down', flat: 'text-muted' } as con
 /** Kartu harga ringkas di hero. Panel ⓘ memuat catatan dan atribusi sumber. */
 export function PriceCard({
   c,
-  wide = false,
-  wideFrom = 'lg',
+  reserveExtra = false,
 }: {
   c: CardModel;
-  wide?: boolean;
-  /** Lebar layar mulai tiga kolom di kartu lebar: `xl` bila kartu hanya memakai sebagian baris. */
-  wideFrom?: 'lg' | 'xl';
+  /** Sisakan satu baris kaki kosong agar meter sejajar dengan kartu lain yang punya `extra`. */
+  reserveExtra?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const panelId = useId();
@@ -58,15 +56,8 @@ export function PriceCard({
   const meter = hasBuy ? ((c.buyback as number) / (c.sell as number)) * 100 : 0;
   return (
     <article
-      aria-label={wide ? c.title : undefined}
-      className={cn(
-        'flex min-w-0 flex-col gap-3.5 rounded-card-sm border border-line bg-surface px-5 py-[18px]',
-        // Kartu lebar (Tabungan Emas): tiga kolom di desktop, bertumpuk di bawahnya.
-        wide &&
-          (wideFrom === 'lg'
-            ? 'lg:grid lg:grid-cols-[1.1fr_1.2fr_1.7fr] lg:items-center lg:gap-8'
-            : 'xl:grid xl:grid-cols-[1.1fr_1.2fr_1.7fr] xl:items-center xl:gap-8'),
-      )}
+      aria-label={c.title}
+      className="flex min-w-0 flex-col gap-3.5 rounded-card-sm border border-line bg-surface px-5 py-[18px]"
     >
       <div className="flex min-w-0 flex-col gap-1.5">
         {/* Judul dan keterangan satuan ditumpuk (bukan satu baris) agar tidak saling patah di kartu
@@ -113,40 +104,41 @@ export function PriceCard({
             ) : null}
           </div>
         </div>
-        {wide && c.description ? (
-          <p className="m-0 text-xs leading-normal text-muted">{c.description}</p>
-        ) : null}
       </div>
       <div>
         <div className="num text-[30px] leading-tight font-semibold tracking-[-0.02em]">
           {formatRupiah(c.sell)}
         </div>
-        {c.carryOver ? (
-          <div className="mt-1 text-sm text-muted">
-            Belum ada harga baru{c.carrySince ? ` · berlaku sejak ${c.carrySince}` : ''}
-          </div>
-        ) : (
-          <div
-            className={cn('num mt-1 text-sm font-medium', TEXT_DIR[changeDirection(c.change?.abs)])}
-          >
-            {c.change ? `${formatChangeRupiah(c.change.abs)} (${formatPct(c.change.pct)})` : EMPTY}
-            {c.changeLabel ? (
-              <span className="font-normal text-faint"> {c.changeLabel}</span>
-            ) : null}
-          </div>
-        )}
-        {c.staleLabel ? <div className="mt-0.5 text-xs text-faint">{c.staleLabel}</div> : null}
+        {/* Baris perubahan dan baris meta punya tinggi tetap agar isi kartu sejajar sebaris. */}
+        <div className="mt-1 min-h-5 text-sm">
+          {c.carryOver ? (
+            <span className="text-muted">
+              Belum ada harga baru{c.carrySince ? ` · berlaku sejak ${c.carrySince}` : ''}
+            </span>
+          ) : c.change ? (
+            <span
+              className={cn(
+                'num flex flex-wrap gap-x-1 font-medium',
+                TEXT_DIR[changeDirection(c.change.abs)],
+              )}
+            >
+              <span className="whitespace-nowrap">
+                {formatChangeRupiah(c.change.abs)} ({formatPct(c.change.pct)})
+              </span>
+              {c.changeLabel ? (
+                <span className="font-normal whitespace-nowrap text-faint">{c.changeLabel}</span>
+              ) : null}
+            </span>
+          ) : c.changeLabel ? (
+            <span className="text-muted">{EMPTY}</span>
+          ) : (
+            <span className="text-muted">Belum ada pembanding kemarin</span>
+          )}
+        </div>
+        <div className="mt-0.5 min-h-4 text-xs text-faint">{c.staleLabel}</div>
       </div>
       {/* mt-auto: bagian bawah menempel ke dasar kartu sehingga meter sejajar antarkartu. */}
-      <div
-        className={cn(
-          'mt-auto flex flex-col gap-2 border-t border-line pt-3',
-          wide &&
-            (wideFrom === 'lg'
-              ? 'lg:mt-0 lg:border-t-0 lg:border-l lg:pt-0 lg:pl-8'
-              : 'xl:mt-0 xl:border-t-0 xl:border-l xl:pt-0 xl:pl-8'),
-        )}
-      >
+      <div className="mt-auto flex flex-col gap-2 border-t border-line pt-3">
         <div className="flex justify-between gap-3 text-sm">
           <span className="whitespace-nowrap text-muted">Buyback</span>
           {hasBuy ? (
@@ -173,7 +165,13 @@ export function PriceCard({
             style={{ width: `${meter.toFixed(1)}%` }}
           />
         </div>
-        {c.extra ? <p className="num m-0 text-xs text-faint">{c.extra}</p> : null}
+        {c.extra ? (
+          <p className="num m-0 text-xs text-faint">{c.extra}</p>
+        ) : reserveExtra ? (
+          <p aria-hidden="true" className="m-0 text-xs">
+            &nbsp;
+          </p>
+        ) : null}
       </div>
     </article>
   );

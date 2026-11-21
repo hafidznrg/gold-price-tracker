@@ -67,14 +67,18 @@ test.describe('Beranda', () => {
   }) => {
     const errors = collectErrors(page);
     await page.goto('/');
-    const bars = page.getByRole('list', { name: 'Emas batangan' });
+    const bars = page.getByRole('list', { name: 'Harga emas per penerbit' });
     const titles = bars.getByRole('heading', { level: 2 });
-    // EMASKU (hrtagold.id) menyusul sebagai kartu kelima setelah data pertamanya ada (Fase 7).
+    // EMASKU (hrtagold.id) muncul sebagai kartu kelima setelah data pertamanya ada (Fase 7).
     const names = (await titles.allTextContents()).filter((t) => t !== 'EMASKU');
-    expect(names).toEqual(['Antam', 'UBS', 'Galeri24', 'Lotus Archi']);
-    await expect(page.getByRole('article', { name: 'Tabungan Emas' })).toContainText(
+    expect(names).toEqual(['Antam', 'UBS', 'Galeri24', 'Lotus Archi', 'Tabungan Emas']);
+    // Deskripsi Tabungan Emas ada di panel ⓘ, bukan di badan kartu.
+    await expect(page.getByRole('article', { name: 'Tabungan Emas' })).not.toContainText(
       'Produk lain dari emas batangan',
     );
+    await page.getByRole('button', { name: 'Keterangan Tabungan Emas' }).click();
+    await expect(page.getByRole('note')).toContainText('Produk lain dari emas batangan');
+    await page.keyboard.press('Escape');
     await expect(
       page.getByRole('heading', { level: 2, name: 'Galeri24', exact: true }),
     ).toHaveCount(1);
@@ -312,7 +316,7 @@ test.describe('EMASKU / HRTA Gold (Fase 7)', () => {
     await expect(table.getByRole('columnheader', { name: /EMASKU/ })).toBeVisible();
   });
 
-  for (const width of [375, 768, 1024, 1280]) {
+  for (const width of [375, 768, 1024, 1280, 1440]) {
     test(`beranda tanpa gulir horizontal dan kartu sama tinggi di ${width}px`, async ({ page }) => {
       await page.setViewportSize({ width, height: 900 });
       await page.goto('/');
@@ -340,7 +344,7 @@ test.describe('EMASKU / HRTA Gold (Fase 7)', () => {
     });
   }
 
-  test('kartu EMASKU: Gold 1 g, pajak, Prime hanya catatan; tata letak 4 + (EMASKU + Tabungan)', async ({
+  test('kartu EMASKU: Gold 1 g, pajak, Prime hanya catatan; pembanding kemarin', async ({
     page,
   }) => {
     await page.setViewportSize({ width: 1280, height: 900 });
@@ -351,20 +355,63 @@ test.describe('EMASKU / HRTA Gold (Fase 7)', () => {
     await expect(article).toContainText(/Buyback\s*Rp/);
     await expect(article).not.toContainText('tidak ditampilkan');
     await expect(article).toContainText(/Prime 25 g: Rp/);
+    // Tanpa pembanding kemarin: teks jelas, bukan "—" kosong.
+    const t = await article.innerText();
+    expect(t).toMatch(/vs |Belum ada pembanding kemarin/);
     await page.getByRole('button', { name: 'Keterangan EMASKU' }).click();
     await expect(page.getByRole('note')).toContainText('sudah termasuk pajak');
     await expect(page.getByRole('note')).toContainText('hrtagold.id');
-    // Baris kedua: EMASKU satu kolom, Tabungan Emas di sebelah kanannya.
-    const e = await article.boundingBox();
-    const t = await page.getByRole('article', { name: 'Tabungan Emas' }).boundingBox();
-    const a = await page
-      .locator('article')
-      .filter({ has: page.getByRole('heading', { level: 2, name: 'Antam', exact: true }) })
-      .boundingBox();
-    expect(Math.abs(e!.y - t!.y)).toBeLessThanOrEqual(1);
-    expect(t!.x).toBeGreaterThan(e!.x + e!.width - 1);
-    expect(e!.y).toBeGreaterThan(a!.y + a!.height - 1);
-    expect(Math.abs(e!.width - a!.width)).toBeLessThanOrEqual(1);
+  });
+
+  // Kartu seragam: 1 kolom (375), 2 (768), 3 (1280/1440); Tabungan Emas selebar kartu lain.
+  for (const [width, cols] of [
+    [375, 1],
+    [768, 2],
+    [1280, 3],
+    [1440, 3],
+  ] as const) {
+    test(`kartu harga seragam: ${cols} kolom di ${width}px`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 900 });
+      await page.goto('/');
+      const boxes = await page
+        .locator('main section')
+        .first()
+        .locator('article')
+        .evaluateAll((els) =>
+          els.map((e) => {
+            const r = e.getBoundingClientRect();
+            return {
+              x: Math.round(r.x),
+              y: Math.round(r.y),
+              w: Math.round(r.width),
+              h: Math.round(r.height),
+            };
+          }),
+        );
+      expect(boxes.length).toBeGreaterThanOrEqual(5);
+      const xs = new Set(boxes.map((b) => b.x));
+      expect(xs.size).toBe(cols);
+      for (const b of boxes) expect(Math.abs(b.w - boxes[0]!.w)).toBeLessThanOrEqual(1);
+      const tab = await page.getByRole('article', { name: 'Tabungan Emas' }).boundingBox();
+      expect(Math.abs(tab!.width - boxes[0]!.w)).toBeLessThanOrEqual(1);
+    });
+  }
+
+  test('statistik tren: 3 kolom di tablet dan desktop, judul satu baris', async ({ page }) => {
+    for (const width of [768, 1440]) {
+      await page.setViewportSize({ width, height: 900 });
+      await page.goto('/');
+      const stats = page.getByTestId('trend-stat');
+      await expect(stats).toHaveCount(6);
+      const xs = await stats.evaluateAll((els) => [
+        ...new Set(els.map((e) => Math.round(e.getBoundingClientRect().x))),
+      ]);
+      expect(xs.length).toBe(3);
+      const hs = await stats.evaluateAll((els) =>
+        els.map((e) => Math.round(e.getBoundingClientRect().height)),
+      );
+      expect(Math.max(...hs) - Math.min(...hs)).toBeLessThanOrEqual(1);
+    }
   });
 
   test('Spread dan Explorer: opsi EMASKU bersyarat data; Prime seri sendiri', async ({ page }) => {

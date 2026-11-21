@@ -135,6 +135,7 @@
     4. **Gulir horizontal di `md`** — tidak disukai (menyembunyikan kartu).
   - Hasil: satu opsi dipilih dan dicatat di `mockup/README.md` beserta alasannya; implementasi di P7-11. Prime **tidak** jadi kartu sendiri (lihat P7-11).
   - **Keputusan (21 Nov 2026): opsi 1 "4 + (EMASKU + Tabungan)".** Desktop (≥ `lg`): baris 1 = Antam, UBS, Galeri24, Lotus Archi; baris 2 = kartu EMASKU (1 kolom) + Tabungan Emas (3 kolom sisanya). Tablet 2 kolom, HP 1 kolom (Tabungan selebar baris). Alasan: perubahan terkecil, empat kartu baris 1 tidak menyempit, tidak ada kartu yatim atau tersembunyi; opsi 3 (5 kolom) memaksa angka `Rp2.258.000` + selisih ke ±230 px. Tabungan Emas yang menyempit (±705 px di 1024 px) tetap bertumpuk sampai `xl`; tiga kolom mulai di 1280 px. Diverifikasi di 375/768/1024/1280 px (tanpa gulir horizontal, kartu satu baris sama tinggi).
+  - **Diubah 21 Nov 2026 setelah tinjauan pemilik:** Tabungan Emas yang lebar tampak timpang, jadi layout menjadi 6 kartu seragam (3×2 di desktop, 2×3 tablet, 1 kolom HP); lihat `plan/mockup/README.md`.
 - [x] **P7-11** Hari ini (`lib/today.ts`, `components/price-card.tsx`). — `FR-20` · M
   - *Selesai 21 Nov 2026 (fixture sintetis; sumber belum aktif). Penyimpangan: kartu memakai catatan "harga sudah termasuk pajak" (Q-9 terjawab), bukan "Harga dasar situs"; Prime 25 g = baris `extra` di kaki kartu (hanya bila seri Prime berjalan).*
   - Kartu EMASKU dari `hrtagold-emasku` (Gold, `variant ''`), jual + buyback 1 g, label "Harga dasar situs" bila Q-9 belum jelas.

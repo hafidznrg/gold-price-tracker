@@ -144,11 +144,12 @@ describe('buildCards', () => {
     expect(withOfficial.map((c) => c.id)).not.toContain('lotusarchi-lotusarchi');
   });
 
-  it('Antam dan UBS mempertahankan catatan lama; hanya Tabungan Emas berdeskripsi', () => {
+  it('Antam dan UBS mempertahankan catatan lama; deskripsi Tabungan Emas ada di catatan', () => {
     expect(cards[0]!.note).toContain('PPh 0,25%');
     expect(cards[0]!.note).toContain('Di Pegadaian: Rp2.564.000');
     expect(cards[1]!.note).toContain('tahun produksi 2026');
-    expect(cards.filter((c) => c.description).map((c) => c.id)).toEqual(['pegadaian-pegadaian']);
+    const t = cards.find((c) => c.id === 'pegadaian-pegadaian')!;
+    expect(t.note).toContain('Produk lain dari emas batangan');
   });
 });
 

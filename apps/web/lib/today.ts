@@ -43,8 +43,6 @@ export interface CardModel {
   note: string;
   /** Baris tambahan kecil di kaki kartu (EMASKU: harga Prime 25 g); null = tanpa. Bukan kartu sendiri. */
   extra: string | null;
-  /** Deskripsi singkat di bawah judul (hanya kartu lebar Tabungan Emas); null = tanpa. */
-  description: string | null;
   noBuyback: string;
 }
 
@@ -57,7 +55,7 @@ function cardNote(h: Highlight, all: Highlight[]): string {
   };
   if (h.product === 'gold_savings') {
     const d = (n: number | null) => (n === null ? 'tidak ditampilkan' : formatRupiah(n / 100, 0));
-    return `Dicatat per 0,01 g: jual ${d(h.sell)} · buyback ${d(h.buyback)}`;
+    return `${TABUNGAN_DESC} Dicatat per 0,01 g: jual ${d(h.sell)} · buyback ${d(h.buyback)}`;
   }
   if (h.source === 'logammulia') return `Harga dasar belum termasuk PPh 0,25%.${pg('antam')}`;
   if (h.source === 'ubslifestyle')
@@ -137,7 +135,6 @@ export function buildCards(latest: LatestFile): CardModel[] {
         buySpark: h.buyback === null ? null : sp.buy,
         note: cardNote(h, latest.highlights),
         extra: primeExtra(h, latest),
-        description: h.product === 'gold_savings' ? TABUNGAN_DESC : null,
         noBuyback: 'Tidak ditampilkan sumber',
       };
     });

@@ -25,18 +25,6 @@ import { buildCards } from '@/lib/today';
 
 const NA = 'Belum tersedia';
 
-/** Kolom `lg` yang diisi kartu Tabungan Emas: sisa baris terakhir kartu batangan (4 kolom per baris). */
-const LG_SPAN = {
-  1: 'lg:col-span-1',
-  2: 'lg:col-span-2',
-  3: 'lg:col-span-3',
-  4: 'lg:col-span-4',
-} as const;
-function savingsSpan(barCount: number): keyof typeof LG_SPAN {
-  const used = barCount % 4;
-  return (used === 0 ? 4 : 4 - used) as keyof typeof LG_SPAN;
-}
-
 function SpotItem({
   label,
   value,
@@ -112,8 +100,7 @@ export default function HomePage() {
   const latest = readLatest();
   const meta = readMeta();
   const cards = buildCards(latest);
-  const bars = cards.filter((c) => c.kind === 'fisik');
-  const savings = cards.filter((c) => c.kind === 'tabungan');
+  const reserveExtra = cards.some((c) => c.extra);
   const cells = todayCells(latest);
   const trendOptions = compareOptions(explorerOptions(meta)).filter((o) =>
     TREND_DEFS.some(
@@ -175,29 +162,17 @@ export default function HomePage() {
             <Freshness items={freshItems} latestLabel={latestLabel} builtAt={meta.built_at} />
           </div>
 
-          {/* Emas batangan (P7-10, opsi "4 + (EMASKU + Tabungan)"): satu grid. HP 1 kolom, tablet 2
-              kolom, desktop (≥ 1024 px) 4 kolom per baris. Tabungan Emas (bukan keping) memakai kartu
-              lebar yang mengisi sisa kolom di baris terakhir (3 kolom di samping EMASKU; 4 kolom
-              bila baris kartu batangan penuh atau EMASKU belum ada). Daftar batangan memakai
-              `contents` agar kartunya tetap sel grid yang sama. */}
-          <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 lg:grid-cols-4">
-            <div role="list" aria-label="Emas batangan" className="contents">
-              {bars.map((c) => (
-                <div
-                  key={c.id}
-                  role="listitem"
-                  className="flex min-w-0 flex-col [&>article]:flex-1"
-                >
-                  <PriceCard c={c} />
-                </div>
-              ))}
-            </div>
-            {savings.map((c) => (
-              <div
-                key={c.id}
-                className={`flex min-w-0 flex-col sm:col-span-2 [&>article]:flex-1 ${LG_SPAN[savingsSpan(bars.length)]}`}
-              >
-                <PriceCard c={c} wide wideFrom={savingsSpan(bars.length) === 4 ? 'lg' : 'xl'} />
+          {/* P7-10 (diubah 21 Nov setelah tinjauan pemilik): satu grid 6 kartu seragam (Antam, UBS,
+              Galeri24, Lotus Archi, EMASKU, Tabungan Emas). HP 1 kolom, tablet 2, desktop (>= 1024
+              px) 3 kolom, jadi 3 x 2. Kartu tanpa data tidak muncul; grid cukup berisi sisanya. */}
+          <div
+            role="list"
+            aria-label="Harga emas per penerbit"
+            className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 lg:grid-cols-3"
+          >
+            {cards.map((c) => (
+              <div key={c.id} role="listitem" className="flex min-w-0 flex-col [&>article]:flex-1">
+                <PriceCard c={c} reserveExtra={reserveExtra} />
               </div>
             ))}
           </div>
