@@ -670,6 +670,9 @@ export function buildTimeSeriesOption(input: BuildInput): {
         ...axisLabelStyle(t),
         margin: 12,
         hideOverlap: true,
+        // Label di ujung sumbu (min/max = tanggal data) rata ke dalam agar tidak terpotong tepi grid.
+        alignMinLabel: 'left',
+        alignMaxLabel: 'right',
         formatter: (v: number) => formatAxisDate(v, span),
       },
       axisPointer: {
