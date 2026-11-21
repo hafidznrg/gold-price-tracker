@@ -11,7 +11,7 @@ import { explorerOptions } from '@/lib/explorer';
 export const metadata: Metadata = {
   title: 'Bandingkan',
   description:
-    'Bandingkan harga emas Antam, UBS, Galeri24, Lotus Archi, EMASKU, dan Tabungan Emas Pegadaian pada berat yang sama, serta premi Antam terhadap harga emas dunia dari waktu ke waktu.',
+    'Bandingkan harga emas Antam, UBS, Galeri24, Lotus Archi, Hartadinata, dan Tabungan Emas Pegadaian pada berat yang sama, serta premi Antam terhadap harga emas dunia dari waktu ke waktu.',
   openGraph: { title: 'Bandingkan' },
 };
 
@@ -28,7 +28,7 @@ export default function BandingkanPage() {
             Emas fisik dan tabungan <em>di berat yang sama</em>
           </>
         }
-        lead="Lihat mana yang termurah per gram: Antam, UBS, Galeri24, Lotus Archi, EMASKU, atau Tabungan Emas Pegadaian, dan seberapa jauh harga di Pegadaian berbeda dari toko resmi penerbitnya."
+        lead="Lihat mana yang termurah per gram: Antam, UBS, Galeri24, Lotus Archi, Hartadinata, atau Tabungan Emas Pegadaian, dan seberapa jauh harga di Pegadaian berbeda dari toko resmi penerbitnya."
       />
       <NuqsAdapter>
         <Suspense

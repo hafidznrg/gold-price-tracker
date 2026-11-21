@@ -53,7 +53,7 @@ const BRAND_NAME = {
   galeri24: 'Galeri24',
   pegadaian: '',
   lotusarchi: 'Lotus Archi',
-  emasku: 'EMASKU',
+  emasku: 'Hartadinata',
 } as const;
 
 /** Baris "kapan": tanggal + jam bila sumber mencatat jam; Pegadaian = jam harga terbit. */

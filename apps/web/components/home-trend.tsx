@@ -105,7 +105,7 @@ export function HomeTrend({ options, asOf, calendar }: HomeTrendProps) {
               gapStyle="subtle"
               height={280}
               legend={false}
-              ariaLabel={`Grafik harga jual 1 gram, ${days} hari terakhir, untuk Antam, UBS, Galeri24, Lotus Archi, EMASKU, dan Tabungan Emas`}
+              ariaLabel={`Grafik harga jual 1 gram, ${days} hari terakhir, untuk Antam, UBS, Galeri24, Lotus Archi, Hartadinata, dan Tabungan Emas`}
             />
             {gaps.length > 0 && (
               <p data-testid="trend-gap-note" className="m-0 text-xs text-faint">

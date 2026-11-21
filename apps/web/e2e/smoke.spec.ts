@@ -69,8 +69,8 @@ test.describe('Beranda', () => {
     await page.goto('/');
     const bars = page.getByRole('list', { name: 'Harga emas per penerbit' });
     const titles = bars.getByRole('heading', { level: 2 });
-    // EMASKU (hrtagold.id) muncul sebagai kartu kelima setelah data pertamanya ada (Fase 7).
-    const names = (await titles.allTextContents()).filter((t) => t !== 'EMASKU');
+    // Hartadinata (hrtagold.id) muncul sebagai kartu kelima setelah data pertamanya ada (Fase 7).
+    const names = (await titles.allTextContents()).filter((t) => t !== 'Hartadinata');
     expect(names).toEqual(['Antam', 'UBS', 'Galeri24', 'Lotus Archi', 'Tabungan Emas']);
     // Deskripsi Tabungan Emas ada di panel ⓘ, bukan di badan kartu.
     await expect(page.getByRole('article', { name: 'Tabungan Emas' })).not.toContainText(
@@ -285,9 +285,9 @@ test.describe('Spread', () => {
   test('spread per gramasi: tujuh sumber, ganti sumber, gramasi 1 g disorot', async ({ page }) => {
     await page.goto('/spread');
     const src = page.locator('#barSrc');
-    // Opsi EMASKU ('HRTA Gold · EMASKU') baru muncul setelah ada data hrtagold; sisanya tetap.
+    // Opsi Hartadinata ('HRTA Gold · Hartadinata') baru muncul setelah ada data hrtagold; sisanya tetap.
     const barOptions = (await src.locator('option').allTextContents()).filter(
-      (t) => t !== 'HRTA Gold · EMASKU',
+      (t) => t !== 'HRTA Gold · Hartadinata',
     );
     expect(barOptions).toEqual([
       'UBS Lifestyle · UBS (tahun produksi berjalan)',
@@ -306,14 +306,14 @@ test.describe('Spread', () => {
   });
 });
 
-test.describe('EMASKU / HRTA Gold (Fase 7)', () => {
+test.describe('Hartadinata / HRTA Gold (Fase 7)', () => {
   // Dijaga agar lulus sebelum dan sesudah data hrtagold pertama: bagian berdata bersyarat.
-  test('footer menyebut sumber HRTA Gold; matriks punya kolom EMASKU', async ({ page }) => {
+  test('footer menyebut sumber HRTA Gold; matriks punya kolom Hartadinata', async ({ page }) => {
     await page.goto('/');
-    await expect(page.locator('footer')).toContainText('HRTA Gold (EMASKU, hrtagold.id)');
+    await expect(page.locator('footer')).toContainText('HRTA Gold (Hartadinata, hrtagold.id)');
     await expect(page.locator('footer')).toContainText('sudah termasuk pajak');
     const table = page.getByRole('table', { name: 'Perbandingan harga per gramasi' });
-    await expect(table.getByRole('columnheader', { name: /EMASKU/ })).toBeVisible();
+    await expect(table.getByRole('columnheader', { name: /Hartadinata/ })).toBeVisible();
   });
 
   for (const width of [375, 768, 1024, 1280, 1440]) {
@@ -344,12 +344,12 @@ test.describe('EMASKU / HRTA Gold (Fase 7)', () => {
     });
   }
 
-  test('kartu EMASKU: Gold 1 g, pajak, Prime hanya catatan; pembanding kemarin', async ({
+  test('kartu Hartadinata: Gold 1 g, pajak, Prime hanya catatan; pembanding kemarin', async ({
     page,
   }) => {
     await page.setViewportSize({ width: 1280, height: 900 });
     await page.goto('/');
-    const card = page.getByRole('heading', { level: 2, name: 'EMASKU', exact: true });
+    const card = page.getByRole('heading', { level: 2, name: 'Hartadinata', exact: true });
     if ((await card.count()) === 0) return; // belum ada data hrtagold
     const article = page.locator('article').filter({ has: card });
     await expect(article).toContainText(/Buyback\s*Rp/);
@@ -358,7 +358,7 @@ test.describe('EMASKU / HRTA Gold (Fase 7)', () => {
     // Tanpa pembanding kemarin: teks jelas, bukan "—" kosong.
     const t = await article.innerText();
     expect(t).toMatch(/vs |Belum ada pembanding kemarin/);
-    await page.getByRole('button', { name: 'Keterangan EMASKU' }).click();
+    await page.getByRole('button', { name: 'Keterangan Hartadinata' }).click();
     await expect(page.getByRole('note')).toContainText('sudah termasuk pajak');
     await expect(page.getByRole('note')).toContainText('hrtagold.id');
   });
@@ -414,15 +414,17 @@ test.describe('EMASKU / HRTA Gold (Fase 7)', () => {
     }
   });
 
-  test('Spread dan Explorer: opsi EMASKU bersyarat data; Prime seri sendiri', async ({ page }) => {
+  test('Spread dan Explorer: opsi Hartadinata bersyarat data; Prime seri sendiri', async ({
+    page,
+  }) => {
     await page.goto('/spread');
     const buyAt = page.locator('#buyAt');
     if ((await buyAt.locator('option[value="hr-emasku"]').count()) === 1) {
-      await page.getByRole('button', { name: 'EMASKU: HRTA Gold → HRTA Gold' }).click();
+      await page.getByRole('button', { name: 'Hartadinata: HRTA Gold → HRTA Gold' }).click();
       await expect(buyAt).toHaveValue('hr-emasku');
       await expect(page.locator('#sellTo')).toHaveValue('hr-emasku');
     } else {
-      await expect(page.getByRole('button', { name: /EMASKU: HRTA Gold/ })).toHaveCount(0);
+      await expect(page.getByRole('button', { name: /Hartadinata: HRTA Gold/ })).toHaveCount(0);
     }
     await page.goto('/explorer');
     const brand = page
@@ -431,10 +433,12 @@ test.describe('EMASKU / HRTA Gold (Fase 7)', () => {
     const hasEmasku =
       (await brand
         .first()
-        .locator('option', { hasText: /^EMASKU/ })
+        .locator('option', { hasText: /^Hartadinata/ })
         .count()) > 0;
     if (hasEmasku) {
-      await expect(brand.first().locator('option', { hasText: 'EMASKU Prime' })).toHaveCount(1);
+      await expect(brand.first().locator('option', { hasText: 'Hartadinata Prime' })).toHaveCount(
+        1,
+      );
     }
   });
 });

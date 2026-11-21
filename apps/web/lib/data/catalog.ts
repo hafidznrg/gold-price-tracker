@@ -151,7 +151,7 @@ export const SOURCE_LABELS: Record<PriceSource, string> = {
   ubslifestyle: 'UBS Lifestyle',
   galeri24: 'Galeri24',
   lotusarchi: 'Lotus Archi',
-  hrtagold: 'EMASKU (Hartadinata)',
+  hrtagold: 'HRTA Gold',
 };
 
 /** Domain untuk atribusi "Sumber: …". */
@@ -170,7 +170,7 @@ export const BRAND_LABELS: Record<Brand, string> = {
   galeri24: 'Galeri24',
   pegadaian: 'Pegadaian',
   lotusarchi: 'Lotus Archi',
-  emasku: 'EMASKU',
+  emasku: 'Hartadinata',
 };
 
 export const PRODUCT_LABELS: Record<string, string> = {
@@ -216,7 +216,7 @@ export function variantLabel(variant: string): string {
 export function seriesGroupLabel(ref: Pick<SeriesRef, 'source' | 'brand' | 'product'>): string {
   // Lotus Archi di situs resminya: "Lotus Archi · Lotus Archi" menyesatkan, tulis domainnya.
   if (ref.source === 'lotusarchi') return `${displayBrand(ref)} · ${SOURCE_DOMAINS[ref.source]}`;
-  // EMASKU di situs Hartadinata: "EMASKU · EMASKU (Hartadinata)" berulang, pakai nama modul.
+  // Hartadinata di situs Hartadinata: "Hartadinata · HRTA Gold".
   if (ref.source === 'hrtagold') return `${displayBrand(ref)} · ${SCRAPER_LABELS.hrtagold}`;
   return `${displayBrand(ref)} · ${SOURCE_LABELS[ref.source]}`;
 }

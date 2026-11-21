@@ -16,7 +16,7 @@ const SOURCES: { title: string; items: string[] }[] = [
       'Logam Mulia (Antam)',
       'UBS Lifestyle',
       'Lotus Archi (lotusarchi.com)',
-      'HRTA Gold (EMASKU, hrtagold.id)',
+      'HRTA Gold (Hartadinata, hrtagold.id)',
       'Galeri24: Antam, UBS, Galeri24, Lotus Archi',
       'Pegadaian: Antam, UBS, Galeri24, Lotus Archi, Tabungan Emas',
     ],
@@ -36,7 +36,7 @@ const NOTES = [
   'Bukan rekomendasi investasi.',
   'Harga buyback belum memperhitungkan PPh 22 yang dapat dipotong saat menjual kembali sesuai ketentuan pajak yang berlaku.',
   'Harga jual Logam Mulia adalah Harga Dasar, belum termasuk PPh 0,25%.',
-  'Harga jual EMASKU (HRTA Gold) sudah termasuk pajak menurut Syarat & Ketentuan situsnya.',
+  'Harga jual Hartadinata (HRTA Gold) sudah termasuk pajak menurut Syarat & Ketentuan situsnya.',
   'Harga emas dunia bersifat indikatif, bukan patokan LBMA.',
 ];
 

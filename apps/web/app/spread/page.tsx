@@ -15,7 +15,7 @@ import {
 export const metadata: Metadata = {
   title: 'Spread',
   description:
-    'Bandingkan spread (selisih harga jual dan buyback) emas batangan Antam, UBS, Galeri24, Lotus Archi, EMASKU, dan Tabungan Emas Pegadaian per gramasi dan dari waktu ke waktu.',
+    'Bandingkan spread (selisih harga jual dan buyback) emas batangan Antam, UBS, Galeri24, Lotus Archi, Hartadinata, dan Tabungan Emas Pegadaian per gramasi dan dari waktu ke waktu.',
   openGraph: { title: 'Spread' },
 };
 
