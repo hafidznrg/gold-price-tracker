@@ -70,7 +70,7 @@ flowchart LR
 | 4 | 13/13 selesai; P4-13 Kalkulator total harga beli yang bisa diubah + berat lain (FR-37, D-61, 15 Nov 2026). (P4-04 sudah terpenuhi oleh Spread P3-07): Explorer mode nilai/agregasi/isi celah, `derived/*`, Bandingkan + premi Antam sejak 2010 (D-38), Kelipatan, Kalkulator (D-39), API statis di README, fallback 1 g Logam Mulia. G4 menunggu audit Lighthouse mobile ulang di situs live (NFR-08) | 7 Nov 2026 | |
 | 5 | Belum mulai | | |
 | 6 | 17 Nov 2026: P6-01b–P6-05 dan P6-07–P6-13 selesai; `galeri24` dan `lotusarchi` aktif (histori Galeri24 47.569 baris, histori lotusarchi.com 489 tanggal). 21 Nov 2026: 13/14, P6-01 selesai dan jadwal final (D-68). Tersisa P6-06: pantau G6 7 hari (`galeri24` hijau 17–21 Nov, target 23 Nov) | 17 Nov 2026 | |
-| 7 | Rencana siap 21 Nov 2026 (0/15; riset [research/hartadinata.md](./research/hartadinata.md), draf D-69). Belum dikerjakan: probe runner (P7-01) dulu | | |
+| 7 | 21 Nov 2026: 14/15 (P7-01–P7-07, P7-09–P7-14 selesai; D-69 final). `hrtagold` aktif sejak 21 Nov 2026 (commit `39fc66b`, run pertama 44869032220: 17 Gold + 3 Prime, 0 karantina) dan EMASKU tampil di semua halaman web. Tersisa P7-08 (jadwal/kalender final, Q-10, setelah observasi probe ±26–28 Nov) dan P7-15 (penutupan); G7: 7 hari run hijau dari 21 Nov, target ±28 Nov | 21 Nov 2026 | |
 
 ## Riwayat revisi
 
@@ -102,3 +102,4 @@ flowchart LR
 | 17 Nov 2026 | Backfill `lotusarchi-history`: 489 tanggal 1 g (jual + buyback) 27 Feb 2025–17 Nov 2026 dari `harga-gold` (satu request, tanggal ganda → `harga_id` terbesar); asumsi `harga_emas` = harga jual keping 1 g; katalog 1 g `active_from: 2025-02-27` |
 | 21 Nov 2026 | P1-08, P1-11 ditutup (G1 terpenuhi, Q-6 terjawab); P6-01 ditutup: observasi jam terbit selesai, kalender `lotusarchi` → `business_days_id` + alarm stale aktif, `schedule:` probe.yml dicabut (D-68) |
 | 21 Nov 2026 | Rencana Fase 7: riset Hartadinata/EMASKU (`research/hartadinata.md`, endpoint `hrtagold.id/api/v1/brandings/price/daily`), `phases/fase-7-hartadinata.md` (P7-01–P7-15, G7); PRD Q-8 (histori), Q-9 (PPh Harga Dasar), Q-10 (jadwal/kalender); draf D-69 |
+| 21 Nov 2026 | Fase 7 aktif (P7-14): D-69 final (EMASKU/`hrtagold`; Q-8 tanpa histori, Q-9 harga sudah termasuk pajak, Q-11 pemilik menerima risiko klausul §9; Q-10 terbuka), TECH-SPEC §5.9, DATA-MODEL §3.6 (`emasku`, `prime`), PRD §6/§13/§16 (v1.5), README repo; catatan: `updated_date` bergeser intraday, slot final diputuskan di P7-08 |

@@ -4,7 +4,7 @@
 
 Platform untuk melihat pergerakan historis harga emas batangan di Indonesia: **harga jual toko**, **harga buyback**, dan **spread** untuk Antam, UBS, dan Galeri24, dibandingkan dengan harga emas dunia (XAU/USD) dan kurs USD/IDR.
 
-Data dikumpulkan otomatis setiap hari oleh GitHub Actions dari logammulia.com, pegadaian.co.id, ubslifestyle.com, galeri24.co.id, dan lotusarchi.com, disimpan sebagai CSV di repository ini (*git-as-database*), lalu disajikan sebagai situs statis di Vercel.
+Data dikumpulkan otomatis setiap hari oleh GitHub Actions dari logammulia.com, pegadaian.co.id, ubslifestyle.com, galeri24.co.id, lotusarchi.com, dan hrtagold.id (EMASKU), disimpan sebagai CSV di repository ini (*git-as-database*), lalu disajikan sebagai situs statis di Vercel.
 
 > **Status:** Fase 1 (pipeline harga ritel). Ketiga sumber ritel dijalankan otomatis setiap hari; notifikasi, karantina, dan backfill sudah aktif; observasi 7 hari menuju gerbang G1 sedang berjalan. Rencana lengkap di [`plan/`](./plan/README.md).
 
@@ -27,7 +27,7 @@ Pipeline berjalan sendiri lewat GitHub Actions. Bagian ini untuk saat ada yang p
 
 | Workflow | Kapan | Isi |
 | --- | --- | --- |
-| `scrape-retail` | Satu Cron Trigger Cloudflare (menit :20, D-67): 08.20 percobaan awal Logam Mulia; 09.20 Logam Mulia; 11.20 + Pegadaian & Galeri24 (`midday`); 13.20 + percobaan awal UBS & Lotus Archi; 16.20 semua (+ makro hari kerja); 19.20 sweep primary semua sumber. Cadangan cron GitHub 04.15, 09.15 WIB | Slot `retry` hanya menjalankan sumber yang belum masuk atau masih carry-over (D-66); percobaan awal yang `stale` tidak membunyikan alarm. Watchdog 17.20 (Logam Mulia, Pegadaian, Galeri24) dan 23.20 WIB (semua) |
+| `scrape-retail` | Satu Cron Trigger Cloudflare (menit :20, D-67): 08.20 percobaan awal Logam Mulia & HRTA Gold (EMASKU); 09.20 Logam Mulia & HRTA Gold; 11.20 + Pegadaian & Galeri24 (`midday`); 13.20 + percobaan awal UBS & Lotus Archi; 16.20 semua (+ makro hari kerja); 19.20 sweep primary semua sumber. Cadangan cron GitHub 04.15, 09.15 WIB | Slot `retry` hanya menjalankan sumber yang belum masuk atau masih carry-over (D-66); percobaan awal yang `stale` tidak membunyikan alarm. Watchdog 17.20 (Logam Mulia, Pegadaian, Galeri24; HRTA Gold belum, alarm stale-nya mati sampai kalender final, P7-08) dan 23.20 WIB (semua) |
 | `ci` | Setiap push kode (bukan `data/**`) dan PR | Lint, typecheck, test |
 | `backfill`, `quarantine`, `probe`, `notify-test` | Manual | Lihat di bawah |
 
@@ -189,7 +189,7 @@ Semua file dibangun ulang setiap ada commit data (sekali sehari per sumber, liha
 | --- | --- | --- |
 | `{BASE}/latest.json` | Harga terbaru, perubahan, dan sparkline per seri; spot emas; status sumber | Harian |
 | `{BASE}/meta.json` | Katalog sumber, seri, rentang data, peristiwa, dan daftar file untuk diunduh | Harian |
-| `{BASE}/series/{file}.json` | Seri harian satu sumber × brand × produk, mis. `logammulia-antam`, `pegadaian-galeri24`, `ubslifestyle-ubs` (daftar lengkap di `meta.json`) | Harian |
+| `{BASE}/series/{file}.json` | Seri harian satu sumber × brand × produk, mis. `logammulia-antam`, `pegadaian-galeri24`, `ubslifestyle-ubs`, `hrtagold-emasku` (daftar lengkap di `meta.json`) | Harian |
 | `{BASE}/macro/{series}.json` | Seri makro mentah: `xau_usd_oz`, `usd_idr_jisdor`, `usd_idr_ecb`, `usd_idr_annual` | Harian (`annual`: tahunan) |
 | `{BASE}/derived/gold-idr-gram.json` | Emas spot dalam Rp/gram (US$/oz × kurs ÷ 31,1035) | Harian |
 | `{BASE}/derived/annual.json` | Agregat tahunan emas, kurs, Antam 1 g, dan Rp/gram sejak 1996 | Harian |

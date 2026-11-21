@@ -89,6 +89,7 @@
 - Belum diketahui: jam terbit di hari lain, revisi di hari yang sama, Minggu dan hari libur nasional, dan apakah `updated_date` bergeser setiap hari atau hanya saat harga berubah.
 - Pendekatan seperti P6-01: jadwal probe **sementara** (`schedule:` di `probe.yml`) yang mem-probe `hrtagold` beberapa kali sehari selama 5–7 hari, mencatat `updated_date` dan `price` 1 g per probe. Hasilnya menutup Q-10 dan menentukan `schedule_window` serta `update_calendar` final.
 - Usulan awal sebelum observasi: `schedule_window: day` (percobaan awal 08.20 WIB, retry 09.20 dan 11.20, D-67), `update_calendar: daily`, `stale_is_error_on_expected_day: false`, `accept_previous_day: true`. Alarm stale baru dihidupkan setelah kalender terbukti (pola `lotusarchi`, D-68).
+- **Temuan aktivasi (21 Nov 2026):** run pertama `scrape-retail` (44869032220) membaca `updated_date` 2026-11-21T11:39:52+07:00, sedangkan fetch lokal 08.30 WIB dan probe runner 11.05 WIB melihat 08:12:26 dengan harga 0,1 g dan 0,25 g identik. Jadi situs mengubah cap `updated_date` di tengah hari (revisi harga atau simpan ulang tanpa perubahan harga). P7-08 harus memutuskan slot mana yang dianggap "final" (dan apakah revisi intraday perlu ditangkap lewat retry, pola D-66/D-67).
 
 ## 5. Batasan data
 
@@ -112,9 +113,6 @@
 | Layout Hari ini: lima kartu batangan | Keputusan di P7-10 (lihat fase-7) |
 | Perubahan nama merek (EMASKU/HRTA Gold) | `source = hrtagold`, `brand = emasku`, label web mudah diubah |
 
-## 7. Draf keputusan (D-69)
+## 7. Keputusan (D-69)
 
-> **D-69 — Sumber `hrtagold` dan brand EMASKU (Hartadinata)**
-> **Konteks:** PT Hartadinata Abadi Tbk menerbitkan harga emas batangan EMASKU (0,1–1.000 g; grup Gold dan Prime) di hrtagold.id lewat satu endpoint JSON publik tanpa token, dengan jual dan buyback per keping untuk semua gramasi. EMASKU tidak ada di Galeri24 maupun Pegadaian. Tidak ada histori.
-> **Keputusan:** (1) sumber baru `hrtagold`, brand baru `emasku` — nama merek yang dikenal konsumen, sejajar dengan `antam`/`ubs` (bukan nama perusahaan `hartadinata`, yang juga menaungi merek lain seperti Ardore); label panjang "EMASKU (Hartadinata)", label pendek "EMASKU". (2) Prime = `variant = 'prime'`, seri terpisah, tidak pernah digabung (aturan non-tahun D-64). Gold = `variant ''`. (3) Satu `GET` `price/daily` per run (NFR-12). `source_updated_at` = `updated_date`; `data_date` = tanggal WIB dari `updated_date`. (4) Seri dimulai saat aktivasi; backfill hanya bila Q-8 menemukan endpoint resmi. (5) Jadwal/kalender final setelah observasi probe (Q-10); sebelum itu alarm stale mati. (6) Akses dari runner [lolos / tertahan karena …].
-> **Konsekuensi:** kartu batangan ke-5 di Hari ini, satu pasangan jual–buyback baru di Spread/Bandingkan, dua seri (Gold, Prime) di Explorer. Buyback langsung per keping, tanpa penurunan per gram.
+Draf sudah difinalkan sebagai [D-69](../DECISIONS.md#d-69--sumber-hrtagold-dan-brand-emasku-hartadinata-menjawab-q-8-q-9-q-11-q-10-masih-terbuka) di `plan/DECISIONS.md` (21 Nov 2026, P7-14). Draf awal dihapus dari sini supaya tidak ada dua versi.

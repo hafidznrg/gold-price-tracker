@@ -273,9 +273,10 @@ Nilai `update_calendar` final per sumber ditetapkan dari observasi di Fase 0–1
 
 | Enum | Nilai |
 | --- | --- |
-| `source` (harga) | `logammulia`, `pegadaian`, `ubslifestyle`, `galeri24`, `lotusarchi` (lotusarchi.com, D-65) |
+| `source` (harga) | `logammulia`, `pegadaian`, `ubslifestyle`, `galeri24`, `lotusarchi` (lotusarchi.com, D-65), `hrtagold` (hrtagold.id, D-69) |
 | `source` (makro) | `xaus`, `worldbank`, `bi`, `ecb`, `wdi` |
-| `brand` | `antam`, `ubs`, `galeri24`, `pegadaian` (Tabungan Emas, D-30), `lotusarchi` (Galeri24, Lotus Archi). Galeri24 juga menerbitkan Antam yang dibeli di luar Pegadaian: `brand = antam`, `variant = 'non_pegadaian'` |
+| `brand` | `antam`, `ubs`, `galeri24`, `pegadaian` (Tabungan Emas, D-30), `lotusarchi` (Galeri24, Lotus Archi), `emasku` (EMASKU, Hartadinata; sumber `hrtagold`, D-69). Galeri24 juga menerbitkan Antam yang dibeli di luar Pegadaian: `brand = antam`, `variant = 'non_pegadaian'` |
+| `variant` (nilai selain tahun) | `''` (default), tahun produksi 4 digit (UBS), `non_pegadaian` (buyback Antam di luar Pegadaian, D-64), `prime` (seri EMASKU Prime 25/50/100 g, D-69; seri terpisah dari Gold `''`, tidak pernah digabung) |
 | `product` | `gold_bar` (default); varian lain ditambah lewat katalog, mis. `gold_bar_retro` |
 | `series` | `xau_usd_oz`, `usd_idr_jisdor`, `usd_idr_ecb`, `usd_idr_annual` |
 | `origin` | `scrape`, `backfill`, `manual` |

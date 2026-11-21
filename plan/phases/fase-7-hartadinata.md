@@ -6,7 +6,7 @@
 | **Bergantung pada** | G1 (pipeline ritel stabil) dan G6 (pola sumber/brand baru dari Fase 6). Bisa jalan paralel dengan Fase 5 |
 | **Perkiraan usaha** | 3–4 hari kerja, ditambah observasi probe 5–7 hari di belakang (tanpa kerja aktif) |
 | **Gerbang keluar** | **G7** |
-| **Keputusan pemilik** | Belum ada. Q-8 (histori) dan Q-9 (PPh) terbuka; Q-8 butuh persetujuan pemilik bila endpoint histori ditemukan (seperti Q-7) |
+| **Keputusan pemilik** | Q-11 (21 Nov 2026): aktifkan dan tampilkan, risiko klausul §9 diterima (D-69). Q-8 dan Q-9 terjawab; Q-10 terbuka sampai P7-08 |
 | **Riset** | [research/hartadinata.md](../research/hartadinata.md) |
 
 ## Ruang lingkup
@@ -38,7 +38,7 @@
 
 ### Gelombang A — validasi akses dan observasi (wajib sebelum kode produksi)
 
-- [ ] **P7-01** Probe `hrtagold` dari runner GitHub, fixture, dan observasi jam terbit. — `G0`-style · M
+- [x] **P7-01** Probe `hrtagold` dari runner GitHub, fixture, dan observasi jam terbit. — `G0`-style · M
   - Tambah target di `apps/scraper/src/probe/targets.ts` dan `checkHrtaGold` di `checks.ts`, jalankan lewat `probe.yml`.
   - `checkHrtaGold`: `GET /api/v1/brandings/price/daily` → 200 `application/json`, `code = 200`, `updated_date` valid ISO `+07:00`, seri `Gold` ≥ 12 gramasi dan seri `Prime` ada, semua `price` dan `buyback_price` bilangan bulat > 0, `buyback_price < price`, tanggal `updated_date` ≤ 3 hari dari hari ini. Respons berisi tantangan (`Just a moment`, `cf-chl`) atau 403/429/503 → `BLOCKED`.
   - Simpan fixture di `apps/scraper/test/fixtures/hrtagold/` dengan `README.md` seperti fixture lain: `price-daily-2026-11-21.json` (respons penuh, diambil dari terminal lokal) dan satu fixture sintetis kasus tepi (Prime tanpa Gold, harga 0, `buyback ≥ jual`, tanggal kemarin).
@@ -154,7 +154,8 @@
 
 ### Gelombang F — dokumentasi
 
-- [ ] **P7-14** Keputusan dan dokumen spesifikasi. — S
+- [x] **P7-14** Keputusan dan dokumen spesifikasi. — S
+  - *Selesai 21 Nov 2026: D-69 final di DECISIONS (draf research §7 diganti penunjuk); TECH-SPEC §5.9 + §7; DATA-MODEL §3.6; PRD §6/§13/§16 (v1.5); README repo (sumber, jadwal, contoh `series`) dan baris status/riwayat `plan/README.md` ikut diperbarui (sisa P7-15: penutupan setelah G7). Q-10 tetap terbuka sampai P7-08.*
   - DECISIONS: **D-69** (isi dari draf research/hartadinata.md §7 + hasil P7-01/P7-02/P7-08). Draf tetap di research sampai tugas ini (preseden D-64/D-65 di P6-13).
   - TECH-SPEC: **§5.9 Hartadinata (`hrtagold.ts`)** (endpoint, bentuk respons, pemetaan Gold/Prime, validasi, jadwal), §7 (V-03/V-04 menyebut `hrtagold`).
   - DATA-MODEL §3.6: `source` `hrtagold`, `brand` `emasku`, nilai `variant = 'prime'`.
