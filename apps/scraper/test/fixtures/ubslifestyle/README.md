@@ -9,5 +9,7 @@ Diambil 25 Okt 2026 08.41 WIB (Minggu) dari runner lokal (Indonesia), User-Agent
 | `table-multiyear-synthetic.html` | Tabel 2026 asli + tabel "Tahun 2025" **sintetis** (buyback −1%, harga beli `-`) untuk menguji banyak tahun produksi (D-08) dan sel tanpa harga | Sintetis sebagian |
 | `chart-interval-1095-2026-10-25.json` | Respons `POST /wp-admin/admin-ajax.php` `action=get_harga_emas_hari_ini&path=ajax/chart_interval/GOLD/1095`, dipotong ke 30 titik terakhir (asli 543 titik, 2023-11-20 → 2026-10-24) | Asli (dipotong) |
 | `chart-range-empty.json` | Respons `path=ajax/chart_range/GOLD/{from}/{to}` — selalu `data: []` | Asli |
+| `raw-2026-11-20T122046Z-final.json.gz` | Raw run harian 20 Nov 2026 19.20 WIB (`{ tables, chart }`), versi final 20 Nov: grafik dan buyback 1 g = 20 Nov (Rp2.115.000) | Asli |
+| `raw-2026-11-21T092035Z-sell-only.json.gz` | Raw run 21 Nov 2026 16.20 WIB (Sabtu): harga jual baru (1 g Rp2.278.500), buyback dan grafik masih 20 Nov, run `stale` (D-78) | Asli |
 
 Tabel 1 g pada 24 Okt 2026: harga beli Rp2.483.400, buyback Rp2.288.000. Titik terakhir grafik `[1792800000000, 2288000, 2288000, 2288000, 2277000]` (2026-10-24T00:00Z) = buyback 1 g.

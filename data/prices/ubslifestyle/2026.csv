@@ -483,3 +483,16 @@ date,source,brand,product,variant,weight_g,location,sell_price,buyback_price,sou
 2026-11-20,ubslifestyle,ubs,gold_bar,2026,25,,54250800,52888000,,2026-11-20T12:21:20Z,44734905145-1,scrape
 2026-11-20,ubslifestyle,ubs,gold_bar,2026,50,,108120000,105776000,,2026-11-20T12:21:20Z,44734905145-1,scrape
 2026-11-20,ubslifestyle,ubs,gold_bar,2026,100,,216091600,211552000,,2026-11-20T12:21:20Z,44734905145-1,scrape
+2026-11-21,ubslifestyle,ubs,gold_bar,2026,0.05,,196500,,,2026-11-21T23:04:53Z,local-20261121230406,backfill
+2026-11-21,ubslifestyle,ubs,gold_bar,2026,0.1,,313300,,,2026-11-21T23:04:53Z,local-20261121230406,backfill
+2026-11-21,ubslifestyle,ubs,gold_bar,2026,0.25,,713200,,,2026-11-21T23:04:53Z,local-20261121230406,backfill
+2026-11-21,ubslifestyle,ubs,gold_bar,2026,0.5,,1286100,,,2026-11-21T23:04:53Z,local-20261121230406,backfill
+2026-11-21,ubslifestyle,ubs,gold_bar,2026,1,,2278500,,,2026-11-21T23:04:53Z,local-20261121230406,backfill
+2026-11-21,ubslifestyle,ubs,gold_bar,2026,2,,4499500,,,2026-11-21T23:04:53Z,local-20261121230406,backfill
+2026-11-21,ubslifestyle,ubs,gold_bar,2026,3,,6733200,,,2026-11-21T23:04:53Z,local-20261121230406,backfill
+2026-11-21,ubslifestyle,ubs,gold_bar,2026,4,,8944300,,,2026-11-21T23:04:53Z,local-20261121230406,backfill
+2026-11-21,ubslifestyle,ubs,gold_bar,2026,5,,11033400,,,2026-11-21T23:04:53Z,local-20261121230406,backfill
+2026-11-21,ubslifestyle,ubs,gold_bar,2026,10,,21873000,,,2026-11-21T23:04:53Z,local-20261121230406,backfill
+2026-11-21,ubslifestyle,ubs,gold_bar,2026,25,,54506700,,,2026-11-21T23:04:53Z,local-20261121230406,backfill
+2026-11-21,ubslifestyle,ubs,gold_bar,2026,50,,108630000,,,2026-11-21T23:04:53Z,local-20261121230406,backfill
+2026-11-21,ubslifestyle,ubs,gold_bar,2026,100,,217110900,,,2026-11-21T23:04:53Z,local-20261121230406,backfill

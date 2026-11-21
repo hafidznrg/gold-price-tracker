@@ -8,6 +8,7 @@ import { pegadaianRawBrand } from './pegadaian-raw-brand';
 import { pegadaianSavings } from './pegadaian-savings';
 import type { BackfillJob } from './types';
 import { ubsHistory } from './ubs-history';
+import { ubsRawSell } from './ubs-raw-sell';
 import { worldbank } from './worldbank';
 import { xaus } from './xaus';
 
@@ -22,6 +23,7 @@ export const BACKFILL_JOB_IDS = [
   'jisdor',
   'annual-fx',
   'ubs-history',
+  'ubs-raw-sell',
   'logammulia-archive',
   'pegadaian-savings',
   'pegadaian-raw-brand',
@@ -38,6 +40,7 @@ export const BACKFILL_TASKS: Record<BackfillJobId, string> = {
   jisdor: 'P2-09',
   'annual-fx': 'P2-10',
   'ubs-history': 'P1-09',
+  'ubs-raw-sell': 'D-78',
   'logammulia-archive': 'D-29',
   'pegadaian-savings': 'D-30',
   'pegadaian-raw-brand': 'P6-08',
@@ -53,6 +56,7 @@ const registry: Partial<Record<BackfillJobId, BackfillJob>> = {
   worldbank,
   xaus,
   'ubs-history': ubsHistory,
+  'ubs-raw-sell': ubsRawSell,
   'logammulia-archive': logammuliaArchive,
   'pegadaian-savings': pegadaianSavings,
   'pegadaian-raw-brand': pegadaianRawBrand,
