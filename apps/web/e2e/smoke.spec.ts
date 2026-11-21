@@ -459,10 +459,10 @@ test.describe('Bandingkan (pengalih ke Riwayat harga, D-70)', () => {
     page,
   }) => {
     await page.goto('/explorer?r=6B');
-    const group = page.getByRole('radiogroup', { name: 'Gramasi pembanding' });
-    await expect(group.getByRole('radio', { checked: true })).toHaveCount(0);
-    await group.getByRole('radio', { name: '5 g', exact: true }).click();
-    await expect(group.getByRole('radio', { name: '5 g', exact: true })).toBeChecked();
+    const preset = page.getByRole('combobox', { name: 'Gramasi pembanding' });
+    await expect(preset).toHaveValue('');
+    await preset.selectOption({ label: '5 g' });
+    await expect(preset).toHaveValue('5');
     await expect(page).toHaveURL(/[?&]m=gram(&|$)/);
     const q = new URL(page.url()).searchParams;
     expect(q.get('s')).toContain('-5-sell');

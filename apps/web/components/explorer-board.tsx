@@ -539,6 +539,25 @@ export function ExplorerBoard({
             >
               Atur series ({active.length})
             </button>
+            {presetOptions.length > 0 ? (
+              // Preset D-70: satu kontrol ringkas sejajar judul, bukan deretan tombol kedua.
+              <div className="flex items-center gap-2">
+                <span className="text-sm whitespace-nowrap text-muted">Bandingkan semua brand</span>
+                <select
+                  aria-label="Gramasi pembanding"
+                  className="h-9 cursor-pointer rounded-field border border-line bg-surface2 px-2.5 text-sm font-semibold text-text"
+                  value={presetValue === null ? '' : weightKey(presetValue)}
+                  onChange={(e) => applyPreset(e.target.value)}
+                >
+                  {presetValue === null ? <option value="">Pilih gramasi</option> : null}
+                  {presetOptions.map((o) => (
+                    <option key={o.value} value={o.value}>
+                      {o.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            ) : null}
             <RangeControl
               size="sm"
               value={range}
@@ -547,19 +566,6 @@ export function ExplorerBoard({
               minDate={minDate && minDate !== '9999' ? minDate : undefined}
             />
           </div>
-          {presetOptions.length > 0 ? (
-            <div className="mb-3 flex flex-wrap items-center gap-x-3 gap-y-1.5">
-              <span className="text-sm font-semibold text-muted">Bandingkan semua brand</span>
-              <Segmented
-                label="Gramasi pembanding"
-                size="sm"
-                scroll
-                options={presetOptions}
-                value={presetValue === null ? null : weightKey(presetValue)}
-                onChange={applyPreset}
-              />
-            </div>
-          ) : null}
           {error ? (
             <Hint>Data gagal dimuat. Muat ulang halaman.</Hint>
           ) : active.length === 0 ? (
