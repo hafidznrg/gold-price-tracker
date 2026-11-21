@@ -7,6 +7,7 @@ import { formatDate, formatTimeWib } from './format';
  * - Pegadaian: `source_updated_at` = waktu entri harga diterbitkan (±10.00–10.30 WIB, dari `idHarga`
  *   / `id` epoch ms), bukan jam snapshot 18.32 (D-25) → ditulis "harga terbit", bukan "snapshot".
  * - Lotus Archi (lotusarchi.com): halaman tanpa jam terbit → tanggal saja (D-65).
+ * - EMASKU (hrtagold.id): `updated_date` API = waktu terbit tabel → tanggal + jam, "harga terbit" (P7-03).
  * - Logam Mulia: "Terakhir diperbarui" dari situs (D-26).
  */
 const SOURCE_DOMAIN: Record<PriceSource, string> = {
@@ -15,6 +16,7 @@ const SOURCE_DOMAIN: Record<PriceSource, string> = {
   ubslifestyle: 'ubslifestyle.com',
   galeri24: 'galeri24.co.id',
   lotusarchi: 'lotusarchi.com',
+  hrtagold: 'hrtagold.id',
 };
 
 const SOURCE_VERB: Record<PriceSource, string> = {
@@ -23,6 +25,7 @@ const SOURCE_VERB: Record<PriceSource, string> = {
   ubslifestyle: 'data',
   galeri24: 'harga terbit',
   lotusarchi: 'data',
+  hrtagold: 'harga terbit',
 };
 
 /** Bagian-bagian atribusi untuk tata letak berkolom: domain dan keterangan waktu. */

@@ -14,6 +14,12 @@ describe('enum Fase 6', () => {
     expect(ScraperId.safeParse('lotusarchi').success).toBe(true);
   });
 
+  it('hrtagold adalah sumber harga dan modul scraper, emasku brand (P7-03)', () => {
+    expect(Brand.safeParse('emasku').success).toBe(true);
+    expect(PriceSource.safeParse('hrtagold').success).toBe(true);
+    expect(ScraperId.safeParse('hrtagold').success).toBe(true);
+  });
+
   it('PRICE_FORMULA adalah alasan karantina (V-12)', () => {
     expect(QuarantineReason.safeParse('PRICE_FORMULA').success).toBe(true);
     expect(QuarantineReason.safeParse('LAINNYA').success).toBe(false);

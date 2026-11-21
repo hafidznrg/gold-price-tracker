@@ -39,6 +39,14 @@ const catalog: CatalogItem[] = expandCatalog({
       active_to: null,
     },
     {
+      source: 'hrtagold',
+      brand: 'emasku',
+      product: 'gold_bar',
+      weights: [0.1, 0.25, 0.5, 1, 2, 5, 10, 25, 50, 100, 125, 150, 175, 200, 250, 500, 1000],
+      active_from: '2010-01-01',
+      active_to: null,
+    },
+    {
       source: 'logammulia',
       brand: 'antam',
       product: 'gold_bar',
@@ -459,5 +467,103 @@ describe('galeri24 (P6-05)', () => {
       expect(r.rows).toHaveLength(14);
       expect(r.held).toEqual([{ reason_code: 'PRICE_FORMULA', rows: [rows[3]] }]);
     }
+  });
+});
+
+describe('hrtagold (P7-06)', () => {
+  const GOLD = [0.1, 0.25, 0.5, 1, 2, 5, 10, 25, 50, 100, 125, 150, 175, 200, 250, 500, 1000];
+  const hrta = (variant: string, w: number, over: Partial<Candidate> = {}) =>
+    candidate({
+      source: 'hrtagold',
+      brand: 'emasku',
+      variant,
+      weight_g: w,
+      sell_price: Math.round(2_258_000 * w) + (variant ? 100_000 : 0),
+      buyback_price: Math.round(2_122_000 * w),
+      source_updated_at: '2026-10-26T08:12:26+07:00',
+      ...over,
+    });
+  const goldDay = (n = GOLD.length) => GOLD.slice(0, n).map((w) => hrta('', w));
+  const prime = () =>
+    [25, 50, 100].map((w) => hrta('prime', w, { buyback_price: hrta('', w).buyback_price }));
+  const hInput = (rows: Candidate[], over: Partial<ValidateInput> = {}) =>
+    input(rows, { source: 'hrtagold', ...over });
+
+  it('17 Gold + 3 Prime hari ini → ok, tanpa catatan', () => {
+    const r = validate(hInput([...goldDay(), ...prime()]));
+    expect(r.outcome).toBe('ok');
+    if (r.outcome === 'ok') {
+      expect(r.rows).toHaveLength(20);
+      expect(r.notes).toBeUndefined();
+    }
+  });
+
+  it('V-04: 12 baris Gold lolos, 11 gagal; Prime tidak dihitung', () => {
+    expect(validate(hInput(goldDay(12))).outcome).toBe('ok');
+    const r = validate(hInput([...goldDay(11), ...prime()]));
+    expect(r).toMatchObject({ outcome: 'failed', error_code: 'VALIDATION_FAILED' });
+    expect(r.outcome === 'failed' && r.error_message).toBe('V-04: 11 gramasi Gold (minimal 12)');
+  });
+
+  it('V-03 pada Gold (buyback ≥ jual) → VALIDATION_FAILED', () => {
+    const rows = goldDay().map((r) =>
+      r.weight_g === 1 ? { ...r, buyback_price: r.sell_price } : r,
+    );
+    expect(validate(hInput(rows))).toMatchObject({
+      outcome: 'failed',
+      error_code: 'VALIDATION_FAILED',
+    });
+  });
+
+  it('V-03 pada Prime → baris dibuang + catatan, Gold tetap lolos', () => {
+    const p = prime().map((r) => (r.weight_g === 50 ? { ...r, buyback_price: r.sell_price } : r));
+    const r = validate(hInput([...goldDay(), ...p]));
+    expect(r.outcome).toBe('ok');
+    if (r.outcome === 'ok') {
+      expect(r.rows).toHaveLength(19);
+      expect(r.rows.some((x) => x.variant === 'prime' && x.weight_g === 50)).toBe(false);
+      expect(r.notes).toEqual([expect.stringMatching(/^V-03: prime 50 g buyback .* dibuang$/)]);
+      expect(r.held).toEqual([]);
+    }
+  });
+
+  it('cek lunak: buyback Prime ≠ Gold → hanya catatan, baris tetap masuk', () => {
+    const p = prime().map((r) => (r.weight_g === 25 ? { ...r, buyback_price: 50_000_000 } : r));
+    const r = validate(hInput([...goldDay(), ...p]));
+    expect(r.outcome).toBe('ok');
+    if (r.outcome === 'ok') {
+      expect(r.rows).toHaveLength(20);
+      expect(r.notes).toEqual([expect.stringMatching(/Prime 25 g 50000000 ≠ Gold 53050000/)]);
+    }
+  });
+
+  it('V-05: lonjakan Prime dibandingkan dengan Prime sendiri', () => {
+    const yesterday = '2026-10-25';
+    const existing = [
+      stored({ ...hrta('', 25), date: yesterday }),
+      stored({ ...hrta('prime', 25), date: yesterday }),
+    ];
+    const jumpPrime = [
+      ...goldDay(),
+      ...prime().map((r) => (r.weight_g === 25 ? { ...r, sell_price: r.sell_price! * 1.5 } : r)),
+    ];
+    const r = validate(hInput(jumpPrime, { existing }));
+    expect(r.outcome).toBe('ok');
+    if (r.outcome === 'ok') {
+      expect(r.held).toEqual([
+        {
+          reason_code: 'PRICE_JUMP',
+          rows: [expect.objectContaining({ variant: 'prime', weight_g: 25 })],
+        },
+      ]);
+      expect(r.rows).toHaveLength(19);
+    }
+  });
+
+  it('tanggal data kemarin → stale; dengan accept_previous_day → ok', () => {
+    const rows = goldDay().map((r) => ({ ...r, date: '2026-10-25' }));
+    const parsed = { rows, dataDate: '2026-10-25', sourceUpdatedAt: null, stale: null };
+    expect(validate(hInput(rows, { parsed })).outcome).toBe('stale');
+    expect(validate(hInput(rows, { parsed, acceptPreviousDay: true })).outcome).toBe('ok');
   });
 });

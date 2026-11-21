@@ -12,6 +12,7 @@ export const SCRAPER_IDS = [
   'worldbank',
   'galeri24',
   'lotusarchi',
+  'hrtagold',
 ] as const;
 export const ScraperId = z.enum(SCRAPER_IDS);
 export type ScraperId = z.infer<typeof ScraperId>;
@@ -22,6 +23,7 @@ export const PRICE_SOURCES = [
   'ubslifestyle',
   'galeri24',
   'lotusarchi',
+  'hrtagold',
 ] as const;
 export const PriceSource = z.enum(PRICE_SOURCES);
 export type PriceSource = z.infer<typeof PriceSource>;
@@ -31,8 +33,8 @@ export const MACRO_SOURCES = ['xaus', 'worldbank', 'bi', 'ecb', 'wdi'] as const;
 export const MacroSource = z.enum(MACRO_SOURCES);
 export type MacroSource = z.infer<typeof MacroSource>;
 
-/** `pegadaian` = produk milik Pegadaian sendiri (Tabungan Emas, D-30). */
-export const BRANDS = ['antam', 'ubs', 'galeri24', 'pegadaian', 'lotusarchi'] as const;
+/** `emasku` = merek Hartadinata (hrtagold.id, Fase 7). `pegadaian` = produk milik Pegadaian sendiri (Tabungan Emas, D-30). */
+export const BRANDS = ['antam', 'ubs', 'galeri24', 'pegadaian', 'lotusarchi', 'emasku'] as const;
 export const Brand = z.enum(BRANDS);
 export type Brand = z.infer<typeof Brand>;
 

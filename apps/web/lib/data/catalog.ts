@@ -142,6 +142,7 @@ export const SOURCE_LABELS: Record<PriceSource, string> = {
   ubslifestyle: 'UBS Lifestyle',
   galeri24: 'Galeri24',
   lotusarchi: 'Lotus Archi',
+  hrtagold: 'EMASKU (Hartadinata)',
 };
 
 /** Domain untuk atribusi "Sumber: …". */
@@ -151,6 +152,7 @@ export const SOURCE_DOMAINS: Record<PriceSource, string> = {
   ubslifestyle: 'ubslifestyle.com',
   galeri24: 'galeri24.co.id',
   lotusarchi: 'lotusarchi.com',
+  hrtagold: 'hrtagold.id',
 };
 
 export const BRAND_LABELS: Record<Brand, string> = {
@@ -159,6 +161,7 @@ export const BRAND_LABELS: Record<Brand, string> = {
   galeri24: 'Galeri24',
   pegadaian: 'Pegadaian',
   lotusarchi: 'Lotus Archi',
+  emasku: 'EMASKU',
 };
 
 export const PRODUCT_LABELS: Record<string, string> = {
@@ -256,6 +259,8 @@ export function colorToken(ref: Pick<SeriesRef, 'brand' | 'product'>): ColorToke
       return 'tab';
     case 'lotusarchi':
       return 'lotus';
+    case 'emasku':
+      return 'muted'; // sementara; token warna `emasku` di P7-09
   }
 }
 
@@ -297,6 +302,7 @@ export const SCRAPER_LABELS: Record<ScraperId, string> = {
   worldbank: 'World Bank Pink Sheet',
   galeri24: 'Galeri24',
   lotusarchi: 'Lotus Archi',
+  hrtagold: 'HRTA Gold',
 };
 
 /** Urutan file series di kartu Hari ini dan halaman Data (mockup). */

@@ -44,7 +44,7 @@ function sliceTable(html: string, openTagStart: string): string | null {
 }
 
 // `challenge-platform/scripts/jsd` ikut disuntik di halaman normal; tantangan asli memakai `/h/`.
-const CHALLENGE_RE = /Just a moment|cf-chl|challenge-platform\/h\//i;
+export const CHALLENGE_RE = /Just a moment|cf-chl|challenge-platform\/h\//i;
 
 const daysBetween = (from: string, to: string) =>
   Math.round((Date.parse(`${to}T00:00:00Z`) - Date.parse(`${from}T00:00:00Z`)) / 86_400_000);

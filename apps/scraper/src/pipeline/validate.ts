@@ -39,6 +39,7 @@ export const MIN_ROWS = {
   logammulia: 12,
   galeri24: 5,
   lotusarchi: 8,
+  hrtagold: 12,
 } as const;
 /** Brand yang wajib ada di Pegadaian (D-20). */
 export const PEGADAIAN_BRANDS = ['antam', 'ubs', 'galeri24'] as const;
@@ -69,7 +70,7 @@ export type ValidateFailed = { outcome: 'failed'; error_code: ErrorCode; error_m
 export type ValidateResult =
   | ValidateFailed
   | { outcome: 'stale'; reason: string }
-  | { outcome: 'ok'; rows: Candidate[]; held: HeldBatch[] };
+  | { outcome: 'ok'; rows: Candidate[]; held: HeldBatch[]; notes?: string[] };
 
 const fail = (error_code: ErrorCode, error_message: string): ValidateFailed => ({
   outcome: 'failed',
@@ -105,6 +106,42 @@ function checkSpread(rows: readonly Candidate[]): string | null {
   return bad
     ? `V-03: buyback ${bad.buyback_price} ≥ jual ${bad.sell_price} (${bad.brand} ${bad.variant} ${bad.weight_g} g)`
     : null;
+}
+
+const rowLabel = (r: Pick<Candidate, 'variant' | 'weight_g'>) =>
+  `${r.variant || 'gold'} ${r.weight_g} g`;
+
+/**
+ * hrtagold (P7-06): Prime opsional tidak boleh menggagalkan seri Gold. V-03 pada baris Prime
+ * (buyback ≥ jual) → baris dibuang + catatan. Cek lunak: buyback Prime ≠ buyback Gold untuk
+ * gramasi yang sama → hanya catatan (tanda produk berubah), bukan karantina.
+ */
+function filterHrtaPrime(rows: readonly Candidate[]): { rows: Candidate[]; notes: string[] } {
+  const notes: string[] = [];
+  const kept: Candidate[] = [];
+  for (const r of rows) {
+    if (
+      r.variant !== '' &&
+      r.sell_price !== null &&
+      r.buyback_price !== null &&
+      !(r.buyback_price < r.sell_price)
+    ) {
+      notes.push(`V-03: ${rowLabel(r)} buyback ${r.buyback_price} ≥ jual ${r.sell_price}, dibuang`);
+      continue;
+    }
+    kept.push(r);
+  }
+  const gold = new Map(kept.filter((r) => r.variant === '').map((r) => [r.weight_g, r]));
+  for (const r of kept) {
+    if (r.variant !== 'prime') continue;
+    const g = gold.get(r.weight_g);
+    if (g && g.buyback_price !== r.buyback_price) {
+      notes.push(
+        `buyback Prime ${r.weight_g} g ${r.buyback_price} ≠ Gold ${g.buyback_price} (produk berubah?)`,
+      );
+    }
+  }
+  return { rows: kept, notes };
 }
 
 /** Tahun produksi terbaru di tabel UBS = "tahun berjalan" untuk V-04 dan D-19. */
@@ -148,6 +185,13 @@ function checkMinRows(
       return rows.length >= MIN_ROWS.lotusarchi
         ? null
         : `V-04: ${rows.length} gramasi (minimal ${MIN_ROWS.lotusarchi})`;
+    case 'hrtagold': {
+      // Hanya Gold (`variant = ''`): Prime opsional dan tidak dihitung (P7-06).
+      const n = rows.filter((r) => r.variant === '').length;
+      return n >= MIN_ROWS.hrtagold
+        ? null
+        : `V-04: ${n} gramasi Gold (minimal ${MIN_ROWS.hrtagold})`;
+    }
     case 'logammulia':
       // `note` = fallback 1 g saat tabel gagal dibaca (FR-04): sengaja hanya satu baris 1 g.
       return (note && rows.length === 1 && rows[0]!.weight_g === 1) ||
@@ -193,7 +237,13 @@ const jumped = (prev: number | null, next: number | null) =>
 
 export function validate(input: ValidateInput): ValidateResult {
   const { source, parsed, catalog, existing, today } = input;
-  const rows = parsed.rows;
+  let rows = parsed.rows;
+  const notes: string[] = [];
+  if (source === 'hrtagold') {
+    const f = filterHrtaPrime(rows);
+    rows = f.rows;
+    notes.push(...f.notes);
+  }
 
   const schema = checkSchema(rows);
   if (schema) return fail('SCHEMA_INVALID', `V-01: ${schema}`);
@@ -245,9 +295,10 @@ export function validate(input: ValidateInput): ValidateResult {
       outcome: 'ok',
       rows: [],
       held: [...held, { reason_code: 'MASS_REVISION', rows: passed }],
+      ...(notes.length > 0 ? { notes } : {}),
     };
   }
-  return { outcome: 'ok', rows: passed, held };
+  return { outcome: 'ok', rows: passed, held, ...(notes.length > 0 ? { notes } : {}) };
 }
 
 /**

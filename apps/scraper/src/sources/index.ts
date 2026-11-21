@@ -1,5 +1,6 @@
 import type { ScraperId } from '@gold/schema';
 import { galeri24 } from './galeri24';
+import { hrtagold } from './hrtagold';
 import { jisdor } from './jisdor';
 import { logammulia } from './logammulia';
 import { lotusarchi } from './lotusarchi';
@@ -19,6 +20,7 @@ const registry: Partial<Record<ScraperId, SourceScraper>> = {
   worldbank,
   galeri24,
   lotusarchi,
+  hrtagold,
 };
 
 export function getScraper(id: ScraperId): SourceScraper | undefined {

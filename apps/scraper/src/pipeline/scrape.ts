@@ -92,6 +92,7 @@ export async function scrape(opts: ScrapeOptions): Promise<ScrapeRun> {
   let missed = false;
   let rows: unknown[] = [];
   let held: { rows: unknown[] }[] = [];
+  let validateNotes: string[] = [];
   let spot: SpotSnapshot | null = null;
 
   try {
@@ -171,6 +172,7 @@ export async function scrape(opts: ScrapeOptions): Promise<ScrapeRun> {
     } else {
       rows = result.rows;
       held = result.held;
+      validateNotes = result.notes ?? [];
     }
   }
 
@@ -207,7 +209,9 @@ export async function scrape(opts: ScrapeOptions): Promise<ScrapeRun> {
     error_code: failure?.code ?? null,
     // Dipotong ke 500 karakter: catatan parser yang panjang tidak boleh menggagalkan merge.
     error_message: ((m) => (m === null ? null : errorMessageOf(m)))(
-      failure?.message ?? staleReason ?? parsed?.note ?? null,
+      failure?.message ??
+        staleReason ??
+        ([parsed?.note, ...validateNotes].filter(Boolean).join('; ') || null),
     ),
     data_date: parsed?.dataDate ?? null,
     rows_parsed: rowsParsed,

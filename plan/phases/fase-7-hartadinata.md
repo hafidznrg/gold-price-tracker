@@ -54,12 +54,12 @@
 
 ### Gelombang B — skema dan konfigurasi
 
-- [ ] **P7-03** Skema `@gold/schema` (`packages/schema/src/enums.ts`) + penyesuaian tipe di web. — S
+- [x] **P7-03** Skema `@gold/schema` (`packages/schema/src/enums.ts`) + penyesuaian tipe di web. — S
   - `SCRAPER_IDS` dan `PRICE_SOURCES`: tambah `hrtagold`. `BRANDS`: tambah `emasku`. `variant = 'prime'` bukan enum (string bebas), tidak perlu perubahan skema.
   - **Web ikut berubah di commit yang sama** (pelajaran P6-02): `SOURCE_LABELS`, `SOURCE_DOMAINS`, `BRAND_LABELS`, `SCRAPER_LABELS` (`apps/web/lib/data/catalog.ts`), `SOURCE_DOMAIN` dan `SOURCE_VERB` (`apps/web/lib/source-stamp.ts`) bertipe `Record<…>`; tanpa entri baru `pnpm typecheck` gagal. Isi label/domain minimal (`EMASKU`, `hrtagold.id`); UI di Gelombang E.
   - Uji `packages/schema/test/*` untuk enum baru; tambah kasus `derive.test.ts`: `isYearVariant('prime') === false`, `newestYearVariant` mengabaikan `prime`, dan `matchAcrossSources` memilih `variant ''` untuk sumber dengan varian `''` + `prime`.
   - Nilai enum baru bukan perubahan kolom → `SCHEMA_VERSION` tetap (DATA-MODEL §8).
-- [ ] **P7-04** Konfigurasi sumber (`enabled: false`). — S
+- [x] **P7-04** Konfigurasi sumber (`enabled: false`). — S
   - `config/sources.yml`, usulan (sesuaikan dengan P7-01):
 
     ```yaml
@@ -81,7 +81,7 @@
 
 ### Gelombang C — scraper
 
-- [ ] **P7-05** `apps/scraper/src/sources/hrtagold.ts` (`hrtagold@1.0.0`), daftarkan di `sources/index.ts`, plus katalog. — `FR-02` (perluasan), `FR-10` · M
+- [x] **P7-05** `apps/scraper/src/sources/hrtagold.ts` (`hrtagold@1.0.0`), daftarkan di `sources/index.ts`, plus katalog. — `FR-02` (perluasan), `FR-10` · M
   - `fetchRaw`: satu `GET` JSON, `Accept: application/json`, User-Agent proyek. `403`/`429`/`503` berisi tantangan atau HTTP 200 berisi tantangan → `BLOCKED` tanpa retry agresif; 200 bukan JSON → `PARSE_ERROR`. Raw = respons utuh (±4 KB), `application/json`.
   - `parse` (murni):
     - Wajib: `code = 200`, `updated_date` ISO valid, `data` array. Bentuk tak dikenal (data kosong, seri `Gold` hilang, angka bukan bilangan bulat aman) → `PARSE_ERROR`.
@@ -97,7 +97,7 @@
     - 17 baris Gold + 3 baris Prime; nilai 1 g (2.258.000 / 2.122.000), 0,1 g, 1.000 g;
     - `variant` benar per seri; urutan array diacak → hasil sama;
     - tanggal kemarin → `stale`; `updated_date` rusak → `PARSE_ERROR`; Gold hilang → `PARSE_ERROR`; seri tak dikenal → dilewati + note; tantangan → `BLOCKED`.
-- [ ] **P7-06** Validasi untuk `hrtagold` di `apps/scraper/src/pipeline/validate.ts`. — `FR-10` · S
+- [x] **P7-06** Validasi untuk `hrtagold` di `apps/scraper/src/pipeline/validate.ts`. — `FR-10` · S
   - V-04: `MIN_ROWS.hrtagold = 12` baris `variant = ''` (dari 17 gramasi Gold). Prime tidak dihitung (opsional).
   - V-03: buyback < jual per baris; pelanggaran pada Gold → `VALIDATION_FAILED`; pada Prime → baris dibuang + `note` (Prime opsional, tidak boleh menggagalkan seri Gold; aturan baris opsional Fase 6).
   - V-05/V-06: berlaku seperti sumber ritel lain; `seriesKey` memuat `variant`, jadi lompatan Prime dibandingkan dengan Prime sendiri.

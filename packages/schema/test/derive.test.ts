@@ -296,6 +296,22 @@ describe('§6.2 as-of join', () => {
       ).toBe(2_464_000);
     });
 
+    it("Prime (EMASKU, P7-03): bukan varian tahun; sumber '' + prime memilih ''", () => {
+      expect(isYearVariant('prime')).toBe(false);
+      expect(newestYearVariant([{ variant: 'prime' }, { variant: '' }])).toBeNull();
+      expect(newestYearVariant([{ variant: 'prime' }, { variant: '2025' }])).toBe('2025');
+      const hrta = { source: 'hrtagold', brand: 'emasku', weight_g: 25 } as const;
+      const h = [
+        priceRow({ ...hrta, variant: 'prime', sell_price: 55_575_000, buyback_price: 53_050_000 }),
+        priceRow({ ...hrta, variant: '', sell_price: 55_050_000, buyback_price: 53_050_000 }),
+      ];
+      const k = { date: '2026-10-24', brand: 'emasku', product: 'gold_bar', weight_g: 25 } as const;
+      expect(matchAcrossSources(h, k).get('hrtagold')!.sell_price).toBe(55_050_000);
+      expect(matchAcrossSources(h, { ...k, variant: 'prime' }).get('hrtagold')!.sell_price).toBe(
+        55_575_000,
+      );
+    });
+
     it('pengguna bisa memilih tahun lain', () => {
       expect(
         matchAcrossSources(rows, { ...key, variant: '2025' }).get('ubslifestyle')!.buyback_price,
