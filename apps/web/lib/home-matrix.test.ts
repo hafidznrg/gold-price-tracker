@@ -22,12 +22,13 @@ const CELLS: TodayCells = {
   'ubsl-ubs': { '1': c(2_490_000, 2_290_000), '0.5': c(1_300_000) },
   'g24-g24': { '1': c(2_430_000, 2_256_000) },
   'g24-lotus': { '1': c(2_405_000, 2_226_000) },
+  'hr-emasku': { '1': c(2_258_000, 2_122_000), '0.1': c(300_000, 250_000) },
   tab: { linear: c(2_385_000, 2_289_000) },
 };
 
 describe('matrixWeights', () => {
   it('gabungan gramasi, urut naik, tanpa linear', () => {
-    expect(matrixWeights(CELLS)).toEqual([0.5, 1, 5]);
+    expect(matrixWeights(CELLS)).toEqual([0.1, 0.5, 1, 5]);
   });
 
   it('kolom: Galeri24 dan Lotus Archi dari sumber galeri24', () => {
@@ -37,13 +38,15 @@ describe('matrixWeights', () => {
       'ubsl-ubs',
       'g24-g24',
       'g24-lotus',
+      'hr-emasku',
     ]);
-    expect(MATRIX_COLS.slice(3).map((d) => d.source)).toEqual(['galeri24', 'galeri24']);
+    expect(MATRIX_COLS.slice(3, 5).map((d) => d.source)).toEqual(['galeri24', 'galeri24']);
     expect(TREND_DEFS.map((d) => d.id)).toEqual([
       'lm-antam',
       'ubsl-ubs',
       'g24-g24',
       'g24-lotus',
+      'hr-emasku',
       'tab',
     ]);
   });
@@ -53,9 +56,9 @@ describe('buildMatrix', () => {
   it('jual: termurah ditandai, sel kosong null', () => {
     const r1 = buildMatrix(CELLS, 'jual', 'keping').find((r) => r.w === 1)!;
     expect(r1.cells.map((x) => x.value)).toEqual([
-      2_500_000, 2_540_000, 2_490_000, 2_430_000, 2_405_000,
+      2_500_000, 2_540_000, 2_490_000, 2_430_000, 2_405_000, 2_258_000,
     ]);
-    expect(r1.cells.map((x) => x.best)).toEqual([false, false, false, false, true]);
+    expect(r1.cells.map((x) => x.best)).toEqual([false, false, false, false, false, true]);
   });
 
   it('per gram membagi dengan berat', () => {
@@ -63,6 +66,7 @@ describe('buildMatrix', () => {
     expect(r5.cells[0]?.value).toBe(2_480_000);
     expect(r5.cells[3]?.value).toBeNull();
     expect(r5.cells[4]?.value).toBeNull();
+    expect(r5.cells[5]?.value).toBeNull();
     expect(r5.cells[0]?.best).toBe(true);
   });
 
@@ -75,8 +79,9 @@ describe('buildMatrix', () => {
       2_290_000,
       2_256_000,
       2_226_000,
+      2_122_000,
     ]);
-    expect(r1.cells.map((x) => x.best)).toEqual([true, false, false, false, false]);
+    expect(r1.cells.map((x) => x.best)).toEqual([true, false, false, false, false, false]);
     expect(rows.find((r) => r.w === 5)!.cells.every((x) => !x.best && x.value === null)).toBe(true);
   });
 
@@ -84,7 +89,8 @@ describe('buildMatrix', () => {
     const a = buildMatrix(CELLS, 'spread', 'keping').find((r) => r.w === 1)!;
     const b = buildMatrix(CELLS, 'spread', 'gram').find((r) => r.w === 1)!;
     expect(a.cells[0]?.value).toBeCloseTo(6, 5);
-    expect(a.cells.map((x) => x.best)).toEqual([true, false, false, false, false]);
+    expect(a.cells.map((x) => x.best).slice(0, 5)).toEqual([true, false, false, false, false]);
+    expect(a.cells[5]?.value).toBeCloseTo(6.0, 0);
     expect(b).toEqual(a);
   });
 

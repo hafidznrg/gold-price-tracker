@@ -33,13 +33,23 @@ const SOURCES: readonly PriceSource[] = [
   'ubslifestyle',
   'galeri24',
   'lotusarchi',
+  'hrtagold',
 ];
-const BRANDS: readonly Brand[] = ['antam', 'ubs', 'galeri24', 'pegadaian', 'lotusarchi'];
+const BRANDS: readonly Brand[] = ['antam', 'ubs', 'galeri24', 'pegadaian', 'lotusarchi', 'emasku'];
 
 /** Varian yang menjadi series sendiri di Explorer (tidak digabung ke series biasa). */
 export const NON_PEGADAIAN = 'non_pegadaian';
-/** Akhiran segmen brand di URL untuk varian non-Pegadaian: `galeri24-antam_np-1-buyback`. */
-const NP_SUFFIX = '_np';
+/** EMASKU Prime (hrtagold, 25/50/100 g): seri sendiri, tidak digabung ke Gold (P7-09). */
+export const PRIME = 'prime';
+/** Varian yang menjadi series sendiri di Explorer. */
+export type SeparateVariant = typeof NON_PEGADAIAN | typeof PRIME;
+/**
+ * Akhiran segmen brand di URL untuk varian terpisah: `galeri24-antam_np-1-buyback`,
+ * `hrtagold-emasku_prime-25-sell`.
+ */
+const VARIANT_SUFFIX: Record<SeparateVariant, string> = { non_pegadaian: '_np', prime: '_prime' };
+const suffixOf = (v: SeparateVariant | undefined): string => (v ? VARIANT_SUFFIX[v] : '');
+const isSeparateVariant = (v: string): v is SeparateVariant => v === NON_PEGADAIAN || v === PRIME;
 
 // ---------------------------------------------------------------------------
 // Kunci di URL
@@ -57,8 +67,11 @@ export interface SeriesPick {
   brand: Brand;
   w: number;
   price: PriceField;
-  /** Hanya `non_pegadaian` (Antam di Galeri24): series buyback terpisah, tidak digabung. */
-  variant?: typeof NON_PEGADAIAN;
+  /**
+   * `non_pegadaian` (Antam di Galeri24): series buyback terpisah; `prime` (EMASKU): seri Prime
+   * sendiri. Keduanya tidak digabung ke seri biasa.
+   */
+  variant?: SeparateVariant;
 }
 
 export const DEFAULT_PICKS: SeriesPick[] = [
@@ -71,15 +84,17 @@ export const DEFAULT_PICKS: SeriesPick[] = [
 export const DEFAULT_RANGE: RangeValue = '1B';
 
 export function encodePick(p: SeriesPick): string {
-  return `${p.source}-${p.brand}${p.variant ? NP_SUFFIX : ''}-${weightKey(p.w)}-${p.price}`;
+  return `${p.source}-${p.brand}${suffixOf(p.variant)}-${weightKey(p.w)}-${p.price}`;
 }
 
 export function decodePick(key: string): SeriesPick | null {
   const parts = key.split('-');
   if (parts.length !== 4) return null;
   const [source, brandKey, w, price] = parts as [string, string, string, string];
-  const np = brandKey.endsWith(NP_SUFFIX);
-  const brand = np ? brandKey.slice(0, -NP_SUFFIX.length) : brandKey;
+  const variant = (Object.keys(VARIANT_SUFFIX) as SeparateVariant[]).find((v) =>
+    brandKey.endsWith(VARIANT_SUFFIX[v]),
+  );
+  const brand = variant ? brandKey.slice(0, -VARIANT_SUFFIX[variant].length) : brandKey;
   if (!SOURCES.includes(source as PriceSource) || !BRANDS.includes(brand as Brand)) return null;
   if (!PRICES.includes(price as PriceField)) return null;
   const weight = Number(w);
@@ -89,7 +104,7 @@ export function decodePick(key: string): SeriesPick | null {
     brand: brand as Brand,
     w: weight,
     price: price as PriceField,
-    ...(np ? { variant: NON_PEGADAIAN } : {}),
+    ...(variant ? { variant } : {}),
   };
 }
 
@@ -158,17 +173,20 @@ export interface ExplorerOption {
   first: Record<PriceField, string | null>;
   /** `true` = buyback dihitung dari buyback 1 g × berat (D-39); sumber tidak mencatatnya. */
   buybackFromGram?: boolean;
-  /** `non_pegadaian` = series buyback sendiri (keping dibeli di luar Pegadaian); tidak ada harga jual. */
-  variant?: typeof NON_PEGADAIAN;
+  /**
+   * `non_pegadaian` = series buyback sendiri (keping dibeli di luar Pegadaian), tanpa harga jual;
+   * `prime` = seri EMASKU Prime (jual + buyback), terpisah dari Gold.
+   */
+  variant?: SeparateVariant;
 }
 
 export function optionId(o: Pick<SeriesPick, 'source' | 'brand' | 'w' | 'variant'>): string {
-  return `${o.source}-${o.brand}${o.variant ? NP_SUFFIX : ''}-${weightKey(o.w)}`;
+  return `${o.source}-${o.brand}${suffixOf(o.variant)}-${weightKey(o.w)}`;
 }
 
 /** Kunci brand di pemilih: `antam` atau `antam_np` (Antam non-Pegadaian terpisah dari Antam). */
 export function optionBrandKey(o: Pick<ExplorerOption, 'brand' | 'variant'>): string {
-  return o.variant ? `${o.brand}${NP_SUFFIX}` : o.brand;
+  return `${o.brand}${suffixOf(o.variant)}`;
 }
 
 /** Nama brand di pemilih dan label series; "Antam non-Pegadaian" untuk varian terpisah. */
@@ -181,7 +199,7 @@ export function explorerOptions(meta: Pick<MetaFile, 'series'>): ExplorerOption[
   const groups = new Map<string, MetaFile['series']>();
   for (const s of meta.series) {
     const k =
-      optionId({ ...s, variant: s.variant === NON_PEGADAIAN ? NON_PEGADAIAN : undefined }) +
+      optionId({ ...s, variant: isSeparateVariant(s.variant) ? s.variant : undefined }) +
       `-${s.product}`;
     groups.set(k, [...(groups.get(k) ?? []), s]);
   }
@@ -203,6 +221,25 @@ export function explorerOptions(meta: Pick<MetaFile, 'series'>): ExplorerOption[
         variants: [NON_PEGADAIAN],
         first: { sell: null, buyback: min(rows.map((r) => r.first_buyback_date)) },
         variant: NON_PEGADAIAN,
+      });
+      continue;
+    }
+    if (r0.variant === PRIME) {
+      // Seri Prime sendiri (jual + buyback per keping); tidak pernah menggeser Gold.
+      out.push({
+        id: optionId({ ...r0, variant: PRIME }),
+        source: r0.source,
+        brand: r0.brand,
+        product: r0.product,
+        kind: productKind(r0.product),
+        file: r0.file,
+        w: r0.w,
+        variants: [PRIME],
+        first: {
+          sell: min(rows.map((r) => r.first_sell_date)),
+          buyback: min(rows.map((r) => r.first_buyback_date)),
+        },
+        variant: PRIME,
       });
       continue;
     }

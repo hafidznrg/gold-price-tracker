@@ -27,7 +27,7 @@ export function SiteHeader({ status }: { status?: ReactNode }) {
           <span className="flex min-w-0 flex-col leading-[1.1]">
             <Wordmark className="text-xl max-sm:text-lg" />
             <span className="hidden text-[9.5px] tracking-[.16em] text-faint uppercase 2xl:block">
-              Antam · UBS · Galeri24 · Lotus Archi
+              Antam · UBS · Galeri24 · Lotus Archi · EMASKU
             </span>
           </span>
         </Link>

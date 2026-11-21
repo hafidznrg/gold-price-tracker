@@ -119,13 +119,13 @@
 
 ### Gelombang E — web
 
-- [ ] **P7-09** Data layer web: sumber `hrtagold`, brand `emasku`, varian `prime`. — `FR-20`–`FR-23`, `FR-30` · S
+- [x] **P7-09** Data layer web: sumber `hrtagold`, brand `emasku`, varian `prime`. — `FR-20`–`FR-23`, `FR-30` · S
   - `lib/data/catalog.ts`: `PRICE_SOURCE_IDS`, `SOURCE_LABELS` (`EMASKU (Hartadinata)`), `SOURCE_DOMAINS` (`hrtagold.id`), `BRAND_IDS`, `BRAND_LABELS` (`EMASKU`), `FILE_ORDER` (`hrtagold-emasku` setelah `lotusarchi-lotusarchi`).
   - Token warna `emasku`: tambah ke `ColorToken` (`lib/data/types.ts`), `COLOR_CLASSES`, variabel `--emasku` terang/gelap di `app/globals.css`. Pilih hue yang belum dipakai token lain (`--antam`, `--ubs`, `--g24`, `--tab`, `--lotus`) dan **cek kontras** seperti D-62; usulan ditetapkan saat implementasi.
   - `lib/explorer.ts` `BRANDS`; `app/data/page.tsx` `BRAND_NAME`; `lib/source-stamp.ts` (atribusi `hrtagold.id`, kata kerja sumber).
   - Varian `prime`: pastikan `lib/explorer.ts`, `lib/bandingkan.ts`, `lib/spread.ts`, `lib/build/latest.ts`, `lib/today.ts` tidak menggabung Prime ke seri Gold ("variant awal menang"). Prime hanya muncul sebagai opsi tersendiri.
   - Uji unit di `lib/`.
-- [ ] **P7-10** Keputusan layout Hari ini untuk lima kartu batangan. — `FR-20` · S
+- [x] **P7-10** Keputusan layout Hari ini untuk lima kartu batangan. — `FR-20` · S
   - Saat ini grid kartu batangan `grid-cols-1 sm:grid-cols-2 lg:grid-cols-4` (`app/page.tsx`) = 4 kartu (Logam Mulia, UBS, Galeri24, Lotus Archi) + kartu Tabungan Emas yang lebar. Kartu ke-5 pada `lg` menjadi yatim di baris kedua.
   - Opsi (bandingkan di mockup dan di browser, lebar 375 / 768 / 1024 / 1280):
     1. **4 + (EMASKU + Tabungan)** — kartu EMASKU berbagi baris kedua dengan Tabungan Emas (Tabungan menyempit atau tetap lebar). Perubahan terkecil.
@@ -133,16 +133,20 @@
     3. **5 kolom di `xl`** — `xl:grid-cols-5`; risiko angka `Rp2.258.000` + selisih terlalu sempit.
     4. **Gulir horizontal di `md`** — tidak disukai (menyembunyikan kartu).
   - Hasil: satu opsi dipilih dan dicatat di `mockup/README.md` beserta alasannya; implementasi di P7-11. Prime **tidak** jadi kartu sendiri (lihat P7-11).
-- [ ] **P7-11** Hari ini (`lib/today.ts`, `components/price-card.tsx`). — `FR-20` · M
+  - **Keputusan (21 Nov 2026): opsi 1 "4 + (EMASKU + Tabungan)".** Desktop (≥ `lg`): baris 1 = Antam, UBS, Galeri24, Lotus Archi; baris 2 = kartu EMASKU (1 kolom) + Tabungan Emas (3 kolom sisanya). Tablet 2 kolom, HP 1 kolom (Tabungan selebar baris). Alasan: perubahan terkecil, empat kartu baris 1 tidak menyempit, tidak ada kartu yatim atau tersembunyi; opsi 3 (5 kolom) memaksa angka `Rp2.258.000` + selisih ke ±230 px. Tabungan Emas yang menyempit (±705 px di 1024 px) tetap bertumpuk sampai `xl`; tiga kolom mulai di 1280 px. Diverifikasi di 375/768/1024/1280 px (tanpa gulir horizontal, kartu satu baris sama tinggi).
+- [x] **P7-11** Hari ini (`lib/today.ts`, `components/price-card.tsx`). — `FR-20` · M
+  - *Selesai 21 Nov 2026 (fixture sintetis; sumber belum aktif). Penyimpangan: kartu memakai catatan "harga sudah termasuk pajak" (Q-9 terjawab), bukan "Harga dasar situs"; Prime 25 g = baris `extra` di kaki kartu (hanya bila seri Prime berjalan).*
   - Kartu EMASKU dari `hrtagold-emasku` (Gold, `variant ''`), jual + buyback 1 g, label "Harga dasar situs" bila Q-9 belum jelas.
   - Prime: catatan di kartu ("Prime 25 g: …") atau baris tambahan, bukan kartu sendiri; tidak menggeser angka Gold.
   - Baris carry-over tidak berlaku (D-66); label "vs kemarin" mengikuti aturan yang ada (hanya bila `prev` tepat sehari sebelumnya).
   - Layout sesuai keputusan P7-10; cek mobile 375 px (tanpa gulir horizontal).
-- [ ] **P7-12** Spread, Bandingkan, Kalkulator. — `FR-21`, `FR-30`, `FR-37` · M
+- [x] **P7-12** Spread, Bandingkan, Kalkulator. — `FR-21`, `FR-30`, `FR-37` · M
+  - *Selesai 21 Nov 2026. Penyimpangan: id opsi Spread/Bandingkan `hr-emasku`; opsi `hrta-prime` **tidak** dibuat di Spread (keputusan pemilik: Prime hanya seri Explorer + catatan kartu + deskripsi Data). Semua opsi tersembunyi sampai file `hrtagold-emasku` ada. Kalkulator: buyback per keping, tanpa "Berat lain…".*
   - Spread (`lib/spread.ts`): opsi jual dan buyback `hrta-emasku` (Gold) dan `hrta-prime` (25/50/100 g); aturan pasangan D-56 (brand + produk sama) tetap; `POPULAR_PAIRS` "EMASKU: jual → buyback". Prime hanya berpasangan dengan Prime.
   - Bandingkan (`lib/bandingkan.ts`): seri `hrta-emasku` dengan warna token baru; histori mulai dari tanggal aktivasi, jadi rentang default tidak boleh menyiratkan data lama.
   - Kalkulator: EMASKU sebagai sumber dengan buyback **per keping** (bukan `hasPerGramBuyback`); gramasi besar (≥ 250 g) memakai buyback per keping yang sebenarnya.
-- [ ] **P7-13** Explorer, Data, dan e2e. — `FR-22`, `FR-23` · S
+- [x] **P7-13** Explorer, Data, dan e2e. — `FR-22`, `FR-23` · S
+  - *Selesai 21 Nov 2026. e2e bersyarat data (lulus dengan dan tanpa data hrtagold); uji unit memakai fixture sintetis `lib/test-support/hrtagold.ts` (Gold 17 + Prime 3). Diverifikasi juga dengan CSV sintetis lewat `GOLD_DATA_DIR` (opsi baru `scripts/build-data.ts`, tanpa menyentuh `data/`).*
   - Explorer: brand EMASKU, varian Prime, gramasi 17 pilihan; Data: unduhan `data/prices/hrtagold/…` dan baris sumber.
   - `e2e/smoke.spec.ts`: kartu/opsi EMASKU ada, Prime tidak menimpa Gold, tidak ada gulir horizontal di 375 px. Periksa ukuran `public/data` setelah build.
   - `mockup/README.md` mencatat penyimpangan dari mockup.

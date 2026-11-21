@@ -13,6 +13,7 @@ export const DOT: Record<ColorToken, string> = {
   ubs: 'bg-ubs',
   g24: 'bg-g24',
   lotus: 'bg-lotus',
+  emasku: 'bg-emasku',
   tab: 'bg-tab',
   spot: 'bg-spot',
   gold: 'bg-gold',
@@ -22,7 +23,16 @@ export const DOT: Record<ColorToken, string> = {
 const TEXT_DIR = { up: 'text-up', down: 'text-down', flat: 'text-muted' } as const;
 
 /** Kartu harga ringkas di hero. Panel ⓘ memuat catatan dan atribusi sumber. */
-export function PriceCard({ c, wide = false }: { c: CardModel; wide?: boolean }) {
+export function PriceCard({
+  c,
+  wide = false,
+  wideFrom = 'lg',
+}: {
+  c: CardModel;
+  wide?: boolean;
+  /** Lebar layar mulai tiga kolom di kartu lebar: `xl` bila kartu hanya memakai sebagian baris. */
+  wideFrom?: 'lg' | 'xl';
+}) {
   const [open, setOpen] = useState(false);
   const panelId = useId();
   const boxRef = useRef<HTMLDivElement>(null);
@@ -52,7 +62,10 @@ export function PriceCard({ c, wide = false }: { c: CardModel; wide?: boolean })
       className={cn(
         'flex min-w-0 flex-col gap-3.5 rounded-card-sm border border-line bg-surface px-5 py-[18px]',
         // Kartu lebar (Tabungan Emas): tiga kolom di desktop, bertumpuk di bawahnya.
-        wide && 'lg:grid lg:grid-cols-[1.1fr_1.2fr_1.7fr] lg:items-center lg:gap-8',
+        wide &&
+          (wideFrom === 'lg'
+            ? 'lg:grid lg:grid-cols-[1.1fr_1.2fr_1.7fr] lg:items-center lg:gap-8'
+            : 'xl:grid xl:grid-cols-[1.1fr_1.2fr_1.7fr] xl:items-center xl:gap-8'),
       )}
     >
       <div className="flex min-w-0 flex-col gap-1.5">
@@ -128,7 +141,10 @@ export function PriceCard({ c, wide = false }: { c: CardModel; wide?: boolean })
       <div
         className={cn(
           'mt-auto flex flex-col gap-2 border-t border-line pt-3',
-          wide && 'lg:mt-0 lg:border-t-0 lg:border-l lg:pt-0 lg:pl-8',
+          wide &&
+            (wideFrom === 'lg'
+              ? 'lg:mt-0 lg:border-t-0 lg:border-l lg:pt-0 lg:pl-8'
+              : 'xl:mt-0 xl:border-t-0 xl:border-l xl:pt-0 xl:pl-8'),
         )}
       >
         <div className="flex justify-between gap-3 text-sm">
@@ -157,6 +173,7 @@ export function PriceCard({ c, wide = false }: { c: CardModel; wide?: boolean })
             style={{ width: `${meter.toFixed(1)}%` }}
           />
         </div>
+        {c.extra ? <p className="num m-0 text-xs text-faint">{c.extra}</p> : null}
       </div>
     </article>
   );

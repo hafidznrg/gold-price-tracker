@@ -27,6 +27,7 @@
   --g24: #9c3220;
   --tab: #0f7f6c;
   --lotus: #7a4bb5;
+  --emasku: #b3237a;
   --spot: #15171c;
   --navy: #0f1a2b;
   --logo-bar-top: #a67c1e;
@@ -60,6 +61,7 @@
   --g24: #d8603c;
   --tab: #5fd0b8;
   --lotus: #c59bf0;
+  --emasku: #f08bc4;
   --spot: #edeae3;
   --navy: #0f1a2b;
   --logo-bar-top: #f1d18a;
@@ -94,6 +96,7 @@
   --color-g24: var(--g24);
   --color-tab: var(--tab);
   --color-lotus: var(--lotus);
+  --color-emasku: var(--emasku);
   --color-spot: var(--spot);
   --color-navy: var(--navy);
   --color-btn: var(--btn);

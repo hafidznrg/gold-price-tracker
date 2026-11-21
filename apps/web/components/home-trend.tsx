@@ -20,7 +20,7 @@ import {
 import { cn } from '@/lib/utils';
 
 export interface HomeTrendProps {
-  /** Opsi katalog untuk kelima series (1 g dan Tabungan Emas). */
+  /** Opsi katalog untuk keenam series (1 g dan Tabungan Emas). */
   options: ExplorerOption[];
   asOf: string;
   calendar: DataCalendar;
@@ -105,7 +105,7 @@ export function HomeTrend({ options, asOf, calendar }: HomeTrendProps) {
               gapStyle="subtle"
               height={280}
               legend={false}
-              ariaLabel={`Grafik harga jual 1 gram, ${days} hari terakhir, untuk Antam, UBS, Galeri24, Lotus Archi, dan Tabungan Emas`}
+              ariaLabel={`Grafik harga jual 1 gram, ${days} hari terakhir, untuk Antam, UBS, Galeri24, Lotus Archi, EMASKU, dan Tabungan Emas`}
             />
             {gaps.length > 0 && (
               <p data-testid="trend-gap-note" className="m-0 text-xs text-faint">
@@ -115,7 +115,7 @@ export function HomeTrend({ options, asOf, calendar }: HomeTrendProps) {
           </div>
         )}
 
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-6">
           {TREND_DEFS.map((d) => {
             const line = lines?.find((l) => l.d.id === d.id)?.line;
             const s = line ? trendStats(line.points) : null;

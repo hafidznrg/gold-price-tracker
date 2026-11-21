@@ -25,6 +25,18 @@ import { buildCards } from '@/lib/today';
 
 const NA = 'Belum tersedia';
 
+/** Kolom `lg` yang diisi kartu Tabungan Emas: sisa baris terakhir kartu batangan (4 kolom per baris). */
+const LG_SPAN = {
+  1: 'lg:col-span-1',
+  2: 'lg:col-span-2',
+  3: 'lg:col-span-3',
+  4: 'lg:col-span-4',
+} as const;
+function savingsSpan(barCount: number): keyof typeof LG_SPAN {
+  const used = barCount % 4;
+  return (used === 0 ? 4 : 4 - used) as keyof typeof LG_SPAN;
+}
+
 function SpotItem({
   label,
   value,
@@ -87,7 +99,8 @@ function SpotStrip({ spot }: { spot: LatestSpot | null }) {
 function whenOf(source: string, date: string | null, at: string | null): string {
   if (!date) return EMPTY;
   if (source === 'ubslifestyle' || !at) return `data ${formatDate(date, false)}`;
-  const verb = source === 'pegadaian' || source === 'galeri24' ? 'harga terbit' : '';
+  const verb =
+    source === 'pegadaian' || source === 'galeri24' || source === 'hrtagold' ? 'harga terbit' : '';
   return `${formatDate(date, false)} · ${verb} ${formatTimeWib(at)}`.replace('  ', ' ');
 }
 
@@ -162,14 +175,13 @@ export default function HomePage() {
             <Freshness items={freshItems} latestLabel={latestLabel} builtAt={meta.built_at} />
           </div>
 
-          {/* Emas batangan: HP 1 kolom, tablet 2 kolom, desktop (≥ 1024 px) 4 kolom. Tabungan Emas
-              (bukan keping) memakai kartu lebar di bawahnya. */}
-          <div className="flex flex-col gap-3.5">
-            <div
-              role="list"
-              aria-label="Emas batangan"
-              className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 lg:grid-cols-4"
-            >
+          {/* Emas batangan (P7-10, opsi "4 + (EMASKU + Tabungan)"): satu grid. HP 1 kolom, tablet 2
+              kolom, desktop (≥ 1024 px) 4 kolom per baris. Tabungan Emas (bukan keping) memakai kartu
+              lebar yang mengisi sisa kolom di baris terakhir (3 kolom di samping EMASKU; 4 kolom
+              bila baris kartu batangan penuh atau EMASKU belum ada). Daftar batangan memakai
+              `contents` agar kartunya tetap sel grid yang sama. */}
+          <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 lg:grid-cols-4">
+            <div role="list" aria-label="Emas batangan" className="contents">
               {bars.map((c) => (
                 <div
                   key={c.id}
@@ -181,7 +193,12 @@ export default function HomePage() {
               ))}
             </div>
             {savings.map((c) => (
-              <PriceCard key={c.id} c={c} wide />
+              <div
+                key={c.id}
+                className={`flex min-w-0 flex-col sm:col-span-2 [&>article]:flex-1 ${LG_SPAN[savingsSpan(bars.length)]}`}
+              >
+                <PriceCard c={c} wide wideFrom={savingsSpan(bars.length) === 4 ? 'lg' : 'xl'} />
+              </div>
             ))}
           </div>
 

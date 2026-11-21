@@ -102,6 +102,7 @@ export const ALL_DEFS: readonly CompareDef[] = [
   def('pg-lotus', 'pegadaian', 'lotusarchi', 'gold_bar', 'lotus', false),
   def('g24-lotus', 'galeri24', 'lotusarchi', 'gold_bar', 'lotus', false),
   def('la-lotus', 'lotusarchi', 'lotusarchi', 'gold_bar', 'lotus', false),
+  def('hr-emasku', 'hrtagold', 'emasku', 'gold_bar', 'emasku', false),
   def('tab', 'pegadaian', 'pegadaian', 'gold_savings', 'tab', false, true),
   def('g24-antam-np', 'galeri24', 'antam', 'gold_bar', 'antam', false, false, {
     variant: 'non_pegadaian',
@@ -112,7 +113,7 @@ export const ALL_DEFS: readonly CompareDef[] = [
 /**
  * Series halaman Bandingkan dan beranda, urut mockup: Antam LM, Antam dan UBS Pegadaian (garis
  * putus-putus), UBS Lifestyle, Galeri24 dan Lotus Archi dari Galeri24 (garis penuh, ada buyback),
- * Tabungan Emas. Harga Galeri24/Lotus di Pegadaian tidak digambar (lihat `ALL_DEFS`).
+ * EMASKU (hrtagold.id, garis penuh, buyback per keping), Tabungan Emas. Harga Galeri24/Lotus di Pegadaian tidak digambar (lihat `ALL_DEFS`).
  */
 const COMPARE_IDS: readonly string[] = [
   'lm-antam',
@@ -121,6 +122,7 @@ const COMPARE_IDS: readonly string[] = [
   'pg-ubs',
   'g24-g24',
   'g24-lotus',
+  'hr-emasku',
   'tab',
 ];
 export const COMPARE_DEFS: readonly CompareDef[] = ALL_DEFS.filter((d) =>

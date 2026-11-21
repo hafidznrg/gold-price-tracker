@@ -224,7 +224,7 @@ export function BandingkanBoard({ options, weights, today, asOf, calendar }: Ban
               valueFormat={mode === 'index' ? 'number' : 'rupiah'}
               gaps={gaps}
               height={chartHeight}
-              ariaLabel={`Perbandingan harga jual ${wText} Antam, UBS, Galeri24, Lotus Archi, dan Tabungan Emas`}
+              ariaLabel={`Perbandingan harga jual ${wText} Antam, UBS, Galeri24, Lotus Archi, EMASKU, dan Tabungan Emas`}
             />
           )}
           {!loading && lines && empty.length > 0 ? (

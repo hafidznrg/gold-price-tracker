@@ -41,6 +41,8 @@ export interface CardModel {
   buySpark: (number | null)[] | null;
   /** Keterangan kaki kartu. */
   note: string;
+  /** Baris tambahan kecil di kaki kartu (EMASKU: harga Prime 25 g); null = tanpa. Bukan kartu sendiri. */
+  extra: string | null;
   /** Deskripsi singkat di bawah judul (hanya kartu lebar Tabungan Emas); null = tanpa. */
   description: string | null;
   noBuyback: string;
@@ -69,7 +71,18 @@ function cardNote(h: Highlight, all: Highlight[]): string {
     const la = official?.sell != null ? ` Di lotusarchi.com: ${formatRupiah(official.sell)}.` : '';
     return `Harga dan buyback dari situs Galeri24.${p ? `${p} (tanpa buyback).` : ''}${la}`;
   }
+  if (h.source === 'hrtagold')
+    return 'Harga jual dan buyback keping 1 g dari situs EMASKU (Hartadinata). Harga sudah termasuk pajak menurut Syarat & Ketentuan situs. Seri Prime (25/50/100 g) terpisah dari Gold.';
   return 'Pegadaian tidak menampilkan harga buyback untuk emas batangan.';
+}
+
+/** Prime 25 g untuk catatan kartu EMASKU; null bila seri Prime belum ada/tidak berjalan. */
+function primeExtra(h: Highlight, latest: LatestFile): string | null {
+  if (h.source !== 'hrtagold') return null;
+  const p = latest.series.find(
+    (s) => s.file === h.file && s.variant === 'prime' && s.w === 25 && s.current,
+  );
+  return p?.sell != null ? `Prime 25 g: ${formatRupiah(p.sell)}` : null;
 }
 
 const TABUNGAN_DESC =
@@ -85,6 +98,7 @@ export const CARD_FILES: readonly string[] = [
   'ubslifestyle-ubs',
   'galeri24-galeri24',
   'galeri24-lotusarchi',
+  'hrtagold-emasku',
   'pegadaian-pegadaian',
 ];
 
@@ -122,6 +136,7 @@ export function buildCards(latest: LatestFile): CardModel[] {
         sellSpark: sp.sell,
         buySpark: h.buyback === null ? null : sp.buy,
         note: cardNote(h, latest.highlights),
+        extra: primeExtra(h, latest),
         description: h.product === 'gold_savings' ? TABUNGAN_DESC : null,
         noBuyback: 'Tidak ditampilkan sumber',
       };

@@ -13,7 +13,7 @@ function pick(ids: readonly string[]): CompareDef[] {
 
 /**
  * Kolom matriks (urut mockup): Antam LM, Antam Pegadaian, UBS, Galeri24 dan Lotus Archi (keduanya
- * dari sumber Galeri24, dengan buyback semua gramasi).
+ * dari sumber Galeri24, dengan buyback semua gramasi), lalu EMASKU (hrtagold.id, buyback per keping).
  */
 export const MATRIX_COLS: readonly CompareDef[] = pick([
   'lm-antam',
@@ -21,6 +21,7 @@ export const MATRIX_COLS: readonly CompareDef[] = pick([
   'ubsl-ubs',
   'g24-g24',
   'g24-lotus',
+  'hr-emasku',
 ]);
 
 export const BEST_LABEL: Record<MatrixMode, string> = {
@@ -126,5 +127,6 @@ export const TREND_DEFS: readonly CompareDef[] = pick([
   'ubsl-ubs',
   'g24-g24',
   'g24-lotus',
+  'hr-emasku',
   'tab',
 ]);

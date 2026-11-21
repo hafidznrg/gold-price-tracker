@@ -279,6 +279,7 @@ describe('Galeri24 dan Lotus Archi (P6-10)', () => {
       'pg-ubs',
       'g24-g24',
       'g24-lotus',
+      'hr-emasku',
       'tab',
     ]);
     for (const id of ['g24-g24', 'g24-lotus']) {

@@ -69,7 +69,9 @@ test.describe('Beranda', () => {
     await page.goto('/');
     const bars = page.getByRole('list', { name: 'Emas batangan' });
     const titles = bars.getByRole('heading', { level: 2 });
-    await expect(titles).toHaveText(['Antam', 'UBS', 'Galeri24', 'Lotus Archi']);
+    // EMASKU (hrtagold.id) menyusul sebagai kartu kelima setelah data pertamanya ada (Fase 7).
+    const names = (await titles.allTextContents()).filter((t) => t !== 'EMASKU');
+    expect(names).toEqual(['Antam', 'UBS', 'Galeri24', 'Lotus Archi']);
     await expect(page.getByRole('article', { name: 'Tabungan Emas' })).toContainText(
       'Produk lain dari emas batangan',
     );
@@ -128,7 +130,7 @@ test.describe('Beranda', () => {
     const errors = collectErrors(page);
     await page.goto('/');
     await expect(page.getByRole('heading', { name: 'Tren harga jual 1 gram' })).toBeVisible();
-    await expect(page.getByTestId('trend-stat')).toHaveCount(5);
+    await expect(page.getByTestId('trend-stat')).toHaveCount(6);
     await expect(page.getByTestId('trend-stat').first()).toContainText('Tertinggi');
     await page.getByRole('radio', { name: '90H', exact: true }).click();
     await expect(page.getByRole('radio', { name: '90H', exact: true })).toBeChecked();
@@ -279,7 +281,11 @@ test.describe('Spread', () => {
   test('spread per gramasi: tujuh sumber, ganti sumber, gramasi 1 g disorot', async ({ page }) => {
     await page.goto('/spread');
     const src = page.locator('#barSrc');
-    await expect(src.locator('option')).toHaveText([
+    // Opsi EMASKU ('HRTA Gold · EMASKU') baru muncul setelah ada data hrtagold; sisanya tetap.
+    const barOptions = (await src.locator('option').allTextContents()).filter(
+      (t) => t !== 'HRTA Gold · EMASKU',
+    );
+    expect(barOptions).toEqual([
       'UBS Lifestyle · UBS (tahun produksi berjalan)',
       'Logam Mulia · Antam (buyback per gram)',
       'Galeri24 · Antam (buyback biasa)',
@@ -293,6 +299,96 @@ test.describe('Spread', () => {
     await expect(list.getByRole('listitem')).toHaveCount(6);
     await expect(list.getByRole('listitem').filter({ hasText: '1 g' }).first()).toBeVisible();
     await expect(page.getByText(/1 g = gramasi acuan/)).toBeVisible();
+  });
+});
+
+test.describe('EMASKU / HRTA Gold (Fase 7)', () => {
+  // Dijaga agar lulus sebelum dan sesudah data hrtagold pertama: bagian berdata bersyarat.
+  test('footer menyebut sumber HRTA Gold; matriks punya kolom EMASKU', async ({ page }) => {
+    await page.goto('/');
+    await expect(page.locator('footer')).toContainText('HRTA Gold (EMASKU, hrtagold.id)');
+    await expect(page.locator('footer')).toContainText('sudah termasuk pajak');
+    const table = page.getByRole('table', { name: 'Perbandingan harga per gramasi' });
+    await expect(table.getByRole('columnheader', { name: /EMASKU/ })).toBeVisible();
+  });
+
+  for (const width of [375, 768, 1024, 1280]) {
+    test(`beranda tanpa gulir horizontal dan kartu sama tinggi di ${width}px`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 900 });
+      await page.goto('/');
+      await page.waitForLoadState('load');
+      const { scrollWidth, clientWidth } = await page.evaluate(() => ({
+        scrollWidth: document.documentElement.scrollWidth,
+        clientWidth: document.documentElement.clientWidth,
+      }));
+      expect(scrollWidth).toBeLessThanOrEqual(clientWidth);
+      // Kartu satu baris sama tinggi (sel grid meregang); dikelompokkan menurut posisi atas.
+      const boxes = await page.locator('main article').evaluateAll((els) =>
+        els
+          .map((e) => e.getBoundingClientRect())
+          .map((r) => ({
+            top: Math.round(r.top),
+            h: Math.round(r.height),
+            w: Math.round(r.width),
+          })),
+      );
+      const rows = new Map<number, number[]>();
+      for (const b of boxes) rows.set(b.top, [...(rows.get(b.top) ?? []), b.h]);
+      for (const heights of rows.values()) {
+        expect(Math.max(...heights) - Math.min(...heights)).toBeLessThanOrEqual(1);
+      }
+    });
+  }
+
+  test('kartu EMASKU: Gold 1 g, pajak, Prime hanya catatan; tata letak 4 + (EMASKU + Tabungan)', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await page.goto('/');
+    const card = page.getByRole('heading', { level: 2, name: 'EMASKU', exact: true });
+    if ((await card.count()) === 0) return; // belum ada data hrtagold
+    const article = page.locator('article').filter({ has: card });
+    await expect(article).toContainText(/Buyback\s*Rp/);
+    await expect(article).not.toContainText('tidak ditampilkan');
+    await expect(article).toContainText(/Prime 25 g: Rp/);
+    await page.getByRole('button', { name: 'Keterangan EMASKU' }).click();
+    await expect(page.getByRole('note')).toContainText('sudah termasuk pajak');
+    await expect(page.getByRole('note')).toContainText('hrtagold.id');
+    // Baris kedua: EMASKU satu kolom, Tabungan Emas di sebelah kanannya.
+    const e = await article.boundingBox();
+    const t = await page.getByRole('article', { name: 'Tabungan Emas' }).boundingBox();
+    const a = await page
+      .locator('article')
+      .filter({ has: page.getByRole('heading', { level: 2, name: 'Antam', exact: true }) })
+      .boundingBox();
+    expect(Math.abs(e!.y - t!.y)).toBeLessThanOrEqual(1);
+    expect(t!.x).toBeGreaterThan(e!.x + e!.width - 1);
+    expect(e!.y).toBeGreaterThan(a!.y + a!.height - 1);
+    expect(Math.abs(e!.width - a!.width)).toBeLessThanOrEqual(1);
+  });
+
+  test('Spread dan Explorer: opsi EMASKU bersyarat data; Prime seri sendiri', async ({ page }) => {
+    await page.goto('/spread');
+    const buyAt = page.locator('#buyAt');
+    if ((await buyAt.locator('option[value="hr-emasku"]').count()) === 1) {
+      await page.getByRole('button', { name: 'EMASKU: HRTA Gold → HRTA Gold' }).click();
+      await expect(buyAt).toHaveValue('hr-emasku');
+      await expect(page.locator('#sellTo')).toHaveValue('hr-emasku');
+    } else {
+      await expect(page.getByRole('button', { name: /EMASKU: HRTA Gold/ })).toHaveCount(0);
+    }
+    await page.goto('/explorer');
+    const brand = page
+      .locator('select')
+      .filter({ has: page.locator('option', { hasText: 'Antam' }) });
+    const hasEmasku =
+      (await brand
+        .first()
+        .locator('option', { hasText: /^EMASKU/ })
+        .count()) > 0;
+    if (hasEmasku) {
+      await expect(brand.first().locator('option', { hasText: 'EMASKU Prime' })).toHaveCount(1);
+    }
   });
 });
 

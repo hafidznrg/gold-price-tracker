@@ -302,6 +302,7 @@ describe('Galeri24 dan Lotus Archi (P6-10)', () => {
       'Galeri24: Galeri24 → Galeri24',
       'Antam: Logam Mulia → Galeri24 (non-Pegadaian)',
       'Lotus Archi: lotusarchi.com → lotusarchi.com',
+      'EMASKU: HRTA Gold → HRTA Gold',
       'UBS: Pegadaian → UBS Lifestyle',
       'UBS: UBS Lifestyle → UBS Lifestyle',
     ]);
@@ -309,7 +310,10 @@ describe('Galeri24 dan Lotus Archi (P6-10)', () => {
       'g24-antam-np',
     );
     const withLa = buildOptions({
-      series: [{ file: 'lotusarchi-lotusarchi', variant: '', w: 1, current: true }],
+      series: [
+        { file: 'lotusarchi-lotusarchi', variant: '', w: 1, current: true },
+        { file: 'hrtagold-emasku', variant: '', w: 1, current: true },
+      ],
       as_of: null,
     } as unknown as LatestFile);
     for (const p of POPULAR_PAIRS) {

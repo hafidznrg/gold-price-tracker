@@ -25,7 +25,7 @@ const instrumentSerif = Instrument_Serif({
 });
 
 const DESCRIPTION =
-  'Riwayat dan perbandingan harga emas Antam, UBS, Galeri24, Lotus Archi, dan Pegadaian beserta spot dunia. Data harian, terbuka, dan bisa diunduh.';
+  'Riwayat dan perbandingan harga emas Antam, UBS, Galeri24, Lotus Archi, EMASKU, dan Pegadaian beserta spot dunia. Data harian, terbuka, dan bisa diunduh.';
 const HOME_TITLE = `${SITE_NAME} · ${SITE_TAGLINE}`;
 
 export const metadata: Metadata = {

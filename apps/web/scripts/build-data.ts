@@ -28,7 +28,10 @@ import { buildOutputs } from '../lib/build/outputs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(here, '..', '..', '..');
-const DATA = path.join(ROOT, 'data');
+// `GOLD_DATA_DIR` (opsional) mengarahkan pembacaan ke salinan data, mis. untuk uji dengan data sintetis.
+const DATA = process.env.GOLD_DATA_DIR
+  ? path.resolve(process.env.GOLD_DATA_DIR)
+  : path.join(ROOT, 'data');
 const CONFIG = path.join(ROOT, 'config');
 const OUT = path.resolve(here, '..', 'public', 'data');
 

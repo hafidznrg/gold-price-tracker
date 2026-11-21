@@ -722,6 +722,20 @@ describe('pickHighlightSeries: variant non-tahun', () => {
   it('hanya non_pegadaian current: tidak ada kartu', () => {
     expect(pickHighlightSeries([g('non_pegadaian', 1, 1)] as never, '2026-11-17')).toBeNull();
   });
+  it("hrtagold emasku: kartu utama = Gold '' 1 g; Prime (25 g) tidak jadi kartu atau penyambung", () => {
+    const h = (variant: string, w: number, sell: number) => ({
+      key: `hrtagold|emasku|gold_bar|${variant}|${w}`,
+      file: 'hrtagold-emasku',
+      ref: { variant, w },
+      rows: [{ date: '2026-11-21', sell_price: sell, buyback_price: sell - 1 }],
+    });
+    const series = [h('', 1, 2_258_000), h('', 25, 56_000_000), h('prime', 25, 57_000_000)];
+    const hit = pickHighlightSeries(series as never, '2026-11-21');
+    expect(hit?.main.ref).toMatchObject({ variant: '', w: 1 });
+    expect(hit?.fallback).toBeNull();
+    // Hanya Prime current: tidak ada kartu.
+    expect(pickHighlightSeries([h('prime', 25, 1)] as never, '2026-11-21')).toBeNull();
+  });
   it('UBS: tahun terbaru tetap menang, penyambung variant kosong', () => {
     const series = [g('', 1, 1), g('2025', 2, 2), g('2026', 3, 3)];
     const hit = pickHighlightSeries(series as never, '2026-11-17');

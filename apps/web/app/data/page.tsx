@@ -1,4 +1,3 @@
-import { isYearVariant } from '@gold/schema';
 import type { Metadata } from 'next';
 import { DataAge } from '@/components/data-age';
 import { PageIntro } from '@/components/page-intro';
@@ -22,6 +21,8 @@ const DESC: Record<string, string> = {
   'ubslifestyle-ubs': '13 pecahan 0,05–100 g, semua tahun produksi',
   'lotusarchi-lotusarchi':
     '10 gramasi 0,1–100 g dari situs resmi. Harga jual per keping; buyback hanya 1 g (per gram), sekali sehari, tanpa jam terbit',
+  'hrtagold-emasku':
+    'Gold 17 gramasi 0,1–1.000 g dan Prime 25/50/100 g (seri terpisah); harga jual dan buyback per keping, sekali sehari. Harga sudah termasuk pajak. Sejak 21 Nov 2026',
   'galeri24-fisik':
     'Antam, UBS, Galeri24, dan Lotus Archi (0,5–1.000 g); harga jual dan buyback, sekali sehari',
   'galeri24-antam-non-pegadaian':
@@ -39,6 +40,7 @@ const DOT: Record<ColorToken, string> = {
   ubs: 'bg-ubs',
   g24: 'bg-g24',
   lotus: 'bg-lotus',
+  emasku: 'bg-emasku',
   tab: 'bg-tab',
   spot: 'bg-spot',
   gold: 'bg-gold',
@@ -60,7 +62,10 @@ function whenText(d: DownloadEntry): string {
   if (d.last?.kind === 'macro' && d.last.frequency === 'A')
     return `Tahun ${d.last.date.slice(0, 4)} · seri statis`;
   if (d.last_updated_at) {
-    const verb = d.id.startsWith('pegadaian') || d.id.startsWith('galeri24') ? 'terbit ' : '';
+    const verb =
+      d.id.startsWith('pegadaian') || d.id.startsWith('galeri24') || d.id.startsWith('hrtagold')
+        ? 'terbit '
+        : '';
     return `${formatDate(d.last_date)} · ${verb}${formatTimeWib(d.last_updated_at)}`;
   }
   return formatDate(d.last_date);
@@ -80,7 +85,7 @@ function valueParts(d: DownloadEntry): { main: string; caption: string } | null 
   }
   const brand = BRAND_NAME[l.brand];
   // Varian non-tahun (non_pegadaian): hanya buyback, bukan "produksi non_pegadaian".
-  if (l.variant && !isYearVariant(l.variant)) {
+  if (l.variant === 'non_pegadaian') {
     return {
       main: formatRupiah(l.buyback),
       caption: `Buyback ${brand ? `${brand} ` : ''}${formatWeight(l.w)} (non-Pegadaian)`,

@@ -15,8 +15,17 @@ const PRICE_SOURCE_IDS: readonly PriceSource[] = [
   'pegadaian',
   'ubslifestyle',
   'galeri24',
+  'lotusarchi',
+  'hrtagold',
 ];
-const BRAND_IDS: readonly Brand[] = ['antam', 'ubs', 'galeri24', 'pegadaian', 'lotusarchi'];
+const BRAND_IDS: readonly Brand[] = [
+  'antam',
+  'ubs',
+  'galeri24',
+  'pegadaian',
+  'lotusarchi',
+  'emasku',
+];
 
 /** Bentuk kanonik berat (`0.5`, `1`, `1000`, `0.01`), sama dengan `canonicalWeight` schema. */
 export function weightKey(w: number): string {
@@ -199,6 +208,7 @@ export function variantLabel(variant: string): string {
   if (variant === '') return '';
   if (/^\d{4}$/.test(variant)) return `produksi ${variant}`;
   if (variant === 'non_pegadaian') return 'non-Pegadaian';
+  if (variant === 'prime') return 'Prime';
   return variant.replace(/_/g, ' ');
 }
 
@@ -206,6 +216,8 @@ export function variantLabel(variant: string): string {
 export function seriesGroupLabel(ref: Pick<SeriesRef, 'source' | 'brand' | 'product'>): string {
   // Lotus Archi di situs resminya: "Lotus Archi · Lotus Archi" menyesatkan, tulis domainnya.
   if (ref.source === 'lotusarchi') return `${displayBrand(ref)} · ${SOURCE_DOMAINS[ref.source]}`;
+  // EMASKU di situs Hartadinata: "EMASKU · EMASKU (Hartadinata)" berulang, pakai nama modul.
+  if (ref.source === 'hrtagold') return `${displayBrand(ref)} · ${SCRAPER_LABELS.hrtagold}`;
   return `${displayBrand(ref)} · ${SOURCE_LABELS[ref.source]}`;
 }
 
@@ -260,7 +272,7 @@ export function colorToken(ref: Pick<SeriesRef, 'brand' | 'product'>): ColorToke
     case 'lotusarchi':
       return 'lotus';
     case 'emasku':
-      return 'muted'; // sementara; token warna `emasku` di P7-09
+      return 'emasku';
   }
 }
 
@@ -283,6 +295,7 @@ export const COLOR_CLASSES: Record<ColorToken, { text: string; bg: string; borde
   ubs: { text: 'text-ubs', bg: 'bg-ubs', border: 'border-ubs' },
   g24: { text: 'text-g24', bg: 'bg-g24', border: 'border-g24' },
   lotus: { text: 'text-lotus', bg: 'bg-lotus', border: 'border-lotus' },
+  emasku: { text: 'text-emasku', bg: 'bg-emasku', border: 'border-emasku' },
   tab: { text: 'text-tab', bg: 'bg-tab', border: 'border-tab' },
   spot: { text: 'text-spot', bg: 'bg-spot', border: 'border-spot' },
   gold: { text: 'text-gold', bg: 'bg-gold', border: 'border-gold' },
@@ -311,6 +324,7 @@ export const FILE_ORDER: readonly string[] = [
   'ubslifestyle-ubs',
   'galeri24-galeri24',
   'galeri24-lotusarchi',
+  'hrtagold-emasku',
   'lotusarchi-lotusarchi',
   'galeri24-antam',
   'galeri24-ubs',
