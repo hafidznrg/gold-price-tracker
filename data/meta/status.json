@@ -1,21 +1,21 @@
 {
   "galeri24": {
-    "last_run_id": "45111213147-1",
+    "last_run_id": "45173296648-1",
     "last_status": "success",
-    "last_success_at": "2026-11-23T04:21:06Z",
+    "last_success_at": "2026-11-23T12:20:43Z",
     "last_data_date": "2026-11-23",
     "consecutive_failures": 0,
-    "carry_over": false,
-    "updated_at": "2026-11-23T04:21:28Z"
+    "updated_at": "2026-11-23T12:21:33Z",
+    "carry_over": false
   },
   "hrtagold": {
-    "last_run_id": "45095852049-1",
+    "last_run_id": "45173296648-1",
     "last_status": "success",
-    "last_success_at": "2026-11-23T01:40:40Z",
+    "last_success_at": "2026-11-23T12:20:48Z",
     "last_data_date": "2026-11-23",
     "consecutive_failures": 0,
-    "carry_over": false,
-    "updated_at": "2026-11-23T01:41:20Z"
+    "updated_at": "2026-11-23T12:21:33Z",
+    "carry_over": false
   },
   "jisdor": {
     "last_run_id": "45146063601-1",
@@ -26,40 +26,40 @@
     "updated_at": "2026-11-23T09:21:03Z"
   },
   "logammulia": {
-    "last_run_id": "45099599254-1",
+    "last_run_id": "45173296648-1",
     "last_status": "success",
-    "last_success_at": "2026-11-23T02:20:59Z",
+    "last_success_at": "2026-11-23T12:21:10Z",
     "last_data_date": "2026-11-23",
     "consecutive_failures": 0,
-    "carry_over": false,
-    "updated_at": "2026-11-23T02:21:24Z"
+    "updated_at": "2026-11-23T12:21:33Z",
+    "carry_over": false
   },
   "lotusarchi": {
-    "last_run_id": "45123390315-1",
+    "last_run_id": "45173296648-1",
     "last_status": "success",
-    "last_success_at": "2026-11-23T06:20:51Z",
+    "last_success_at": "2026-11-23T12:20:47Z",
     "last_data_date": "2026-11-23",
     "consecutive_failures": 0,
-    "carry_over": false,
-    "updated_at": "2026-11-23T06:21:14Z"
+    "updated_at": "2026-11-23T12:21:33Z",
+    "carry_over": false
   },
   "pegadaian": {
-    "last_run_id": "45111213147-1",
+    "last_run_id": "45173296648-1",
     "last_status": "success",
-    "last_success_at": "2026-11-23T04:20:50Z",
+    "last_success_at": "2026-11-23T12:20:46Z",
     "last_data_date": "2026-11-23",
     "consecutive_failures": 0,
-    "carry_over": false,
-    "updated_at": "2026-11-23T04:21:28Z"
+    "updated_at": "2026-11-23T12:21:33Z",
+    "carry_over": false
   },
   "ubslifestyle": {
-    "last_run_id": "45123390315-1",
+    "last_run_id": "45173296648-1",
     "last_status": "success",
-    "last_success_at": "2026-11-23T06:20:48Z",
+    "last_success_at": "2026-11-23T12:20:42Z",
     "last_data_date": "2026-11-23",
     "consecutive_failures": 0,
-    "carry_over": false,
-    "updated_at": "2026-11-23T06:21:14Z"
+    "updated_at": "2026-11-23T12:21:33Z",
+    "carry_over": false
   },
   "xaus": {
     "last_run_id": "45146063601-1",
