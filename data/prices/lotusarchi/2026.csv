@@ -284,3 +284,13 @@ date,source,brand,product,variant,weight_g,location,sell_price,buyback_price,sou
 2026-11-21,lotusarchi,lotusarchi,gold_bar,,25,,54691000,,,2026-11-21T06:21:10Z,44875039563-1,scrape
 2026-11-21,lotusarchi,lotusarchi,gold_bar,,50,,109304000,,,2026-11-21T06:21:10Z,44875039563-1,scrape
 2026-11-21,lotusarchi,lotusarchi,gold_bar,,100,,218529000,,,2026-11-21T06:21:10Z,44875039563-1,scrape
+2026-11-23,lotusarchi,lotusarchi,gold_bar,,0.1,,301000,,,2026-11-23T06:21:14Z,45123390315-1,scrape
+2026-11-23,lotusarchi,lotusarchi,gold_bar,,0.2,,595000,,,2026-11-23T06:21:14Z,45123390315-1,scrape
+2026-11-23,lotusarchi,lotusarchi,gold_bar,,0.5,,1210000,,,2026-11-23T06:21:14Z,45123390315-1,scrape
+2026-11-23,lotusarchi,lotusarchi,gold_bar,,1,,2276000,2135000,,2026-11-23T06:21:14Z,45123390315-1,scrape
+2026-11-23,lotusarchi,lotusarchi,gold_bar,,2,,4519000,,,2026-11-23T06:21:14Z,45123390315-1,scrape
+2026-11-23,lotusarchi,lotusarchi,gold_bar,,5,,11182000,,,2026-11-23T06:21:14Z,45123390315-1,scrape
+2026-11-23,lotusarchi,lotusarchi,gold_bar,,10,,22290000,,,2026-11-23T06:21:14Z,45123390315-1,scrape
+2026-11-23,lotusarchi,lotusarchi,gold_bar,,25,,55550000,,,2026-11-23T06:21:14Z,45123390315-1,scrape
+2026-11-23,lotusarchi,lotusarchi,gold_bar,,50,,111023000,,,2026-11-23T06:21:14Z,45123390315-1,scrape
+2026-11-23,lotusarchi,lotusarchi,gold_bar,,100,,221968000,,,2026-11-23T06:21:14Z,45123390315-1,scrape
