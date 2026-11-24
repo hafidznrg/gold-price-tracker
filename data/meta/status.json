@@ -5,16 +5,16 @@
     "last_success_at": "2026-11-23T12:20:43Z",
     "last_data_date": "2026-11-23",
     "consecutive_failures": 0,
-    "updated_at": "2026-11-23T12:21:33Z",
-    "carry_over": false
+    "carry_over": false,
+    "updated_at": "2026-11-23T12:21:33Z"
   },
   "hrtagold": {
-    "last_run_id": "45173296648-1",
+    "last_run_id": "45304258093-1",
     "last_status": "success",
-    "last_success_at": "2026-11-23T12:20:48Z",
+    "last_success_at": "2026-11-24T01:20:37Z",
     "last_data_date": "2026-11-23",
     "consecutive_failures": 0,
-    "updated_at": "2026-11-23T12:21:33Z",
+    "updated_at": "2026-11-24T01:21:24Z",
     "carry_over": false
   },
   "jisdor": {
@@ -26,12 +26,12 @@
     "updated_at": "2026-11-23T09:21:03Z"
   },
   "logammulia": {
-    "last_run_id": "45173296648-1",
-    "last_status": "success",
+    "last_run_id": "45304258093-1",
+    "last_status": "stale",
     "last_success_at": "2026-11-23T12:21:10Z",
     "last_data_date": "2026-11-23",
     "consecutive_failures": 0,
-    "updated_at": "2026-11-23T12:21:33Z",
+    "updated_at": "2026-11-24T01:21:24Z",
     "carry_over": false
   },
   "lotusarchi": {
@@ -40,8 +40,8 @@
     "last_success_at": "2026-11-23T12:20:47Z",
     "last_data_date": "2026-11-23",
     "consecutive_failures": 0,
-    "updated_at": "2026-11-23T12:21:33Z",
-    "carry_over": false
+    "carry_over": false,
+    "updated_at": "2026-11-23T12:21:33Z"
   },
   "pegadaian": {
     "last_run_id": "45173296648-1",
@@ -49,8 +49,8 @@
     "last_success_at": "2026-11-23T12:20:46Z",
     "last_data_date": "2026-11-23",
     "consecutive_failures": 0,
-    "updated_at": "2026-11-23T12:21:33Z",
-    "carry_over": false
+    "carry_over": false,
+    "updated_at": "2026-11-23T12:21:33Z"
   },
   "ubslifestyle": {
     "last_run_id": "45173296648-1",
@@ -58,8 +58,8 @@
     "last_success_at": "2026-11-23T12:20:42Z",
     "last_data_date": "2026-11-23",
     "consecutive_failures": 0,
-    "updated_at": "2026-11-23T12:21:33Z",
-    "carry_over": false
+    "carry_over": false,
+    "updated_at": "2026-11-23T12:21:33Z"
   },
   "xaus": {
     "last_run_id": "45146063601-1",
