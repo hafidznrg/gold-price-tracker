@@ -1,9 +1,9 @@
 {
-  "fetched_at": "2026-11-24T09:21:00Z",
-  "xau_usd_oz": 3620,
-  "usd_idr": 18223,
+  "fetched_at": "2026-11-25T09:20:38Z",
+  "xau_usd_oz": 3530.699951,
+  "usd_idr": 18204,
   "usd_idr_series": "usd_idr_jisdor",
-  "usd_idr_date": "2026-11-23",
+  "usd_idr_date": "2026-11-24",
   "source": "xaus",
   "stale": false
 }
