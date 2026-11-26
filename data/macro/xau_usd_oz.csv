@@ -1640,3 +1640,4 @@ date,series,frequency,value,unit,source,scraped_at,run_id,origin
 2026-11-20,xau_usd_oz,D,3515.4,USD/ozt,xaus,2026-11-23T09:21:03Z,45146063601-1,scrape
 2026-11-23,xau_usd_oz,D,3651.4,USD/ozt,xaus,2026-11-24T09:21:29Z,45364193943-1,scrape
 2026-11-24,xau_usd_oz,D,3561.9,USD/ozt,xaus,2026-11-25T09:21:09Z,45584396831-1,scrape
+2026-11-25,xau_usd_oz,D,3535.8,USD/ozt,xaus,2026-11-26T09:21:30Z,45790989911-1,scrape
