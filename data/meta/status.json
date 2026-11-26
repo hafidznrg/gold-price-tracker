@@ -1,12 +1,12 @@
 {
   "galeri24": {
-    "last_run_id": "45749572430-1",
+    "last_run_id": "45754535712-1",
     "last_status": "success",
-    "last_success_at": "2026-11-26T03:33:21Z",
+    "last_success_at": "2026-11-26T04:20:54Z",
     "last_data_date": "2026-11-26",
     "consecutive_failures": 0,
-    "updated_at": "2026-11-26T03:33:39Z",
-    "carry_over": true
+    "updated_at": "2026-11-26T04:21:18Z",
+    "carry_over": false
   },
   "hrtagold": {
     "last_run_id": "45735043667-1",
@@ -49,8 +49,8 @@
     "last_success_at": "2026-11-26T03:33:08Z",
     "last_data_date": "2026-11-26",
     "consecutive_failures": 0,
-    "updated_at": "2026-11-26T03:33:39Z",
-    "carry_over": false
+    "carry_over": false,
+    "updated_at": "2026-11-26T03:33:39Z"
   },
   "ubslifestyle": {
     "last_run_id": "45612744116-1",
