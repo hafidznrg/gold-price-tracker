@@ -14,8 +14,8 @@
     "last_success_at": "2026-11-26T01:20:49Z",
     "last_data_date": "2026-11-25",
     "consecutive_failures": 0,
-    "updated_at": "2026-11-26T01:21:27Z",
-    "carry_over": false
+    "carry_over": false,
+    "updated_at": "2026-11-26T01:21:27Z"
   },
   "jisdor": {
     "last_run_id": "45584396831-1",
@@ -26,12 +26,12 @@
     "updated_at": "2026-11-25T09:21:09Z"
   },
   "logammulia": {
-    "last_run_id": "45735043667-1",
-    "last_status": "stale",
-    "last_success_at": "2026-11-25T12:20:59Z",
-    "last_data_date": "2026-11-25",
+    "last_run_id": "45741706934-1",
+    "last_status": "success",
+    "last_success_at": "2026-11-26T02:21:27Z",
+    "last_data_date": "2026-11-26",
     "consecutive_failures": 0,
-    "updated_at": "2026-11-26T01:21:27Z",
+    "updated_at": "2026-11-26T02:21:46Z",
     "carry_over": false
   },
   "lotusarchi": {
