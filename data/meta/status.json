@@ -5,8 +5,8 @@
     "last_success_at": "2026-11-26T04:20:54Z",
     "last_data_date": "2026-11-26",
     "consecutive_failures": 0,
-    "updated_at": "2026-11-26T04:21:18Z",
-    "carry_over": false
+    "carry_over": false,
+    "updated_at": "2026-11-26T04:21:18Z"
   },
   "hrtagold": {
     "last_run_id": "45735043667-1",
@@ -35,13 +35,13 @@
     "updated_at": "2026-11-26T02:21:46Z"
   },
   "lotusarchi": {
-    "last_run_id": "45612744116-1",
+    "last_run_id": "45767462604-1",
     "last_status": "success",
-    "last_success_at": "2026-11-25T12:23:08Z",
+    "last_success_at": "2026-11-26T06:20:57Z",
     "last_data_date": "2026-11-25",
     "consecutive_failures": 0,
-    "carry_over": false,
-    "updated_at": "2026-11-25T12:23:25Z"
+    "updated_at": "2026-11-26T06:21:14Z",
+    "carry_over": false
   },
   "pegadaian": {
     "last_run_id": "45749572430-1",
@@ -53,13 +53,13 @@
     "updated_at": "2026-11-26T03:33:39Z"
   },
   "ubslifestyle": {
-    "last_run_id": "45612744116-1",
+    "last_run_id": "45767462604-1",
     "last_status": "success",
-    "last_success_at": "2026-11-25T12:20:45Z",
-    "last_data_date": "2026-11-25",
+    "last_success_at": "2026-11-26T06:20:43Z",
+    "last_data_date": "2026-11-26",
     "consecutive_failures": 0,
-    "carry_over": false,
-    "updated_at": "2026-11-25T12:23:25Z"
+    "updated_at": "2026-11-26T06:21:14Z",
+    "carry_over": false
   },
   "xaus": {
     "last_run_id": "45584396831-1",
