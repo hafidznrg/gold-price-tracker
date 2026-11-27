@@ -314,6 +314,7 @@ date,source,brand,product,variant,weight_g,location,sell_price,buyback_price,sou
 2026-11-25,lotusarchi,lotusarchi,gold_bar,,25,,54961000,,,2026-11-25T06:21:14Z,45559815912-1,scrape
 2026-11-25,lotusarchi,lotusarchi,gold_bar,,50,,109844000,,,2026-11-25T06:21:14Z,45559815912-1,scrape
 2026-11-25,lotusarchi,lotusarchi,gold_bar,,100,,219610000,,,2026-11-25T06:21:14Z,45559815912-1,scrape
+2026-11-26,lotusarchi,lotusarchi,gold_bar,,1,,2268000,2130000,,2026-11-27T06:26:59Z,local-20261127062659,backfill
 2026-11-27,lotusarchi,lotusarchi,gold_bar,,0.1,,303000,,,2026-11-27T06:21:21Z,45951169667-1,scrape
 2026-11-27,lotusarchi,lotusarchi,gold_bar,,0.2,,597000,,,2026-11-27T06:21:21Z,45951169667-1,scrape
 2026-11-27,lotusarchi,lotusarchi,gold_bar,,0.5,,1219000,,,2026-11-27T06:21:21Z,45951169667-1,scrape
