@@ -18,12 +18,12 @@
     "updated_at": "2026-11-27T01:21:21Z"
   },
   "jisdor": {
-    "last_run_id": "45790989911-1",
+    "last_run_id": "45972829125-1",
     "last_status": "success",
-    "last_success_at": "2026-11-26T09:21:01Z",
-    "last_data_date": "2026-11-26",
+    "last_success_at": "2026-11-27T09:21:10Z",
+    "last_data_date": "2026-11-27",
     "consecutive_failures": 0,
-    "updated_at": "2026-11-26T09:21:30Z"
+    "updated_at": "2026-11-27T09:21:33Z"
   },
   "logammulia": {
     "last_run_id": "45927701459-1",
@@ -40,8 +40,8 @@
     "last_success_at": "2026-11-27T06:20:58Z",
     "last_data_date": "2026-11-27",
     "consecutive_failures": 0,
-    "updated_at": "2026-11-27T06:21:21Z",
-    "carry_over": false
+    "carry_over": false,
+    "updated_at": "2026-11-27T06:21:21Z"
   },
   "pegadaian": {
     "last_run_id": "45935305779-1",
@@ -58,15 +58,15 @@
     "last_success_at": "2026-11-27T06:21:00Z",
     "last_data_date": "2026-11-27",
     "consecutive_failures": 0,
-    "updated_at": "2026-11-27T06:21:21Z",
-    "carry_over": false
+    "carry_over": false,
+    "updated_at": "2026-11-27T06:21:21Z"
   },
   "xaus": {
-    "last_run_id": "45790989911-1",
+    "last_run_id": "45972829125-1",
     "last_status": "success",
-    "last_success_at": "2026-11-26T09:21:06Z",
+    "last_success_at": "2026-11-27T09:21:12Z",
     "last_data_date": "2026-11-25",
     "consecutive_failures": 0,
-    "updated_at": "2026-11-26T09:21:30Z"
+    "updated_at": "2026-11-27T09:21:33Z"
   }
 }
